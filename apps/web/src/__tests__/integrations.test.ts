@@ -62,6 +62,7 @@ describe("provider payloads", () => {
     expect(b.name).toBe(roomName(spec.bookingId));
     expect(b.name).toMatch(/^b-[a-z0-9]+$/);
     expect(b.properties.exp).toBe(Math.floor(spec.end.getTime() / 1000) + 7200);
+    expect(b.properties).not.toHaveProperty("nbf");
     expect(meetPageUrl(b.name)).toBe(`http://localhost:3002/meet/${b.name}`);
   });
 });

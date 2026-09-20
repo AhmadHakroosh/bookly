@@ -71,7 +71,7 @@ export const google: CalendarDriver = {
       hangoutLink?: string;
       conferenceData?: { entryPoints?: { entryPointType: string; uri: string }[] };
     }>(
-      `${BASE}/calendars/${encodeURIComponent(calendarId)}/events?conferenceDataVersion=1&sendUpdates=none`,
+      `${BASE}/calendars/${encodeURIComponent(calendarId)}/events?conferenceDataVersion=1&sendUpdates=all`,
       { method: "POST", token, body: JSON.stringify(googleEventBody(spec, conference)) },
     );
     const meet =
@@ -82,7 +82,7 @@ export const google: CalendarDriver = {
   },
   async deleteEvent(token, calendarId, eventId) {
     await api(
-      `${BASE}/calendars/${encodeURIComponent(calendarId)}/events/${encodeURIComponent(eventId)}?sendUpdates=none`,
+      `${BASE}/calendars/${encodeURIComponent(calendarId)}/events/${encodeURIComponent(eventId)}?sendUpdates=all`,
       { method: "DELETE", token },
     ).catch((e) => {
       if (e?.status !== 404 && e?.status !== 410) throw e;

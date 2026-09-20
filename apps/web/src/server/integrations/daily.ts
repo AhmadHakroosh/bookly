@@ -32,7 +32,6 @@ export function dailyRoomBody(spec: MeetingSpec) {
     name: roomName(spec.bookingId),
     privacy: "public",
     properties: {
-      nbf: Math.floor(spec.start.getTime() / 1000) - 15 * 60,
       exp: Math.floor(spec.end.getTime() / 1000) + 2 * 60 * 60,
       enable_prejoin_ui: true,
       enable_chat: true,

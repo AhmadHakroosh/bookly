@@ -41,7 +41,8 @@ invalidates all connections.
 4. Set `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`.
 
 Meet links are created through the Calendar API (`conferenceData`), so Google Meet works for any
-Google account that can create Meet calls from Calendar.
+Google account that can create Meet calls from Calendar. Google also emails the attendee a
+normal calendar invitation (`sendUpdates=all`), in addition to Bookly's confirmation email.
 
 ## Microsoft (Outlook + Teams)
 
@@ -72,8 +73,8 @@ accounts get Skype/Teams-for-personal links.
    Point that host at the same deployment (add it as a domain in Vercel / your reverse proxy);
    the proxy rewrites `meet.example.com/<room>` to `/meet/<room>`.
 
-Rooms are public, named after the booking, open 15 minutes before the start and expire two hours
-after the end. The `/meet/<room>` page shows the meeting title and embeds Daily Prebuilt.
+Rooms are public, named after the booking, can be opened any time and expire two hours after
+the end. The `/meet/<room>` page shows the meeting title and embeds Daily Prebuilt.
 
 ## Local development
 
