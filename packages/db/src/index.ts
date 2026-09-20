@@ -14,8 +14,9 @@ const globalForDb = globalThis as unknown as { __booklyPool?: Pool; __booklyDb?:
  * `sslmode=prefer|require|verify-ca` are aliases for `verify-full` in pg 8 and will weaken in
  * pg 9; spell out `verify-full` so behaviour stays the same and the driver stops warning.
  */
-export function normalizeConnectionString(url: string): string {
-  return url.replace(/([?&])sslmode=(prefer|require|verify-ca)(?=&|$)/, "$1sslmode=verify-full");
+export function normalizeConnectionString(url: string | undefined): string | undefined {
+  // Builds run with SKIP_ENV_VALIDATION and no DATABASE_URL; the pool is created lazily then.
+  return url?.replace(/([?&])sslmode=(prefer|require|verify-ca)(?=&|$)/, "$1sslmode=verify-full");
 }
 
 export function createDb(connectionString: string): Database {

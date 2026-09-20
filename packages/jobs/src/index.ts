@@ -32,7 +32,7 @@ const queueDefaults: Record<JobName, undefined> = {
 export async function getBoss(): Promise<PgBoss> {
   if (globalForBoss.__booklyBossStarted) return globalForBoss.__booklyBossStarted;
   // Same SSL-mode normalisation as packages/db (aliases of verify-full, spelled out for pg 9).
-  const connectionString = loadEnv().DATABASE_URL.replace(
+  const connectionString = loadEnv().DATABASE_URL?.replace(
     /([?&])sslmode=(prefer|require|verify-ca)(?=&|$)/,
     "$1sslmode=verify-full",
   );
