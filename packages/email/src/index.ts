@@ -39,9 +39,10 @@ class ResendDriver implements EmailDriver {
       html: m.html,
       replyTo: m.replyTo,
       headers: m.headers,
+      // Base64 strings survive JSON serialisation; Buffers would be sent as {type,data}.
       attachments: m.attachments?.map((a) => ({
         filename: a.filename,
-        content: typeof a.content === "string" ? Buffer.from(a.content) : a.content,
+        content: Buffer.from(a.content).toString("base64"),
         contentType: a.contentType,
       })),
     });
