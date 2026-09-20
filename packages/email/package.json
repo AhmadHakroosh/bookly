@@ -1,0 +1,23 @@
+{
+  "name": "@bookly/email",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@bookly/config": "workspace:*",
+    "nodemailer": "catalog:",
+    "resend": "catalog:"
+  },
+  "devDependencies": {
+    "@types/node": "catalog:",
+    "@types/nodemailer": "catalog:",
+    "typescript": "catalog:",
+    "@typescript/native": "catalog:"
+  }
+}

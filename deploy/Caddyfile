@@ -1,0 +1,22 @@
+# Reverse proxy with automatic HTTPS for every domain Bookly says it serves.
+# Used by `docker compose --profile tls up -d`.
+{
+	email {$ACME_EMAIL}
+	on_demand_tls {
+		ask http://app:3000/api/domains/check
+	}
+}
+
+https:// {
+	tls {
+		on_demand
+	}
+	encode zstd gzip
+	reverse_proxy app:3000 {
+		header_up X-Forwarded-Host {host}
+	}
+}
+
+http:// {
+	redir https://{host}{uri} permanent
+}

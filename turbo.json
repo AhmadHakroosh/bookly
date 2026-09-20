@@ -1,0 +1,30 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "ui": "tui",
+  "globalEnv": ["NODE_ENV", "SKIP_ENV_VALIDATION"],
+  "globalDependencies": [".env", ".env.local"],
+  "tasks": {
+    "build": {
+      "dependsOn": ["^build"],
+      "outputs": [".next/**", "!.next/cache/**", "dist/**"],
+      "env": [
+        "DATABASE_URL",
+        "AUTH_SECRET",
+        "APP_URL",
+        "ROOT_DOMAIN",
+        "TENANCY",
+        "STORAGE_*",
+        "EMAIL_*",
+        "RESEND_API_KEY",
+        "SMTP_*",
+        "S3_*"
+      ]
+    },
+    "dev": { "cache": false, "persistent": true },
+    "lint": { "dependsOn": ["^build"] },
+    "typecheck": { "dependsOn": ["^build"] },
+    "test": { "dependsOn": ["^build"] },
+    "generate": { "cache": false },
+    "migrate": { "cache": false }
+  }
+}

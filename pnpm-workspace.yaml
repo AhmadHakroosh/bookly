@@ -1,0 +1,47 @@
+packages:
+  - apps/*
+  - packages/*
+
+allowBuilds:
+  sharp: true
+  esbuild: true
+  unrs-resolver: false
+
+catalog:
+  # runtime
+  next: 16.3.5
+  react: 19.3.0
+  react-dom: 19.3.0
+  zod: ^4.6.5
+  drizzle-orm: ^0.45.2
+  pg: ^8.23.0
+  better-auth: ^1.7.5
+  "@better-auth/drizzle-adapter": ^1.7.5
+  pg-boss: ^12.33.2
+  pino: ^10.3.1
+  resend: ^6.28.1
+  nodemailer: ^10.0.10
+  "@aws-sdk/client-s3": ^3.1136.0
+  # dev
+  typescript: npm:@typescript/typescript6@^6.0.2
+  "@typescript/native": npm:typescript@^7.0.2
+  "@types/node": ^24.13.5
+  "@types/pg": ^8.23.1
+  "@types/nodemailer": ^8.0.2
+  drizzle-kit: ^0.31.10
+  eslint: ^9.39.5
+  prettier: ^3.9.8
+  prettier-plugin-tailwindcss: ^0.8.1
+  turbo: ^2.11.2
+  tsx: ^4.23.13
+  vitest: ^5.0.1
+  dotenv: ^18.0.0
+
+minimumReleaseAgeExclude:
+  - "@turbo/darwin-64@2.11.2"
+  - "@turbo/darwin-arm64@2.11.2"
+  - "@turbo/linux-64@2.11.2"
+  - "@turbo/linux-arm64@2.11.2"
+  - "@turbo/windows-64@2.11.2"
+  - "@turbo/windows-arm64@2.11.2"
+  - turbo@2.11.2
