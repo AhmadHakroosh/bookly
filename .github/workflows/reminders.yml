@@ -1,0 +1,20 @@
+name: Reminders tick
+
+# Calls /api/cron/tick every 10 minutes so reminders go out on time on hosts without
+# a long-running worker (e.g. Vercel Hobby, whose own cron is daily). Needs two repository
+# secrets: BOOKLY_URL (https://book.example.com) and CRON_SECRET (same value as on the host).
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch:
+
+jobs:
+  tick:
+    runs-on: ubuntu-latest
+    if: ${{ vars.REMINDERS_ENABLED == 'true' }}
+    steps:
+      - name: Call the tick endpoint
+        run: |
+          code=$(curl -s -o /tmp/out -w "%{http_code}" -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" "${{ secrets.BOOKLY_URL }}/api/cron/tick")
+          cat /tmp/out; echo
+          test "$code" = "200"

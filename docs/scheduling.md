@@ -15,4 +15,4 @@
 
 ## Emails
 
-Confirmation to the attendee (with `.ics`, `METHOD:REQUEST`), notification to the host, cancellation to both (`METHOD:CANCEL`), and reminders 24h and 1h before (`booking.reminders` job every 10 minutes, or `/api/cron/tick` hourly on serverless). All go through `@bookly/email` (console / Resend / SMTP).
+Confirmation to the attendee (with `.ics`, `METHOD:REQUEST`), notification to the host, cancellation to both (`METHOD:CANCEL`), and reminders 24h and 1h before (`booking.reminders` job every 10 minutes with the in-process worker; on serverless call `/api/cron/tick` with `Authorization: Bearer $CRON_SECRET` — the repo ships a GitHub Actions schedule (`.github/workflows/reminders.yml`, enable with the `REMINDERS_ENABLED` repository variable) because Vercel's Hobby cron is daily). All go through `@bookly/email` (console / Resend / SMTP).
