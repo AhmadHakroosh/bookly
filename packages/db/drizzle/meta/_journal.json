@@ -15,6 +15,13 @@
       "when": 1789885251819,
       "tag": "0001_fine_the_leader",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1789890182095,
+      "tag": "0002_wealthy_power_pack",
+      "breakpoints": true
     }
   ]
 }

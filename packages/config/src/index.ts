@@ -35,6 +35,21 @@ export const envSchema = z.object({
   S3_SECRET_ACCESS_KEY: z.string().optional(),
   S3_PUBLIC_URL: z.string().optional(),
   S3_FORCE_PATH_STYLE: bool,
+
+  // ---- Integrations (all optional; a provider is "available" when its keys are set) ----
+  GOOGLE_CLIENT_ID: z.string().optional(),
+  GOOGLE_CLIENT_SECRET: z.string().optional(),
+  MICROSOFT_CLIENT_ID: z.string().optional(),
+  MICROSOFT_CLIENT_SECRET: z.string().optional(),
+  /** Entra tenant: "common" (any account), "consumers", "organizations" or a tenant id. */
+  MICROSOFT_TENANT: z.string().default("common"),
+  ZOOM_CLIENT_ID: z.string().optional(),
+  ZOOM_CLIENT_SECRET: z.string().optional(),
+  /** Daily.co (built-in video). DAILY_DOMAIN is your Daily subdomain, e.g. "acme.daily.co". */
+  DAILY_API_KEY: z.string().optional(),
+  DAILY_DOMAIN: z.string().optional(),
+  /** Public URL of the built-in meeting pages, e.g. https://meet.example.com. Defaults to APP_URL + /meet. */
+  MEET_URL: z.url().optional(),
 });
 
 export type Env = z.infer<typeof envSchema>;

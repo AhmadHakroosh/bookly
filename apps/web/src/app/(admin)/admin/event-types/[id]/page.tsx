@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
+import { conferencingAvailability } from "@/server/integrations";
 import { getEventTypeById, getProfileByUser, listSchedules } from "@/server/scheduling";
 import { requireStaff } from "@/server/session";
 import { getCurrentWorkspace } from "@/server/workspace";
@@ -16,12 +17,19 @@ async function EditEventTypePage({ params }: PageProps<"/admin/event-types/[id]"
   if (!ws) return null;
   const et = await getEventTypeById(ws.id, id);
   if (!et) notFound();
-  const [schedules, profile] = await Promise.all([
+  const [schedules, profile, avail] = await Promise.all([
     listSchedules(ws.id, et.userId),
     getProfileByUser(ws.id, session.user.id),
+    conferencingAvailability(et.userId),
   ]);
   return (
     <EventTypeForm
+      ready={{
+        daily: avail.daily,
+        google_meet: avail.google_meet,
+        teams: avail.teams,
+        zoom: avail.zoom,
+      }}
       initial={{
         id: et.id,
         title: et.title,

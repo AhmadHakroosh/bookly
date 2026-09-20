@@ -15,7 +15,12 @@ export type BookingMailCtx = {
 
 function details({ booking, eventType, host }: BookingMailCtx, tz: string) {
   const when = fmtDateTime(booking.startAt, tz);
-  const where = booking.meetingUrl ?? locationLabel(booking.location);
+  const conferencing = ["daily", "google_meet", "zoom", "teams"].includes(booking.location.type);
+  const where =
+    booking.meetingUrl ??
+    (conferencing
+      ? `${locationLabel(booking.location)} · the link will be emailed before the meeting`
+      : locationLabel(booking.location));
   return {
     when,
     where,

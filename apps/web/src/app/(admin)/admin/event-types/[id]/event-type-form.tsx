@@ -31,7 +31,7 @@ type Values = {
 };
 
 const LOCATIONS: [string, string][] = [
-  ["daily", "Video call (built-in, Daily.co)"],
+  ["daily", "Video call (built-in)"],
   ["google_meet", "Google Meet"],
   ["zoom", "Zoom"],
   ["teams", "Microsoft Teams"],
@@ -40,14 +40,23 @@ const LOCATIONS: [string, string][] = [
   ["custom", "Custom text / link"],
 ];
 
+export type ConferencingReady = {
+  daily: boolean;
+  google_meet: boolean;
+  teams: boolean;
+  zoom: boolean;
+};
+
 export function EventTypeForm({
   initial,
   schedules,
   publicUrl,
+  ready,
 }: {
   initial: Values;
   schedules: { id: string; name: string }[];
   publicUrl: string | null;
+  ready: ConferencingReady;
 }) {
   const [state, action, pending] = useActionState(
     saveEventType,
@@ -136,15 +145,22 @@ export function EventTypeForm({
               onChange={(e) => setLoc(e.target.value)}
               className="h-8 rounded-lg border bg-background px-2 text-sm"
             >
-              {LOCATIONS.map(([v, l]) => (
-                <option key={v} value={v}>
-                  {l}
-                </option>
-              ))}
+              {LOCATIONS.map(([v, l]) => {
+                const conf = v in ready ? ready[v as keyof ConferencingReady] : null;
+                return (
+                  <option key={v} value={v}>
+                    {l}
+                    {conf === false ? (v === "daily" ? " — not set up" : " — not connected") : ""}
+                  </option>
+                );
+              })}
             </select>
             <FieldDescription>
-              Meet, Zoom and Teams links are added automatically once that integration is connected.
-              Until then, choose &quot;Custom text / link&quot; and say how you will share the link.
+              {loc in ready && !ready[loc as keyof ConferencingReady]
+                ? "This provider is not connected yet. Bookings fall back to built-in video if available, otherwise the email says the link follows. Set it up under Calendars / Conferencing."
+                : loc in ready
+                  ? "A meeting link is created automatically for every confirmed booking."
+                  : "Shown to attendees in the confirmation email and calendar invite."}
             </FieldDescription>
           </Field>
           {(loc === "phone" || loc === "in_person" || loc === "custom") && (

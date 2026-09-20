@@ -7,8 +7,26 @@ import { WORKSPACE_HEADER } from "@/server/workspace";
  * 2. First run (no workspace yet) → force the setup wizard.
  * 3. /admin requires a session cookie (full check happens in the admin layout).
  */
+function meetHost(): string | null {
+  const u = process.env.MEET_URL;
+  if (!u) return null;
+  try {
+    return new URL(u).host;
+  } catch {
+    return null;
+  }
+}
+
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
+
+  // Built-in video on its own host (MEET_URL, e.g. meet.example.com): /<room> → /meet/<room>.
+  const mh = meetHost();
+  if (mh && request.headers.get("host") === mh && !pathname.startsWith("/meet/")) {
+    const url = request.nextUrl.clone();
+    url.pathname = pathname === "/" ? "/meet" : `/meet${pathname}`;
+    return NextResponse.rewrite(url);
+  }
   const workspace = await resolveWorkspaceByHost(request.headers.get("host"));
 
   if (!workspace) {

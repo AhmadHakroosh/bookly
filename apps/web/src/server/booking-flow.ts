@@ -10,6 +10,7 @@ import {
   type BookingMailCtx,
 } from "@/emails/booking";
 import { buildIcs } from "./ics";
+import { deprovisionBooking, provisionBooking } from "./integrations";
 import { refreshWorkspace } from "./cache";
 import { baseUrl, getProfileByUser, locationLabel, newToken, slotIsBookable } from "./scheduling";
 
@@ -64,7 +65,23 @@ async function hostEmail(userId: string) {
   return u?.email ?? null;
 }
 
-/** Validates the slot, stores the booking, and emails both sides. Meeting links come from K2 providers. */
+/** Creates the meeting link + calendar events and stores them on the booking (best-effort). */
+async function provision(workspace: Workspace, booking: Booking, eventType: EventType | null) {
+  const host = await getProfileByUser(workspace.id, booking.hostUserId);
+  const email = await hostEmail(booking.hostUserId);
+  const p = await provisionBooking(booking, eventType, {
+    name: host?.displayName ?? workspace.name,
+    email,
+  });
+  const [updated] = await db()
+    .update(schema.bookings)
+    .set(p)
+    .where(eq(schema.bookings.id, booking.id))
+    .returning();
+  return updated ?? booking;
+}
+
+/** Validates the slot, stores the booking, provisions meeting/calendar, and emails both sides. */
 export async function createBooking(
   workspace: Workspace,
   eventType: EventType,
@@ -90,10 +107,11 @@ export async function createBooking(
         .update(schema.bookings)
         .set({ status: "rescheduled" })
         .where(eq(schema.bookings.id, prev.id));
+      await deprovisionBooking(prev);
     }
   }
 
-  const [booking] = await db()
+  let [booking] = await db()
     .insert(schema.bookings)
     .values({
       workspaceId: workspace.id,
@@ -114,6 +132,7 @@ export async function createBooking(
     })
     .returning();
 
+  if (booking!.status === "confirmed") booking = await provision(workspace, booking!, eventType);
   await notifyCreated(workspace, booking!, eventType);
   refreshWorkspace(workspace.id);
   return booking!;
@@ -157,7 +176,7 @@ export async function confirmBooking(workspace: Workspace, bookingId: string) {
     where: and(eq(schema.bookings.id, bookingId), eq(schema.bookings.workspaceId, workspace.id)),
   });
   if (!b || b.status !== "pending") return null;
-  const [updated] = await db()
+  let [updated] = await db()
     .update(schema.bookings)
     .set({ status: "confirmed" })
     .where(eq(schema.bookings.id, b.id))
@@ -165,6 +184,7 @@ export async function confirmBooking(workspace: Workspace, bookingId: string) {
   const et = b.eventTypeId
     ? await db().query.eventTypes.findFirst({ where: eq(schema.eventTypes.id, b.eventTypeId) })
     : null;
+  updated = await provision(workspace, updated!, et ?? null);
   const ctx = await mailCtx(updated!, et ?? null, workspace);
   const a = attendeeConfirmation(ctx);
   await sendEmail({
@@ -199,6 +219,7 @@ export async function cancelBooking(
     .set({ status: "cancelled", cancelledBy: by, cancelReason: reason?.trim() || null })
     .where(eq(schema.bookings.id, b.id))
     .returning();
+  await deprovisionBooking(b);
   const et = b.eventTypeId
     ? await db().query.eventTypes.findFirst({ where: eq(schema.eventTypes.id, b.eventTypeId) })
     : null;

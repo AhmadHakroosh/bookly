@@ -197,12 +197,10 @@ export async function hostBusy(hostUserId: string, from: Date, to: Date): Promis
   return rows;
 }
 
-/** External busy time (calendar sync) — filled in by K2. */
+/** Busy time from connected calendars (Google / Outlook); fails open when a provider errors. */
 export async function externalBusy(hostUserId: string, from: Date, to: Date): Promise<Interval[]> {
-  void hostUserId;
-  void from;
-  void to;
-  return [];
+  const { externalBusy: fromIntegrations } = await import("./integrations");
+  return fromIntegrations(hostUserId, from, to);
 }
 
 async function engineInput(eventType: EventType, attendeeTz: string, from: string, to: string) {
@@ -295,7 +293,7 @@ export async function listBookings(
 export function locationLabel(loc: EventType["location"]): string {
   switch (loc.type) {
     case "daily":
-      return "Video call (Bookly)";
+      return "Video call";
     case "google_meet":
       return "Google Meet";
     case "zoom":
