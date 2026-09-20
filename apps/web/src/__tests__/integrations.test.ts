@@ -63,6 +63,8 @@ describe("provider payloads", () => {
     expect(b.name).toMatch(/^b-[a-z0-9]+$/);
     expect(b.properties.exp).toBe(Math.floor(spec.end.getTime() / 1000) + 7200);
     expect(b.properties).not.toHaveProperty("nbf");
+    expect(b.properties.enable_video_processing_ui).toBe(true);
+    expect(b.properties.enable_pip_ui).toBe(true);
     expect(meetPageUrl(b.name)).toBe(`http://localhost:3002/meet/${b.name}`);
   });
 });

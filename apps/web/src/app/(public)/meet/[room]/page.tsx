@@ -48,7 +48,7 @@ async function MeetPage({ params }: PageProps<"/meet/[room]">) {
       <iframe
         title="Video call"
         src={dailyRoomUrl(room)}
-        allow="camera; microphone; display-capture; autoplay; clipboard-write"
+        allow="camera; microphone; display-capture; autoplay; clipboard-write; picture-in-picture; fullscreen"
         className="w-full flex-1 border-0"
       />
     </div>

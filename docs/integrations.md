@@ -74,7 +74,9 @@ accounts get Skype/Teams-for-personal links.
    the proxy rewrites `meet.example.com/<room>` to `/meet/<room>`.
 
 Rooms are public, named after the booking, can be opened any time and expire two hours after
-the end. The `/meet/<room>` page shows the meeting title and embeds Daily Prebuilt.
+the end. The `/meet/<room>` page shows the meeting title and embeds Daily Prebuilt with chat, emoji
+reactions, hand raising, picture-in-picture, background effects and noise cancellation enabled.
+Background effects need a browser with insertable-streams support (Chrome, Edge, recent Safari).
 
 ## Local development
 
