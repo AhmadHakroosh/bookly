@@ -95,6 +95,7 @@ export function EventTypeForm({
           <Field>
             <FieldLabel htmlFor="slug">URL slug</FieldLabel>
             <Input id="slug" name="slug" defaultValue={initial.slug} />
+            <FieldDescription>Last part of the link, e.g. intro-call</FieldDescription>
           </Field>
         </div>
         <Field>
@@ -107,15 +108,23 @@ export function EventTypeForm({
           />
         </Field>
         <div className="grid gap-6 sm:grid-cols-3">
-          {num("durationMin", "Duration (min)")}
-          {num("slotIntervalMin", "Slot interval (min)", "0 = same as duration")}
+          {num("durationMin", "Duration (minutes)")}
+          {num(
+            "slotIntervalMin",
+            "Start times every (minutes)",
+            "0 = every duration, e.g. 9:00, 9:30 for a 30-minute call",
+          )}
           {num("maxPerDay", "Max bookings per day", "0 = unlimited")}
         </div>
         <div className="grid gap-6 sm:grid-cols-4">
-          {num("bufferBeforeMin", "Buffer before (min)")}
-          {num("bufferAfterMin", "Buffer after (min)")}
-          {num("minNoticeMin", "Minimum notice (min)")}
-          {num("maxDaysAhead", "Book up to (days ahead)")}
+          {num("bufferBeforeMin", "Gap before (minutes)", "Kept free before each booking")}
+          {num("bufferAfterMin", "Gap after (minutes)", "Kept free after each booking")}
+          {num("minNoticeMin", "Minimum notice (minutes)", "e.g. 720 = 12 hours, 1440 = 1 day")}
+          {num(
+            "maxDaysAhead",
+            "Book up to (days ahead)",
+            "How far into the future people can book",
+          )}
         </div>
         <div className="grid gap-6 sm:grid-cols-2">
           <Field>
@@ -134,8 +143,8 @@ export function EventTypeForm({
               ))}
             </select>
             <FieldDescription>
-              Meet, Zoom and Teams links are created when the integration is connected
-              (Integrations).
+              Meet, Zoom and Teams links are added automatically once that integration is connected.
+              Until then, choose &quot;Custom text / link&quot; and say how you will share the link.
             </FieldDescription>
           </Field>
           {(loc === "phone" || loc === "in_person" || loc === "custom") && (
@@ -204,6 +213,7 @@ export function EventTypeForm({
               defaultChecked={initial.requiresConfirmation}
             />{" "}
             Requires my confirmation
+            <span className="text-muted-foreground">(bookings stay pending until you approve)</span>
           </label>
           <label className="inline-flex items-center gap-2">
             <input type="checkbox" name="hidden" defaultChecked={initial.hidden} /> Hidden from my

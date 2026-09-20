@@ -25,8 +25,8 @@ async function AvailabilityPage() {
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">Availability</h1>
         <p className="text-sm text-muted-foreground">
-          Weekly hours in your schedule&apos;s timezone. Event types subtract bookings, buffers and
-          notice from these.
+          Tick the days you take calls and set the hours. Existing bookings, buffers and minimum
+          notice are removed from these hours automatically.
         </p>
       </div>
       <ScheduleForm
@@ -44,6 +44,9 @@ async function AvailabilityPage() {
       />
       <section className="space-y-3">
         <h2 className="text-lg font-semibold">Date overrides</h2>
+        <p className="text-sm text-muted-foreground">
+          Block a day off, or open different hours on a specific date.
+        </p>
         <form
           action={addOverride}
           className="flex flex-wrap items-end gap-2 rounded-xl border p-4 text-sm"

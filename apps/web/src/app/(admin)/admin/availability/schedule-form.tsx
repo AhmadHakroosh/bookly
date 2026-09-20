@@ -4,6 +4,7 @@ import { useActionState, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { TimezoneField } from "@/components/timezone-field";
 import { saveSchedule } from "../scheduling-actions";
 
 type Day = { weekday: number; label: string; ranges: { start: string; end: string }[] };
@@ -40,19 +41,9 @@ export function ScheduleForm({
           <span className="mb-1 block text-xs font-medium">Schedule name</span>
           <Input name="name" defaultValue={name} className="w-48" />
         </label>
-        <label className="text-sm">
-          <span className="mb-1 block text-xs font-medium">Timezone</span>
-          <select
-            name="timezone"
-            defaultValue={timezone}
-            className="h-8 rounded-lg border bg-background px-2 text-sm"
-          >
-            {zones.map((z) => (
-              <option key={z} value={z}>
-                {z}
-              </option>
-            ))}
-          </select>
+        <label className="text-sm" htmlFor="timezone">
+          <span className="mb-1 block text-xs font-medium">Hours below are in</span>
+          <TimezoneField name="timezone" defaultValue={timezone} zones={zones} className="w-72" />
         </label>
       </div>
       <ul className="divide-y rounded-xl border">

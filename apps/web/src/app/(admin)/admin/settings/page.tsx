@@ -1,3 +1,4 @@
+import { timezoneList } from "@/lib/time";
 import { getCurrentWorkspace } from "@/server/workspace";
 import { Suspense } from "react";
 import { SettingsForm } from "./settings-form";
@@ -12,8 +13,8 @@ async function SettingsPage() {
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">Settings</h1>
         <p className="text-sm text-muted-foreground">
-          Name, description, locale and default timezone. Branding and integrations come in later
-          phases.
+          The workspace name appears in the admin header and in email footers. The default timezone
+          is used for new booking pages and schedules.
         </p>
       </div>
       <SettingsForm
@@ -23,6 +24,7 @@ async function SettingsPage() {
           locale: workspace.locale,
           timezone: workspace.timezone,
         }}
+        zones={timezoneList()}
       />
     </div>
   );

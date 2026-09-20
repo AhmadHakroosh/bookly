@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Field, FieldDescription, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { TimezoneField } from "@/components/timezone-field";
 import { saveProfile } from "../scheduling-actions";
 
 type Values = {
@@ -36,25 +37,21 @@ export function ProfileForm({ initial, zones }: { initial: Values; zones: string
         <Field>
           <FieldLabel htmlFor="displayName">Display name</FieldLabel>
           <Input id="displayName" name="displayName" defaultValue={initial.displayName} required />
+          <FieldDescription>Shown as the host on your page and in emails.</FieldDescription>
         </Field>
         <Field>
           <FieldLabel htmlFor="bio">Bio</FieldLabel>
           <Textarea id="bio" name="bio" rows={2} defaultValue={initial.bio} />
+          <FieldDescription>
+            One or two sentences under your name on the booking page.
+          </FieldDescription>
         </Field>
         <Field>
-          <FieldLabel htmlFor="timezone">Timezone</FieldLabel>
-          <select
-            id="timezone"
-            name="timezone"
-            defaultValue={initial.timezone}
-            className="h-8 rounded-lg border bg-background px-2 text-sm"
-          >
-            {zones.map((z) => (
-              <option key={z} value={z}>
-                {z}
-              </option>
-            ))}
-          </select>
+          <FieldLabel htmlFor="timezone">Your timezone</FieldLabel>
+          <TimezoneField name="timezone" defaultValue={initial.timezone} zones={zones} />
+          <FieldDescription>
+            Where you are. Visitors see times in their own timezone automatically.
+          </FieldDescription>
         </Field>
         <Field>
           <FieldLabel htmlFor="avatarUrl">Avatar URL</FieldLabel>
@@ -64,6 +61,7 @@ export function ProfileForm({ initial, zones }: { initial: Values; zones: string
             defaultValue={initial.avatarUrl}
             placeholder="https://…"
           />
+          <FieldDescription>Link to a square image, ideally at least 256×256.</FieldDescription>
         </Field>
         <Button type="submit" disabled={pending}>
           {pending ? "Saving…" : "Save"}

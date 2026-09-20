@@ -6,11 +6,12 @@ import { Button } from "@/components/ui/button";
 import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { TimezoneField } from "@/components/timezone-field";
 import { updateWorkspaceSettings, type SettingsState } from "./actions";
 
 type Values = { name: string; description: string; locale: string; timezone: string };
 
-export function SettingsForm({ workspace }: { workspace: Values }) {
+export function SettingsForm({ workspace, zones }: { workspace: Values; zones: string[] }) {
   const [state, action, pending] = useActionState(updateWorkspaceSettings, {} as SettingsState);
   useEffect(() => {
     if (state.ok) toast.success("Settings saved");
@@ -41,13 +42,8 @@ export function SettingsForm({ workspace }: { workspace: Values }) {
             <Input id="locale" name="locale" defaultValue={workspace.locale} />
           </Field>
           <Field>
-            <FieldLabel htmlFor="timezone">Timezone</FieldLabel>
-            <Input
-              id="timezone"
-              name="timezone"
-              defaultValue={workspace.timezone}
-              placeholder="UTC"
-            />
+            <FieldLabel htmlFor="timezone">Default timezone</FieldLabel>
+            <TimezoneField name="timezone" defaultValue={workspace.timezone} zones={zones} />
           </Field>
         </div>
         <Button type="submit" disabled={pending}>
