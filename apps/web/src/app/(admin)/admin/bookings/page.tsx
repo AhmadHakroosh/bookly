@@ -1,0 +1,112 @@
+import Link from "next/link";
+import { Suspense } from "react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { fmtDateTime } from "@/lib/time";
+import { getProfileByUser, listBookings, locationLabel } from "@/server/scheduling";
+import { requireStaff } from "@/server/session";
+import { getCurrentWorkspace } from "@/server/workspace";
+import { hostCancel, hostConfirm } from "../scheduling-actions";
+
+export const metadata = { title: "Bookings" };
+
+async function BookingsPage({ searchParams }: PageProps<"/admin/bookings">) {
+  const [{ session, role }, ws, sp] = await Promise.all([
+    requireStaff(),
+    getCurrentWorkspace(),
+    searchParams,
+  ]);
+  if (!ws) return null;
+  const past = sp.view === "past";
+  const mine = role !== "owner" && role !== "admin";
+  const [rows, profile] = await Promise.all([
+    listBookings(ws.id, { upcoming: !past, userId: mine ? session.user.id : undefined }),
+    getProfileByUser(ws.id, session.user.id),
+  ]);
+  const tz = profile?.timezone ?? ws.timezone;
+  return (
+    <div className="space-y-6">
+      <div className="flex items-end justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight">Bookings</h1>
+          <p className="text-sm text-muted-foreground">Times shown in {tz}.</p>
+        </div>
+        <nav className="flex gap-2 text-sm">
+          <Link
+            href="/admin/bookings"
+            className={`rounded-md px-2.5 py-1 ${!past ? "bg-muted font-medium" : "text-muted-foreground"}`}
+          >
+            Upcoming
+          </Link>
+          <Link
+            href="/admin/bookings?view=past"
+            className={`rounded-md px-2.5 py-1 ${past ? "bg-muted font-medium" : "text-muted-foreground"}`}
+          >
+            Past
+          </Link>
+        </nav>
+      </div>
+      <ul className="space-y-2">
+        {rows.map((b) => (
+          <li
+            key={b.id}
+            className="flex flex-wrap items-start justify-between gap-3 rounded-xl border p-4 text-sm"
+          >
+            <div>
+              <p className="font-medium">
+                {b.eventTitle ?? "Meeting"} with {b.attendeeName}
+              </p>
+              <p className="text-muted-foreground">
+                {fmtDateTime(b.startAt, tz)} · {b.meetingUrl ?? locationLabel(b.location)}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                {b.attendeeEmail}
+                {b.notes ? ` · “${b.notes}”` : ""}
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              <Badge
+                variant={b.status === "confirmed" ? "default" : "secondary"}
+                className="capitalize"
+              >
+                {b.status.replace("_", " ")}
+              </Badge>
+              {b.status === "pending" && (
+                <form action={hostConfirm.bind(null, b.id)}>
+                  <Button type="submit" size="sm">
+                    Confirm
+                  </Button>
+                </form>
+              )}
+              {(b.status === "confirmed" || b.status === "pending") && b.endAt > new Date() && (
+                <form action={hostCancel.bind(null, b.id)} className="flex gap-1">
+                  <input
+                    name="reason"
+                    placeholder="Reason"
+                    className="h-7 w-32 rounded-md border bg-background px-2 text-xs"
+                  />
+                  <Button type="submit" variant="ghost" size="sm">
+                    Cancel
+                  </Button>
+                </form>
+              )}
+            </div>
+          </li>
+        ))}
+        {rows.length === 0 && (
+          <li className="rounded-xl border border-dashed p-10 text-center text-muted-foreground">
+            No {past ? "past" : "upcoming"} bookings.
+          </li>
+        )}
+      </ul>
+    </div>
+  );
+}
+
+export default function BookingsPageBoundary(props: PageProps<"/admin/bookings">) {
+  return (
+    <Suspense fallback={null}>
+      <BookingsPage {...props} />
+    </Suspense>
+  );
+}

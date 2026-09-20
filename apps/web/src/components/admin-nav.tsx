@@ -7,6 +7,7 @@ const GROUPS: { label: string; items: { href: string; label: string }[] }[] = [
   {
     label: "Scheduling",
     items: [
+      { href: "/admin/profile", label: "Booking page" },
       { href: "/admin/event-types", label: "Event types" },
       { href: "/admin/availability", label: "Availability" },
       { href: "/admin/bookings", label: "Bookings" },

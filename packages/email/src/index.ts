@@ -1,5 +1,7 @@
 import { loadEnv } from "@bookly/config";
 
+export type EmailAttachment = { filename: string; content: string | Buffer; contentType?: string };
+
 export type EmailMessage = {
   to: string | string[];
   subject: string;
@@ -7,6 +9,9 @@ export type EmailMessage = {
   html?: string;
   replyTo?: string;
   from?: string;
+  attachments?: EmailAttachment[];
+  /** Extra headers, e.g. List-Unsubscribe. */
+  headers?: Record<string, string>;
 };
 
 export interface EmailDriver {
@@ -15,7 +20,9 @@ export interface EmailDriver {
 
 class ConsoleDriver implements EmailDriver {
   async send(m: EmailMessage) {
-    console.log(`\n📧 [email:console] to=${m.to} subject="${m.subject}"\n${m.text}\n`);
+    console.log(
+      `\n📧 [email:console] to=${m.to} subject="${m.subject}"${m.attachments?.length ? ` attachments=${m.attachments.map((a) => a.filename).join(",")}` : ""}\n${m.text}\n`,
+    );
     return {};
   }
 }
@@ -31,6 +38,12 @@ class ResendDriver implements EmailDriver {
       text: m.text,
       html: m.html,
       replyTo: m.replyTo,
+      headers: m.headers,
+      attachments: m.attachments?.map((a) => ({
+        filename: a.filename,
+        content: typeof a.content === "string" ? Buffer.from(a.content) : a.content,
+        contentType: a.contentType,
+      })),
     });
     if (error) throw new Error(`Resend: ${error.message}`);
     return { id: data?.id };
@@ -54,6 +67,12 @@ class SmtpDriver implements EmailDriver {
       text: m.text,
       html: m.html,
       replyTo: m.replyTo,
+      headers: m.headers,
+      attachments: m.attachments?.map((a) => ({
+        filename: a.filename,
+        content: a.content,
+        contentType: a.contentType,
+      })),
     });
     return { id: info.messageId };
   }

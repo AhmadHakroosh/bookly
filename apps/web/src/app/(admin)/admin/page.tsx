@@ -18,7 +18,8 @@ async function AdminDashboard() {
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {(
           [
-            ["Event types", "Define what people can book. Arrives in K1.", "/admin/event-types"],
+            ["Booking page", "Your public profile and timezone.", "/admin/profile"],
+            ["Event types", "Define what people can book.", "/admin/event-types"],
             [
               "Availability",
               "Weekly hours and date overrides. Arrives in K1.",

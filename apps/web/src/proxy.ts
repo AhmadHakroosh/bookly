@@ -19,6 +19,7 @@ export async function proxy(request: NextRequest) {
 
   const requestHeaders = new Headers(request.headers);
   requestHeaders.set(WORKSPACE_HEADER, workspace.workspaceId);
+  if (request.nextUrl.searchParams.get("embed") === "1") requestHeaders.set("x-bookly-embed", "1");
 
   if (
     pathname.startsWith("/admin") &&
