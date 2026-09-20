@@ -1,9 +1,10 @@
 "use server";
 
-import { redirect } from "next/navigation";
+import { redirect, unstable_rethrow } from "next/navigation";
 import { z } from "zod";
 import { isValidTimezone } from "@/lib/time";
 import { BookingError, createBooking } from "@/server/booking-flow";
+import { createCheckout } from "@/server/payments";
 import { getEventType, getProfileByUsername } from "@/server/scheduling";
 import { getCurrentWorkspace } from "@/server/workspace";
 
@@ -50,7 +51,12 @@ export async function book(_prev: BookState, formData: FormData): Promise<BookSt
       rescheduleToken: d.reschedule || null,
     });
     token = b.manageToken;
+    if (b.status === "awaiting_payment") {
+      const url = await createCheckout(ws, b, et);
+      redirect(url);
+    }
   } catch (e) {
+    unstable_rethrow(e);
     if (e instanceof BookingError) return { error: e.message };
     console.error(e);
     return { error: "Something went wrong. Please try again." };

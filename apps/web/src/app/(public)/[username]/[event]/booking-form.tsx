@@ -12,9 +12,19 @@ type Props = {
   questions: EventQuestion[];
   reschedule?: string;
   defaults?: { name?: string; email?: string };
+  paid?: boolean;
 };
 
-export function BookingForm({ username, event, slot, tz, questions, reschedule, defaults }: Props) {
+export function BookingForm({
+  username,
+  event,
+  slot,
+  tz,
+  questions,
+  reschedule,
+  defaults,
+  paid = false,
+}: Props) {
   const [state, action, pending] = useActionState(book, {} as BookState);
   const field =
     "bg-background h-10 w-full rounded-lg border px-3 text-sm outline-none focus-visible:ring-2";
@@ -112,7 +122,13 @@ export function BookingForm({ username, event, slot, tz, questions, reschedule, 
         disabled={pending}
         className="h-10 w-full rounded-lg bg-primary text-sm font-medium text-primary-foreground disabled:opacity-60"
       >
-        {pending ? "Booking…" : reschedule ? "Confirm new time" : "Confirm booking"}
+        {pending
+          ? "Booking…"
+          : reschedule
+            ? "Confirm new time"
+            : paid
+              ? "Continue to payment"
+              : "Confirm booking"}
       </button>
     </form>
   );

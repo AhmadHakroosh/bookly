@@ -3,6 +3,7 @@ import { Suspense } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { fmtDateTime } from "@/lib/time";
+import { formatPrice } from "@/server/payments";
 import { getProfileByUser, listBookings, locationLabel } from "@/server/scheduling";
 import { requireStaff } from "@/server/session";
 import { getCurrentWorkspace } from "@/server/workspace";
@@ -65,6 +66,16 @@ async function BookingsPage({ searchParams }: PageProps<"/admin/bookings">) {
               </p>
             </div>
             <div className="flex items-center gap-2">
+              {b.paymentStatus && b.amountCents != null && (
+                <Badge variant="outline">
+                  {formatPrice(b.amountCents, b.currency)}
+                  {b.paymentStatus === "refunded"
+                    ? " refunded"
+                    : b.paymentStatus === "paid"
+                      ? " paid"
+                      : " unpaid"}
+                </Badge>
+              )}
               <Badge
                 variant={b.status === "confirmed" ? "default" : "secondary"}
                 className="capitalize"

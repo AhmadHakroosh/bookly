@@ -28,6 +28,9 @@ type Values = {
   questions: string;
   requiresConfirmation: boolean;
   hidden: boolean;
+  priceCents: number;
+  currency: string;
+  remindByText: boolean;
 };
 
 const LOCATIONS: [string, string][] = [
@@ -52,11 +55,13 @@ export function EventTypeForm({
   schedules,
   publicUrl,
   ready,
+  paymentsReady,
 }: {
   initial: Values;
   schedules: { id: string; name: string }[];
   publicUrl: string | null;
   ready: ConferencingReady;
+  paymentsReady: boolean;
 }) {
   const [state, action, pending] = useActionState(
     saveEventType,
@@ -204,6 +209,33 @@ export function EventTypeForm({
             </div>
           </Field>
         </div>
+        <div className="grid gap-6 sm:grid-cols-3">
+          <Field>
+            <FieldLabel htmlFor="price">Price</FieldLabel>
+            <Input
+              id="price"
+              name="price"
+              type="number"
+              min={0}
+              step="0.01"
+              defaultValue={(initial.priceCents / 100).toFixed(2)}
+            />
+            <FieldDescription>
+              {paymentsReady
+                ? "0 = free. Paid bookings go through Stripe Checkout before they are confirmed."
+                : "Stripe is not set up on this server, so bookings stay free (docs/payments.md)."}
+            </FieldDescription>
+          </Field>
+          <Field>
+            <FieldLabel htmlFor="currency">Currency</FieldLabel>
+            <Input
+              id="currency"
+              name="currency"
+              defaultValue={initial.currency}
+              placeholder="usd"
+            />
+          </Field>
+        </div>
         <Field>
           <FieldLabel htmlFor="questions">Booking questions</FieldLabel>
           <Textarea
@@ -234,6 +266,10 @@ export function EventTypeForm({
           <label className="inline-flex items-center gap-2">
             <input type="checkbox" name="hidden" defaultChecked={initial.hidden} /> Hidden from my
             page (link only)
+          </label>
+          <label className="inline-flex items-center gap-2">
+            <input type="checkbox" name="remindByText" defaultChecked={initial.remindByText} /> Text
+            reminders to attendees who leave a phone number
           </label>
         </div>
         <div className="flex items-center justify-between">

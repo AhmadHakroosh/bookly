@@ -20,6 +20,8 @@ export type WorkspaceSettings = {
   timezone?: string;
   /** Booking page footer / privacy text. */
   footerText?: string;
+  /** Daily.co webhook registered for join notifications. */
+  daily?: { webhookId?: string; hmac?: string; url?: string } | null;
   [key: string]: unknown;
 };
 

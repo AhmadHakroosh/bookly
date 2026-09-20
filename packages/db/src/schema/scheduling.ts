@@ -42,6 +42,9 @@ export const profiles = pgTable(
     bio: text("bio"),
     avatarUrl: text("avatar_url"),
     timezone: text("timezone").notNull().default("UTC"),
+    /** E.164 phone for SMS / WhatsApp notifications to the host. */
+    phone: text("phone"),
+    notifications: jsonb("notifications").$type<HostNotifications>().notNull().default({}),
     ...timestamps,
   },
   (t) => [
@@ -49,6 +52,17 @@ export const profiles = pgTable(
     uniqueIndex("profiles_ws_user_idx").on(t.workspaceId, t.userId),
   ],
 );
+
+/** How and when a host wants to be pinged (email is always on). */
+export type HostNotifications = {
+  /** Text channel for the phone above. */
+  channel?: "none" | "sms" | "whatsapp";
+  slackWebhookUrl?: string | null;
+  onBooking?: boolean;
+  onCancel?: boolean;
+  onJoin?: boolean;
+  reminder1h?: boolean;
+};
 
 /* ---------------- Availability ---------------- */
 
@@ -145,6 +159,8 @@ export const eventTypes = pgTable(
     position: integer("position").notNull().default(0),
     priceCents: integer("price_cents"),
     currency: text("currency"),
+    /** Text (SMS/WhatsApp) reminders to attendees who leave a phone number. */
+    remindByText: boolean("remind_by_text").notNull().default(false),
     ...timestamps,
   },
   (t) => [
@@ -156,6 +172,7 @@ export const eventTypes = pgTable(
 /* ---------------- Bookings ---------------- */
 
 export const bookingStatus = pgEnum("booking_status", [
+  "awaiting_payment",
   "pending",
   "confirmed",
   "cancelled",
@@ -199,6 +216,15 @@ export const bookings = pgTable(
       .notNull()
       .default({}),
     remindersSent: jsonb("reminders_sent").$type<string[]>().notNull().default([]),
+    /** null (free) | pending | paid | refunded | failed */
+    paymentStatus: text("payment_status"),
+    amountCents: integer("amount_cents"),
+    currency: text("currency"),
+    paymentRef: jsonb("payment_ref").$type<{
+      sessionId?: string;
+      paymentIntentId?: string;
+      refundId?: string;
+    }>(),
     ...timestamps,
   },
   (t) => [

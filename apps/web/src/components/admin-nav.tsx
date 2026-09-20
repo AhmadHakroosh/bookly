@@ -11,6 +11,7 @@ const GROUPS: { label: string; items: { href: string; label: string }[] }[] = [
       { href: "/admin/event-types", label: "Event types" },
       { href: "/admin/availability", label: "Availability" },
       { href: "/admin/bookings", label: "Bookings" },
+      { href: "/admin/notifications", label: "Notifications" },
     ],
   },
   {

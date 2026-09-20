@@ -1,3 +1,4 @@
+import { createHmac, timingSafeEqual } from "node:crypto";
 import { loadEnv } from "@bookly/config";
 import { api, type ConferencingDriver, type MeetingSpec } from "./types";
 
@@ -47,6 +48,41 @@ export function dailyRoomBody(spec: MeetingSpec) {
       max_participants: 10,
     },
   };
+}
+
+/** Registers (or replaces) the Daily webhook that reports participant joins. Returns its HMAC key. */
+export async function registerDailyWebhook(url: string, previousId?: string | null) {
+  if (!dailyConfigured()) throw new Error("Built-in video is not configured");
+  const key = loadEnv().DAILY_API_KEY!;
+  if (previousId)
+    await api(`${BASE}/webhooks/${previousId}`, { method: "DELETE", token: key }).catch(() => {});
+  const hook = await api<{ uuid: string; hmac: string; url: string }>(`${BASE}/webhooks`, {
+    method: "POST",
+    token: key,
+    body: JSON.stringify({ url, eventTypes: ["participant.joined"] }),
+  });
+  return { id: hook.uuid, hmac: hook.hmac, url: hook.url };
+}
+
+export async function removeDailyWebhook(id: string) {
+  if (!dailyConfigured()) return;
+  await api(`${BASE}/webhooks/${id}`, { method: "DELETE", token: loadEnv().DAILY_API_KEY! }).catch(
+    () => {},
+  );
+}
+
+/** Daily signs `${timestamp}.${body}` with the base64-decoded hmac; signature is base64. */
+export function verifyDailySignature(
+  hmacB64: string,
+  timestamp: string,
+  signature: string,
+  body: string,
+) {
+  const expected = createHmac("sha256", Buffer.from(hmacB64, "base64"))
+    .update(`${timestamp}.${body}`)
+    .digest("base64");
+  if (expected.length !== signature.length) return false;
+  return timingSafeEqual(Buffer.from(expected), Buffer.from(signature));
 }
 
 export const daily: ConferencingDriver = {

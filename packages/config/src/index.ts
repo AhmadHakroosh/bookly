@@ -50,6 +50,18 @@ export const envSchema = z.object({
   DAILY_DOMAIN: z.string().optional(),
   /** Public URL of the built-in meeting pages, e.g. https://meet.example.com. Defaults to APP_URL + /meet. */
   MEET_URL: z.url().optional(),
+
+  // ---- Payments (Stripe) ----
+  STRIPE_SECRET_KEY: z.string().optional(),
+  STRIPE_WEBHOOK_SECRET: z.string().optional(),
+
+  // ---- Text messages (Twilio) for SMS / WhatsApp reminders and host pings ----
+  TWILIO_ACCOUNT_SID: z.string().optional(),
+  TWILIO_AUTH_TOKEN: z.string().optional(),
+  /** E.164 sender for SMS, e.g. +15551234567 */
+  TWILIO_FROM_SMS: z.string().optional(),
+  /** WhatsApp sender, e.g. +14155238886 (sandbox) or your approved number */
+  TWILIO_FROM_WHATSAPP: z.string().optional(),
 });
 
 export type Env = z.infer<typeof envSchema>;

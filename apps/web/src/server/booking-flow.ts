@@ -9,9 +9,12 @@ import {
   hostNotification,
   type BookingMailCtx,
 } from "@/emails/booking";
+import { fmtDateTime } from "@/lib/time";
 import { buildIcs } from "./ics";
 import { deprovisionBooking, provisionBooking } from "./integrations";
 import { serializeBooking } from "./api";
+import { notifyHost } from "./notify";
+import { isPaid, paymentsConfigured, refundBooking } from "./payments";
 import { emitEvent } from "./webhooks";
 import { refreshWorkspace } from "./cache";
 import { baseUrl, getProfileByUser, locationLabel, newToken, slotIsBookable } from "./scheduling";
@@ -96,7 +99,12 @@ export async function createBooking(
       throw new BookingError(`Please answer: ${q.label}`);
   }
   const end = new Date(input.start.getTime() + eventType.durationMin * 60_000);
-  const status: Booking["status"] = eventType.requiresConfirmation ? "pending" : "confirmed";
+  const needsPayment = isPaid(eventType) && paymentsConfigured();
+  const status: Booking["status"] = needsPayment
+    ? "awaiting_payment"
+    : eventType.requiresConfirmation
+      ? "pending"
+      : "confirmed";
 
   let rescheduledFromId: string | null = null;
   if (input.rescheduleToken) {
@@ -113,7 +121,7 @@ export async function createBooking(
     }
   }
 
-  let [booking] = await db()
+  const [booking] = await db()
     .insert(schema.bookings)
     .values({
       workspaceId: workspace.id,
@@ -131,12 +139,45 @@ export async function createBooking(
       manageToken: newToken(),
       rescheduledFromId,
       location: eventType.location,
+      amountCents: needsPayment ? eventType.priceCents : null,
+      currency: needsPayment ? (eventType.currency ?? "usd") : null,
     })
     .returning();
 
-  if (booking!.status === "confirmed") booking = await provision(workspace, booking!, eventType);
-  await notifyCreated(workspace, booking!, eventType);
-  const payload = { booking: serializeBooking(booking!, { eventType }) };
+  // Paid bookings are finalised by the Stripe webhook (see finalizeBooking).
+  if (needsPayment) return booking!;
+  return finalizeBooking(workspace, booking!, eventType, rescheduledFromId);
+}
+
+/**
+ * Second half of booking creation: provisions meeting + calendar, sends emails, pings the
+ * host, emits webhooks. Runs immediately for free bookings and after payment for paid ones.
+ */
+export async function finalizeBooking(
+  workspace: Workspace,
+  booking: Booking,
+  eventType: EventType,
+  rescheduledFromId: string | null = booking.rescheduledFromId,
+): Promise<Booking> {
+  if (booking.status === "awaiting_payment") {
+    const [b] = await db()
+      .update(schema.bookings)
+      .set({ status: eventType.requiresConfirmation ? "pending" : "confirmed" })
+      .where(eq(schema.bookings.id, booking.id))
+      .returning();
+    booking = b!;
+  }
+  if (booking.status === "confirmed") booking = await provision(workspace, booking, eventType);
+  await notifyCreated(workspace, booking, eventType);
+  const when = fmtDateTime(
+    booking.startAt,
+    (await getProfileByUser(workspace.id, booking.hostUserId))?.timezone ?? workspace.timezone,
+  );
+  void notifyHost(booking.hostUserId, "onBooking", {
+    subject: `New booking: ${eventType.title}`,
+    text: `${booking.attendeeName} booked ${eventType.title} on ${when}${booking.status === "pending" ? " (needs your confirmation)" : ""}. ${baseUrl()}/admin/bookings`,
+  });
+  const payload = { booking: serializeBooking(booking, { eventType }) };
   emitEvent(workspace.id, "booking.created", payload);
   if (rescheduledFromId)
     emitEvent(workspace.id, "booking.rescheduled", {
@@ -144,7 +185,7 @@ export async function createBooking(
       previousBookingId: rescheduledFromId,
     });
   refreshWorkspace(workspace.id);
-  return booking!;
+  return booking;
 }
 
 async function notifyCreated(workspace: Workspace, booking: Booking, eventType: EventType | null) {
@@ -232,6 +273,12 @@ export async function cancelBooking(
     .where(eq(schema.bookings.id, b.id))
     .returning();
   await deprovisionBooking(b);
+  if (b.paymentStatus === "paid") await refundBooking(b);
+  if (by === "attendee")
+    void notifyHost(b.hostUserId, "onCancel", {
+      subject: "Booking cancelled",
+      text: `${b.attendeeName} cancelled their booking on ${fmtDateTime(b.startAt, workspace.timezone)}${reason ? `: ${reason}` : ""}.`,
+    });
   const et = b.eventTypeId
     ? await db().query.eventTypes.findFirst({ where: eq(schema.eventTypes.id, b.eventTypeId) })
     : null;

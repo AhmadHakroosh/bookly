@@ -13,6 +13,7 @@ import {
   getProfileByUsername,
   locationLabel,
 } from "@/server/scheduling";
+import { formatPrice, paymentsConfigured } from "@/server/payments";
 import { getCurrentWorkspace } from "@/server/workspace";
 import { BookingForm } from "./booking-form";
 
@@ -85,6 +86,9 @@ async function EventPage({ params, searchParams }: PageProps<"/[username]/[event
           <h1 className="mt-3 text-2xl font-semibold tracking-tight">{et.title}</h1>
           <p className="mt-2 text-sm text-muted-foreground">
             {et.durationMin} min · {locationLabel(et.location)}
+            {et.priceCents && paymentsConfigured()
+              ? ` · ${formatPrice(et.priceCents, et.currency)}`
+              : ""}
           </p>
           {et.description && (
             <p className="mt-3 text-sm whitespace-pre-line text-muted-foreground">
@@ -125,6 +129,7 @@ async function EventPage({ params, searchParams }: PageProps<"/[username]/[event
                 tz={tz}
                 questions={et.questions}
                 reschedule={reschedule}
+                paid={!!et.priceCents && paymentsConfigured()}
                 defaults={prev ? { name: prev.attendeeName, email: prev.attendeeEmail } : undefined}
               />
             </div>

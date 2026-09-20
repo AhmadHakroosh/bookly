@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
+import { formatPrice, paymentsConfigured } from "@/server/payments";
 import { getProfileByUsername, listEventTypes, locationLabel } from "@/server/scheduling";
 import { getCurrentWorkspace } from "@/server/workspace";
 
@@ -45,6 +46,9 @@ async function ProfilePage({ params }: PageProps<"/[username]">) {
               <span className="block font-medium">{e.title}</span>
               <span className="block text-sm text-muted-foreground">
                 {e.durationMin} min · {locationLabel(e.location)}
+                {e.priceCents && paymentsConfigured()
+                  ? ` · ${formatPrice(e.priceCents, e.currency)}`
+                  : ""}
               </span>
               {e.description && (
                 <span className="mt-1 line-clamp-2 block text-sm text-muted-foreground">

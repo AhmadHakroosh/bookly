@@ -44,7 +44,15 @@ const booking = {
     id: str,
     status: {
       type: "string",
-      enum: ["pending", "confirmed", "cancelled", "rescheduled", "completed", "no_show"],
+      enum: [
+        "awaiting_payment",
+        "pending",
+        "confirmed",
+        "cancelled",
+        "rescheduled",
+        "completed",
+        "no_show",
+      ],
     },
     start: { type: "string", format: "date-time" },
     end: { type: "string", format: "date-time" },
@@ -59,6 +67,11 @@ const booking = {
       type: "object",
       nullable: true,
       properties: { id: str, slug: str, title: str },
+    },
+    payment: {
+      type: "object",
+      nullable: true,
+      properties: { status: str, amountCents: { type: "integer" }, currency: nstr },
     },
     rescheduledFromId: nstr,
     cancelledBy: nstr,

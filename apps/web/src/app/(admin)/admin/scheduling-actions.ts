@@ -233,6 +233,14 @@ const eventSchema = z.object({
   questions: z.string().max(5000).default(""),
   requiresConfirmation: z.enum(["on", "off"]).default("off"),
   hidden: z.enum(["on", "off"]).default("off"),
+  remindByText: z.enum(["on", "off"]).default("off"),
+  price: z.coerce.number().min(0).max(100000).default(0),
+  currency: z
+    .string()
+    .trim()
+    .toLowerCase()
+    .regex(/^[a-z]{3}$/, "Currency must be a 3-letter code")
+    .default("usd"),
 });
 
 export async function saveEventType(
@@ -244,6 +252,7 @@ export async function saveEventType(
     ...Object.fromEntries(formData),
     requiresConfirmation: formData.get("requiresConfirmation") ? "on" : "off",
     hidden: formData.get("hidden") ? "on" : "off",
+    remindByText: formData.get("remindByText") ? "on" : "off",
   });
   if (!parsed.success)
     return { error: parsed.error.issues[0]?.message ?? "Please check the form." };
@@ -278,6 +287,9 @@ export async function saveEventType(
       questions: parseQuestions(d.questions),
       requiresConfirmation: d.requiresConfirmation === "on",
       hidden: d.hidden === "on",
+      remindByText: d.remindByText === "on",
+      priceCents: d.price > 0 ? Math.round(d.price * 100) : null,
+      currency: d.price > 0 ? d.currency : null,
     })
     .where(eq(schema.eventTypes.id, d.id));
   refreshWorkspace(ws.id);

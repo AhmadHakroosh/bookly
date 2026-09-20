@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { conferencingAvailability } from "@/server/integrations";
+import { paymentsConfigured } from "@/server/payments";
 import { getEventTypeById, getProfileByUser, listSchedules } from "@/server/scheduling";
 import { requireStaff } from "@/server/session";
 import { getCurrentWorkspace } from "@/server/workspace";
@@ -24,6 +25,7 @@ async function EditEventTypePage({ params }: PageProps<"/admin/event-types/[id]"
   ]);
   return (
     <EventTypeForm
+      paymentsReady={paymentsConfigured()}
       ready={{
         daily: avail.daily,
         google_meet: avail.google_meet,
@@ -54,6 +56,9 @@ async function EditEventTypePage({ params }: PageProps<"/admin/event-types/[id]"
           )
           .join("\n"),
         requiresConfirmation: et.requiresConfirmation,
+        priceCents: et.priceCents ?? 0,
+        currency: et.currency ?? "usd",
+        remindByText: et.remindByText,
         hidden: et.hidden,
       }}
       schedules={schedules.map((s) => ({ id: s.id, name: `${s.name} (${s.timezone})` }))}

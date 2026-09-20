@@ -155,6 +155,10 @@ export function serializeBooking(
       : b.eventTypeId
         ? { id: b.eventTypeId }
         : null,
+    payment:
+      b.paymentStatus && b.amountCents != null
+        ? { status: b.paymentStatus, amountCents: b.amountCents, currency: b.currency }
+        : null,
     rescheduledFromId: b.rescheduledFromId,
     cancelledBy: b.cancelledBy,
     cancelReason: b.cancelReason,

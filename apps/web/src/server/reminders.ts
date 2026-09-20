@@ -3,6 +3,8 @@ import { and, eq, gte, inArray, lte, schema, sql } from "@bookly/db";
 import { sendEmail } from "@bookly/email";
 import { db } from "@/lib/db";
 import { reminderMail } from "@/emails/booking";
+import { notifyHost, sendText } from "./notify";
+import { expireUnpaidBookings } from "./payments";
 import { baseUrl, getProfileByUser } from "./scheduling";
 
 const WINDOWS = [
@@ -50,10 +52,22 @@ export async function sendDueReminders(now = new Date()): Promise<number> {
       };
       const a = reminderMail(ctx, false, w.hours);
       const h = reminderMail(ctx, true, w.hours);
+      const line = `Reminder: ${et?.title ?? "Meeting"} with ${host.displayName} in ${w.hours === 1 ? "1 hour" : `${w.hours} hours`}. ${b.meetingUrl ?? `${baseUrl()}/booking/${b.manageToken}`}`;
       await Promise.all([
         sendEmail({ to: b.attendeeEmail, subject: a.subject, text: a.text, html: a.html }),
         hostUser?.email
           ? sendEmail({ to: hostUser.email, subject: h.subject, text: h.text, html: h.html })
+          : Promise.resolve(),
+        et?.remindByText && b.attendeePhone
+          ? sendText("sms", b.attendeePhone.replace(/[\s()-]/g, ""), line).then((ok) =>
+              ok ? undefined : sendText("whatsapp", b.attendeePhone!.replace(/[\s()-]/g, ""), line),
+            )
+          : Promise.resolve(),
+        w.hours === 1
+          ? notifyHost(b.hostUserId, "reminder1h", {
+              subject: h.subject,
+              text: `${b.attendeeName} · ${et?.title ?? "Meeting"} in 1 hour. ${b.meetingUrl ?? ""}`.trim(),
+            })
           : Promise.resolve(),
       ]).catch((e) => console.error("[reminders]", e));
       await db()
@@ -63,6 +77,7 @@ export async function sendDueReminders(now = new Date()): Promise<number> {
       sent++;
     }
   }
+  await expireUnpaidBookings(now).catch((e) => console.error("[payments] expire failed", e));
   // Mark finished meetings as completed.
   await db()
     .update(schema.bookings)

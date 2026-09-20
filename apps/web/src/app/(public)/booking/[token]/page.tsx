@@ -7,7 +7,8 @@ import { db } from "@/lib/db";
 import { fmtDateTime } from "@/lib/time";
 import { getBookingByToken, getProfileByUser, locationLabel } from "@/server/scheduling";
 import { getCurrentWorkspace } from "@/server/workspace";
-import { cancelByAttendee } from "./actions";
+import { formatPrice } from "@/server/payments";
+import { cancelByAttendee, payNow } from "./actions";
 
 export const metadata: Metadata = { title: "Your booking", robots: { index: false } };
 
@@ -25,15 +26,17 @@ async function BookingPage({ params, searchParams }: PageProps<"/booking/[token]
   const isNew = sp.new === "1";
   const upcoming = b.endAt > new Date();
   const title =
-    b.status === "cancelled"
-      ? "Booking cancelled"
-      : b.status === "rescheduled"
-        ? "Booking rescheduled"
-        : b.status === "pending"
-          ? "Request sent"
-          : isNew
-            ? "You're booked"
-            : "Your booking";
+    b.status === "awaiting_payment"
+      ? "Complete your payment"
+      : b.status === "cancelled"
+        ? "Booking cancelled"
+        : b.status === "rescheduled"
+          ? "Booking rescheduled"
+          : b.status === "pending"
+            ? "Request sent"
+            : isNew
+              ? "You're booked"
+              : "Your booking";
   return (
     <div className="mx-auto w-full max-w-lg px-4 py-16">
       <h1 className="text-2xl font-semibold tracking-tight">{title}</h1>
@@ -41,6 +44,19 @@ async function BookingPage({ params, searchParams }: PageProps<"/booking/[token]
         <p className="mt-1 text-sm text-muted-foreground">
           {host?.displayName} will confirm shortly. You will get an email.
         </p>
+      )}
+      {b.status === "awaiting_payment" && (
+        <div className="mt-4 rounded-xl border p-4 text-sm">
+          <p>
+            This slot is held for you for 30 minutes. Pay{" "}
+            {b.amountCents != null ? formatPrice(b.amountCents, b.currency) : ""} to confirm it.
+          </p>
+          <form action={payNow.bind(null, token)} className="mt-3">
+            <button type="submit" className="rounded-lg bg-foreground px-4 py-2 text-background">
+              Pay now
+            </button>
+          </form>
+        </div>
       )}
       <dl className="mt-8 space-y-3 rounded-xl border p-5 text-sm">
         <div className="flex gap-4">
@@ -65,6 +81,19 @@ async function BookingPage({ params, searchParams }: PageProps<"/booking/[token]
             )}
           </dd>
         </div>
+        {b.paymentStatus && (
+          <div className="flex gap-4">
+            <dt className="w-16 shrink-0 text-muted-foreground">Paid</dt>
+            <dd>
+              {b.amountCents != null ? formatPrice(b.amountCents, b.currency) : ""}
+              {b.paymentStatus === "refunded"
+                ? " · refunded"
+                : b.paymentStatus === "pending"
+                  ? " · payment pending"
+                  : ""}
+            </dd>
+          </div>
+        )}
         <div className="flex gap-4">
           <dt className="w-16 shrink-0 text-muted-foreground">Who</dt>
           <dd>
@@ -72,21 +101,23 @@ async function BookingPage({ params, searchParams }: PageProps<"/booking/[token]
           </dd>
         </div>
       </dl>
-      {b.status !== "cancelled" && b.status !== "rescheduled" && (
-        <div className="mt-6 flex flex-wrap gap-2">
-          <a href={`/booking/${token}/ics`} className="rounded-lg border px-3 py-2 text-sm">
-            Add to calendar (.ics)
-          </a>
-          {upcoming && host && et && (
-            <Link
-              href={`/${host.username}/${et.slug}?reschedule=${token}`}
-              className="rounded-lg border px-3 py-2 text-sm"
-            >
-              Reschedule
-            </Link>
-          )}
-        </div>
-      )}
+      {b.status !== "cancelled" &&
+        b.status !== "rescheduled" &&
+        b.status !== "awaiting_payment" && (
+          <div className="mt-6 flex flex-wrap gap-2">
+            <a href={`/booking/${token}/ics`} className="rounded-lg border px-3 py-2 text-sm">
+              Add to calendar (.ics)
+            </a>
+            {upcoming && host && et && (
+              <Link
+                href={`/${host.username}/${et.slug}?reschedule=${token}`}
+                className="rounded-lg border px-3 py-2 text-sm"
+              >
+                Reschedule
+              </Link>
+            )}
+          </div>
+        )}
       {b.status !== "cancelled" && b.status !== "rescheduled" && upcoming && (
         <details className="mt-8 rounded-xl border p-4">
           <summary className="cursor-pointer text-sm font-medium">Cancel this booking</summary>

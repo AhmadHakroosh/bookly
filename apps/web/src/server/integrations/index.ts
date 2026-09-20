@@ -20,7 +20,14 @@ import { ProviderError } from "./types";
 import { zoom, zoomAccount } from "./zoom";
 
 export { authorizeUrl, isProvider, providerConfigured, redirectUri } from "./oauth";
-export { dailyConfigured, dailyRoomUrl, meetPageUrl } from "./daily";
+export {
+  dailyConfigured,
+  dailyRoomUrl,
+  meetPageUrl,
+  registerDailyWebhook,
+  removeDailyWebhook,
+  verifyDailySignature,
+} from "./daily";
 
 const CALENDARS: Record<"google" | "microsoft", CalendarDriver> = { google, microsoft };
 
