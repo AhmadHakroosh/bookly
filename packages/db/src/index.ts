@@ -10,9 +10,17 @@ const globalForDb = globalThis as unknown as { __booklyPool?: Pool; __booklyDb?:
  * Process-wide Drizzle client over node-postgres. Works for self-host (Docker
  * Postgres), Neon, Supabase, RDS — any Postgres 13+ reachable over TCP.
  */
+/**
+ * `sslmode=prefer|require|verify-ca` are aliases for `verify-full` in pg 8 and will weaken in
+ * pg 9; spell out `verify-full` so behaviour stays the same and the driver stops warning.
+ */
+export function normalizeConnectionString(url: string): string {
+  return url.replace(/([?&])sslmode=(prefer|require|verify-ca)(?=&|$)/, "$1sslmode=verify-full");
+}
+
 export function createDb(connectionString: string): Database {
   if (globalForDb.__booklyDb) return globalForDb.__booklyDb;
-  const pool = new Pool({ connectionString, max: 10 });
+  const pool = new Pool({ connectionString: normalizeConnectionString(connectionString), max: 10 });
   globalForDb.__booklyPool = pool;
   globalForDb.__booklyDb = drizzle(pool, { schema, casing: "snake_case" });
   return globalForDb.__booklyDb;

@@ -31,7 +31,12 @@ const queueDefaults: Record<JobName, undefined> = {
 
 export async function getBoss(): Promise<PgBoss> {
   if (globalForBoss.__booklyBossStarted) return globalForBoss.__booklyBossStarted;
-  const boss = new PgBoss({ connectionString: loadEnv().DATABASE_URL, schema: "pgboss" });
+  // Same SSL-mode normalisation as packages/db (aliases of verify-full, spelled out for pg 9).
+  const connectionString = loadEnv().DATABASE_URL.replace(
+    /([?&])sslmode=(prefer|require|verify-ca)(?=&|$)/,
+    "$1sslmode=verify-full",
+  );
+  const boss = new PgBoss({ connectionString, schema: "pgboss" });
   boss.on("error", (err) => console.error("[jobs]", err));
   globalForBoss.__booklyBoss = boss;
   globalForBoss.__booklyBossStarted = boss.start().then(async () => {
