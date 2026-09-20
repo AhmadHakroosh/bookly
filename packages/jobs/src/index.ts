@@ -11,6 +11,7 @@ type SendOptions = NonNullable<Parameters<PgBoss["send"]>[2]>;
 export type Jobs = {
   "email.send": { to: string; subject: string; text: string; html?: string };
   "booking.reminders": Record<string, never>;
+  "webhooks.retry": Record<string, never>;
   "calendar.sync": { workspaceId: string; connectionId?: string };
 };
 
@@ -24,6 +25,7 @@ const globalForBoss = globalThis as unknown as {
 const queueDefaults: Record<JobName, undefined> = {
   "email.send": undefined,
   "booking.reminders": undefined,
+  "webhooks.retry": undefined,
   "calendar.sync": undefined,
 };
 

@@ -13,6 +13,11 @@ export async function register() {
       await sendDueReminders();
     });
     await schedule("booking.reminders", "*/10 * * * *", {});
+    const { retryDueDeliveries } = await import("@/server/webhooks");
+    await work("webhooks.retry", async () => {
+      await retryDueDeliveries();
+    });
+    await schedule("webhooks.retry", "*/5 * * * *", {});
     console.log("[jobs] worker started");
   } catch (err) {
     console.error("[jobs] failed to start worker", err);

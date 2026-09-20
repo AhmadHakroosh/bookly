@@ -13,3 +13,9 @@ Third of Ahmad's three products (personal site `ahmadhakroosh.com`, **Warqa** bl
 - Providers behind interfaces: `@bookly/email`, `@bookly/storage`, `@bookly/jobs`. Calendar and conferencing providers (K2) follow the same pattern under `src/server/integrations/`.
 - Domains: `_bookly.<host>` TXT verification; `/api/domains/check` gates Caddy on-demand TLS.
 - Self-host first: everything must work with `docker compose up` and no third-party accounts (built-in video via Daily.co is optional).
+
+## Public API & webhooks (K4)
+
+- Routes under `src/app/api/v1/*` use `apiContext(req, scope?)` from `src/server/api.ts` (workspace resolution, key auth, rate limits) and return `json()` / `apiError()`. Add every new route to `openapi.json/route.ts` and `docs/api.md`.
+- Domain events go through `emitEvent()` in `src/server/webhooks.ts` from the booking flow, never from routes directly.
+- `refreshWorkspace()` is safe in actions and route handlers (falls back to background revalidation).

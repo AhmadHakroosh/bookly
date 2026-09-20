@@ -5,10 +5,18 @@ import { revalidatePath, revalidateTag, updateTag } from "next/cache";
 export const workspaceTag = (workspaceId: string) => `workspace:${workspaceId}`;
 export const postTag = (postId: string) => `post:${postId}`;
 
-/** Call from Server Actions: readers see fresh data on the very next request. */
+/**
+ * From Server Actions readers see fresh data on the very next request. Outside actions
+ * (route handlers, jobs) `updateTag` throws, so fall back to stale-while-revalidate.
+ */
 export function refreshWorkspace(workspaceId: string, ...extra: string[]) {
-  updateTag(workspaceTag(workspaceId));
-  for (const t of extra) updateTag(t);
+  try {
+    updateTag(workspaceTag(workspaceId));
+    for (const t of extra) updateTag(t);
+  } catch {
+    revalidateTag(workspaceTag(workspaceId), "max");
+    for (const t of extra) revalidateTag(t, "max");
+  }
   revalidatePath("/", "layout");
 }
 

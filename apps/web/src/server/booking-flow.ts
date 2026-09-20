@@ -11,6 +11,8 @@ import {
 } from "@/emails/booking";
 import { buildIcs } from "./ics";
 import { deprovisionBooking, provisionBooking } from "./integrations";
+import { serializeBooking } from "./api";
+import { emitEvent } from "./webhooks";
 import { refreshWorkspace } from "./cache";
 import { baseUrl, getProfileByUser, locationLabel, newToken, slotIsBookable } from "./scheduling";
 
@@ -134,6 +136,13 @@ export async function createBooking(
 
   if (booking!.status === "confirmed") booking = await provision(workspace, booking!, eventType);
   await notifyCreated(workspace, booking!, eventType);
+  const payload = { booking: serializeBooking(booking!, { eventType }) };
+  emitEvent(workspace.id, "booking.created", payload);
+  if (rescheduledFromId)
+    emitEvent(workspace.id, "booking.rescheduled", {
+      ...payload,
+      previousBookingId: rescheduledFromId,
+    });
   refreshWorkspace(workspace.id);
   return booking!;
 }
@@ -185,6 +194,9 @@ export async function confirmBooking(workspace: Workspace, bookingId: string) {
     ? await db().query.eventTypes.findFirst({ where: eq(schema.eventTypes.id, b.eventTypeId) })
     : null;
   updated = await provision(workspace, updated!, et ?? null);
+  emitEvent(workspace.id, "booking.confirmed", {
+    booking: serializeBooking(updated!, { eventType: et ?? null }),
+  });
   const ctx = await mailCtx(updated!, et ?? null, workspace);
   const a = attendeeConfirmation(ctx);
   await sendEmail({
@@ -223,6 +235,9 @@ export async function cancelBooking(
   const et = b.eventTypeId
     ? await db().query.eventTypes.findFirst({ where: eq(schema.eventTypes.id, b.eventTypeId) })
     : null;
+  emitEvent(workspace.id, "booking.cancelled", {
+    booking: serializeBooking(updated!, { eventType: et ?? null }),
+  });
   const ctx = await mailCtx(updated!, et ?? null, workspace);
   const ics = icsFor(ctx, "CANCEL", 2);
   const hostTo = await hostEmail(b.hostUserId);
@@ -252,6 +267,34 @@ export async function cancelBooking(
   ]).catch((e) => console.error("[booking] cancel email failed", e));
   refreshWorkspace(workspace.id);
   return updated!;
+}
+
+/** Moves a booking to a new start: creates the replacement and marks the old one rescheduled. */
+export async function rescheduleBooking(
+  workspace: Workspace,
+  bookingId: string,
+  start: Date,
+  timezone?: string | null,
+): Promise<Booking> {
+  const prev = await db().query.bookings.findFirst({
+    where: and(eq(schema.bookings.id, bookingId), eq(schema.bookings.workspaceId, workspace.id)),
+  });
+  if (!prev || !["confirmed", "pending"].includes(prev.status))
+    throw new BookingError("Only upcoming bookings can be rescheduled.");
+  const et = prev.eventTypeId
+    ? await db().query.eventTypes.findFirst({ where: eq(schema.eventTypes.id, prev.eventTypeId) })
+    : null;
+  if (!et) throw new BookingError("The event type no longer exists.");
+  return createBooking(workspace, et, {
+    start,
+    timezone: timezone ?? prev.timezone,
+    name: prev.attendeeName,
+    email: prev.attendeeEmail,
+    phone: prev.attendeePhone,
+    notes: prev.notes,
+    answers: prev.answers,
+    rescheduleToken: prev.manageToken,
+  });
 }
 
 export async function bookingIcs(booking: Booking, workspace: Workspace) {

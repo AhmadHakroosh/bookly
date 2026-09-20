@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { sendDueReminders } from "@/server/reminders";
+import { retryDueDeliveries } from "@/server/webhooks";
 
 /** Serverless alternative to the pg-boss worker: reminders + housekeeping. Protect with CRON_SECRET. */
 export async function GET(req: Request) {
@@ -8,5 +9,6 @@ export async function GET(req: Request) {
   if (req.headers.get("authorization") !== `Bearer ${secret}`)
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const reminders = await sendDueReminders();
-  return NextResponse.json({ ok: true, reminders });
+  const retried = await retryDueDeliveries();
+  return NextResponse.json({ ok: true, reminders, retried });
 }

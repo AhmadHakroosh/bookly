@@ -24,6 +24,7 @@ const GROUPS: { label: string; items: { href: string; label: string }[] }[] = [
     label: "Workspace",
     items: [
       { href: "/admin/team", label: "Team" },
+      { href: "/admin/api", label: "API & webhooks" },
       { href: "/admin/domains", label: "Domains" },
       { href: "/admin/settings", label: "Settings" },
     ],
