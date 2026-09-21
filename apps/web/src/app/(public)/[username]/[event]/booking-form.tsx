@@ -13,6 +13,8 @@ type Props = {
   reschedule?: string;
   defaults?: { name?: string; email?: string };
   paid?: boolean;
+  /** Occurrences this booking reserves (recurring event types). */
+  sessions?: number;
 };
 
 export function BookingForm({
@@ -24,6 +26,7 @@ export function BookingForm({
   reschedule,
   defaults,
   paid = false,
+  sessions = 1,
 }: Props) {
   const [state, action, pending] = useActionState(book, {} as BookState);
   const field =
@@ -128,7 +131,9 @@ export function BookingForm({
             ? "Confirm new time"
             : paid
               ? "Continue to payment"
-              : "Confirm booking"}
+              : sessions > 1
+                ? `Book ${sessions} sessions`
+                : "Confirm booking"}
       </button>
     </form>
   );

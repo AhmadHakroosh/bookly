@@ -75,7 +75,10 @@ export async function POST(req: Request) {
       notes: d.notes,
       answers,
     });
-    return json(serializeBooking(b, { eventType: et }), { status: 201 });
+    return json(serializeBooking(b, { eventType: et }), {
+      status: 201,
+      meta: b.skipped?.length ? { skipped: b.skipped.map((d) => d.toISOString()) } : undefined,
+    });
   } catch (e) {
     if (e instanceof BookingError) return apiError(e.message, 409, "unavailable");
     console.error("[api] create booking failed", e);

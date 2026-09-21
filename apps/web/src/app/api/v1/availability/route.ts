@@ -1,6 +1,6 @@
 import { apiContext, apiError, json, options } from "@/server/api";
 import { addDays, isValidTimezone, todayIn } from "@/lib/time";
-import { availableSlots, getEventType, getProfileByUsername } from "@/server/scheduling";
+import { availableSlots, getEventType, getProfileByUsername, slotSeats } from "@/server/scheduling";
 
 export const OPTIONS = options;
 
@@ -30,7 +30,20 @@ export async function GET(req: Request) {
   if (addDays(from, MAX_RANGE_DAYS) < to)
     return apiError(`Range must be at most ${MAX_RANGE_DAYS} days`, 400, "bad_request");
   const slots = await availableSlots(et, tz, from, to);
-  return json(slots, {
-    meta: { username, event, timezone: tz, from, to, durationMin: et.durationMin },
+  const seats = await slotSeats(
+    et,
+    slots.flatMap((d) => d.slots),
+  );
+  const data =
+    et.seats > 1
+      ? slots.map((d) => ({
+          ...d,
+          seatsLeft: Object.fromEntries(
+            d.slots.map((s) => [s.toISOString(), seats.get(s.getTime()) ?? et.seats]),
+          ),
+        }))
+      : slots;
+  return json(data, {
+    meta: { username, event, timezone: tz, from, to, durationMin: et.durationMin, seats: et.seats },
   });
 }

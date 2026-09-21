@@ -1,5 +1,5 @@
 import "server-only";
-import { and, eq, schema } from "@bookly/db";
+import { and, asc, eq, gt, inArray, ne, schema } from "@bookly/db";
 import type { Booking, EventType, Profile, Workspace } from "@bookly/db/schema";
 import { sendEmail } from "@bookly/email";
 import { db } from "@/lib/db";
@@ -10,13 +10,14 @@ import {
   type BookingMailCtx,
 } from "@/emails/booking";
 import { fmtDateTime } from "@/lib/time";
-import { buildIcs } from "./ics";
+import { buildIcsCalendar, type IcsEvent } from "./ics";
 import { deprovisionBooking, provisionBooking } from "./integrations";
 import { serializeBooking } from "./api";
 import { notifyHost } from "./notify";
 import { isPaid, paymentsConfigured, refundBooking } from "./payments";
 import { emitEvent } from "./webhooks";
 import { refreshWorkspace } from "./cache";
+import { occurrences, recurrenceOf } from "./recurrence";
 import { baseUrl, getProfileByUser, locationLabel, newToken, pickHost } from "./scheduling";
 
 export type BookingInput = {
@@ -32,6 +33,29 @@ export type BookingInput = {
 
 export class BookingError extends Error {}
 
+/** What `createBooking` returns: the (first) booking plus, for a series, the dates that could not be booked. */
+export type BookingResult = Booking & { skipped?: Date[] };
+
+/** Every booking of a series, in order (cancelled ones included so indexes stay meaningful). */
+export async function bookingSeries(booking: Pick<Booking, "seriesId">): Promise<Booking[]> {
+  if (!booking.seriesId) return [];
+  return db()
+    .select()
+    .from(schema.bookings)
+    .where(eq(schema.bookings.seriesId, booking.seriesId))
+    .orderBy(asc(schema.bookings.seriesIndex));
+}
+
+async function seriesCtx(booking: Booking) {
+  if (!booking.seriesId) return undefined;
+  const all = (await bookingSeries(booking)).filter((b) => b.status !== "cancelled");
+  return {
+    index: booking.seriesIndex ?? 1,
+    count: booking.seriesCount ?? all.length,
+    dates: all.map((b) => b.startAt),
+  };
+}
+
 async function mailCtx(
   booking: Booking,
   eventType: EventType | null,
@@ -41,9 +65,13 @@ async function mailCtx(
   return { booking, eventType, host, workspaceName: workspace.name, baseUrl: baseUrl() };
 }
 
-function icsFor(ctx: BookingMailCtx, method: "REQUEST" | "CANCEL", sequence = 0) {
-  const b = ctx.booking;
-  return buildIcs({
+function icsEvent(
+  ctx: BookingMailCtx,
+  b: Booking,
+  method: "REQUEST" | "CANCEL",
+  sequence = 0,
+): IcsEvent {
+  return {
     uid: `${b.id}@bookly`,
     start: b.startAt,
     end: b.endAt,
@@ -59,7 +87,18 @@ function icsFor(ctx: BookingMailCtx, method: "REQUEST" | "CANCEL", sequence = 0)
     method,
     sequence,
     status: method === "CANCEL" ? "CANCELLED" : "CONFIRMED",
-  });
+  };
+}
+
+/** The invite for a booking; for a series every (non-cancelled) occurrence is included. */
+async function icsFor(ctx: BookingMailCtx, method: "REQUEST" | "CANCEL", sequence = 0) {
+  const members = ctx.series
+    ? (await bookingSeries(ctx.booking)).filter((b) => b.status !== "cancelled")
+    : [ctx.booking];
+  return buildIcsCalendar(
+    members.map((b) => icsEvent(ctx, b, method, sequence)),
+    method,
+  );
 }
 
 async function hostEmail(userId: string) {
@@ -70,8 +109,43 @@ async function hostEmail(userId: string) {
   return u?.email ?? null;
 }
 
-/** Creates the meeting link + calendar events and stores them on the booking (best-effort). */
+/** Another attendee's booking in the same group session, if the session already exists. */
+async function sessionSibling(booking: Booking, eventType: EventType | null) {
+  if (!eventType || eventType.seats <= 1) return null;
+  return (
+    (await db().query.bookings.findFirst({
+      where: and(
+        eq(schema.bookings.eventTypeId, eventType.id),
+        eq(schema.bookings.hostUserId, booking.hostUserId),
+        eq(schema.bookings.startAt, booking.startAt),
+        eq(schema.bookings.status, "confirmed"),
+        ne(schema.bookings.id, booking.id),
+      ),
+      orderBy: asc(schema.bookings.createdAt),
+    })) ?? null
+  );
+}
+
+/**
+ * Creates the meeting link + calendar events and stores them on the booking (best-effort).
+ * Group sessions share one meeting: later attendees copy the first booking's link and the
+ * calendar event stays owned by that first booking.
+ */
 async function provision(workspace: Workspace, booking: Booking, eventType: EventType | null) {
+  const sibling = await sessionSibling(booking, eventType);
+  if (sibling?.meetingUrl) {
+    const [updated] = await db()
+      .update(schema.bookings)
+      .set({
+        meetingUrl: sibling.meetingUrl,
+        meetingProvider: sibling.meetingProvider,
+        meetingRef: sibling.meetingRef,
+        location: sibling.location,
+      })
+      .where(eq(schema.bookings.id, booking.id))
+      .returning();
+    return updated ?? booking;
+  }
   const host = await getProfileByUser(workspace.id, booking.hostUserId);
   const email = await hostEmail(booking.hostUserId);
   const p = await provisionBooking(booking, eventType, {
@@ -86,20 +160,39 @@ async function provision(workspace: Workspace, booking: Booking, eventType: Even
   return updated ?? booking;
 }
 
-/** Validates the slot, stores the booking, provisions meeting/calendar, and emails both sides. */
+/**
+ * Plans the occurrences of a recurring event type from `start`: which dates can be booked and
+ * which are skipped because the host is busy. Regular event types plan a single occurrence.
+ */
+export async function planSeries(
+  eventType: EventType,
+  attendeeTz: string,
+  start: Date,
+): Promise<{ start: Date; hostUserId: string | null }[]> {
+  const rule = recurrenceOf(eventType.recurrence);
+  const starts = rule ? occurrences(start, attendeeTz, rule) : [start];
+  return Promise.all(
+    starts.map(async (s, i) => ({
+      start: s,
+      hostUserId: await pickHost(eventType, attendeeTz, s, { horizon: i === 0 }),
+    })),
+  );
+}
+
+/**
+ * Validates the slot, stores the booking, provisions meeting/calendar, and emails both sides.
+ * Recurring event types book the whole series at once (occurrences the host cannot take are
+ * skipped and reported via `skipped`); reschedules and paid bookings stay single.
+ */
 export async function createBooking(
   workspace: Workspace,
   eventType: EventType,
   input: BookingInput,
-): Promise<Booking> {
-  const hostUserId = await pickHost(eventType, input.timezone, input.start);
-  if (!hostUserId)
-    throw new BookingError("That time is no longer available. Please pick another slot.");
+): Promise<BookingResult> {
   for (const q of eventType.questions) {
     if (q.required && !input.answers[q.id]?.trim())
       throw new BookingError(`Please answer: ${q.label}`);
   }
-  const end = new Date(input.start.getTime() + eventType.durationMin * 60_000);
   const needsPayment = isPaid(eventType) && paymentsConfigured();
   const status: Booking["status"] = needsPayment
     ? "awaiting_payment"
@@ -107,47 +200,70 @@ export async function createBooking(
       ? "pending"
       : "confirmed";
 
-  let rescheduledFromId: string | null = null;
+  let prev: Booking | null = null;
   if (input.rescheduleToken) {
-    const prev = await db().query.bookings.findFirst({
-      where: eq(schema.bookings.manageToken, input.rescheduleToken),
-    });
-    if (prev && prev.status !== "cancelled") {
-      rescheduledFromId = prev.id;
-      await db()
-        .update(schema.bookings)
-        .set({ status: "rescheduled" })
-        .where(eq(schema.bookings.id, prev.id));
-      await deprovisionBooking(prev);
-    }
+    prev =
+      (await db().query.bookings.findFirst({
+        where: eq(schema.bookings.manageToken, input.rescheduleToken),
+      })) ?? null;
+    if (prev?.status === "cancelled") prev = null;
   }
 
-  const [booking] = await db()
+  const single = !!prev || needsPayment || !recurrenceOf(eventType.recurrence);
+  const plan = single
+    ? [{ start: input.start, hostUserId: await pickHost(eventType, input.timezone, input.start) }]
+    : await planSeries(eventType, input.timezone, input.start);
+  if (!plan[0]?.hostUserId)
+    throw new BookingError("That time is no longer available. Please pick another slot.");
+  const bookable = plan.filter((p): p is { start: Date; hostUserId: string } => !!p.hostUserId);
+  const skipped = plan.filter((p) => !p.hostUserId).map((p) => p.start);
+
+  const rescheduledFromId = prev?.id ?? null;
+  if (prev) {
+    await db()
+      .update(schema.bookings)
+      .set({ status: "rescheduled" })
+      .where(eq(schema.bookings.id, prev.id));
+    await deprovisionBooking(prev);
+  }
+
+  // A reschedule keeps its place in the series; a new series gets a fresh id.
+  const seriesId = prev?.seriesId ?? (bookable.length > 1 ? crypto.randomUUID() : null);
+  const rows = await db()
     .insert(schema.bookings)
-    .values({
-      workspaceId: workspace.id,
-      eventTypeId: eventType.id,
-      hostUserId,
-      startAt: input.start,
-      endAt: end,
-      timezone: input.timezone,
-      attendeeName: input.name.trim().slice(0, 120),
-      attendeeEmail: input.email.trim().toLowerCase(),
-      attendeePhone: input.phone?.trim() || null,
-      notes: input.notes?.trim() || null,
-      answers: input.answers,
-      status,
-      manageToken: newToken(),
-      rescheduledFromId,
-      location: eventType.location,
-      amountCents: needsPayment ? eventType.priceCents : null,
-      currency: needsPayment ? (eventType.currency ?? "usd") : null,
-    })
+    .values(
+      bookable.map((p, i) => ({
+        workspaceId: workspace.id,
+        eventTypeId: eventType.id,
+        hostUserId: p.hostUserId,
+        startAt: p.start,
+        endAt: new Date(p.start.getTime() + eventType.durationMin * 60_000),
+        timezone: input.timezone,
+        attendeeName: input.name.trim().slice(0, 120),
+        attendeeEmail: input.email.trim().toLowerCase(),
+        attendeePhone: input.phone?.trim() || null,
+        notes: input.notes?.trim() || null,
+        answers: input.answers,
+        status,
+        manageToken: newToken(),
+        rescheduledFromId,
+        seriesId,
+        seriesIndex: prev?.seriesIndex ?? (seriesId ? i + 1 : null),
+        seriesCount: prev?.seriesCount ?? (seriesId ? bookable.length : null),
+        location: eventType.location,
+        amountCents: needsPayment ? eventType.priceCents : null,
+        currency: needsPayment ? (eventType.currency ?? "usd") : null,
+      })),
+    )
     .returning();
+  const first = rows[0]!;
 
   // Paid bookings are finalised by the Stripe webhook (see finalizeBooking).
-  if (needsPayment) return booking!;
-  return finalizeBooking(workspace, booking!, eventType, rescheduledFromId);
+  if (needsPayment) return first;
+  // Every occurrence is provisioned and announced to webhooks; people are emailed once.
+  const finalized = await finalizeBooking(workspace, first, eventType, rescheduledFromId);
+  for (const b of rows.slice(1)) await finalizeBooking(workspace, b, eventType, null, false);
+  return { ...finalized, skipped };
 }
 
 /**
@@ -159,6 +275,7 @@ export async function finalizeBooking(
   booking: Booking,
   eventType: EventType,
   rescheduledFromId: string | null = booking.rescheduledFromId,
+  notify = true,
 ): Promise<Booking> {
   if (booking.status === "awaiting_payment") {
     const [b] = await db()
@@ -169,15 +286,18 @@ export async function finalizeBooking(
     booking = b!;
   }
   if (booking.status === "confirmed") booking = await provision(workspace, booking, eventType);
-  await notifyCreated(workspace, booking, eventType);
-  const when = fmtDateTime(
-    booking.startAt,
-    (await getProfileByUser(workspace.id, booking.hostUserId))?.timezone ?? workspace.timezone,
-  );
-  void notifyHost(booking.hostUserId, "onBooking", {
-    subject: `New booking: ${eventType.title}`,
-    text: `${booking.attendeeName} booked ${eventType.title} on ${when}${booking.status === "pending" ? " (needs your confirmation)" : ""}. ${baseUrl()}/admin/bookings`,
-  });
+  if (notify) {
+    await notifyCreated(workspace, booking, eventType);
+    const when = fmtDateTime(
+      booking.startAt,
+      (await getProfileByUser(workspace.id, booking.hostUserId))?.timezone ?? workspace.timezone,
+    );
+    const series = booking.seriesCount ? ` (${booking.seriesCount} sessions)` : "";
+    void notifyHost(booking.hostUserId, "onBooking", {
+      subject: `New booking: ${eventType.title}`,
+      text: `${booking.attendeeName} booked ${eventType.title}${series} on ${when}${booking.status === "pending" ? " (needs your confirmation)" : ""}. ${baseUrl()}/admin/bookings`,
+    });
+  }
   const payload = { booking: serializeBooking(booking, { eventType }) };
   emitEvent(workspace.id, "booking.created", payload);
   if (rescheduledFromId)
@@ -190,8 +310,11 @@ export async function finalizeBooking(
 }
 
 async function notifyCreated(workspace: Workspace, booking: Booking, eventType: EventType | null) {
-  const ctx = await mailCtx(booking, eventType, workspace);
-  const ics = icsFor(ctx, "REQUEST");
+  const ctx = {
+    ...(await mailCtx(booking, eventType, workspace)),
+    series: await seriesCtx(booking),
+  };
+  const ics = await icsFor(ctx, "REQUEST");
   const a = attendeeConfirmation(ctx);
   const h = hostNotification(ctx);
   const hostTo = await hostEmail(booking.hostUserId);
@@ -249,7 +372,7 @@ export async function confirmBooking(workspace: Workspace, bookingId: string) {
     attachments: [
       {
         filename: "invite.ics",
-        content: icsFor(ctx, "REQUEST", 1),
+        content: await icsFor(ctx, "REQUEST", 1),
         contentType: "text/calendar; method=REQUEST",
       },
     ],
@@ -258,11 +381,17 @@ export async function confirmBooking(workspace: Workspace, bookingId: string) {
   return updated!;
 }
 
+/**
+ * Cancels one booking. `opts.quiet` skips the emails and host ping (used when a whole series is
+ * cancelled and one summary goes out instead). A group session's calendar event moves to the
+ * next attendee instead of being deleted while others are still coming.
+ */
 export async function cancelBooking(
   workspace: Workspace,
   bookingId: string,
   by: "attendee" | "host",
   reason?: string | null,
+  opts: { quiet?: boolean } = {},
 ) {
   const b = await db().query.bookings.findFirst({
     where: and(eq(schema.bookings.id, bookingId), eq(schema.bookings.workspaceId, workspace.id)),
@@ -273,21 +402,31 @@ export async function cancelBooking(
     .set({ status: "cancelled", cancelledBy: by, cancelReason: reason?.trim() || null })
     .where(eq(schema.bookings.id, b.id))
     .returning();
-  await deprovisionBooking(b);
+  const et = b.eventTypeId
+    ? await db().query.eventTypes.findFirst({ where: eq(schema.eventTypes.id, b.eventTypeId) })
+    : null;
+  const heir = Object.keys(b.externalEventIds).length ? await sessionSibling(b, et ?? null) : null;
+  if (heir) {
+    await db()
+      .update(schema.bookings)
+      .set({ externalEventIds: b.externalEventIds })
+      .where(eq(schema.bookings.id, heir.id));
+  } else {
+    await deprovisionBooking(b);
+  }
   if (b.paymentStatus === "paid") await refundBooking(b);
+  emitEvent(workspace.id, "booking.cancelled", {
+    booking: serializeBooking(updated!, { eventType: et ?? null }),
+  });
+  refreshWorkspace(workspace.id);
+  if (opts.quiet) return updated!;
   if (by === "attendee")
     void notifyHost(b.hostUserId, "onCancel", {
       subject: "Booking cancelled",
       text: `${b.attendeeName} cancelled their booking on ${fmtDateTime(b.startAt, workspace.timezone)}${reason ? `: ${reason}` : ""}.`,
     });
-  const et = b.eventTypeId
-    ? await db().query.eventTypes.findFirst({ where: eq(schema.eventTypes.id, b.eventTypeId) })
-    : null;
-  emitEvent(workspace.id, "booking.cancelled", {
-    booking: serializeBooking(updated!, { eventType: et ?? null }),
-  });
   const ctx = await mailCtx(updated!, et ?? null, workspace);
-  const ics = icsFor(ctx, "CANCEL", 2);
+  const ics = await icsFor(ctx, "CANCEL", 2);
   const hostTo = await hostEmail(b.hostUserId);
   const a = cancellationMail(ctx, false);
   const h = cancellationMail(ctx, true);
@@ -313,8 +452,81 @@ export async function cancelBooking(
         })
       : Promise.resolve(),
   ]).catch((e) => console.error("[booking] cancel email failed", e));
-  refreshWorkspace(workspace.id);
   return updated!;
+}
+
+/**
+ * Cancels every upcoming occurrence of a series from `booking` onwards, with one summary email
+ * to each side and one host ping.
+ */
+export async function cancelSeries(
+  workspace: Workspace,
+  booking: Booking,
+  by: "attendee" | "host",
+  reason?: string | null,
+): Promise<Booking[]> {
+  if (!booking.seriesId) {
+    const one = await cancelBooking(workspace, booking.id, by, reason);
+    return one ? [one] : [];
+  }
+  const targets = await db()
+    .select()
+    .from(schema.bookings)
+    .where(
+      and(
+        eq(schema.bookings.seriesId, booking.seriesId),
+        eq(schema.bookings.workspaceId, workspace.id),
+        inArray(schema.bookings.status, ["confirmed", "pending"]),
+        gt(schema.bookings.endAt, new Date()),
+      ),
+    )
+    .orderBy(asc(schema.bookings.startAt));
+  const cancelled: Booking[] = [];
+  for (const t of targets) {
+    const c = await cancelBooking(workspace, t.id, by, reason, { quiet: true });
+    if (c) cancelled.push(c);
+  }
+  if (!cancelled.length) return [];
+  const first = cancelled[0]!;
+  const et = first.eventTypeId
+    ? await db().query.eventTypes.findFirst({ where: eq(schema.eventTypes.id, first.eventTypeId) })
+    : null;
+  const ctx: BookingMailCtx = {
+    ...(await mailCtx(first, et ?? null, workspace)),
+    series: {
+      index: first.seriesIndex ?? 1,
+      count: first.seriesCount ?? cancelled.length,
+      dates: cancelled.map((c) => c.startAt),
+    },
+  };
+  const ics = buildIcsCalendar(
+    cancelled.map((c) => icsEvent(ctx, c, "CANCEL", 2)),
+    "CANCEL",
+  );
+  const hostTo = await hostEmail(first.hostUserId);
+  const a = cancellationMail(ctx, false);
+  const h = cancellationMail(ctx, true);
+  const attachments = [
+    { filename: "cancel.ics", content: ics, contentType: "text/calendar; method=CANCEL" },
+  ];
+  await Promise.all([
+    sendEmail({
+      to: first.attendeeEmail,
+      subject: a.subject,
+      text: a.text,
+      html: a.html,
+      attachments,
+    }),
+    hostTo
+      ? sendEmail({ to: hostTo, subject: h.subject, text: h.text, html: h.html, attachments })
+      : Promise.resolve(),
+  ]).catch((e) => console.error("[booking] series cancel email failed", e));
+  if (by === "attendee")
+    void notifyHost(first.hostUserId, "onCancel", {
+      subject: "Series cancelled",
+      text: `${first.attendeeName} cancelled ${cancelled.length} remaining ${et?.title ?? "sessions"}${reason ? `: ${reason}` : ""}.`,
+    });
+  return cancelled;
 }
 
 /** Moves a booking to a new start: creates the replacement and marks the old one rescheduled. */
@@ -351,6 +563,9 @@ export async function bookingIcs(booking: Booking, workspace: Workspace) {
         where: eq(schema.eventTypes.id, booking.eventTypeId),
       })
     : null;
-  const ctx = await mailCtx(booking, et ?? null, workspace);
+  const ctx = {
+    ...(await mailCtx(booking, et ?? null, workspace)),
+    series: await seriesCtx(booking),
+  };
   return icsFor(ctx, booking.status === "cancelled" ? "CANCEL" : "REQUEST");
 }

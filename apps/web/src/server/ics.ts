@@ -33,11 +33,24 @@ const fold = (line: string) => {
 };
 
 export function buildIcs(ev: IcsEvent): string {
+  return buildIcsCalendar([ev], ev.method ?? "REQUEST");
+}
+
+/** One calendar holding several events (a recurring series ships every occurrence explicitly). */
+export function buildIcsCalendar(events: IcsEvent[], method: "REQUEST" | "CANCEL"): string {
   const lines = [
     "BEGIN:VCALENDAR",
     "VERSION:2.0",
     "PRODID:-//Bookly//Scheduling//EN",
-    `METHOD:${ev.method ?? "REQUEST"}`,
+    `METHOD:${method}`,
+  ];
+  for (const ev of events) lines.push(...eventLines(ev));
+  lines.push("END:VCALENDAR");
+  return lines.map(fold).join("\r\n") + "\r\n";
+}
+
+function eventLines(ev: IcsEvent): string[] {
+  const lines = [
     "BEGIN:VEVENT",
     `UID:${ev.uid}`,
     `DTSTAMP:${fmt(new Date())}`,
@@ -54,6 +67,6 @@ export function buildIcs(ev: IcsEvent): string {
     lines.push(`ORGANIZER;CN=${esc(ev.organizer.name)}:mailto:${ev.organizer.email}`);
   for (const a of ev.attendees ?? [])
     lines.push(`ATTENDEE;CN=${esc(a.name)};ROLE=REQ-PARTICIPANT;RSVP=TRUE:mailto:${a.email}`);
-  lines.push("END:VEVENT", "END:VCALENDAR");
-  return lines.map(fold).join("\r\n") + "\r\n";
+  lines.push("END:VEVENT");
+  return lines;
 }

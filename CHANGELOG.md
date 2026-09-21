@@ -2,6 +2,13 @@
 
 All notable changes are listed here. The format follows [Keep a Changelog](https://keepachangelog.com/) and versions follow [SemVer](https://semver.org/).
 
+## [Unreleased]
+
+### Added
+
+- Group sessions: `seats` per event type; a slot stays bookable until full, attendees share one meeting link, seats left shown on the booking page and in the API.
+- Recurring bookings: event types can repeat daily, weekly or monthly for 2–52 sessions; one booking reserves the series, with per-session manage links and "cancel remaining" (migration 0007).
+
 ## [0.1.0] - 2026-09-21
 
 First public release.

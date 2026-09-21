@@ -9,6 +9,7 @@ import { hhmmToMin, isValidTimezone } from "@/lib/time";
 import { cancelBooking, confirmBooking } from "@/server/booking-flow";
 import { refreshWorkspace } from "@/server/cache";
 import { parseQuestions, parseQuestionsJson, parseReminders } from "@/server/questions";
+import { MAX_OCCURRENCES } from "@/server/recurrence";
 import { ensureDefaultSchedule, getProfileByUser } from "@/server/scheduling";
 import { assertFeature, assertWithinLimit, LimitError } from "@/server/limits";
 import { requireStaff } from "@/server/session";
@@ -244,6 +245,11 @@ const eventSchema = z.object({
   followUpSubject: z.string().trim().max(200).default(""),
   followUpBody: z.string().trim().max(5000).default(""),
   assignment: z.enum(["single", "round_robin", "collective"]).default("single"),
+  seats: z.coerce.number().int().min(1).max(500).default(1),
+  recurEnabled: z.enum(["on", "off"]).default("off"),
+  recurFreq: z.enum(["daily", "weekly", "monthly"]).default("weekly"),
+  recurInterval: z.coerce.number().int().min(1).max(12).default(1),
+  recurCount: z.coerce.number().int().min(2).max(MAX_OCCURRENCES).default(4),
   requiresConfirmation: z.enum(["on", "off"]).default("off"),
   hidden: z.enum(["on", "off"]).default("off"),
   remindByText: z.enum(["on", "off"]).default("off"),
@@ -267,6 +273,7 @@ export async function saveEventType(
     hidden: formData.get("hidden") ? "on" : "off",
     remindByText: formData.get("remindByText") ? "on" : "off",
     followUpEnabled: formData.get("followUpEnabled") ? "on" : "off",
+    recurEnabled: formData.get("recurEnabled") ? "on" : "off",
   });
   const hostUserIds = formData.getAll("hostUserIds").map(String).slice(0, 20);
   if (!parsed.success)
@@ -283,6 +290,8 @@ export async function saveEventType(
   });
   if (clash && clash.id !== d.id) slug = `${slug}-${d.id.slice(0, 4)}`;
   const location: EventLocation = { type: d.locationType, value: d.locationValue || undefined };
+  if (d.recurEnabled === "on" && d.price > 0)
+    return { error: "Recurring bookings are not available for paid event types yet." };
   try {
     if (d.price > 0) assertFeature(ws, "payments");
     if (d.assignment !== "single") assertFeature(ws, "teamScheduling");
@@ -324,6 +333,11 @@ export async function saveEventType(
       },
       assignment: d.assignment,
       hostUserIds: d.assignment === "single" ? [] : hostUserIds,
+      seats: d.seats,
+      recurrence:
+        d.recurEnabled === "on"
+          ? { enabled: true, freq: d.recurFreq, interval: d.recurInterval, count: d.recurCount }
+          : {},
       requiresConfirmation: d.requiresConfirmation === "on",
       hidden: d.hidden === "on",
       remindByText: d.remindByText === "on",

@@ -5,10 +5,11 @@ import { Suspense } from "react";
 import { eq, schema } from "@bookly/db";
 import { db } from "@/lib/db";
 import { fmtDateTime } from "@/lib/time";
+import { bookingSeries } from "@/server/booking-flow";
 import { getBookingByToken, getProfileByUser, locationLabel } from "@/server/scheduling";
 import { getCurrentWorkspace } from "@/server/workspace";
 import { formatPrice } from "@/server/payments";
-import { cancelByAttendee, payNow } from "./actions";
+import { cancelByAttendee, cancelRemainingByAttendee, payNow } from "./actions";
 
 export const metadata: Metadata = { title: "Your booking", robots: { index: false } };
 
@@ -24,7 +25,12 @@ async function BookingPage({ params, searchParams }: PageProps<"/booking/[token]
       : null,
   ]);
   const isNew = sp.new === "1";
+  const skipped = Number(sp.skipped) || 0;
   const upcoming = b.endAt > new Date();
+  const series = b.seriesId ? await bookingSeries(b) : [];
+  const remaining = series.filter(
+    (s) => s.endAt > new Date() && (s.status === "confirmed" || s.status === "pending"),
+  );
   const title =
     b.status === "awaiting_payment"
       ? "Complete your payment"
@@ -43,6 +49,12 @@ async function BookingPage({ params, searchParams }: PageProps<"/booking/[token]
       {b.status === "pending" && (
         <p className="mt-1 text-sm text-muted-foreground">
           {host?.displayName} will confirm shortly. You will get an email.
+        </p>
+      )}
+      {isNew && skipped > 0 && (
+        <p className="mt-2 rounded-lg bg-muted p-3 text-sm">
+          {skipped} of the repeating dates {skipped === 1 ? "was" : "were"} skipped because{" "}
+          {host?.displayName ?? "the host"} is busy then. The sessions below are booked.
         </p>
       )}
       {b.status === "awaiting_payment" && (
@@ -94,6 +106,14 @@ async function BookingPage({ params, searchParams }: PageProps<"/booking/[token]
             </dd>
           </div>
         )}
+        {b.seriesCount && (
+          <div className="flex gap-4">
+            <dt className="w-16 shrink-0 text-muted-foreground">Series</dt>
+            <dd>
+              Session {b.seriesIndex} of {b.seriesCount}
+            </dd>
+          </div>
+        )}
         <div className="flex gap-4">
           <dt className="w-16 shrink-0 text-muted-foreground">Who</dt>
           <dd>
@@ -138,6 +158,47 @@ async function BookingPage({ params, searchParams }: PageProps<"/booking/[token]
       )}
       {b.status === "cancelled" && b.cancelReason && (
         <p className="mt-4 text-sm text-muted-foreground">Reason: {b.cancelReason}</p>
+      )}
+      {series.length > 1 && (
+        <section className="mt-8">
+          <h2 className="text-sm font-medium">All sessions in this series</h2>
+          <ol className="mt-2 divide-y rounded-xl border text-sm">
+            {series.map((s) => (
+              <li key={s.id} className="flex items-center justify-between gap-3 px-4 py-2">
+                <span className={s.status === "cancelled" ? "line-through opacity-60" : ""}>
+                  {s.seriesIndex}. {fmtDateTime(s.startAt, b.timezone)}
+                </span>
+                {s.id === b.id ? (
+                  <span className="text-xs text-muted-foreground">this page</span>
+                ) : (
+                  <Link href={`/booking/${s.manageToken}`} className="text-xs underline">
+                    {s.status === "cancelled" ? "cancelled" : "manage"}
+                  </Link>
+                )}
+              </li>
+            ))}
+          </ol>
+          {remaining.length > 1 && (
+            <details className="mt-3 rounded-xl border p-4">
+              <summary className="cursor-pointer text-sm font-medium">
+                Cancel all {remaining.length} remaining sessions
+              </summary>
+              <form action={cancelRemainingByAttendee.bind(null, token)} className="mt-3 space-y-2">
+                <input
+                  name="reason"
+                  placeholder="Reason (optional)"
+                  className="h-9 w-full rounded-lg border bg-background px-3 text-sm"
+                />
+                <button
+                  type="submit"
+                  className="rounded-lg border px-3 py-1.5 text-sm text-destructive"
+                >
+                  Cancel remaining sessions
+                </button>
+              </form>
+            </details>
+          )}
+        </section>
       )}
     </div>
   );

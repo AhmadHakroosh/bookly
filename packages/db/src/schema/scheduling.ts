@@ -131,6 +131,16 @@ export type FollowUp = {
   body?: string;
 };
 
+/** Repeat a booking into a series of occurrences (weekly coaching, standing 1:1s). */
+export type Recurrence = {
+  enabled?: boolean;
+  freq?: "daily" | "weekly" | "monthly";
+  /** Every N days/weeks/months (default 1). */
+  interval?: number;
+  /** Total occurrences including the first (2–52). */
+  count?: number;
+};
+
 export type EventQuestion = {
   id: string;
   label: string;
@@ -178,6 +188,9 @@ export const eventTypes = pgTable(
     assignment: text("assignment").$type<Assignment>().notNull().default("single"),
     /** Extra hosts for round-robin / collective event types (the owner is always included). */
     hostUserIds: jsonb("host_user_ids").$type<string[]>().notNull().default([]),
+    /** Attendees per slot. >1 makes this a group event: the same start can be booked until full. */
+    seats: integer("seats").notNull().default(1),
+    recurrence: jsonb("recurrence").$type<Recurrence>().notNull().default({}),
     ...timestamps,
   },
   (t) => [
@@ -224,6 +237,10 @@ export const bookings = pgTable(
     cancelReason: text("cancel_reason"),
     cancelledBy: text("cancelled_by"), // attendee | host
     rescheduledFromId: text("rescheduled_from_id"),
+    /** Recurring bookings: every occurrence shares a series id; index is 1-based. */
+    seriesId: text("series_id"),
+    seriesIndex: integer("series_index"),
+    seriesCount: integer("series_count"),
     location: jsonb("location").$type<EventLocation>().notNull().default({ type: "custom" }),
     meetingUrl: text("meeting_url"),
     meetingProvider: text("meeting_provider"),
@@ -249,6 +266,8 @@ export const bookings = pgTable(
     index("bookings_ws_start_idx").on(t.workspaceId, t.startAt),
     uniqueIndex("bookings_manage_token_idx").on(t.manageToken),
     index("bookings_reminders_idx").on(t.status, t.startAt),
+    index("bookings_series_idx").on(t.seriesId),
+    index("bookings_event_start_idx").on(t.eventTypeId, t.startAt),
   ],
 );
 

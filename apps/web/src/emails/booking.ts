@@ -11,7 +11,15 @@ export type BookingMailCtx = {
   host: Profile;
   workspaceName: string;
   baseUrl: string;
+  /** Set when the booking is one occurrence of a recurring series. */
+  series?: { index: number; count: number; dates: Date[] };
 };
+
+/** "Repeats" line for a series: every occurrence on its own line in `tz`. */
+function seriesLines(ctx: BookingMailCtx, tz: string): string[] {
+  if (!ctx.series) return [];
+  return ctx.series.dates.map((d) => fmtDateTime(d, tz));
+}
 
 function details({ booking, eventType, host }: BookingMailCtx, tz: string) {
   const when = fmtDateTime(booking.startAt, tz);
@@ -53,12 +61,16 @@ export function attendeeConfirmation(ctx: BookingMailCtx) {
   const subject = pending
     ? `Requested: ${d.title} with ${d.hostName}`
     : `Confirmed: ${d.title} with ${d.hostName}`;
-  const text = `${pending ? "Your request was sent to" : "You are booked with"} ${d.hostName}.\n\nWhat: ${d.title} (${d.duration} min)\nWhen: ${d.when}\nWhere: ${d.where}\n\nReschedule or cancel: ${manage}`;
+  const dates = seriesLines(ctx, ctx.booking.timezone);
+  const text = `${pending ? "Your request was sent to" : "You are booked with"} ${d.hostName}.\n\nWhat: ${d.title} (${d.duration} min)\nWhen: ${dates.length ? `${dates.length} sessions\n  ${dates.join("\n  ")}` : d.when}\nWhere: ${d.where}\n\nReschedule or cancel: ${manage}`;
   const html = wrap(
     pending ? "Request sent" : "You're booked",
     [
       ["What", `${esc(d.title)} · ${d.duration} min`],
-      ["When", esc(d.when)],
+      [
+        "When",
+        dates.length ? `${dates.length} sessions<br>${dates.map(esc).join("<br>")}` : esc(d.when),
+      ],
       [
         "Where",
         ctx.booking.meetingUrl
@@ -79,14 +91,18 @@ export function hostNotification(ctx: BookingMailCtx) {
   const d = details(ctx, ctx.host.timezone);
   const b = ctx.booking;
   const answers = Object.entries(b.answers).map(([k, v]) => `${k}: ${v}`);
-  const subject = `${b.status === "pending" ? "Booking request" : "New booking"}: ${d.title} with ${b.attendeeName}`;
-  const text = `${b.attendeeName} (${b.attendeeEmail}) booked ${d.title}.\n\nWhen: ${d.when}\nWhere: ${d.where}${b.notes ? `\n\nNotes: ${b.notes}` : ""}${answers.length ? `\n\n${answers.join("\n")}` : ""}\n\nManage: ${ctx.baseUrl}/admin/bookings`;
+  const dates = seriesLines(ctx, ctx.host.timezone);
+  const subject = `${b.status === "pending" ? "Booking request" : "New booking"}: ${d.title} with ${b.attendeeName}${dates.length ? ` (${dates.length} sessions)` : ""}`;
+  const text = `${b.attendeeName} (${b.attendeeEmail}) booked ${d.title}.\n\nWhen: ${dates.length ? `${dates.length} sessions\n  ${dates.join("\n  ")}` : d.when}\nWhere: ${d.where}${b.notes ? `\n\nNotes: ${b.notes}` : ""}${answers.length ? `\n\n${answers.join("\n")}` : ""}\n\nManage: ${ctx.baseUrl}/admin/bookings`;
   const html = wrap(
     b.status === "pending" ? "Booking request" : "New booking",
     [
       ["Who", `${esc(b.attendeeName)} &lt;${esc(b.attendeeEmail)}&gt;`],
       ["What", `${esc(d.title)} · ${d.duration} min`],
-      ["When", esc(d.when)],
+      [
+        "When",
+        dates.length ? `${dates.length} sessions<br>${dates.map(esc).join("<br>")}` : esc(d.when),
+      ],
       ["Where", esc(d.where)],
       ...(b.notes ? ([["Notes", esc(b.notes)]] as [string, string][]) : []),
       ...answers.map((a) => ["Answer", esc(a)] as [string, string]),
@@ -100,13 +116,20 @@ export function hostNotification(ctx: BookingMailCtx) {
 export function cancellationMail(ctx: BookingMailCtx, forHost: boolean) {
   const d = details(ctx, forHost ? ctx.host.timezone : ctx.booking.timezone);
   const by = ctx.booking.cancelledBy === "host" ? d.hostName : ctx.booking.attendeeName;
-  const subject = `Cancelled: ${d.title} on ${d.when}`;
-  const text = `${by} cancelled this meeting.${ctx.booking.cancelReason ? `\n\nReason: ${ctx.booking.cancelReason}` : ""}\n\nWhat: ${d.title}\nWhen: ${d.when}`;
+  const dates = seriesLines(ctx, forHost ? ctx.host.timezone : ctx.booking.timezone);
+  const subject = dates.length
+    ? `Cancelled: ${d.title}, ${dates.length} remaining sessions`
+    : `Cancelled: ${d.title} on ${d.when}`;
+  const when = dates.length ? `${dates.length} sessions\n  ${dates.join("\n  ")}` : d.when;
+  const text = `${by} cancelled ${dates.length ? "the remaining sessions" : "this meeting"}.${ctx.booking.cancelReason ? `\n\nReason: ${ctx.booking.cancelReason}` : ""}\n\nWhat: ${d.title}\nWhen: ${when}`;
   const html = wrap(
-    "Meeting cancelled",
+    dates.length ? "Sessions cancelled" : "Meeting cancelled",
     [
       ["What", esc(d.title)],
-      ["When", esc(d.when)],
+      [
+        "When",
+        dates.length ? `${dates.length} sessions<br>${dates.map(esc).join("<br>")}` : esc(d.when),
+      ],
       ["Cancelled by", esc(by)],
       ...(ctx.booking.cancelReason
         ? ([["Reason", esc(ctx.booking.cancelReason)]] as [string, string][])

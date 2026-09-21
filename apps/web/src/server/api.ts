@@ -5,6 +5,7 @@ import { and, eq, isNull, schema } from "@bookly/db";
 import type { ApiKey, ApiScope, Booking, EventType, Profile, Workspace } from "@bookly/db/schema";
 import { db } from "@/lib/db";
 import { hasFeature } from "./limits";
+import { recurrenceOf } from "./recurrence";
 import { baseUrl, locationLabel } from "./scheduling";
 import { getCurrentWorkspace } from "./workspace";
 
@@ -133,6 +134,8 @@ export function serializeEventType(e: EventType, host: Pick<Profile, "username" 
     })),
     requiresConfirmation: e.requiresConfirmation,
     hidden: e.hidden,
+    seats: e.seats,
+    recurrence: recurrenceOf(e.recurrence),
     price: e.priceCents != null ? { cents: e.priceCents, currency: e.currency } : null,
     host: { username: host.username, name: host.displayName },
   };
@@ -164,6 +167,7 @@ export function serializeBooking(
         ? { status: b.paymentStatus, amountCents: b.amountCents, currency: b.currency }
         : null,
     rescheduledFromId: b.rescheduledFromId,
+    series: b.seriesId ? { id: b.seriesId, index: b.seriesIndex, count: b.seriesCount } : null,
     cancelledBy: b.cancelledBy,
     cancelReason: b.cancelReason,
     createdAt: b.createdAt.toISOString(),

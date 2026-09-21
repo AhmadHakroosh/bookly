@@ -6,12 +6,15 @@ import { MonthCalendar } from "@/components/booking/month-calendar";
 import { TzDetect } from "@/components/booking/tz-detect";
 import { TzPicker } from "@/components/booking/tz-picker";
 import { addDays, fmtDateTime, fmtTime, isValidTimezone, timezoneList, todayIn } from "@/lib/time";
+import { planSeries } from "@/server/booking-flow";
+import { describeRecurrence, recurrenceOf } from "@/server/recurrence";
 import {
   availableSlots,
   getBookingByToken,
   getEventType,
   getProfileByUsername,
   locationLabel,
+  slotSeats,
 } from "@/server/scheduling";
 import { formatPrice, paymentsConfigured } from "@/server/payments";
 import { getCurrentWorkspace } from "@/server/workspace";
@@ -58,6 +61,11 @@ async function EventPage({ params, searchParams }: PageProps<"/[username]/[event
   const days = await availableSlots(et, tz, monthStart, monthEnd);
   const availableDates = new Set(days.map((d) => d.date));
   const daySlots = date ? (days.find((d) => d.date === date)?.slots ?? []) : [];
+  const seats = await slotSeats(et, daySlots);
+  const rule = prev ? null : recurrenceOf(et.recurrence);
+  const plan =
+    slot && !Number.isNaN(slot.getTime()) && rule ? await planSeries(et, tz, slot) : null;
+  const bookable = plan?.filter((p) => p.hostUserId).length ?? 1;
   const base = `/${profile.username}/${et.slug}`;
   const makeHref = (over: Record<string, string | undefined>) => {
     const q = new URLSearchParams();
@@ -89,7 +97,13 @@ async function EventPage({ params, searchParams }: PageProps<"/[username]/[event
             {et.priceCents && paymentsConfigured()
               ? ` · ${formatPrice(et.priceCents, et.currency)}`
               : ""}
+            {et.seats > 1 ? ` · Group of up to ${et.seats}` : ""}
           </p>
+          {rule && (
+            <p className="mt-1 text-sm text-muted-foreground">
+              {describeRecurrence(rule)}. One booking reserves the whole series.
+            </p>
+          )}
           {et.description && (
             <p className="mt-3 text-sm whitespace-pre-line text-muted-foreground">
               {et.description}
@@ -101,9 +115,19 @@ async function EventPage({ params, searchParams }: PageProps<"/[username]/[event
             </p>
           )}
           {slot && !Number.isNaN(slot.getTime()) && (
-            <p className="mt-4 rounded-lg border p-3 text-sm">
-              <span className="font-medium">{fmtDateTime(slot, tz)}</span>
-            </p>
+            <div className="mt-4 rounded-lg border p-3 text-sm">
+              <p className="font-medium">{fmtDateTime(slot, tz)}</p>
+              {plan && (
+                <ul className="mt-2 space-y-1 text-xs text-muted-foreground">
+                  {plan.map((p, i) => (
+                    <li key={p.start.toISOString()} className={p.hostUserId ? "" : "line-through"}>
+                      {i + 1}. {fmtDateTime(p.start, tz)}
+                      {p.hostUserId ? "" : " (host busy, skipped)"}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
           )}
           <div className="mt-4">
             <Suspense fallback={null}>
@@ -130,6 +154,7 @@ async function EventPage({ params, searchParams }: PageProps<"/[username]/[event
                 questions={et.questions}
                 reschedule={reschedule}
                 paid={!!et.priceCents && paymentsConfigured()}
+                sessions={plan ? bookable : 1}
                 defaults={prev ? { name: prev.attendeeName, email: prev.attendeeEmail } : undefined}
               />
             </div>
@@ -154,16 +179,24 @@ async function EventPage({ params, searchParams }: PageProps<"/[username]/[event
                     : "Pick a day"}
                 </p>
                 <ul className="max-h-80 space-y-2 overflow-y-auto pr-1">
-                  {daySlots.map((s) => (
-                    <li key={s.toISOString()}>
-                      <Link
-                        href={makeHref({ slot: s.toISOString() })}
-                        className="block rounded-lg border px-3 py-2 text-center text-sm font-medium hover:border-primary hover:text-primary"
-                      >
-                        {fmtTime(s, tz)}
-                      </Link>
-                    </li>
-                  ))}
+                  {daySlots.map((s) => {
+                    const left = seats.get(s.getTime());
+                    return (
+                      <li key={s.toISOString()}>
+                        <Link
+                          href={makeHref({ slot: s.toISOString() })}
+                          className="block rounded-lg border px-3 py-2 text-center text-sm font-medium hover:border-primary hover:text-primary"
+                        >
+                          {fmtTime(s, tz)}
+                          {left != null && left < et.seats && (
+                            <span className="block text-xs font-normal text-muted-foreground">
+                              {left} {left === 1 ? "seat" : "seats"} left
+                            </span>
+                          )}
+                        </Link>
+                      </li>
+                    );
+                  })}
                   {date && daySlots.length === 0 && (
                     <li className="text-sm text-muted-foreground">No times left this day.</li>
                   )}

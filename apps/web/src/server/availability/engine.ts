@@ -12,6 +12,8 @@ import { addDays, utcToZoned, weekdayOf, zonedToUtc } from "@/lib/time";
 export type Rule = { weekday: number; startMin: number; endMin: number };
 export type Override = { date: string; startMin: number | null; endMin: number | null };
 export type Interval = { start: Date; end: Date };
+/** A group session already on the calendar: how many seats of this event type are taken at `start`. */
+export type Occupied = Interval & { count: number };
 
 export type EngineInput = {
   scheduleTz: string;
@@ -26,6 +28,10 @@ export type EngineInput = {
   maxPerDay?: number | null;
   /** Existing bookings of the host (UTC instants). Buffers are applied around these. */
   busy: Interval[];
+  /** Attendees per slot (default 1). With more, `occupied` sessions stay bookable until full. */
+  seats?: number;
+  /** Sessions of this same event type (excluded from `busy`), with their seat counts. */
+  occupied?: Occupied[];
   /** Attendee timezone for grouping the output. */
   attendeeTz: string;
   /** Inclusive date range in the attendee tz. */
@@ -35,6 +41,8 @@ export type EngineInput = {
 };
 
 export type DaySlots = { date: string; slots: Date[] };
+/** Per-slot seat availability, only meaningful for group event types. */
+export type SeatMap = Map<number, number>;
 
 const overlaps = (a: Interval, b: Interval) => a.start < b.end && b.start < a.end;
 
@@ -72,6 +80,8 @@ export function computeSlots(input: EngineInput): DaySlots[] {
   const latest = new Date(now.getTime() + (input.maxDaysAhead ?? 60) * 86_400_000);
   // Buffers belong to the candidate slot ([start - before, end + after]); busy intervals are used as-is.
   const busy = input.busy;
+  const seats = Math.max(1, input.seats ?? 1);
+  const occupied = input.occupied ?? [];
 
   // Attendee-day range → schedule-tz dates that could contribute (±1 day for tz skew).
   const dates = new Set<string>();
@@ -86,6 +96,10 @@ export function computeSlots(input: EngineInput): DaySlots[] {
         if (start < earliest || start > latest) continue;
         const padded = { start: new Date(t - before), end: new Date(t + durMs + after) };
         if (busy.some((b) => overlaps(padded, b))) continue;
+        // Group events: a session at this exact start stays open until its seats are full;
+        // sessions at other times block like any booking.
+        const same = occupied.find((o) => o.start.getTime() === t);
+        if (same ? same.count >= seats : occupied.some((o) => overlaps(padded, o))) continue;
         const { date: attendeeDate } = utcToZoned(start, input.attendeeTz);
         if (attendeeDate < input.from || attendeeDate > input.to) continue;
         const arr = byDay.get(attendeeDate) ?? [];
@@ -100,7 +114,7 @@ export function computeSlots(input: EngineInput): DaySlots[] {
     let slots = byDay.get(date)!.sort((a, b) => a.getTime() - b.getTime());
     if (input.maxPerDay) {
       // Count existing bookings on this host-day (approximate by attendee day) toward the cap.
-      const existing = input.busy.filter(
+      const existing = [...input.busy, ...occupied].filter(
         (b) => utcToZoned(b.start, input.attendeeTz).date === date,
       ).length;
       const remaining = Math.max(0, input.maxPerDay - existing);
@@ -116,4 +130,14 @@ export function isSlotAvailable(input: Omit<EngineInput, "from" | "to">, start: 
   const { date } = utcToZoned(start, input.attendeeTz);
   const days = computeSlots({ ...input, from: date, to: date });
   return days.some((d) => d.slots.some((s) => s.getTime() === start.getTime()));
+}
+
+/** Seats still free for each slot start (ms epoch), given the sessions already booked. */
+export function seatsLeft(seats: number, occupied: Occupied[], slots: Date[]): SeatMap {
+  const map: SeatMap = new Map();
+  for (const s of slots) {
+    const o = occupied.find((x) => x.start.getTime() === s.getTime());
+    map.set(s.getTime(), Math.max(0, seats - (o?.count ?? 0)));
+  }
+  return map;
 }

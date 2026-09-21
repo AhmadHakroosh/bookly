@@ -30,6 +30,17 @@ const eventType = {
     },
     requiresConfirmation: { type: "boolean" },
     hidden: { type: "boolean" },
+    seats: { type: "integer", description: "Attendees per slot; >1 is a group session" },
+    recurrence: {
+      type: "object",
+      nullable: true,
+      description: "When set, one booking reserves a series of occurrences",
+      properties: {
+        freq: { type: "string", enum: ["daily", "weekly", "monthly"] },
+        interval: { type: "integer" },
+        count: { type: "integer" },
+      },
+    },
     price: {
       type: "object",
       nullable: true,
@@ -74,6 +85,11 @@ const booking = {
       properties: { status: str, amountCents: { type: "integer" }, currency: nstr },
     },
     rescheduledFromId: nstr,
+    series: {
+      type: "object",
+      nullable: true,
+      properties: { id: str, index: { type: "integer" }, count: { type: "integer" } },
+    },
     cancelledBy: nstr,
     cancelReason: nstr,
     createdAt: { type: "string", format: "date-time" },
@@ -87,6 +103,11 @@ const slot = {
       type: "array",
       description: "Start times (ISO 8601, UTC). Each slot lasts the event type's duration.",
       items: { type: "string", format: "date-time" },
+    },
+    seatsLeft: {
+      type: "object",
+      description: "Group event types only: free seats per slot start",
+      additionalProperties: { type: "integer" },
     },
   },
 };

@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Field, FieldDescription, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import type { EventQuestion, FollowUp } from "@bookly/db/schema";
+import type { EventQuestion, FollowUp, Recurrence } from "@bookly/db/schema";
 import { deleteEventType, saveEventType } from "../../scheduling-actions";
 import { QuestionBuilder } from "./question-builder";
 
@@ -37,6 +37,8 @@ type Values = {
   followUp: FollowUp;
   assignment: "single" | "round_robin" | "collective";
   hostUserIds: string[];
+  seats: number;
+  recurrence: Recurrence;
 };
 
 const LOCATIONS: [string, string][] = [
@@ -77,6 +79,7 @@ export function EventTypeForm({
   );
   const [loc, setLoc] = useState(initial.locationType);
   const [assignment, setAssignment] = useState(initial.assignment);
+  const [repeats, setRepeats] = useState(!!initial.recurrence.enabled);
   useEffect(() => {
     if (state.ok) toast.success("Saved");
     else if (state.error) toast.error(state.error);
@@ -130,7 +133,7 @@ export function EventTypeForm({
             defaultValue={initial.description}
           />
         </Field>
-        <div className="grid gap-6 sm:grid-cols-3">
+        <div className="grid gap-6 sm:grid-cols-4">
           {num("durationMin", "Duration (minutes)")}
           {num(
             "slotIntervalMin",
@@ -138,7 +141,79 @@ export function EventTypeForm({
             "0 = every duration, e.g. 9:00, 9:30 for a 30-minute call",
           )}
           {num("maxPerDay", "Max bookings per day", "0 = unlimited")}
+          <Field>
+            <FieldLabel htmlFor="seats">Seats per slot</FieldLabel>
+            <Input
+              id="seats"
+              name="seats"
+              type="number"
+              min={1}
+              max={500}
+              defaultValue={String(initial.seats)}
+            />
+            <FieldDescription>
+              More than 1 makes this a group session: the same time can be booked until it is full
+              and everyone gets the same meeting link.
+            </FieldDescription>
+          </Field>
         </div>
+        <fieldset className="space-y-3 rounded-lg border p-4">
+          <legend className="px-1 text-sm font-medium">Recurring bookings</legend>
+          <label className="inline-flex items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              name="recurEnabled"
+              checked={repeats}
+              onChange={(e) => setRepeats(e.target.checked)}
+            />{" "}
+            One booking reserves a series of sessions
+          </label>
+          {repeats && (
+            <div className="grid gap-4 sm:grid-cols-3">
+              <Field>
+                <FieldLabel htmlFor="recurFreq">Repeats</FieldLabel>
+                <select
+                  id="recurFreq"
+                  name="recurFreq"
+                  defaultValue={initial.recurrence.freq ?? "weekly"}
+                  className="h-8 rounded-lg border bg-background px-2 text-sm"
+                >
+                  <option value="daily">Daily</option>
+                  <option value="weekly">Weekly</option>
+                  <option value="monthly">Monthly</option>
+                </select>
+              </Field>
+              <Field>
+                <FieldLabel htmlFor="recurInterval">Every</FieldLabel>
+                <Input
+                  id="recurInterval"
+                  name="recurInterval"
+                  type="number"
+                  min={1}
+                  max={12}
+                  defaultValue={String(initial.recurrence.interval ?? 1)}
+                />
+                <FieldDescription>2 = every second week/day/month</FieldDescription>
+              </Field>
+              <Field>
+                <FieldLabel htmlFor="recurCount">Sessions</FieldLabel>
+                <Input
+                  id="recurCount"
+                  name="recurCount"
+                  type="number"
+                  min={2}
+                  max={52}
+                  defaultValue={String(initial.recurrence.count ?? 4)}
+                />
+                <FieldDescription>Total, including the first. Max 52.</FieldDescription>
+              </Field>
+            </div>
+          )}
+          <FieldDescription>
+            Attendees pick the first time and get every session in one confirmation. Dates the host
+            cannot take are skipped. Not available together with a price.
+          </FieldDescription>
+        </fieldset>
         <div className="grid gap-6 sm:grid-cols-4">
           {num("bufferBeforeMin", "Gap before (minutes)", "Kept free before each booking")}
           {num("bufferAfterMin", "Gap after (minutes)", "Kept free after each booking")}

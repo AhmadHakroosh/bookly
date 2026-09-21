@@ -39,6 +39,7 @@ export async function book(_prev: BookState, formData: FormData): Promise<BookSt
   const answers: Record<string, string> = {};
   for (const q of et.questions) answers[q.id] = (raw[`q_${q.id}`] ?? "").slice(0, 2000);
   let token: string;
+  let skipped = 0;
   try {
     const b = await createBooking(ws, et, {
       start,
@@ -51,6 +52,7 @@ export async function book(_prev: BookState, formData: FormData): Promise<BookSt
       rescheduleToken: d.reschedule || null,
     });
     token = b.manageToken;
+    skipped = b.skipped?.length ?? 0;
     if (b.status === "awaiting_payment") {
       const url = await createCheckout(ws, b, et);
       redirect(url);
@@ -61,5 +63,5 @@ export async function book(_prev: BookState, formData: FormData): Promise<BookSt
     console.error(e);
     return { error: "Something went wrong. Please try again." };
   }
-  redirect(`/booking/${token}?new=1`);
+  redirect(`/booking/${token}?new=1${skipped ? `&skipped=${skipped}` : ""}`);
 }

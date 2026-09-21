@@ -5,6 +5,14 @@
 - **Event types** (`Admin → Event types`): what people can book — duration, slot interval, buffers before/after, minimum notice, booking horizon, max bookings per day, location (built-in video, Google Meet, Zoom, Teams, phone, in person, custom), booking questions, "requires confirmation", hidden (link-only).
 - **Bookings** (`Admin → Bookings`): upcoming and past, confirm pending requests, cancel with a reason. Attendees get a manage link (`/booking/<token>`) to cancel, reschedule or download the `.ics`.
 
+## Group sessions (seats)
+
+`Seats per slot` on an event type (default 1) turns it into a group session: the same start time can be booked by several people until it is full. The public page shows "N seats left" once a session has started filling; the API reports the same in `seatsLeft`. Everyone in a session gets the same meeting link, and the host's calendar holds one event for the session (it moves to the next attendee if the first one cancels). Sessions at other times block the host like any booking.
+
+## Recurring bookings
+
+Turn on `Recurring bookings` on an event type and choose the frequency (daily, weekly, monthly), the interval and the number of sessions (2–52). An attendee picks the first time and sees the whole series before confirming; dates the host cannot take are skipped and reported. Every occurrence is its own booking (own meeting link, calendar event, reminders and manage link) tied together by a series id, so a single session can be rescheduled or cancelled, and the manage page also offers "cancel all remaining sessions". The confirmation email lists all dates and attaches one `.ics` with every occurrence. Recurring event types cannot be paid yet.
+
 ## Buffers
 
 `Buffer before` is the free time an event type needs before each of its bookings, `buffer after` the free time after. They are applied to the candidate slot: a slot is offered only if `[start − before, end + after]` does not overlap any existing booking or external busy block.

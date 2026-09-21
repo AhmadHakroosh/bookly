@@ -25,6 +25,13 @@ async function BookingsPage({ searchParams }: PageProps<"/admin/bookings">) {
     getProfileByUser(ws.id, session.user.id),
   ]);
   const tz = profile?.timezone ?? ws.timezone;
+  // Group sessions: how many seats each (event type, start, host) session has taken.
+  const taken = new Map<string, number>();
+  const sessionKey = (b: (typeof rows)[number]) =>
+    `${b.eventTypeId}|${b.hostUserId}|${b.startAt.toISOString()}`;
+  for (const b of rows)
+    if ((b.eventSeats ?? 1) > 1 && (b.status === "confirmed" || b.status === "pending"))
+      taken.set(sessionKey(b), (taken.get(sessionKey(b)) ?? 0) + 1);
   return (
     <div className="space-y-6">
       <div className="flex items-end justify-between gap-4">
@@ -66,6 +73,16 @@ async function BookingsPage({ searchParams }: PageProps<"/admin/bookings">) {
               </p>
             </div>
             <div className="flex items-center gap-2">
+              {(b.eventSeats ?? 1) > 1 && (
+                <Badge variant="outline">
+                  {taken.get(sessionKey(b)) ?? 0}/{b.eventSeats} seats
+                </Badge>
+              )}
+              {b.seriesCount && (
+                <Badge variant="outline">
+                  Series {b.seriesIndex}/{b.seriesCount}
+                </Badge>
+              )}
               {b.paymentStatus && b.amountCents != null && (
                 <Badge variant="outline">
                   {formatPrice(b.amountCents, b.currency)}

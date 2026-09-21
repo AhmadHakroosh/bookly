@@ -50,6 +50,13 @@
       "when": 1789971731676,
       "tag": "0006_exotic_hellcat",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1789982003332,
+      "tag": "0007_high_silhouette",
+      "breakpoints": true
     }
   ]
 }

@@ -1,7 +1,7 @@
 import "server-only";
 import { createHash } from "node:crypto";
 import { cacheLife, cacheTag } from "next/cache";
-import { and, asc, desc, eq, gte, inArray, lte, schema, sql } from "@bookly/db";
+import { and, asc, desc, eq, gte, inArray, lte, ne, schema, sql } from "@bookly/db";
 import type {
   Booking,
   EventType,
@@ -14,7 +14,14 @@ import type {
 import { loadEnv } from "@bookly/config";
 import { db } from "@/lib/db";
 import { addDays } from "@/lib/time";
-import { computeSlots, isSlotAvailable, type Interval } from "./availability/engine";
+import {
+  computeSlots,
+  isSlotAvailable,
+  seatsLeft,
+  type Interval,
+  type Occupied,
+  type SeatMap,
+} from "./availability/engine";
 import { workspaceTag } from "./cache";
 
 export const baseUrl = () => loadEnv().APP_URL.replace(/\/$/, "");
@@ -181,20 +188,71 @@ export async function getEventTypeById(workspaceId: string, id: string): Promise
 
 /* ---------------- Availability (DB-backed) ---------------- */
 
-/** Host's booked intervals in a range (all event types), for the engine's `busy` input. */
-export async function hostBusy(hostUserId: string, from: Date, to: Date): Promise<Interval[]> {
+const ACTIVE = ["confirmed", "pending"] as const;
+
+/**
+ * Host's booked intervals in a range (all event types), for the engine's `busy` input.
+ * `excludeEventTypeId` leaves out a group event type whose sessions are passed as `occupied`.
+ */
+export async function hostBusy(
+  hostUserId: string,
+  from: Date,
+  to: Date,
+  excludeEventTypeId?: string,
+): Promise<Interval[]> {
+  const conds = [
+    eq(schema.bookings.hostUserId, hostUserId),
+    inArray(schema.bookings.status, [...ACTIVE]),
+    lte(schema.bookings.startAt, to),
+    gte(schema.bookings.endAt, from),
+  ];
+  if (excludeEventTypeId) conds.push(ne(schema.bookings.eventTypeId, excludeEventTypeId));
   const rows = await db()
     .select({ start: schema.bookings.startAt, end: schema.bookings.endAt })
     .from(schema.bookings)
+    .where(and(...conds));
+  return rows;
+}
+
+/** Group sessions of one event type on a host's calendar, with how many seats each has taken. */
+export async function occupiedSessions(
+  eventTypeId: string,
+  hostUserId: string,
+  from: Date,
+  to: Date,
+): Promise<Occupied[]> {
+  const rows = await db()
+    .select({
+      start: schema.bookings.startAt,
+      end: schema.bookings.endAt,
+      count: sql<number>`count(*)::int`,
+    })
+    .from(schema.bookings)
     .where(
       and(
+        eq(schema.bookings.eventTypeId, eventTypeId),
         eq(schema.bookings.hostUserId, hostUserId),
-        inArray(schema.bookings.status, ["confirmed", "pending"]),
+        inArray(schema.bookings.status, [...ACTIVE]),
         lte(schema.bookings.startAt, to),
         gte(schema.bookings.endAt, from),
       ),
-    );
+    )
+    .groupBy(schema.bookings.startAt, schema.bookings.endAt);
   return rows;
+}
+
+/** Host of the group session already running at `start`, if any (new attendees join it). */
+export async function sessionHost(eventType: EventType, start: Date): Promise<string | null> {
+  if (eventType.seats <= 1) return null;
+  const row = await db().query.bookings.findFirst({
+    where: and(
+      eq(schema.bookings.eventTypeId, eventType.id),
+      eq(schema.bookings.startAt, start),
+      inArray(schema.bookings.status, [...ACTIVE]),
+    ),
+    columns: { hostUserId: true },
+  });
+  return row?.hostUserId ?? null;
 }
 
 /** Busy time from connected calendars (Google / Outlook); fails open when a provider errors. */
@@ -218,13 +276,21 @@ async function hostSchedule(eventType: EventType, hostUserId: string) {
   );
 }
 
-async function allBusy(hostUserId: string, rangeStart: Date, rangeEnd: Date) {
+async function allBusy(
+  hostUserId: string,
+  rangeStart: Date,
+  rangeEnd: Date,
+  excludeEventTypeId?: string,
+) {
   const [busy, ext] = await Promise.all([
-    hostBusy(hostUserId, rangeStart, rangeEnd),
+    hostBusy(hostUserId, rangeStart, rangeEnd, excludeEventTypeId),
     externalBusy(hostUserId, rangeStart, rangeEnd),
   ]);
   return [...busy, ...ext];
 }
+
+/** Options for slot validation. `horizon: false` ignores `maxDaysAhead` (later series occurrences). */
+export type SlotOptions = { horizon?: boolean };
 
 /**
  * Engine input for one host. Collective event types fold every host's busy time into the
@@ -236,12 +302,23 @@ async function engineInput(
   from: string,
   to: string,
   hostUserId: string = eventType.userId,
+  opts: SlotOptions = {},
 ) {
   const fallback = await hostSchedule(eventType, hostUserId);
   const rangeStart = new Date(`${addDays(from, -2)}T00:00:00Z`);
   const rangeEnd = new Date(`${addDays(to, 2)}T23:59:59Z`);
   const hosts = eventType.assignment === "collective" ? eventHosts(eventType) : [hostUserId];
-  const busyAll = (await Promise.all(hosts.map((h) => allBusy(h, rangeStart, rangeEnd)))).flat();
+  const group = eventType.seats > 1;
+  const [busyAll, occupied] = await Promise.all([
+    Promise.all(
+      hosts.map((h) => allBusy(h, rangeStart, rangeEnd, group ? eventType.id : undefined)),
+    ).then((r) => r.flat()),
+    group
+      ? Promise.all(hosts.map((h) => occupiedSessions(eventType.id, h, rangeStart, rangeEnd))).then(
+          (r) => r.flat(),
+        )
+      : Promise.resolve([] as Occupied[]),
+  ]);
   return {
     scheduleTz: fallback.timezone,
     rules: fallback.rules,
@@ -251,11 +328,29 @@ async function engineInput(
     bufferBeforeMin: eventType.bufferBeforeMin,
     bufferAfterMin: eventType.bufferAfterMin,
     minNoticeMin: eventType.minNoticeMin,
-    maxDaysAhead: eventType.maxDaysAhead,
+    maxDaysAhead: opts.horizon === false ? 3660 : eventType.maxDaysAhead,
     maxPerDay: eventType.maxPerDay,
     busy: busyAll,
+    seats: eventType.seats,
+    occupied,
     attendeeTz,
   };
+}
+
+/** Free seats per offered slot of a group event type (empty map for regular ones). */
+export async function slotSeats(
+  eventType: EventType,
+  slots: Date[],
+  hostUserId: string = eventType.userId,
+): Promise<SeatMap> {
+  if (eventType.seats <= 1 || !slots.length) return new Map();
+  const from = new Date(Math.min(...slots.map((s) => s.getTime())) - 86_400_000);
+  const to = new Date(Math.max(...slots.map((s) => s.getTime())) + 86_400_000);
+  const hosts = eventType.assignment === "single" ? [hostUserId] : eventHosts(eventType);
+  const occupied = (
+    await Promise.all(hosts.map((h) => occupiedSessions(eventType.id, h, from, to)))
+  ).flat();
+  return seatsLeft(eventType.seats, occupied, slots);
 }
 
 export async function availableSlots(
@@ -289,9 +384,15 @@ export async function availableSlots(
     }));
 }
 
-async function hostCanTake(eventType: EventType, attendeeTz: string, start: Date, host: string) {
+async function hostCanTake(
+  eventType: EventType,
+  attendeeTz: string,
+  start: Date,
+  host: string,
+  opts: SlotOptions = {},
+) {
   const day = start.toISOString().slice(0, 10);
-  const input = await engineInput(eventType, attendeeTz, day, day, host);
+  const input = await engineInput(eventType, attendeeTz, day, day, host, opts);
   return isSlotAvailable(input, start);
 }
 
@@ -303,16 +404,23 @@ export async function pickHost(
   eventType: EventType,
   attendeeTz: string,
   start: Date,
+  opts: SlotOptions = {},
 ): Promise<string | null> {
+  // Group events: later attendees join the session that already exists at this start.
+  const running = await sessionHost(eventType, start);
+  if (running)
+    return (await hostCanTake(eventType, attendeeTz, start, running, opts)) ? running : null;
   if (eventType.assignment !== "round_robin") {
-    return (await hostCanTake(eventType, attendeeTz, start, eventType.userId))
+    return (await hostCanTake(eventType, attendeeTz, start, eventType.userId, opts))
       ? eventType.userId
       : null;
   }
   const hosts = eventHosts(eventType);
   const free = (
     await Promise.all(
-      hosts.map(async (h) => ((await hostCanTake(eventType, attendeeTz, start, h)) ? h : null)),
+      hosts.map(async (h) =>
+        (await hostCanTake(eventType, attendeeTz, start, h, opts)) ? h : null,
+      ),
     )
   ).filter((h): h is string => !!h);
   if (!free.length) return null;
@@ -335,8 +443,13 @@ export async function pickHost(
   return loads[0]!.h;
 }
 
-export async function slotIsBookable(eventType: EventType, attendeeTz: string, start: Date) {
-  return (await pickHost(eventType, attendeeTz, start)) !== null;
+export async function slotIsBookable(
+  eventType: EventType,
+  attendeeTz: string,
+  start: Date,
+  opts: SlotOptions = {},
+) {
+  return (await pickHost(eventType, attendeeTz, start, opts)) !== null;
 }
 
 /* ---------------- Bookings ---------------- */
@@ -350,19 +463,23 @@ export async function getBookingByToken(token: string): Promise<Booking | null> 
 export async function listBookings(
   workspaceId: string,
   opts: { userId?: string; upcoming?: boolean; limit?: number } = {},
-): Promise<(Booking & { eventTitle: string | null })[]> {
+): Promise<(Booking & { eventTitle: string | null; eventSeats: number | null })[]> {
   const conds = [eq(schema.bookings.workspaceId, workspaceId)];
   if (opts.userId) conds.push(eq(schema.bookings.hostUserId, opts.userId));
   if (opts.upcoming === true) conds.push(gte(schema.bookings.endAt, new Date()));
   if (opts.upcoming === false) conds.push(lte(schema.bookings.endAt, new Date()));
   const rows = await db()
-    .select({ b: schema.bookings, eventTitle: schema.eventTypes.title })
+    .select({
+      b: schema.bookings,
+      eventTitle: schema.eventTypes.title,
+      eventSeats: schema.eventTypes.seats,
+    })
     .from(schema.bookings)
     .leftJoin(schema.eventTypes, eq(schema.eventTypes.id, schema.bookings.eventTypeId))
     .where(and(...conds))
     .orderBy(opts.upcoming === false ? desc(schema.bookings.startAt) : asc(schema.bookings.startAt))
     .limit(opts.limit ?? 200);
-  return rows.map((r) => ({ ...r.b, eventTitle: r.eventTitle }));
+  return rows.map((r) => ({ ...r.b, eventTitle: r.eventTitle, eventSeats: r.eventSeats }));
 }
 
 export function locationLabel(loc: EventType["location"]): string {

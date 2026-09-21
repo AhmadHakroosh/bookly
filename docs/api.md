@@ -29,6 +29,12 @@ answered. Keys are hashed at rest and shown once; revoke from the admin.
 
 Typical assistant flow: `GET /event-types` → `GET /availability` → `POST /bookings`.
 
+### Group sessions and series
+
+- Event types carry `seats` (attendees per slot) and `recurrence` (`{ freq, interval, count }` or `null`).
+- `GET /availability` adds `seatsLeft` per day (`{ "<start ISO>": n }`) for group event types.
+- `POST /bookings` on a recurring event type books the whole series and returns the first booking; `meta.skipped` lists occurrences the host could not take. Each booking exposes `series: { id, index, count }`.
+
 ## Webhooks
 
 Add an endpoint under **Admin → API & webhooks** and choose events: `booking.created`,
