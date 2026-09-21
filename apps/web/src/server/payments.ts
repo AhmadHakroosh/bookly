@@ -1,6 +1,6 @@
 import "server-only";
 import Stripe from "stripe";
-import { and, eq, lte, schema } from "@bookly/db";
+import { and, asc, eq, inArray, lte, schema } from "@bookly/db";
 import { loadEnv } from "@bookly/config";
 import type { Booking, EventType, Workspace } from "@bookly/db/schema";
 import { db } from "@/lib/db";
@@ -26,19 +26,39 @@ export function formatPrice(cents: number, currency: string | null | undefined, 
   }).format(cents / 100);
 }
 
-/** Starts a Stripe Checkout session for an unpaid booking and returns the URL to redirect to. */
+/** Every unpaid occurrence a Checkout for `booking` should cover (the whole series, or just it). */
+async function unpaidMembers(booking: Booking): Promise<Booking[]> {
+  if (!booking.seriesId) return [booking];
+  const rows = await db()
+    .select()
+    .from(schema.bookings)
+    .where(
+      and(
+        eq(schema.bookings.seriesId, booking.seriesId),
+        eq(schema.bookings.status, "awaiting_payment"),
+      ),
+    )
+    .orderBy(asc(schema.bookings.seriesIndex));
+  return rows.length ? rows : [booking];
+}
+
+/**
+ * Starts a Stripe Checkout session for an unpaid booking and returns the URL to redirect to.
+ * A recurring series is paid in one go: one line item with the number of sessions as quantity.
+ */
 export async function createCheckout(
   workspace: Workspace,
   booking: Booking,
   eventType: EventType,
 ): Promise<string> {
   const manage = `${baseUrl()}/booking/${booking.manageToken}`;
+  const members = await unpaidMembers(booking);
   const session = await stripe().checkout.sessions.create({
     mode: "payment",
     customer_email: booking.attendeeEmail,
     line_items: [
       {
-        quantity: 1,
+        quantity: members.length,
         price_data: {
           currency: (eventType.currency ?? "usd").toLowerCase(),
           unit_amount: eventType.priceCents!,
@@ -49,8 +69,12 @@ export async function createCheckout(
         },
       },
     ],
-    metadata: { bookingId: booking.id, workspaceId: workspace.id },
-    payment_intent_data: { metadata: { bookingId: booking.id } },
+    metadata: {
+      bookingId: members[0]!.id,
+      workspaceId: workspace.id,
+      ...(booking.seriesId ? { seriesId: booking.seriesId } : {}),
+    },
+    payment_intent_data: { metadata: { bookingId: members[0]!.id } },
     success_url: `${manage}?paid=1`,
     cancel_url: manage,
     expires_at: Math.floor(Date.now() / 1000) + PAYMENT_WINDOW_MIN * 60,
@@ -63,7 +87,12 @@ export async function createCheckout(
       currency: eventType.currency ?? "usd",
       paymentRef: { ...(booking.paymentRef ?? {}), sessionId: session.id },
     })
-    .where(eq(schema.bookings.id, booking.id));
+    .where(
+      inArray(
+        schema.bookings.id,
+        members.map((m) => m.id),
+      ),
+    );
   return session.url!;
 }
 
@@ -82,12 +111,18 @@ export async function recordPayment(bookingId: string, paymentIntentId: string |
   return updated ?? null;
 }
 
-/** Refunds a paid booking (best-effort; logged on failure). */
+/**
+ * Refunds a paid booking (best-effort; logged on failure). A series was charged in one payment,
+ * so only this occurrence's share is refunded.
+ */
 export async function refundBooking(b: Booking) {
   if (b.paymentStatus !== "paid" || !b.paymentRef?.paymentIntentId || !paymentsConfigured())
     return false;
   try {
-    const r = await stripe().refunds.create({ payment_intent: b.paymentRef.paymentIntentId });
+    const r = await stripe().refunds.create({
+      payment_intent: b.paymentRef.paymentIntentId,
+      ...(b.seriesId && b.amountCents ? { amount: b.amountCents } : {}),
+    });
     await db()
       .update(schema.bookings)
       .set({ paymentStatus: "refunded", paymentRef: { ...b.paymentRef, refundId: r.id } })

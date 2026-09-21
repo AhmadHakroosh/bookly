@@ -14,7 +14,7 @@ import { buildIcsCalendar, type IcsEvent } from "./ics";
 import { deprovisionBooking, provisionBooking, syncEventAttendees } from "./integrations";
 import { serializeBooking } from "./api";
 import { notifyHost } from "./notify";
-import { isPaid, paymentsConfigured, refundBooking } from "./payments";
+import { isPaid, paymentsConfigured, recordPayment, refundBooking } from "./payments";
 import { notifyWaitlist } from "./waitlist";
 import { emitEvent } from "./webhooks";
 import { refreshWorkspace } from "./cache";
@@ -210,7 +210,8 @@ export async function planSeries(
 /**
  * Validates the slot, stores the booking, provisions meeting/calendar, and emails both sides.
  * Recurring event types book the whole series at once (occurrences the host cannot take are
- * skipped and reported via `skipped`); reschedules and paid bookings stay single.
+ * skipped and reported via `skipped`); a reschedule moves a single occurrence. Paid series are
+ * held as `awaiting_payment` and confirmed together by one Checkout.
  */
 export async function createBooking(
   workspace: Workspace,
@@ -237,7 +238,7 @@ export async function createBooking(
     if (prev?.status === "cancelled") prev = null;
   }
 
-  const single = !!prev || needsPayment || !recurrenceOf(eventType.recurrence);
+  const single = !!prev || !recurrenceOf(eventType.recurrence);
   const plan = single
     ? [{ start: input.start, hostUserId: await pickHost(eventType, input.timezone, input.start) }]
     : await planSeries(eventType, input.timezone, input.start);
@@ -286,8 +287,8 @@ export async function createBooking(
     .returning();
   const first = rows[0]!;
 
-  // Paid bookings are finalised by the Stripe webhook (see finalizeBooking).
-  if (needsPayment) return first;
+  // Paid bookings are finalised by the Stripe webhook (see finalizePaidBooking).
+  if (needsPayment) return { ...first, skipped };
   // Every occurrence is provisioned and announced to webhooks; people are emailed once.
   const finalized = await finalizeBooking(workspace, first, eventType, rescheduledFromId);
   for (const b of rows.slice(1)) await finalizeBooking(workspace, b, eventType, null, false);
@@ -298,6 +299,30 @@ export async function createBooking(
  * Second half of booking creation: provisions meeting + calendar, sends emails, pings the
  * host, emits webhooks. Runs immediately for free bookings and after payment for paid ones.
  */
+/**
+ * Stripe said a Checkout was paid: records the payment on the booking and, for a series, on
+ * every occurrence the session covered, then finalises them (people are emailed once).
+ */
+export async function finalizePaidBooking(bookingId: string, paymentIntentId: string | null) {
+  const paid = await recordPayment(bookingId, paymentIntentId);
+  if (!paid || paid.status !== "awaiting_payment") return null;
+  const [ws, et] = await Promise.all([
+    db().query.workspaces.findFirst({ where: eq(schema.workspaces.id, paid.workspaceId) }),
+    paid.eventTypeId
+      ? db().query.eventTypes.findFirst({ where: eq(schema.eventTypes.id, paid.eventTypeId) })
+      : null,
+  ]);
+  if (!ws || !et) return null;
+  const siblings = paid.seriesId
+    ? (await bookingSeries(paid)).filter((b) => b.id !== paid.id && b.status === "awaiting_payment")
+    : [];
+  for (const s of siblings) await recordPayment(s.id, paymentIntentId);
+  const first = await finalizeBooking(ws, paid, et);
+  for (const s of siblings)
+    await finalizeBooking(ws, { ...s, paymentStatus: "paid" }, et, null, false);
+  return first;
+}
+
 export async function finalizeBooking(
   workspace: Workspace,
   booking: Booking,

@@ -291,8 +291,6 @@ export async function saveEventType(
   });
   if (clash && clash.id !== d.id) slug = `${slug}-${d.id.slice(0, 4)}`;
   const location: EventLocation = { type: d.locationType, value: d.locationValue || undefined };
-  if (d.recurEnabled === "on" && d.price > 0)
-    return { error: "Recurring bookings are not available for paid event types yet." };
   try {
     if (d.price > 0) assertFeature(ws, "payments");
     if (d.assignment !== "single") assertFeature(ws, "teamScheduling");

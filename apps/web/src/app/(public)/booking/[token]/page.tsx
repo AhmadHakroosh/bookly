@@ -60,8 +60,11 @@ async function BookingPage({ params, searchParams }: PageProps<"/booking/[token]
       {b.status === "awaiting_payment" && (
         <div className="mt-4 rounded-xl border p-4 text-sm">
           <p>
-            This slot is held for you for 30 minutes. Pay{" "}
-            {b.amountCents != null ? formatPrice(b.amountCents, b.currency) : ""} to confirm it.
+            {b.seriesCount ? "These sessions are" : "This slot is"} held for you for 30 minutes. Pay{" "}
+            {b.amountCents != null
+              ? formatPrice(b.amountCents * (b.seriesCount ?? 1), b.currency)
+              : ""}{" "}
+            to confirm {b.seriesCount ? `all ${b.seriesCount}` : "it"}.
           </p>
           <form action={payNow.bind(null, token)} className="mt-3">
             <button type="submit" className="rounded-lg bg-foreground px-4 py-2 text-background">

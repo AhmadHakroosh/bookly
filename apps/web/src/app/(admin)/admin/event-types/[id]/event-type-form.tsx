@@ -211,7 +211,7 @@ export function EventTypeForm({
           )}
           <FieldDescription>
             Attendees pick the first time and get every session in one confirmation. Dates the host
-            cannot take are skipped. Not available together with a price.
+            cannot take are skipped. With a price, the whole series is paid in one checkout.
           </FieldDescription>
         </fieldset>
         <div className="grid gap-6 sm:grid-cols-4">

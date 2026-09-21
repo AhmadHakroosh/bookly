@@ -105,7 +105,11 @@ async function EventPage({ params, searchParams }: PageProps<"/[username]/[event
           </p>
           {rule && (
             <p className="mt-1 text-sm text-muted-foreground">
-              {describeRecurrence(rule)}. One booking reserves the whole series.
+              {describeRecurrence(rule)}. One booking reserves the whole series
+              {et.priceCents && paymentsConfigured()
+                ? ` (${formatPrice(et.priceCents * rule.count, et.currency)} for ${rule.count} sessions)`
+                : ""}
+              .
             </p>
           )}
           {et.description && (

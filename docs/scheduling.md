@@ -11,7 +11,7 @@
 
 ## Recurring bookings
 
-Turn on `Recurring bookings` on an event type and choose the frequency (daily, weekly, monthly), the interval and the number of sessions (2–52). An attendee picks the first time and sees the whole series before confirming; dates the host cannot take are skipped and reported. Every occurrence is its own booking (own meeting link, calendar event, reminders and manage link) tied together by a series id, so a single session can be rescheduled or cancelled, and the manage page also offers "cancel all remaining sessions". The confirmation email lists all dates and attaches one `.ics` with every occurrence. Recurring event types cannot be paid yet.
+Turn on `Recurring bookings` on an event type and choose the frequency (daily, weekly, monthly), the interval and the number of sessions (2–52). An attendee picks the first time and sees the whole series before confirming; dates the host cannot take are skipped and reported. Every occurrence is its own booking (own meeting link, calendar event, reminders and manage link) tied together by a series id, so a single session can be rescheduled or cancelled, and the manage page also offers "cancel all remaining sessions". The confirmation email lists all dates and attaches one `.ics` with every occurrence. A paid series is charged in a single Stripe Checkout (price × sessions); cancelling one occurrence refunds that occurrence's share.
 
 ## Waitlist
 

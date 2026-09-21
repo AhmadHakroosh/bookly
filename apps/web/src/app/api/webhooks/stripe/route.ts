@@ -1,11 +1,9 @@
 import { NextResponse } from "next/server";
 import type Stripe from "stripe";
-import { eq, schema } from "@bookly/db";
 import { loadEnv } from "@bookly/config";
-import { db } from "@/lib/db";
-import { finalizeBooking } from "@/server/booking-flow";
+import { finalizePaidBooking } from "@/server/booking-flow";
 import { syncSubscription } from "@/server/billing";
-import { recordPayment, stripe } from "@/server/payments";
+import { stripe } from "@/server/payments";
 
 /** Stripe → Bookly: a paid Checkout session confirms its booking. */
 export async function POST(req: Request) {
@@ -45,21 +43,12 @@ export async function POST(req: Request) {
     }
     const bookingId = session.metadata?.bookingId;
     if (bookingId && session.payment_status === "paid") {
-      const paid = await recordPayment(
+      await finalizePaidBooking(
         bookingId,
         typeof session.payment_intent === "string"
           ? session.payment_intent
           : (session.payment_intent?.id ?? null),
       );
-      if (paid && paid.status === "awaiting_payment") {
-        const [ws, et] = await Promise.all([
-          db().query.workspaces.findFirst({ where: eq(schema.workspaces.id, paid.workspaceId) }),
-          paid.eventTypeId
-            ? db().query.eventTypes.findFirst({ where: eq(schema.eventTypes.id, paid.eventTypeId) })
-            : null,
-        ]);
-        if (ws && et) await finalizeBooking(ws, paid, et);
-      }
     }
   }
   return NextResponse.json({ received: true });
