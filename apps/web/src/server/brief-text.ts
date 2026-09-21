@@ -20,6 +20,8 @@ export type BriefFacts = {
   /** Newest first. */
   timeline: Pick<ContactEvent, "type" | "summary" | "createdAt" | "data">[];
   previousMeetings: { title: string; startAt: Date; status: string }[];
+  /** Still-open action items with this contact (carried over between sessions). */
+  openTasks?: string[];
 };
 
 const daysAgo = (d: Date, now: Date) =>
@@ -47,6 +49,7 @@ export function plainBrief(f: BriefFacts, now = new Date()): string {
   if (f.contact.notes) lines.push(`Your notes: ${f.contact.notes}`);
   const notes = f.timeline.filter((e) => e.type === "note" || e.type === "capture").slice(0, 3);
   if (notes.length) lines.push(`Recent notes: ${notes.map((n) => n.summary).join(" | ")}`);
+  if (f.openTasks?.length) lines.push(`Open items: ${f.openTasks.join(" · ")}`);
   const noShows = f.timeline.filter((e) => e.type === "no_show").length;
   if (noShows) lines.push(`Heads-up: ${noShows} no-show${noShows === 1 ? "" : "s"} before.`);
   if (f.booking.seriesIndex && f.booking.seriesCount)
@@ -65,6 +68,7 @@ export function factsForModel(f: BriefFacts, now = new Date()): string {
       ? `Booking answers:\n${f.questions.map((q) => `- ${q.label}: ${q.answer}`).join("\n")}`
       : "",
     f.booking.notes ? `Attendee note: ${f.booking.notes}` : "",
+    f.openTasks?.length ? `Open action items:\n${f.openTasks.map((t) => `- ${t}`).join("\n")}` : "",
     f.previousMeetings.length
       ? `Previous meetings:\n${f.previousMeetings.map((m) => `- ${fmtDateTime(m.startAt, f.tz)} ${m.title} (${m.status})`).join("\n")}`
       : "No previous meetings.",

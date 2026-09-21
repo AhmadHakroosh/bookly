@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { TaskList } from "@/components/task-list";
 import { fmtDate, fmtDateTime, fmtTime, todayIn, utcToZoned } from "@/lib/time";
 import { listOpenTasks } from "@/server/capture";
+import { recapsToReview } from "@/server/recaps";
 import { staleContacts } from "@/server/contacts";
 import {
   getProfileByUser,
@@ -28,7 +29,7 @@ async function AdminInbox() {
   const mine = role !== "owner" && role !== "admin";
   const profile = await getProfileByUser(workspace.id, session.user.id);
   const tz = profile?.timezone ?? workspace.timezone;
-  const [schedules, events, upcoming, stale, tasks, waitlist] = await Promise.all([
+  const [schedules, events, upcoming, stale, tasks, waitlist, recaps] = await Promise.all([
     profile ? listSchedules(workspace.id, session.user.id) : Promise.resolve([]),
     listAllEventTypes(workspace.id),
     listBookings(workspace.id, {
@@ -39,6 +40,7 @@ async function AdminInbox() {
     staleContacts(workspace.id),
     listOpenTasks(workspace.id, { userId: session.user.id, limit: 30 }),
     listWaitlist(workspace.id, mine ? session.user.id : undefined),
+    recapsToReview(workspace.id, mine ? session.user.id : undefined),
   ]);
   const full = await Promise.all(schedules.map((s) => getSchedule(s.id)));
   const hasHours = full.some((s) => (s?.rules.length ?? 0) > 0);
@@ -180,6 +182,34 @@ async function AdminInbox() {
                     </Button>
                   </form>
                 </details>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+      {recaps.length > 0 && (
+        <section className="space-y-3">
+          <h2 className="text-lg font-semibold">Recaps to review</h2>
+          <ul className="divide-y rounded-xl border text-sm">
+            {recaps.map((x) => (
+              <li key={x.id} className="flex flex-wrap items-start justify-between gap-3 p-4">
+                <div className="min-w-0">
+                  <p className="font-medium">
+                    {x.eventTitle ?? "Meeting"} with {x.booking.attendeeName} ·{" "}
+                    {fmtDateTime(x.booking.startAt, tz)}
+                  </p>
+                  <p className="line-clamp-2 text-muted-foreground">{x.recap.summary}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {x.recap.actions.length} action item{x.recap.actions.length === 1 ? "" : "s"}
+                    {x.recap.nextStep ? ` · next: ${x.recap.nextStep}` : ""}
+                  </p>
+                </div>
+                <Link
+                  href={`/admin/bookings/${x.booking.id}`}
+                  className="text-sm underline underline-offset-4"
+                >
+                  Review
+                </Link>
               </li>
             ))}
           </ul>

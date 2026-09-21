@@ -6,6 +6,7 @@ import { loadEnv } from "@bookly/config";
 import type { Booking, EventType, Workspace } from "@bookly/db/schema";
 import { db } from "@/lib/db";
 import { BRIEF_SYSTEM, factsForModel, plainBrief, type BriefFacts } from "./brief-text";
+import { listOpenTasks } from "./capture";
 import { contactTimeline, logContactEvent, trackBooking } from "./contacts";
 import { getProfileByUser } from "./scheduling";
 
@@ -22,7 +23,7 @@ async function gatherFacts(
   const c =
     contact ??
     (await trackBooking(workspace, booking, "booked", `Booked ${eventType?.title ?? "meeting"}`));
-  const [timeline, previous, host] = await Promise.all([
+  const [timeline, previous, host, openTasks] = await Promise.all([
     contactTimeline(c.id, 40),
     db()
       .select({
@@ -37,6 +38,7 @@ async function gatherFacts(
       )
       .orderBy(asc(schema.bookings.startAt)),
     getProfileByUser(workspace.id, booking.hostUserId),
+    listOpenTasks(workspace.id, { contactId: c.id, limit: 10 }),
   ]);
   const questions = (eventType?.questions ?? [])
     .map((q) => ({ label: q.label, answer: (booking.answers[q.id] ?? "").trim() }))
@@ -48,6 +50,7 @@ async function gatherFacts(
     questions,
     contact: c,
     timeline: timeline.filter((e) => e.bookingId !== booking.id || e.type !== "booked"),
+    openTasks: openTasks.map((t) => t.title),
     previousMeetings: previous
       .filter((p) => p.startAt.getTime() !== booking.startAt.getTime())
       .map((p) => ({ title: p.title ?? "Meeting", startAt: p.startAt, status: p.status })),

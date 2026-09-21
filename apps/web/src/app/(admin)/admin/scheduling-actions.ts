@@ -12,6 +12,13 @@ import { briefForBooking } from "@/server/brief";
 import { addTask, captureMeeting, completeTask, deleteTask, sendFollowUp } from "@/server/capture";
 import { logContactEvent, updateContact } from "@/server/contacts";
 import { deleteTranscript } from "@/server/transcripts";
+import {
+  acceptRecapActions,
+  applyRecapStage,
+  generateRecap,
+  markRecapReviewed,
+  noteRecapEmail,
+} from "@/server/recaps";
 import { trackBooking } from "@/server/contacts";
 import { refreshWorkspace } from "@/server/cache";
 import { parseQuestions, parseQuestionsJson, parseReminders } from "@/server/questions";
@@ -449,6 +456,7 @@ export async function sendFollowUpAction(id: string, formData: FormData) {
     .slice(0, 4000);
   if (!subject || !body) return;
   await sendFollowUp(o.ws, o.b, subject, body);
+  await noteRecapEmail(o.b.id, "followUpAt");
   revalidatePath(`/admin/bookings/${id}`);
 }
 
@@ -509,6 +517,40 @@ export async function snoozeContact(contactId: string, days: number) {
     nextFollowUpAt: new Date(Date.now() + Math.max(1, Math.min(90, days)) * 86_400_000),
   });
   revalidatePath("/admin");
+}
+
+export async function acceptRecapActionsAction(id: string, formData: FormData) {
+  const o = await ownBooking(id);
+  if (!o) return;
+  const indexes = formData
+    .getAll("action")
+    .map((v) => Number(v))
+    .filter((n) => Number.isInteger(n));
+  await acceptRecapActions(o.ws, o.b, indexes);
+  revalidatePath(`/admin/bookings/${id}`);
+  revalidatePath("/admin");
+}
+
+export async function applyRecapStageAction(id: string) {
+  const o = await ownBooking(id);
+  if (!o) return;
+  await applyRecapStage(o.ws, o.b);
+  revalidatePath(`/admin/bookings/${id}`);
+}
+
+export async function markRecapReviewedAction(id: string) {
+  const o = await ownBooking(id);
+  if (!o) return;
+  await markRecapReviewed(o.b.id);
+  revalidatePath(`/admin/bookings/${id}`);
+  revalidatePath("/admin");
+}
+
+export async function regenerateRecapAction(id: string) {
+  const o = await ownBooking(id);
+  if (!o) return;
+  await generateRecap(o.ws, o.b, o.et);
+  revalidatePath(`/admin/bookings/${id}`);
 }
 
 export async function deleteTranscriptAction(id: string) {

@@ -458,6 +458,37 @@ export const meetingTranscripts = pgTable(
   ],
 );
 
+/** What the assistant made of a transcribed meeting, waiting for the host's one-click review. */
+export const meetingRecaps = pgTable(
+  "meeting_recaps",
+  {
+    id: id(),
+    workspaceId: text("workspace_id")
+      .notNull()
+      .references(() => workspaces.id, { onDelete: "cascade" }),
+    bookingId: text("booking_id").notNull(),
+    contactId: text("contact_id"),
+    recap: jsonb("recap").$type<Record<string, unknown>>().notNull().default({}),
+    /** Which action items became tasks (index → task id), stage applied, emails sent. */
+    accepted: jsonb("accepted")
+      .$type<{
+        tasks?: Record<string, string>;
+        stage?: string;
+        followUpAt?: string;
+        recapAt?: string;
+      }>()
+      .notNull()
+      .default({}),
+    model: text("model"),
+    reviewedAt: timestamp("reviewed_at", { withTimezone: true }),
+    ...timestamps,
+  },
+  (t) => [
+    uniqueIndex("meeting_recaps_booking_idx").on(t.bookingId),
+    index("meeting_recaps_ws_review_idx").on(t.workspaceId, t.reviewedAt),
+  ],
+);
+
 /* ---------------- Waitlist ---------------- */
 
 /**
@@ -503,4 +534,5 @@ export type RoutingForm = typeof routingForms.$inferSelect;
 export type Contact = typeof contacts.$inferSelect;
 export type Task = typeof tasks.$inferSelect;
 export type MeetingTranscript = typeof meetingTranscripts.$inferSelect;
+export type MeetingRecap = typeof meetingRecaps.$inferSelect;
 export type ContactEvent = typeof contactEvents.$inferSelect;

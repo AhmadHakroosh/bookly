@@ -8,13 +8,9 @@ import type {
   TranscriptSegment,
   Workspace,
 } from "@bookly/db/schema";
-import { sendEmail } from "@bookly/email";
 import { db } from "@/lib/db";
-import { fmtDateTime } from "@/lib/time";
 import { trackBooking } from "./contacts";
 import { api } from "./integrations/types";
-import { notifyHost } from "./notify";
-import { baseUrl, getProfileByUser } from "./scheduling";
 import { mergeSegments, parseVtt } from "./transcript-text";
 
 const DAILY = "https://api.daily.co/v1";
@@ -152,25 +148,17 @@ export async function completeTranscript(
     .where(eq(schema.bookings.id, booking.id));
   if (status !== "ready") return false;
   await trackBooking(ws, booking, "note", `Transcript captured (${segments.length} lines)`);
-  const [host, user] = await Promise.all([
-    getProfileByUser(ws.id, booking.hostUserId),
-    db().query.users.findFirst({
-      where: eq(schema.users.id, booking.hostUserId),
-      columns: { email: true },
-    }),
-  ]);
-  const link = `${baseUrl()}/admin/bookings/${booking.id}`;
-  const text = `The transcript of your call with ${booking.attendeeName} (${fmtDateTime(booking.startAt, host?.timezone ?? ws.timezone)}) is ready. Review it and turn it into notes, tasks and a follow-up:\n\n${link}`;
-  if (user?.email)
-    await sendEmail({
-      to: user.email,
-      subject: `Transcript ready: ${booking.attendeeName}`,
-      text,
-    }).catch(() => {});
-  void notifyHost(booking.hostUserId, "onBooking", {
-    subject: "Transcript ready",
-    text: `Transcript of your call with ${booking.attendeeName} is ready. ${link}`,
+  const et = booking.eventTypeId
+    ? await db().query.eventTypes.findFirst({
+        where: eq(schema.eventTypes.id, booking.eventTypeId),
+      })
+    : null;
+  const { generateRecap, notifyRecapReady } = await import("./recaps");
+  const recap = await generateRecap(ws, booking, et ?? null).catch((e) => {
+    console.error("[recap] failed", e);
+    return null;
   });
+  await notifyRecapReady(ws, booking, recap);
   return true;
 }
 

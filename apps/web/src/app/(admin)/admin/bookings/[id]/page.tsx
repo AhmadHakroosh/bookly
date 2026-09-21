@@ -13,7 +13,9 @@ import { renderTranscript } from "@/server/transcript-text";
 import { listOpenTasks } from "@/server/capture";
 import { contactTimeline } from "@/server/contacts";
 import { CaptureForm } from "./capture-form";
+import { RecapPanel } from "./recap-panel";
 import { TranscriptPanel } from "./transcript-panel";
+import { getRecap, recapOf } from "@/server/recaps";
 import { getTranscript } from "@/server/transcripts";
 import { locationLabel } from "@/server/scheduling";
 import { requireStaff } from "@/server/session";
@@ -32,18 +34,28 @@ async function BookingBriefPage({ params }: PageProps<"/admin/bookings/[id]">) {
   const et = b.eventTypeId
     ? await db().query.eventTypes.findFirst({ where: eq(schema.eventTypes.id, b.eventTypeId) })
     : null;
-  const [brief, tasks, timeline, transcript] = await Promise.all([
+  const [brief, tasks, timeline, transcript, recapRow] = await Promise.all([
     briefForBooking(ws, b, et ?? null),
     listOpenTasks(ws.id, { bookingId: b.id }),
     b.contactId ? contactTimeline(b.contactId, 50) : Promise.resolve([]),
     b.transcriptStatus ? getTranscript(b.id) : Promise.resolve(null),
+    getRecap(b.id),
   ]);
   const lastCapture = timeline.find((e) => e.type === "capture" && e.bookingId === b.id);
+  const recapDraft = recapOf(recapRow)?.followUp ?? null;
   const draft =
+    recapDraft ??
     (
       lastCapture?.data as
         { capture?: { followUp?: { subject: string; body: string } | null } } | undefined
-    )?.capture?.followUp ?? null;
+    )?.capture?.followUp ??
+    null;
+  const contact = b.contactId
+    ? await db().query.contacts.findFirst({
+        where: eq(schema.contacts.id, b.contactId),
+        columns: { stage: true },
+      })
+    : null;
   const past = b.endAt <= new Date() || b.status === "completed" || b.status === "no_show";
   return (
     <div className="max-w-2xl space-y-6">
@@ -106,6 +118,15 @@ async function BookingBriefPage({ params }: PageProps<"/admin/bookings/[id]">) {
         bookingId={b.id}
         title="Action items"
       />
+      {recapRow && (
+        <RecapPanel
+          bookingId={b.id}
+          row={recapRow}
+          attendeeName={b.attendeeName}
+          contactId={b.contactId}
+          currentStage={contact?.stage ?? null}
+        />
+      )}
       {(b.transcriptStatus ||
         (et && et.autoCapture !== "off" && b.meetingProvider === "daily")) && (
         <TranscriptPanel
