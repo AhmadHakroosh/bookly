@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { eq, schema } from "@bookly/db";
 import { db } from "@/lib/db";
+import { logContactEvent, upsertContact } from "@/server/contacts";
 import { throttlePublicForm } from "@/server/request";
 import { getRoutingForm } from "@/server/routing";
 import { routeAnswers } from "@/server/routing-rules";
@@ -40,6 +41,11 @@ export async function submitRouting(
     if (q.required && !v.trim()) return { error: `Please answer: ${q.label}` };
     answers[q.id] = v;
   }
+  const labelled = Object.fromEntries(form.questions.map((q) => [q.label, answers[q.id] ?? ""]));
+  const contact = await upsertContact(ws.id, { email: d.email, name: d.name });
+  await logContactEvent(ws.id, contact.id, "form_submitted", `Filled the "${form.name}" form`, {
+    data: { form: form.slug, answers: labelled },
+  });
   const dest = routeAnswers(form, answers);
   if (!dest) return { error: "Sorry, we could not find a matching option. Please email us." };
   if (dest.type === "url") redirect(dest.url);

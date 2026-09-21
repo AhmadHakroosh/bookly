@@ -18,6 +18,7 @@ import { isPaid, paymentsConfigured, recordPayment, refundBooking } from "./paym
 import { notifyWaitlist } from "./waitlist";
 import { emitEvent } from "./webhooks";
 import { isBlocked } from "./abuse";
+import { trackBooking } from "./contacts";
 import { refreshWorkspace } from "./cache";
 import { assertBookingQuota, LimitError } from "./limits";
 import { occurrences, recurrenceOf } from "./recurrence";
@@ -35,6 +36,13 @@ export type BookingInput = {
 };
 
 export class BookingError extends Error {}
+
+/** Booking answers keyed by the question's label, for timelines and briefs. */
+function labelledAnswers(eventType: EventType, answers: Record<string, string>) {
+  return Object.fromEntries(
+    eventType.questions.map((q) => [q.label, (answers[q.id] ?? "").trim()]).filter(([, v]) => v),
+  );
+}
 
 /** What `createBooking` returns: the (first) booking plus, for a series, the dates that could not be booked. */
 export type BookingResult = Booking & { skipped?: Date[] };
@@ -300,7 +308,27 @@ export async function createBooking(
   const first = rows[0]!;
 
   // Paid bookings are finalised by the Stripe webhook (see finalizePaidBooking).
-  if (needsPayment) return { ...first, skipped };
+  if (needsPayment) {
+    await trackBooking(
+      workspace,
+      first,
+      "booked",
+      `Started paid booking of ${eventType.title} for ${fmtDateTime(first.startAt, first.timezone)}`,
+      { answers: labelledAnswers(eventType, input.answers), awaitingPayment: true },
+    );
+    return { ...first, skipped };
+  }
+  await trackBooking(
+    workspace,
+    first,
+    rescheduledFromId ? "rescheduled" : "booked",
+    `${rescheduledFromId ? "Rescheduled" : "Booked"} ${eventType.title}${rows.length > 1 ? ` (${rows.length} sessions)` : ""} for ${fmtDateTime(first.startAt, first.timezone)}`,
+    {
+      answers: labelledAnswers(eventType, input.answers),
+      notes: input.notes?.trim() || null,
+      sessions: rows.length,
+    },
+  );
   // Every occurrence is provisioned and announced to webhooks; people are emailed once.
   const finalized = await finalizeBooking(workspace, first, eventType, rescheduledFromId);
   for (const b of rows.slice(1)) await finalizeBooking(workspace, b, eventType, null, false);
@@ -353,6 +381,12 @@ export async function finalizeBooking(
   if (booking.status === "confirmed") booking = await provision(workspace, booking, eventType);
   if (notify) {
     await notifyCreated(workspace, booking, eventType);
+    await trackBooking(
+      workspace,
+      booking,
+      "email_sent",
+      `Confirmation email for ${eventType.title}`,
+    );
     const when = fmtDateTime(
       booking.startAt,
       (await getProfileByUser(workspace.id, booking.hostUserId))?.timezone ?? workspace.timezone,
@@ -424,6 +458,12 @@ export async function confirmBooking(workspace: Workspace, bookingId: string) {
     ? await db().query.eventTypes.findFirst({ where: eq(schema.eventTypes.id, b.eventTypeId) })
     : null;
   updated = await provision(workspace, updated!, et ?? null);
+  await trackBooking(
+    workspace,
+    updated!,
+    "confirmed",
+    `Confirmed ${et?.title ?? "meeting"} for ${fmtDateTime(updated!.startAt, updated!.timezone)}`,
+  );
   emitEvent(workspace.id, "booking.confirmed", {
     booking: serializeBooking(updated!, { eventType: et ?? null }),
   });
@@ -483,6 +523,13 @@ export async function cancelBooking(
   }
   if (b.paymentStatus === "paid") await refundBooking(b);
   void notifyWaitlist(workspace, b, et ?? null).catch((e) => console.error("[waitlist]", e));
+  await trackBooking(
+    workspace,
+    updated!,
+    "cancelled",
+    `${by === "host" ? "Host" : "They"} cancelled ${et?.title ?? "meeting"} on ${fmtDateTime(b.startAt, b.timezone)}${reason ? `: ${reason.trim()}` : ""}`,
+    { by, reason: reason ?? null },
+  );
   emitEvent(workspace.id, "booking.cancelled", {
     booking: serializeBooking(updated!, { eventType: et ?? null }),
   });

@@ -199,6 +199,76 @@ export const eventTypes = pgTable(
   ],
 );
 
+/* ---------------- Contacts (relationship state) ---------------- */
+
+export const CONTACT_STAGES = ["lead", "active", "won", "lost"] as const;
+export type ContactStage = (typeof CONTACT_STAGES)[number];
+
+/** One row per person who ever booked, joined a waitlist or filled a routing form. */
+export const contacts = pgTable(
+  "contacts",
+  {
+    id: id(),
+    workspaceId: text("workspace_id")
+      .notNull()
+      .references(() => workspaces.id, { onDelete: "cascade" }),
+    email: text("email").notNull(),
+    name: text("name").notNull().default(""),
+    company: text("company"),
+    phone: text("phone"),
+    tags: jsonb("tags").$type<string[]>().notNull().default([]),
+    stage: text("stage").$type<ContactStage>().notNull().default("lead"),
+    /** Free-form host notes (markdown-ish plain text). */
+    notes: text("notes"),
+    /** When the host wants to be nudged about this person. */
+    nextFollowUpAt: timestamp("next_follow_up_at", { withTimezone: true }),
+    lastActivityAt: timestamp("last_activity_at", { withTimezone: true }).notNull().defaultNow(),
+    bookingsCount: integer("bookings_count").notNull().default(0),
+    ...timestamps,
+  },
+  (t) => [
+    uniqueIndex("contacts_ws_email_idx").on(t.workspaceId, t.email),
+    index("contacts_ws_stage_idx").on(t.workspaceId, t.stage),
+    index("contacts_ws_activity_idx").on(t.workspaceId, t.lastActivityAt),
+  ],
+);
+
+export type ContactEventType =
+  | "booked"
+  | "confirmed"
+  | "cancelled"
+  | "rescheduled"
+  | "completed"
+  | "no_show"
+  | "email_sent"
+  | "note"
+  | "stage_changed"
+  | "waitlist_joined"
+  | "form_submitted"
+  | "brief"
+  | "capture"
+  | "task";
+
+/** The contact's timeline: everything that happened between them and the workspace. */
+export const contactEvents = pgTable(
+  "contact_events",
+  {
+    id: id(),
+    workspaceId: text("workspace_id")
+      .notNull()
+      .references(() => workspaces.id, { onDelete: "cascade" }),
+    contactId: text("contact_id")
+      .notNull()
+      .references(() => contacts.id, { onDelete: "cascade" }),
+    bookingId: text("booking_id"),
+    type: text("type").$type<ContactEventType>().notNull(),
+    summary: text("summary").notNull(),
+    data: jsonb("data").$type<Record<string, unknown>>().notNull().default({}),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index("contact_events_contact_idx").on(t.contactId, t.createdAt)],
+);
+
 /* ---------------- Bookings ---------------- */
 
 export const bookingStatus = pgEnum("booking_status", [
@@ -241,6 +311,8 @@ export const bookings = pgTable(
     seriesId: text("series_id"),
     seriesIndex: integer("series_index"),
     seriesCount: integer("series_count"),
+    /** The person this booking belongs to (see `contacts`). */
+    contactId: text("contact_id"),
     location: jsonb("location").$type<EventLocation>().notNull().default({ type: "custom" }),
     meetingUrl: text("meeting_url"),
     meetingProvider: text("meeting_provider"),
@@ -268,6 +340,7 @@ export const bookings = pgTable(
     index("bookings_reminders_idx").on(t.status, t.startAt),
     index("bookings_series_idx").on(t.seriesId),
     index("bookings_event_start_idx").on(t.eventTypeId, t.startAt),
+    index("bookings_contact_idx").on(t.contactId),
   ],
 );
 
@@ -351,3 +424,5 @@ export type EventType = typeof eventTypes.$inferSelect;
 export type Booking = typeof bookings.$inferSelect;
 export type WaitlistEntry = typeof waitlistEntries.$inferSelect;
 export type RoutingForm = typeof routingForms.$inferSelect;
+export type Contact = typeof contacts.$inferSelect;
+export type ContactEvent = typeof contactEvents.$inferSelect;

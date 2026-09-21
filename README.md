@@ -36,6 +36,7 @@ Prefer a PaaS? The app also runs on Vercel with a managed Postgres (Neon) and S3
 - [Reminders and host notifications](docs/notifications.md)
 - [Teams, round-robin, workflows](docs/teams.md)
 - [Routing forms](docs/routing.md)
+- [Contacts and timeline](docs/contacts.md)
 - [Embedding the booking widget](docs/embeds.md)
 - [Custom domains and HTTPS](docs/domains.md)
 - [API and webhooks](docs/api.md)

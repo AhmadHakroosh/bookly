@@ -3,9 +3,11 @@ import { and, eq, gte, inArray, lte, schema, sql } from "@bookly/db";
 import { sendEmail } from "@bookly/email";
 import { db } from "@/lib/db";
 import { followUpMail, reminderMail } from "@/emails/booking";
+import { trackBooking } from "./contacts";
 import { notifyHost, sendText } from "./notify";
 import { expireUnpaidBookings } from "./payments";
 import { baseUrl, getProfileByUser } from "./scheduling";
+import { fmtDateTime } from "@/lib/time";
 
 /**
  * Sends reminders at each event type's configured offsets (minutes before the start) and
@@ -77,6 +79,7 @@ export async function sendDueReminders(now = new Date()): Promise<number> {
       .update(schema.bookings)
       .set({ remindersSent: [...b.remindersSent, ...due.map((x) => `r:${x}`)] })
       .where(eq(schema.bookings.id, b.id));
+    await trackBooking(ws, b, "email_sent", `Reminder (${hours}h) for ${et?.title ?? "meeting"}`);
     sent++;
   }
 
@@ -127,12 +130,13 @@ export async function sendDueReminders(now = new Date()): Promise<number> {
       .update(schema.bookings)
       .set({ remindersSent: [...b.remindersSent, "followup"] })
       .where(eq(schema.bookings.id, b.id));
+    await trackBooking(ws, b, "email_sent", `Follow-up email: ${mail.subject}`);
     sent++;
   }
 
   await expireUnpaidBookings(now).catch((e) => console.error("[payments] expire failed", e));
-  // Mark finished meetings as completed.
-  await db()
+  // Mark finished meetings as completed (and note it on the contact's timeline).
+  const done = await db()
     .update(schema.bookings)
     .set({ status: "completed" })
     .where(
@@ -140,6 +144,19 @@ export async function sendDueReminders(now = new Date()): Promise<number> {
         inArray(schema.bookings.status, ["confirmed"]),
         lte(schema.bookings.endAt, new Date(now.getTime() - 3600_000)),
       ),
-    );
+    )
+    .returning();
+  for (const b of done) {
+    const ws = await db().query.workspaces.findFirst({
+      where: eq(schema.workspaces.id, b.workspaceId),
+    });
+    if (ws)
+      await trackBooking(
+        ws,
+        b,
+        "completed",
+        `Meeting took place on ${fmtDateTime(b.startAt, b.timezone)}`,
+      );
+  }
   return sent;
 }

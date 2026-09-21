@@ -5,6 +5,7 @@ import { sendEmail } from "@bookly/email";
 import { db } from "@/lib/db";
 import { fmtDate, fmtDateTime, utcToZoned } from "@/lib/time";
 import { refreshWorkspace } from "./cache";
+import { logContactEvent, upsertContact } from "./contacts";
 import { baseUrl, getProfileByUser, newToken, occupiedSessions } from "./scheduling";
 
 export type WaitlistTarget = { startAt: Date } | { date: string };
@@ -65,6 +66,16 @@ export async function joinWaitlist(
       token: newToken(),
     })
     .returning();
+  const contact = await upsertContact(workspace.id, { email, name: input.name });
+  await logContactEvent(
+    workspace.id,
+    contact.id,
+    "waitlist_joined",
+    `Joined the waitlist for ${eventType.title}`,
+    {
+      data: { startAt: startAt?.toISOString() ?? null, date },
+    },
+  );
   const host = await getProfileByUser(workspace.id, eventType.userId);
   const when = startAt
     ? fmtDateTime(startAt, input.timezone)

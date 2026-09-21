@@ -64,7 +64,14 @@ async function BookingsPage({ searchParams }: PageProps<"/admin/bookings">) {
           >
             <div>
               <p className="font-medium">
-                {b.eventTitle ?? "Meeting"} with {b.attendeeName}
+                {b.eventTitle ?? "Meeting"} with{" "}
+                {b.contactId ? (
+                  <Link href={`/admin/contacts/${b.contactId}`} className="hover:underline">
+                    {b.attendeeName}
+                  </Link>
+                ) : (
+                  b.attendeeName
+                )}
               </p>
               <p className="text-muted-foreground">
                 {fmtDateTime(b.startAt, tz)} · {b.meetingUrl ?? locationLabel(b.location)}

@@ -5,8 +5,9 @@ import { z } from "zod";
 import { and, eq, schema } from "@bookly/db";
 import type { EventLocation } from "@bookly/db/schema";
 import { db } from "@/lib/db";
-import { hhmmToMin, isValidTimezone } from "@/lib/time";
+import { fmtDateTime, hhmmToMin, isValidTimezone } from "@/lib/time";
 import { cancelBooking, confirmBooking } from "@/server/booking-flow";
+import { trackBooking } from "@/server/contacts";
 import { refreshWorkspace } from "@/server/cache";
 import { parseQuestions, parseQuestionsJson, parseReminders } from "@/server/questions";
 import { MAX_OCCURRENCES } from "@/server/recurrence";
@@ -367,10 +368,20 @@ export async function hostCancel(id: string, formData: FormData) {
 
 export async function hostMark(id: string, status: "completed" | "no_show" | "confirmed") {
   const { ws } = await ctx();
-  await db()
+  const [b] = await db()
     .update(schema.bookings)
     .set({ status })
-    .where(and(eq(schema.bookings.id, id), eq(schema.bookings.workspaceId, ws.id)));
+    .where(and(eq(schema.bookings.id, id), eq(schema.bookings.workspaceId, ws.id)))
+    .returning();
+  if (b && status !== "confirmed")
+    await trackBooking(
+      ws,
+      b,
+      status,
+      status === "no_show"
+        ? `Did not show up on ${fmtDateTime(b.startAt, b.timezone)}`
+        : `Meeting took place on ${fmtDateTime(b.startAt, b.timezone)}`,
+    );
   refreshWorkspace(ws.id);
 }
 
