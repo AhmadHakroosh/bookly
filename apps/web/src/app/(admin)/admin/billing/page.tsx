@@ -42,7 +42,7 @@ async function BillingPage({ searchParams }: PageProps<"/admin/billing">) {
       </div>
 
       <section className="space-y-2">
-        <h2 className="font-medium">Usage</h2>
+        <h2 className="text-base font-semibold tracking-tight">Usage</h2>
         <ul className="divide-y rounded-xl border text-sm">
           {usage.map((u) => (
             <li key={u.key} className="flex items-center justify-between p-3">
@@ -60,7 +60,7 @@ async function BillingPage({ searchParams }: PageProps<"/admin/billing">) {
       </section>
 
       <section className="space-y-3">
-        <h2 className="font-medium">Plans</h2>
+        <h2 className="text-base font-semibold tracking-tight">Plans</h2>
         <div className="grid gap-4 md:grid-cols-3">
           {Object.values(PLANS).map((p) => (
             <div key={p.id} className="flex flex-col rounded-xl border p-4">

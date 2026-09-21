@@ -48,7 +48,7 @@ async function AvailabilityPage() {
         }))}
       />
       <section className="space-y-3">
-        <h2 className="text-lg font-semibold">Date overrides</h2>
+        <h2 className="text-lg font-semibold tracking-tight">Date overrides</h2>
         <p className="text-sm text-muted-foreground">
           Block a day off, or open different hours on a specific date.
         </p>

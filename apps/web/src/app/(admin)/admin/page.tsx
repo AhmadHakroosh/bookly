@@ -99,7 +99,7 @@ async function AdminInbox() {
 
       {!ready && (
         <section className="space-y-3">
-          <h2 className="text-lg font-semibold">Get started</h2>
+          <h2 className="text-lg font-semibold tracking-tight">Get started</h2>
           <ol className="divide-y rounded-xl border">
             {steps.map((s, i) => (
               <li key={s.href}>
@@ -123,7 +123,7 @@ async function AdminInbox() {
 
       {pending.length > 0 && (
         <section className="space-y-3">
-          <h2 className="text-lg font-semibold">Requests</h2>
+          <h2 className="text-lg font-semibold tracking-tight">Requests</h2>
           <ul className="space-y-2">
             {pending.map((b) => (
               <li key={b.id} className="rounded-xl border p-4 text-sm">
@@ -189,7 +189,7 @@ async function AdminInbox() {
       )}
       {recaps.length > 0 && (
         <section className="space-y-3">
-          <h2 className="text-lg font-semibold">Recaps to review</h2>
+          <h2 className="text-lg font-semibold tracking-tight">Recaps to review</h2>
           <ul className="divide-y rounded-xl border text-sm">
             {recaps.map((x) => (
               <li key={x.id} className="flex flex-wrap items-start justify-between gap-3 p-4">
@@ -217,7 +217,7 @@ async function AdminInbox() {
       )}
 
       <section className="space-y-3">
-        <h2 className="text-lg font-semibold">Today</h2>
+        <h2 className="text-lg font-semibold tracking-tight">Today</h2>
         {todays.length === 0 ? (
           <p className="rounded-xl border border-dashed p-6 text-sm text-muted-foreground">
             No meetings today.
@@ -283,7 +283,7 @@ async function AdminInbox() {
 
       <div className="grid gap-6 lg:grid-cols-2">
         <section className="space-y-3">
-          <h2 className="text-lg font-semibold">Follow up</h2>
+          <h2 className="text-lg font-semibold tracking-tight">Follow up</h2>
           {stale.length === 0 ? (
             <p className="rounded-xl border border-dashed p-6 text-sm text-muted-foreground">
               Nobody is waiting on you.

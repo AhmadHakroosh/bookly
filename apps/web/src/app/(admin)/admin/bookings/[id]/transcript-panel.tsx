@@ -35,7 +35,7 @@ export function TranscriptPanel({
   return (
     <section className="rounded-xl border p-5 text-sm">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <h2 className="font-medium">Auto-capture</h2>
+        <h2 className="text-base font-semibold tracking-tight">Auto-capture</h2>
         <Badge variant={effective === "ready" ? "default" : "secondary"}>
           {effective === "declined" ? "Attendee declined" : (LABEL[effective] ?? effective)}
         </Badge>

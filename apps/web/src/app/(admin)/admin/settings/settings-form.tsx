@@ -74,7 +74,7 @@ export function SettingsForm({ workspace, zones }: { workspace: Values; zones: s
           </FieldDescription>
         </Field>
         <fieldset className="space-y-3 rounded-lg border p-4">
-          <legend className="px-1 text-sm font-medium">CRM sync</legend>
+          <legend className="px-1 text-base font-semibold tracking-tight">CRM sync</legend>
           <FieldDescription>
             Contacts, stage changes, meeting notes and sent emails are mirrored to your CRM. The key
             is stored encrypted.{workspace.crmConnected ? " Connected." : ""}
@@ -115,7 +115,7 @@ export function SettingsForm({ workspace, zones }: { workspace: Values; zones: s
           </div>
         </fieldset>
         <fieldset className="space-y-3 rounded-lg border p-4">
-          <legend className="px-1 text-sm font-medium">Email templates</legend>
+          <legend className="px-1 text-base font-semibold tracking-tight">Email templates</legend>
           <FieldDescription>
             Used by the Proposal and Payment request buttons on contact pages. Placeholders:{" "}
             {"{name} {company} {host} {amount} {payLink}"}. Leave blank for the defaults.

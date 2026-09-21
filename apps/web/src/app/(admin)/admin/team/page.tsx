@@ -88,7 +88,7 @@ async function TeamPage() {
       </ul>
       {invites.length > 0 && (
         <section className="space-y-2">
-          <h2 className="font-medium">Pending invitations</h2>
+          <h2 className="text-base font-semibold tracking-tight">Pending invitations</h2>
           <ul className="divide-y rounded-xl border text-sm">
             {invites.map((i) => (
               <li key={i.id} className="flex items-center justify-between gap-3 p-3">

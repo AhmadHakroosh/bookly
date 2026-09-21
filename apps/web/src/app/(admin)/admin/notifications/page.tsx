@@ -37,7 +37,7 @@ async function NotificationsPage() {
       <section className="space-y-3 rounded-xl border p-5">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <h2 className="font-medium">
+            <h2 className="text-base font-semibold tracking-tight">
               Attendee joined{" "}
               <Badge variant={joinEnabled ? "default" : "secondary"}>
                 {joinEnabled ? "On" : "Off"}

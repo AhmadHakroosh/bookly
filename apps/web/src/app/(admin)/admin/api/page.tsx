@@ -68,7 +68,7 @@ async function ApiPage() {
       </div>
 
       <section className="space-y-4">
-        <h2 className="text-lg font-semibold">API keys</h2>
+        <h2 className="text-lg font-semibold tracking-tight">API keys</h2>
         <ApiKeyForm />
         <Table>
           <TableHeader>
@@ -114,7 +114,7 @@ async function ApiPage() {
       </section>
 
       <section className="space-y-4">
-        <h2 className="text-lg font-semibold">Webhooks</h2>
+        <h2 className="text-lg font-semibold tracking-tight">Webhooks</h2>
         <WebhookForm />
         <Table>
           <TableHeader>

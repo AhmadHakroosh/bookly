@@ -144,3 +144,11 @@
 .docs-prose .heading-anchor:focus-visible {
   opacity: 1;
 }
+
+/* Admin: light dividers between top-level sections of a page. */
+.admin-page > div > section + section,
+.admin-page > div > section + div,
+.admin-page > div > div + section {
+  border-top: 1px solid var(--border);
+  padding-top: 1.75rem;
+}

@@ -42,7 +42,7 @@ export function AttendeeRecap({
   return (
     <section className="rounded-xl border p-4 text-sm">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <h2 className="font-medium">Recap for {attendeeName}</h2>
+        <h2 className="text-base font-semibold tracking-tight">Recap for {attendeeName}</h2>
         {sentAt ? (
           <span className="text-xs text-muted-foreground">
             Sent {new Date(sentAt).toLocaleString()}

@@ -106,7 +106,7 @@ async function ContactPage({ params }: PageProps<"/admin/contacts/[id]">) {
         <section className="space-y-6">
           {upcoming.length > 0 && (
             <div>
-              <h2 className="text-sm font-medium">Upcoming</h2>
+              <h2 className="text-base font-semibold tracking-tight">Upcoming</h2>
               <ul className="mt-2 divide-y rounded-xl border text-sm">
                 {upcoming.map((b) => (
                   <li key={b.id} className="flex items-center justify-between gap-3 px-4 py-2">
@@ -125,7 +125,7 @@ async function ContactPage({ params }: PageProps<"/admin/contacts/[id]">) {
             </div>
           )}
           <div>
-            <h2 className="text-sm font-medium">Timeline</h2>
+            <h2 className="text-base font-semibold tracking-tight">Timeline</h2>
             <form action={addNote.bind(null, c.id)} className="mt-2 flex gap-2">
               <input
                 name="text"

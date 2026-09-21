@@ -91,7 +91,7 @@ async function AdminShell({ children }: { children: React.ReactNode }) {
           <AdminNav cloud={isCloud()} />
         </aside>
         <main className="min-w-0 flex-1 px-4 py-8 lg:px-8">
-          <div className="mx-auto max-w-6xl">
+          <div className="admin-page mx-auto max-w-6xl">
             {workspace?.suspendedAt && (
               <p className="mb-6 rounded-md border border-destructive/40 p-3 text-sm">
                 This workspace is suspended

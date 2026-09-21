@@ -67,7 +67,7 @@ export function PrefsForm({
           />
         </Field>
         <fieldset className="space-y-2 text-sm">
-          <legend className="mb-1 font-medium">Ping me when</legend>
+          <legend className="mb-1 text-base font-semibold tracking-tight">Ping me when</legend>
           {(
             [
               ["onBooking", "someone books a call", prefs.onBooking ?? true],

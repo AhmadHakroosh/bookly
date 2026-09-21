@@ -167,7 +167,9 @@ export function EventTypeForm({
           </Field>
         )}
         <fieldset className="space-y-3 rounded-lg border p-4">
-          <legend className="px-1 text-sm font-medium">Recurring bookings</legend>
+          <legend className="px-1 text-base font-semibold tracking-tight">
+            Recurring bookings
+          </legend>
           <label className="inline-flex items-center gap-2 text-sm">
             <input
               type="checkbox"
@@ -385,7 +387,9 @@ export function EventTypeForm({
           </Field>
         </div>
         <fieldset className="space-y-3 rounded-lg border p-4">
-          <legend className="px-1 text-sm font-medium">Follow-up email after the meeting</legend>
+          <legend className="px-1 text-base font-semibold tracking-tight">
+            Follow-up email after the meeting
+          </legend>
           <label className="inline-flex items-center gap-2 text-sm">
             <input
               type="checkbox"

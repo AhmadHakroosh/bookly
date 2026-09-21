@@ -35,7 +35,7 @@ export function CalendarCard({
       <section className="rounded-xl border p-5">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <h2 className="font-medium">{name}</h2>
+            <h2 className="text-base font-semibold tracking-tight">{name}</h2>
             <p className="text-sm text-muted-foreground">{description}</p>
           </div>
           {configured ? (
@@ -59,7 +59,7 @@ export function CalendarCard({
     <section className="space-y-4 rounded-xl border p-5">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h2 className="font-medium">{name}</h2>
+          <h2 className="text-base font-semibold tracking-tight">{name}</h2>
           <p className="text-sm text-muted-foreground">
             Connected as {integration.accountLabel ?? "unknown account"}
           </p>

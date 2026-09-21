@@ -31,7 +31,7 @@ export function CaptureForm({
     <div className="space-y-4">
       <form action={action} className="rounded-xl border p-4">
         <input type="hidden" name="id" value={bookingId} />
-        <h2 className="text-sm font-medium">After the meeting</h2>
+        <h2 className="text-base font-semibold tracking-tight">After the meeting</h2>
         <p className="mt-1 text-xs text-muted-foreground">
           {assistant
             ? "Paste your notes or a transcript. The assistant extracts decisions, action items with dates, a next step and drafts the follow-up."
@@ -73,7 +73,7 @@ export function CaptureForm({
         </Button>
       </form>
       <form action={sendFollowUpAction.bind(null, bookingId)} className="rounded-xl border p-4">
-        <h2 className="text-sm font-medium">Follow-up email</h2>
+        <h2 className="text-base font-semibold tracking-tight">Follow-up email</h2>
         <input
           name="subject"
           value={subject}

@@ -23,7 +23,7 @@ export function TaskList({
   const now = new Date();
   return (
     <section className="rounded-xl border p-4">
-      <h2 className="text-sm font-medium">{title}</h2>
+      <h2 className="text-base font-semibold tracking-tight">{title}</h2>
       <ul className="mt-2 space-y-1.5 text-sm">
         {tasks.map((t) => {
           const overdue = t.dueAt && t.dueAt < now;

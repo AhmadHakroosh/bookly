@@ -47,7 +47,7 @@ export function RecapPanel({
   return (
     <section className="space-y-5 rounded-xl border p-5 text-sm">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <h2 className="font-medium">Meeting recap</h2>
+        <h2 className="text-base font-semibold tracking-tight">Meeting recap</h2>
         <div className="flex items-center gap-2">
           {temp && (
             <Badge variant="outline" className="capitalize">
@@ -76,7 +76,7 @@ export function RecapPanel({
 
       {r.covered.length > 0 && (
         <div>
-          <h3 className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
+          <h3 className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
             What they asked for
           </h3>
           <ul className="mt-1 space-y-1">
@@ -105,7 +105,7 @@ export function RecapPanel({
 
       {r.decisions.length > 0 && (
         <div>
-          <h3 className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
+          <h3 className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
             Decisions
           </h3>
           <ul className="mt-1 list-disc space-y-1 pl-5">
@@ -121,7 +121,7 @@ export function RecapPanel({
 
       {r.actions.length > 0 && (
         <form action={acceptRecapActionsAction.bind(null, bookingId)}>
-          <h3 className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
+          <h3 className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
             Action items
           </h3>
           <ul className="mt-1 space-y-1.5">
@@ -173,7 +173,7 @@ export function RecapPanel({
         <div className="grid gap-4 sm:grid-cols-2">
           {r.openQuestions.length > 0 && (
             <div>
-              <h3 className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
+              <h3 className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
                 Open questions
               </h3>
               <ul className="mt-1 list-disc space-y-1 pl-5">
@@ -185,7 +185,7 @@ export function RecapPanel({
           )}
           {r.objections.length > 0 && (
             <div>
-              <h3 className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
+              <h3 className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
                 Objections and risks
               </h3>
               <ul className="mt-1 list-disc space-y-1 pl-5">

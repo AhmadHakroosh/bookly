@@ -22,7 +22,7 @@ export function Outreach({
   const field = "w-full rounded-lg border bg-background px-3 py-2 text-sm";
   return (
     <section className="rounded-xl border p-4 text-sm">
-      <h2 className="font-medium">Send</h2>
+      <h2 className="text-base font-semibold tracking-tight">Send</h2>
       <div className="mt-2 flex flex-wrap gap-2">
         <Button
           type="button"

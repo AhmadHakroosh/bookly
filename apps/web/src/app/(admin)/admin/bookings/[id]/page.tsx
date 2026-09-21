@@ -88,7 +88,7 @@ async function BookingBriefPage({ params }: PageProps<"/admin/bookings/[id]">) {
       </div>
       <section className="rounded-xl border p-5">
         <div className="flex items-center justify-between gap-3">
-          <h2 className="text-sm font-medium">Briefing</h2>
+          <h2 className="text-base font-semibold tracking-tight">Briefing</h2>
           <form action={regenerateBrief.bind(null, b.id)}>
             <Button type="submit" size="sm" variant="outline">
               Regenerate
@@ -105,7 +105,7 @@ async function BookingBriefPage({ params }: PageProps<"/admin/bookings/[id]">) {
       </section>
       {lastCapture && (
         <section className="rounded-xl border p-5 text-sm">
-          <h2 className="font-medium">Captured</h2>
+          <h2 className="text-base font-semibold tracking-tight">Captured</h2>
           <p className="mt-2 whitespace-pre-line">{lastCapture.summary}</p>
           <p className="mt-2 text-xs text-muted-foreground">
             {fmtDateTime(lastCapture.createdAt, ws.timezone)}
@@ -169,7 +169,7 @@ async function BookingBriefPage({ params }: PageProps<"/admin/bookings/[id]">) {
       )}
       {Object.keys(b.answers).length > 0 && (
         <section className="rounded-xl border p-5 text-sm">
-          <h2 className="font-medium">Their answers</h2>
+          <h2 className="text-base font-semibold tracking-tight">Their answers</h2>
           <dl className="mt-2 space-y-1">
             {(et?.questions ?? []).map((q) =>
               b.answers[q.id] ? (
