@@ -26,6 +26,10 @@ async function AcceptPage({ params }: PageProps<"/accept-invitation/[id]">) {
   if (session && session.user.email.toLowerCase() === inv.email.toLowerCase()) {
     const { auth } = await import("@/lib/auth");
     await auth.api.acceptInvitation({ headers: await headers(), body: { invitationId: id } });
+    const ws = await db().query.workspaces.findFirst({
+      where: eq(schema.workspaces.organizationId, inv.organizationId),
+    });
+    if (ws) await (await import("@/server/billing")).syncSeats(ws);
     redirect("/admin/profile?setup=1");
   }
   const org = await db().query.organizations.findFirst({

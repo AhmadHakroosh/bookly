@@ -32,10 +32,17 @@ const GROUPS: { label: string; items: { href: string; label: string }[] }[] = [
   },
 ];
 
-export function AdminNav() {
+export function AdminNav({ cloud = false }: { cloud?: boolean }) {
   const pathname = usePathname();
   const active = (href: string) =>
     href === "/admin" ? pathname === href : pathname.startsWith(href);
+  const groups = cloud
+    ? GROUPS.map((g) =>
+        g.label === "Workspace"
+          ? { ...g, items: [{ href: "/admin/billing", label: "Billing" }, ...g.items] }
+          : g,
+      )
+    : GROUPS;
   return (
     <nav className="space-y-6 text-sm">
       <Link
@@ -44,7 +51,7 @@ export function AdminNav() {
       >
         Dashboard
       </Link>
-      {GROUPS.map((g) => (
+      {groups.map((g) => (
         <div key={g.label}>
           <p className="mb-1 px-2 text-[11px] font-medium tracking-wide text-muted-foreground uppercase">
             {g.label}

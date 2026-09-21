@@ -17,8 +17,35 @@ function meetHost(): string | null {
   }
 }
 
+const PLATFORM_HOST = (() => {
+  try {
+    return new URL(process.env.APP_URL ?? "http://localhost:3002").host.toLowerCase();
+  } catch {
+    return "";
+  }
+})();
+const CLOUD = process.env.TENANCY === "multi";
+const notFound = (req: NextRequest) =>
+  NextResponse.rewrite(new URL("/not-found", req.url), { status: 404 });
+
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
+  const host = (request.headers.get("host") ?? "").toLowerCase();
+
+  // Cloud mode: the platform host serves marketing, sign-up, pricing and the operator console.
+  if (CLOUD && host === PLATFORM_HOST) {
+    if (pathname.startsWith("/platform")) return notFound(request);
+    if (
+      pathname.startsWith("/api/") ||
+      pathname.startsWith("/login") ||
+      pathname.startsWith("/accept-invitation")
+    )
+      return NextResponse.next();
+    const url = request.nextUrl.clone();
+    url.pathname = `/platform${pathname === "/" ? "" : pathname}`;
+    return NextResponse.rewrite(url);
+  }
+  if (pathname.startsWith("/platform")) return notFound(request);
 
   // Built-in video on its own host (MEET_URL, e.g. meet.example.com): /<room> → /meet/<room>.
   const mh = meetHost();
@@ -30,7 +57,10 @@ export async function proxy(request: NextRequest) {
   const workspace = await resolveWorkspaceByHost(request.headers.get("host"));
 
   if (!workspace) {
-    if (pathname.startsWith("/setup") || pathname.startsWith("/api/")) return NextResponse.next();
+    if (pathname.startsWith("/api/")) return NextResponse.next();
+    // Cloud: unknown tenant host → nothing here. Self-host: first run → setup wizard.
+    if (CLOUD) return notFound(request);
+    if (pathname.startsWith("/setup")) return NextResponse.next();
     return NextResponse.redirect(new URL("/setup", request.url));
   }
   if (pathname.startsWith("/setup")) return NextResponse.redirect(new URL("/admin", request.url));

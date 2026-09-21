@@ -4,6 +4,8 @@ import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
 import { z } from "zod";
 import { auth } from "@/lib/auth";
+import { syncSeats } from "@/server/billing";
+import { assertWithinLimit, LimitError } from "@/server/limits";
 import { requireStaff } from "@/server/session";
 import { getCurrentWorkspace } from "@/server/workspace";
 
@@ -27,11 +29,13 @@ export async function inviteMember(_prev: TeamState, formData: FormData): Promis
   if (!parsed.success) return { error: "Enter a valid email." };
   try {
     const { ws, h } = await manager();
+    await assertWithinLimit(ws, "members");
     await auth.api.createInvitation({
       headers: h,
       body: { email: parsed.data.email, role: parsed.data.role, organizationId: ws.organizationId },
     });
   } catch (e) {
+    if (e instanceof LimitError) return { error: `${e.message} See Billing.` };
     return { error: e instanceof Error ? e.message : "Invitation failed" };
   }
   revalidatePath("/admin/team");
@@ -52,6 +56,7 @@ export async function removeMember(memberId: string) {
       body: { memberIdOrEmail: memberId, organizationId: ws.organizationId },
     })
     .catch(() => {});
+  await syncSeats(ws);
   revalidatePath("/admin/team");
 }
 

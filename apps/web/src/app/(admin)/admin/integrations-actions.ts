@@ -14,6 +14,7 @@ import {
   refreshCalendars,
   updateIntegrationSettings,
 } from "@/server/integrations";
+import { assertWithinLimit, LimitError } from "@/server/limits";
 import { requireStaff } from "@/server/session";
 import { getCurrentWorkspace } from "@/server/workspace";
 
@@ -29,6 +30,12 @@ export async function startConnect(provider: string, back: string) {
   if (!ws) return;
   const dest = back.startsWith("/admin") ? back : "/admin/calendars";
   if (!providerConfigured(provider)) redirect(`${dest}?error=not_configured`);
+  try {
+    await assertWithinLimit(ws, "integrations", session.user.id);
+  } catch (e) {
+    if (e instanceof LimitError) redirect(`${dest}?error=limit`);
+    throw e;
+  }
   redirect(authorizeUrl(provider, signState({ u: session.user.id, w: ws.id, back: dest })));
 }
 

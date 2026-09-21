@@ -54,6 +54,12 @@ export const envSchema = z.object({
   // ---- Payments (Stripe) ----
   STRIPE_SECRET_KEY: z.string().optional(),
   STRIPE_WEBHOOK_SECRET: z.string().optional(),
+  // ---- Cloud mode (TENANCY=multi) ----
+  /** Stripe recurring price ids for the Pro and Team plans. */
+  STRIPE_PRICE_PRO: z.string().optional(),
+  STRIPE_PRICE_TEAM: z.string().optional(),
+  /** Comma-separated emails allowed into the operator console at /console on the platform host. */
+  PLATFORM_ADMIN_EMAILS: z.string().default(""),
 
   // ---- Text messages (Twilio) for SMS / WhatsApp reminders and host pings ----
   TWILIO_ACCOUNT_SID: z.string().optional(),

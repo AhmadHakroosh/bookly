@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { and, eq, schema } from "@bookly/db";
 import { db } from "@/lib/db";
 import { normalizeHost, verifyDomain } from "@/server/domains";
+import { assertWithinLimit, LimitError } from "@/server/limits";
 import { requireStaff } from "@/server/session";
 import { getCurrentWorkspace } from "@/server/workspace";
 import { invalidateHostCache } from "@/server/tenancy";
@@ -20,6 +21,12 @@ export async function addDomain(_prev: DomainState, formData: FormData): Promise
   const workspace = await ctx();
   const host = normalizeHost(String(formData.get("host") ?? ""));
   if (!host) return { error: "Enter a valid hostname, e.g. blog.example.com" };
+  try {
+    await assertWithinLimit(workspace, "domains");
+  } catch (e) {
+    if (e instanceof LimitError) return { error: `${e.message} See Billing.` };
+    throw e;
+  }
   const taken = await db().query.workspaceDomains.findFirst({
     where: eq(schema.workspaceDomains.host, host),
     columns: { workspaceId: true },

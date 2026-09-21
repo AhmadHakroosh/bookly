@@ -4,6 +4,7 @@ import { eq, schema } from "@bookly/db";
 import { loadEnv } from "@bookly/config";
 import { db } from "@/lib/db";
 import { finalizeBooking } from "@/server/booking-flow";
+import { syncSubscription } from "@/server/billing";
 import { recordPayment, stripe } from "@/server/payments";
 
 /** Stripe → Bookly: a paid Checkout session confirms its booking. */
@@ -25,10 +26,23 @@ export async function POST(req: Request) {
     );
   }
   if (
+    event.type === "customer.subscription.created" ||
+    event.type === "customer.subscription.updated" ||
+    event.type === "customer.subscription.deleted"
+  ) {
+    await syncSubscription(event.data.object);
+    return NextResponse.json({ received: true });
+  }
+  if (
     event.type === "checkout.session.completed" ||
     event.type === "checkout.session.async_payment_succeeded"
   ) {
     const session = event.data.object;
+    if (session.mode === "subscription" && session.subscription) {
+      const sub = await stripe().subscriptions.retrieve(String(session.subscription));
+      await syncSubscription(sub);
+      return NextResponse.json({ received: true });
+    }
     const bookingId = session.metadata?.bookingId;
     if (bookingId && session.payment_status === "paid") {
       const paid = await recordPayment(

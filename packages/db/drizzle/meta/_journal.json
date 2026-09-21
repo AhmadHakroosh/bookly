@@ -43,6 +43,13 @@
       "when": 1789970054683,
       "tag": "0005_salty_rictor",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1789971731676,
+      "tag": "0006_exotic_hellcat",
+      "breakpoints": true
     }
   ]
 }

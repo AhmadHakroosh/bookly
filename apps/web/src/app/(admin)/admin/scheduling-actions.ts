@@ -10,6 +10,7 @@ import { cancelBooking, confirmBooking } from "@/server/booking-flow";
 import { refreshWorkspace } from "@/server/cache";
 import { parseQuestions, parseQuestionsJson, parseReminders } from "@/server/questions";
 import { ensureDefaultSchedule, getProfileByUser } from "@/server/scheduling";
+import { assertFeature, assertWithinLimit, LimitError } from "@/server/limits";
 import { requireStaff } from "@/server/session";
 import { getCurrentWorkspace } from "@/server/workspace";
 
@@ -170,6 +171,7 @@ export async function removeOverride(id: string) {
 
 export async function createEventType() {
   const { session, ws } = await ctx();
+  await assertWithinLimit(ws, "eventTypes");
   const profile = await getProfileByUser(ws.id, session.user.id);
   if (!profile) redirect("/admin/profile?setup=1");
   const schedule = await ensureDefaultSchedule(ws.id, session.user.id, profile.timezone);
@@ -281,6 +283,19 @@ export async function saveEventType(
   });
   if (clash && clash.id !== d.id) slug = `${slug}-${d.id.slice(0, 4)}`;
   const location: EventLocation = { type: d.locationType, value: d.locationValue || undefined };
+  try {
+    if (d.price > 0) assertFeature(ws, "payments");
+    if (d.assignment !== "single") assertFeature(ws, "teamScheduling");
+    if (
+      d.followUpEnabled === "on" ||
+      d.remindByText === "on" ||
+      parseReminders(d.reminders).join() !== "1440,60"
+    )
+      assertFeature(ws, "workflows");
+  } catch (e) {
+    if (e instanceof LimitError) return { error: `${e.message} (Billing)` };
+    throw e;
+  }
   await db()
     .update(schema.eventTypes)
     .set({

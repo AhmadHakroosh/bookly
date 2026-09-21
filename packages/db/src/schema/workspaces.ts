@@ -43,8 +43,15 @@ export const workspaces = pgTable(
     locale: text("locale").notNull().default("en"),
     timezone: text("timezone").notNull().default("UTC"),
     settings: jsonb("settings").$type<WorkspaceSettings>().notNull().default({}),
+    /** self-hosted | free | pro | team */
     plan: text("plan").notNull().default("self-hosted"),
+    /** Stripe subscription status (active, trialing, past_due, canceled…); null for free/self-hosted. */
+    planStatus: text("plan_status"),
+    planRenewsAt: timestamp("plan_renews_at", { withTimezone: true }),
+    stripeCustomerId: text("stripe_customer_id"),
+    stripeSubscriptionId: text("stripe_subscription_id"),
     suspendedAt: timestamp("suspended_at", { withTimezone: true }),
+    suspendReason: text("suspend_reason"),
     ...timestamps,
   },
   (t) => [

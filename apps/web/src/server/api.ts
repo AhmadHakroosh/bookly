@@ -4,6 +4,7 @@ import { NextResponse } from "next/server";
 import { and, eq, isNull, schema } from "@bookly/db";
 import type { ApiKey, ApiScope, Booking, EventType, Profile, Workspace } from "@bookly/db/schema";
 import { db } from "@/lib/db";
+import { hasFeature } from "./limits";
 import { baseUrl, locationLabel } from "./scheduling";
 import { getCurrentWorkspace } from "./workspace";
 
@@ -96,8 +97,11 @@ export async function apiContext(
 ): Promise<{ workspace: Workspace; key: ApiKey | null } | NextResponse> {
   const workspace = await getCurrentWorkspace();
   if (!workspace) return apiError("Unknown workspace", 404, "unknown_workspace");
+  if (workspace.suspendedAt) return apiError("Workspace suspended", 403, "suspended");
   const key = await authenticateKey(req, workspace.id);
   if (scope) {
+    if (!hasFeature(workspace, "api"))
+      return apiError("The API needs the Pro plan", 402, "upgrade_required");
     if (!key) return apiError("An API key with the required scope is needed", 401, "unauthorized");
     if (!key.scopes.includes(scope)) return apiError(`Missing scope ${scope}`, 403, "forbidden");
   }

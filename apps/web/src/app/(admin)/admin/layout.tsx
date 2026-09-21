@@ -7,6 +7,7 @@ import { AdminNav } from "@/components/admin-nav";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { isCloud } from "@/server/platform";
 import { getSession, getStaffRole } from "@/server/session";
 import { getCurrentWorkspace } from "@/server/workspace";
 import { MenuIcon } from "lucide-react";
@@ -58,7 +59,7 @@ async function AdminShell({ children }: { children: React.ReactNode }) {
                 <SheetTitle className="mb-4 font-semibold">
                   {workspace?.name ?? "Bookly"}
                 </SheetTitle>
-                <AdminNav />
+                <AdminNav cloud={isCloud()} />
               </SheetContent>
             </Sheet>
             <Link href="/admin" className="font-semibold tracking-tight">
@@ -86,10 +87,19 @@ async function AdminShell({ children }: { children: React.ReactNode }) {
       </header>
       <div className="flex flex-1">
         <aside className="hidden w-56 shrink-0 border-r p-4 lg:block">
-          <AdminNav />
+          <AdminNav cloud={isCloud()} />
         </aside>
         <main className="min-w-0 flex-1 px-4 py-8 lg:px-8">
-          <div className="mx-auto max-w-6xl">{children}</div>
+          <div className="mx-auto max-w-6xl">
+            {workspace?.suspendedAt && (
+              <p className="mb-6 rounded-md border border-destructive/40 p-3 text-sm">
+                This workspace is suspended
+                {workspace.suspendReason ? `: ${workspace.suspendReason}` : ""}. Public booking
+                pages are offline. Contact support to resolve this.
+              </p>
+            )}
+            {children}
+          </div>
         </main>
       </div>
     </div>

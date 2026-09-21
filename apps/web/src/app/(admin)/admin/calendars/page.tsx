@@ -12,6 +12,7 @@ const ERRORS: Record<string, string> = {
   mismatch: "Please sign in with the same account you started from.",
   exchange: "The provider rejected the connection. Check the OAuth app settings and try again.",
   access_denied: "You cancelled the connection.",
+  limit: "Your plan's limit on connected accounts is reached. See Billing to upgrade.",
 };
 
 async function CalendarsPage({ searchParams }: PageProps<"/admin/calendars">) {
