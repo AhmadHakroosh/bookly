@@ -1,7 +1,8 @@
 {
   "name": "bookly",
   "private": true,
-  "version": "0.0.1",
+  "license": "AGPL-3.0-only",
+  "version": "0.1.0",
   "description": "Bookly \u2014 a self-hostable scheduling platform with Google Meet, Zoom, Teams and built-in video.",
   "packageManager": "pnpm@11.25.0",
   "engines": {
@@ -21,6 +22,7 @@
     "db:migrate": "pnpm --filter @bookly/db migrate",
     "db:studio": "pnpm --filter @bookly/db studio",
     "auth:generate": "pnpm --filter @bookly/web auth:generate",
+    "demo": "pnpm --filter @bookly/web demo",
     "docker:db": "docker compose up -d postgres minio"
   },
   "devDependencies": {

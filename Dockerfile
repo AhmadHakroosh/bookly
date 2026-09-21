@@ -19,7 +19,7 @@ COPY --from=deps /app/apps/web/node_modules ./apps/web/node_modules
 COPY --from=deps /app/packages ./packages
 COPY . .
 ENV SKIP_ENV_VALIDATION=1 NEXT_TELEMETRY_DISABLED=1
-RUN pnpm --filter @bookly/web build
+RUN pnpm --filter @bookly/web build && pnpm --filter @bookly/db build:migrator
 
 FROM node:24-alpine AS runner
 WORKDIR /app
@@ -29,6 +29,8 @@ COPY --from=build --chown=bookly:bookly /app/apps/web/.next/standalone ./
 COPY --from=build --chown=bookly:bookly /app/apps/web/.next/static ./apps/web/.next/static
 COPY --from=build --chown=bookly:bookly /app/apps/web/public ./apps/web/public
 COPY --from=build --chown=bookly:bookly /app/packages/db/drizzle ./packages/db/drizzle
+COPY --from=build --chown=bookly:bookly /app/packages/db/dist/migrate.cjs ./packages/db/migrate.cjs
 USER bookly
 EXPOSE 3000
-CMD ["node", "apps/web/server.js"]
+# Apply pending migrations, then serve.
+CMD ["sh", "-c", "node packages/db/migrate.cjs && node apps/web/server.js"]

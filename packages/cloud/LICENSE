@@ -1,0 +1,13 @@
+Bookly Cloud — Copyright (c) 2026 Ahmad Hakroosh. All rights reserved.
+
+The files in this directory (`packages/cloud`) implement the hosted, multi-tenant
+Bookly service (plans, limits and billing glue). They are published for
+transparency and so that self-hosters can read every line that runs, but they
+are NOT covered by the AGPL-3.0 license that applies to the rest of this
+repository.
+
+You may read and reference this code. You may not use it to operate a hosted
+service for third parties, sell access to it, or redistribute it as part of a
+competing product, without written permission. Self-hosting Bookly for your own
+use with `TENANCY=single` (the default) does not use this package's billing
+features and is fully covered by the AGPL-3.0.

@@ -27,7 +27,7 @@ export function SetupForm() {
               id="workspaceName"
               name="workspaceName"
               required
-              placeholder="Ahmad Hakroosh"
+              placeholder="Jane Doe"
               aria-invalid={!!state.fields?.workspaceName}
             />
             <FieldError errors={err("workspaceName")} />

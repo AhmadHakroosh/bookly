@@ -1,7 +1,8 @@
 {
   "name": "@bookly/web",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "private": true,
+  "license": "AGPL-3.0-only",
   "scripts": {
     "dev": "next dev -p 3002",
     "build": "next build",
@@ -9,6 +10,7 @@
     "lint": "eslint .",
     "typecheck": "next typegen && tsc --noEmit",
     "test": "vitest run",
+    "demo": "tsx scripts/demo.ts",
     "auth:generate": "pnpm dlx @better-auth/cli@latest generate --config src/lib/auth.ts --output ../../packages/db/src/schema/auth.ts -y"
   },
   "dependencies": {

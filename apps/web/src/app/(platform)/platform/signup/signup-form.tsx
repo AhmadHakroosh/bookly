@@ -71,7 +71,7 @@ export function SignupForm({ rootDomain, signedIn }: { rootDomain: string; signe
             id="wsname"
             name="name"
             required
-            placeholder="Ahmad Hakroosh"
+            placeholder="Jane Doe"
             onChange={(e) =>
               setSlug(
                 e.target.value

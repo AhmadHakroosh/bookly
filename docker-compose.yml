@@ -31,6 +31,8 @@ services:
   app:
     profiles: [app]
     build: .
+    # Or use the published image instead of building:
+    # image: ghcr.io/ahmadhakroosh/bookly:latest
     restart: unless-stopped
     depends_on:
       postgres: { condition: service_healthy }
