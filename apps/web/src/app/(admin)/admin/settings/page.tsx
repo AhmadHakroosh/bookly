@@ -23,6 +23,7 @@ async function SettingsPage() {
           description: workspace.description ?? "",
           locale: workspace.locale,
           timezone: workspace.timezone,
+          blocklist: ((workspace.settings.blockedEmails as string[] | undefined) ?? []).join("\n"),
         }}
         zones={timezoneList()}
       />

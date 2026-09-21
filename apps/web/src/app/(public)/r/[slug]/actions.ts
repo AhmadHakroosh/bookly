@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { eq, schema } from "@bookly/db";
 import { db } from "@/lib/db";
+import { throttlePublicForm } from "@/server/request";
 import { getRoutingForm } from "@/server/routing";
 import { routeAnswers } from "@/server/routing-rules";
 import { getProfileByUser } from "@/server/scheduling";
@@ -31,6 +32,8 @@ export async function submitRouting(
   const ws = await getCurrentWorkspace();
   const form = ws ? await getRoutingForm(ws.id, d.slug) : null;
   if (!ws || !form) return { error: "This form no longer exists." };
+  if (!(await throttlePublicForm(ws.id, "routing")))
+    return { error: "Too many attempts. Please wait a few minutes and try again." };
   const answers: Record<string, string> = {};
   for (const q of form.questions) {
     const v = (raw[`q_${q.id}`] ?? "").slice(0, 2000);

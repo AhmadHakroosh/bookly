@@ -17,6 +17,12 @@ Turn on `Recurring bookings` on an event type and choose the frequency (daily, w
 
 When a group session is full, its time still shows on the booking page as "Full · join waitlist"; when a day has no free times at all, the page offers a waitlist for that day. People leave a name and email and get a confirmation with a leave link. On a cancellation Bookly emails the first person waiting for that session (one per freed seat) and everyone waiting for that day, with a link straight to the freed time; the spot goes to whoever books first. Hosts see and can remove entries under `Admin → Bookings`.
 
+## Abuse controls
+
+- Public forms (booking, waitlist, routing) accept at most 10 submissions per visitor (IP) per 10 minutes, and every form has a honeypot field.
+- `Admin → Settings → Block bookings from` refuses named emails or whole `@domains`.
+- In cloud mode the Free plan allows 100 new bookings per month per workspace; API keys get a per-plan request budget (60 / 600 / 1200 per minute). Self-hosted installs have no quotas.
+
 ## Buffers
 
 `Buffer before` is the free time an event type needs before each of its bookings, `buffer after` the free time after. They are applied to the candidate slot: a slot is offered only if `[start − before, end + after]` does not overlap any existing booking or external busy block.

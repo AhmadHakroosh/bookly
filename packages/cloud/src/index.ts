@@ -13,6 +13,10 @@ export type Limits = {
   integrations: number | null;
   /** Verified custom domains. */
   domains: number | null;
+  /** New bookings per calendar month across the workspace (abuse control). */
+  bookingsPerMonth: number | null;
+  /** API requests per minute per key. */
+  apiRequestsPerMinute: number | null;
   /** Feature gates. */
   payments: boolean;
   workflows: boolean;
@@ -42,6 +46,8 @@ export const PLANS: Record<PlanId, Plan> = {
       members: 1,
       integrations: 1,
       domains: 0,
+      bookingsPerMonth: 100,
+      apiRequestsPerMinute: 60,
       payments: false,
       workflows: false,
       teamScheduling: false,
@@ -66,6 +72,8 @@ export const PLANS: Record<PlanId, Plan> = {
       members: 1,
       integrations: null,
       domains: 1,
+      bookingsPerMonth: null,
+      apiRequestsPerMinute: 600,
       payments: true,
       workflows: true,
       teamScheduling: false,
@@ -91,6 +99,8 @@ export const PLANS: Record<PlanId, Plan> = {
       members: 25,
       integrations: null,
       domains: 3,
+      bookingsPerMonth: null,
+      apiRequestsPerMinute: 1200,
       payments: true,
       workflows: true,
       teamScheduling: true,
@@ -112,6 +122,8 @@ export const UNLIMITED: Limits = {
   members: null,
   integrations: null,
   domains: null,
+  bookingsPerMonth: null,
+  apiRequestsPerMinute: null,
   payments: true,
   workflows: true,
   teamScheduling: true,
@@ -131,6 +143,7 @@ export function limitsFor(plan: string, status?: string | null): Limits {
 }
 
 export type CountableLimit = "eventTypes" | "members" | "integrations" | "domains";
+export type RateLimitKey = "bookingsPerMonth" | "apiRequestsPerMinute";
 export type FeatureLimit = "payments" | "workflows" | "teamScheduling" | "api" | "removeBranding";
 
 /** True when adding one more of `what` stays within the limit. */
@@ -163,3 +176,6 @@ export function planFor(what: FeatureLimit | CountableLimit, needed = 1): PlanId
   }
   return "team";
 }
+
+/** Requests per minute an API key gets on this plan (self-hosted: a generous default). */
+export const apiBudget = (limits: Limits) => limits.apiRequestsPerMinute ?? 600;

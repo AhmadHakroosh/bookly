@@ -4,7 +4,8 @@ import { NextResponse } from "next/server";
 import { and, eq, isNull, schema } from "@bookly/db";
 import type { ApiKey, ApiScope, Booking, EventType, Profile, Workspace } from "@bookly/db/schema";
 import { db } from "@/lib/db";
-import { hasFeature } from "./limits";
+import { apiBudget } from "@bookly/cloud";
+import { hasFeature, workspaceLimits } from "./limits";
 import { recurrenceOf } from "./recurrence";
 import { baseUrl, locationLabel } from "./scheduling";
 import { getCurrentWorkspace } from "./workspace";
@@ -107,7 +108,9 @@ export async function apiContext(
     if (!key.scopes.includes(scope)) return apiError(`Missing scope ${scope}`, 403, "forbidden");
   }
   const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
-  const rl = key ? rateLimit(`key:${key.id}`, 600) : rateLimit(`ip:${workspace.id}:${ip}`, 60);
+  const rl = key
+    ? rateLimit(`key:${key.id}`, apiBudget(workspaceLimits(workspace)))
+    : rateLimit(`ip:${workspace.id}:${ip}`, 60);
   if (!rl.ok) return apiError("Rate limit exceeded", 429, "rate_limited");
   return { workspace, key };
 }

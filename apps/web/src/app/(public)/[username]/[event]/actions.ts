@@ -6,6 +6,7 @@ import { isValidTimezone } from "@/lib/time";
 import { BookingError, createBooking } from "@/server/booking-flow";
 import { createCheckout } from "@/server/payments";
 import { getEventType, getProfileByUsername } from "@/server/scheduling";
+import { throttlePublicForm } from "@/server/request";
 import { joinWaitlist, type WaitlistTarget } from "@/server/waitlist";
 import { getCurrentWorkspace } from "@/server/workspace";
 
@@ -37,6 +38,8 @@ export async function book(_prev: BookState, formData: FormData): Promise<BookSt
   const profile = ws ? await getProfileByUsername(ws.id, d.username) : null;
   const et = ws && profile ? await getEventType(ws.id, profile.userId, d.event) : null;
   if (!ws || !profile || !et) return { error: "This booking page no longer exists." };
+  if (!(await throttlePublicForm(ws.id, "book")))
+    return { error: "Too many attempts. Please wait a few minutes and try again." };
   const answers: Record<string, string> = {};
   for (const q of et.questions) answers[q.id] = (raw[`q_${q.id}`] ?? "").slice(0, 2000);
   let token: string;
@@ -92,6 +95,8 @@ export async function joinWaitlistAction(
   const profile = ws ? await getProfileByUsername(ws.id, d.username) : null;
   const et = ws && profile ? await getEventType(ws.id, profile.userId, d.event) : null;
   if (!ws || !profile || !et) return { error: "This booking page no longer exists." };
+  if (!(await throttlePublicForm(ws.id, "waitlist")))
+    return { error: "Too many attempts. Please wait a few minutes and try again." };
   let target: WaitlistTarget;
   if (/^\d{4}-\d{2}-\d{2}$/.test(d.target)) target = { date: d.target };
   else {

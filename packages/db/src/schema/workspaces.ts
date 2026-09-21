@@ -22,6 +22,8 @@ export type WorkspaceSettings = {
   footerText?: string;
   /** Daily.co webhook registered for join notifications. */
   daily?: { webhookId?: string; hmac?: string; url?: string } | null;
+  /** Emails or `@domains` whose bookings are refused. */
+  blockedEmails?: string[];
   [key: string]: unknown;
 };
 

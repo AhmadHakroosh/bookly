@@ -17,7 +17,9 @@ import { notifyHost } from "./notify";
 import { isPaid, paymentsConfigured, recordPayment, refundBooking } from "./payments";
 import { notifyWaitlist } from "./waitlist";
 import { emitEvent } from "./webhooks";
+import { isBlocked } from "./abuse";
 import { refreshWorkspace } from "./cache";
+import { assertBookingQuota, LimitError } from "./limits";
 import { occurrences, recurrenceOf } from "./recurrence";
 import { baseUrl, getProfileByUser, locationLabel, newToken, pickHost } from "./scheduling";
 
@@ -221,6 +223,16 @@ export async function createBooking(
   for (const q of eventType.questions) {
     if (q.required && !input.answers[q.id]?.trim())
       throw new BookingError(`Please answer: ${q.label}`);
+  }
+  if (isBlocked(input.email, workspace.settings.blockedEmails as string[] | undefined))
+    throw new BookingError("Bookings from this email address are not accepted.");
+  if (!input.rescheduleToken) {
+    try {
+      await assertBookingQuota(workspace);
+    } catch (e) {
+      if (e instanceof LimitError) throw new BookingError(e.message);
+      throw e;
+    }
   }
   const needsPayment = isPaid(eventType) && paymentsConfigured();
   const status: Booking["status"] = needsPayment

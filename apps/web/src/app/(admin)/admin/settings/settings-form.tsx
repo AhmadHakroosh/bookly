@@ -3,13 +3,19 @@
 import { useActionState, useEffect } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
+import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { TimezoneField } from "@/components/timezone-field";
 import { updateWorkspaceSettings, type SettingsState } from "./actions";
 
-type Values = { name: string; description: string; locale: string; timezone: string };
+type Values = {
+  name: string;
+  description: string;
+  locale: string;
+  timezone: string;
+  blocklist: string;
+};
 
 export function SettingsForm({ workspace, zones }: { workspace: Values; zones: string[] }) {
   const [state, action, pending] = useActionState(updateWorkspaceSettings, {} as SettingsState);
@@ -46,6 +52,20 @@ export function SettingsForm({ workspace, zones }: { workspace: Values; zones: s
             <TimezoneField name="timezone" defaultValue={workspace.timezone} zones={zones} />
           </Field>
         </div>
+        <Field>
+          <FieldLabel htmlFor="blocklist">Block bookings from</FieldLabel>
+          <Textarea
+            id="blocklist"
+            name="blocklist"
+            rows={3}
+            defaultValue={workspace.blocklist}
+            placeholder={"spammer@example.com\n@throwaway.example"}
+          />
+          <FieldDescription>
+            One email or @domain per line. Matching visitors are refused on every booking page.
+            Public forms are also limited to 10 submissions per 10 minutes per visitor.
+          </FieldDescription>
+        </Field>
         <Button type="submit" disabled={pending}>
           {pending ? "Saving…" : "Save"}
         </Button>

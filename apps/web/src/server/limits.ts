@@ -10,7 +10,7 @@ import {
   type FeatureLimit,
   type Limits,
 } from "@bookly/cloud";
-import { and, eq, isNotNull, schema, sql } from "@bookly/db";
+import { and, eq, gte, isNotNull, schema, sql } from "@bookly/db";
 import type { Workspace } from "@bookly/db/schema";
 import { db } from "@/lib/db";
 
@@ -105,10 +105,49 @@ export function assertFeature(ws: Workspace, what: FeatureLimit) {
 
 export const hasFeature = (ws: Workspace, what: FeatureLimit) => !!workspaceLimits(ws)[what];
 
+/** Bookings created in the current calendar month (UTC), any status. */
+export async function bookingsThisMonth(ws: Workspace): Promise<number> {
+  const now = new Date();
+  const start = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
+  return (
+    (
+      await db()
+        .select({ n: sql<number>`count(*)::int` })
+        .from(schema.bookings)
+        .where(and(eq(schema.bookings.workspaceId, ws.id), gte(schema.bookings.createdAt, start)))
+    )[0]?.n ?? 0
+  );
+}
+
+/** Throws a LimitError when the plan's monthly booking quota is used up. No-op when self-hosted. */
+export async function assertBookingQuota(ws: Workspace) {
+  const max = workspaceLimits(ws).bookingsPerMonth;
+  if (max === null) return;
+  const used = await bookingsThisMonth(ws);
+  if (used < max) return;
+  throw new LimitError(
+    `This calendar has reached its ${max} bookings for the month. Upgrade to ${PLANS.pro.name} for unlimited bookings.`,
+    "pro",
+  );
+}
+
 /** Current usage for the billing page. */
 export async function usageSummary(ws: Workspace) {
   const limits = workspaceLimits(ws);
   const keys: CountableLimit[] = ["eventTypes", "members", "integrations", "domains"];
   const counts = await Promise.all(keys.map((k) => count(ws, k)));
-  return keys.map((k, i) => ({ key: k, label: LIMIT_LABELS[k], used: counts[i]!, max: limits[k] }));
+  return [
+    ...keys.map((k, i) => ({
+      key: k as string,
+      label: LIMIT_LABELS[k],
+      used: counts[i]!,
+      max: limits[k],
+    })),
+    {
+      key: "bookingsPerMonth",
+      label: "bookings this month",
+      used: await bookingsThisMonth(ws),
+      max: limits.bookingsPerMonth,
+    },
+  ];
 }
