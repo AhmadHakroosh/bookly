@@ -73,10 +73,15 @@ async function EventPage({ params, searchParams }: PageProps<"/[username]/[event
   const base = `/${profile.username}/${et.slug}`;
   const makeHref = (over: Record<string, string | undefined>) => {
     const q = new URLSearchParams();
-    const merged = { tz: tzParam ?? undefined, month, date, reschedule, ...over } as Record<
-      string,
-      string | undefined
-    >;
+    const merged = {
+      tz: tzParam ?? undefined,
+      month,
+      date,
+      reschedule,
+      name: typeof sp.name === "string" ? sp.name : undefined,
+      email: typeof sp.email === "string" ? sp.email : undefined,
+      ...over,
+    } as Record<string, string | undefined>;
     for (const [k, v] of Object.entries(merged)) if (v) q.set(k, v);
     const s = q.toString();
     return s ? `${base}?${s}` : base;
@@ -179,7 +184,14 @@ async function EventPage({ params, searchParams }: PageProps<"/[username]/[event
                 reschedule={reschedule}
                 paid={!!et.priceCents && paymentsConfigured()}
                 sessions={plan ? bookable : 1}
-                defaults={prev ? { name: prev.attendeeName, email: prev.attendeeEmail } : undefined}
+                defaults={
+                  prev
+                    ? { name: prev.attendeeName, email: prev.attendeeEmail }
+                    : {
+                        name: typeof sp.name === "string" ? sp.name.slice(0, 120) : undefined,
+                        email: typeof sp.email === "string" ? sp.email.slice(0, 200) : undefined,
+                      }
+                }
               />
             </div>
           ) : (

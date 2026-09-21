@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { EventQuestion } from "@bookly/db/schema";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,8 +14,18 @@ const TYPES: [EventQuestion["type"], string][] = [
 ];
 
 /** Visual editor for booking questions; serialises to a hidden JSON field. */
-export function QuestionBuilder({ initial }: { initial: EventQuestion[] }) {
+export function QuestionBuilder({
+  initial,
+  onChange,
+}: {
+  initial: EventQuestion[];
+  /** Lets a parent (the routing-form editor) follow the current question list. */
+  onChange?: (questions: EventQuestion[]) => void;
+}) {
   const [qs, setQs] = useState<EventQuestion[]>(initial);
+  useEffect(() => {
+    onChange?.(qs);
+  }, [qs, onChange]);
   const update = (i: number, patch: Partial<EventQuestion>) =>
     setQs((all) => all.map((q, j) => (j === i ? { ...q, ...patch } : q)));
   const move = (i: number, dir: -1 | 1) =>

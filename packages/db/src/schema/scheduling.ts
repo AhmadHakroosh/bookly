@@ -271,6 +271,44 @@ export const bookings = pgTable(
   ],
 );
 
+/* ---------------- Routing forms ---------------- */
+
+export type RoutingDestination =
+  | { type: "event_type"; eventTypeId: string }
+  | { type: "url"; url: string }
+  | { type: "message"; text: string };
+export type RoutingCondition = {
+  questionId: string;
+  op: "equals" | "not_equals" | "contains" | "not_empty";
+  value: string;
+};
+export type RoutingRule = {
+  id: string;
+  match: "all" | "any";
+  conditions: RoutingCondition[];
+  destination: RoutingDestination;
+};
+
+/** A questionnaire at /r/<slug> that sends visitors to the right event type, link or message. */
+export const routingForms = pgTable(
+  "routing_forms",
+  {
+    id: id(),
+    workspaceId: text("workspace_id")
+      .notNull()
+      .references(() => workspaces.id, { onDelete: "cascade" }),
+    slug: text("slug").notNull(),
+    name: text("name").notNull(),
+    description: text("description"),
+    questions: jsonb("questions").$type<EventQuestion[]>().notNull().default([]),
+    rules: jsonb("rules").$type<RoutingRule[]>().notNull().default([]),
+    fallback: jsonb("fallback").$type<RoutingDestination | null>(),
+    active: boolean("active").notNull().default(true),
+    ...timestamps,
+  },
+  (t) => [uniqueIndex("routing_forms_ws_slug_idx").on(t.workspaceId, t.slug)],
+);
+
 /* ---------------- Waitlist ---------------- */
 
 /**
@@ -312,3 +350,4 @@ export type ScheduleOverride = typeof scheduleOverrides.$inferSelect;
 export type EventType = typeof eventTypes.$inferSelect;
 export type Booking = typeof bookings.$inferSelect;
 export type WaitlistEntry = typeof waitlistEntries.$inferSelect;
+export type RoutingForm = typeof routingForms.$inferSelect;

@@ -71,6 +71,13 @@
       "when": 1789983445660,
       "tag": "0009_illegal_vulcan",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1789983635190,
+      "tag": "0010_misty_jamie_braddock",
+      "breakpoints": true
     }
   ]
 }
