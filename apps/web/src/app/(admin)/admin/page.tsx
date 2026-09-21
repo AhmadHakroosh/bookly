@@ -1,30 +1,54 @@
 import Link from "next/link";
 import { Suspense } from "react";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { TaskList } from "@/components/task-list";
+import { fmtDate, fmtDateTime, fmtTime, todayIn, utcToZoned } from "@/lib/time";
+import { listOpenTasks } from "@/server/capture";
+import { staleContacts } from "@/server/contacts";
 import {
   getProfileByUser,
   getSchedule,
   listAllEventTypes,
+  listBookings,
   listSchedules,
+  locationLabel,
 } from "@/server/scheduling";
 import { requireStaff } from "@/server/session";
+import { listWaitlist } from "@/server/waitlist";
 import { getCurrentWorkspace } from "@/server/workspace";
+import { hostConfirm, replyInstead, snoozeContact } from "./scheduling-actions";
 
-async function AdminDashboard() {
-  const [{ session }, workspace] = await Promise.all([requireStaff(), getCurrentWorkspace()]);
+/** The Meeting Inbox: what needs the host's attention today, with one-click actions. */
+async function AdminInbox() {
+  const [{ session, role }, workspace] = await Promise.all([requireStaff(), getCurrentWorkspace()]);
   if (!workspace) return null;
+  const mine = role !== "owner" && role !== "admin";
   const profile = await getProfileByUser(workspace.id, session.user.id);
-  const [schedules, events] = profile
-    ? await Promise.all([
-        listSchedules(workspace.id, session.user.id),
-        listAllEventTypes(workspace.id),
-      ])
-    : [[], []];
+  const tz = profile?.timezone ?? workspace.timezone;
+  const [schedules, events, upcoming, stale, tasks, waitlist] = await Promise.all([
+    profile ? listSchedules(workspace.id, session.user.id) : Promise.resolve([]),
+    listAllEventTypes(workspace.id),
+    listBookings(workspace.id, {
+      upcoming: true,
+      userId: mine ? session.user.id : undefined,
+      limit: 60,
+    }),
+    staleContacts(workspace.id),
+    listOpenTasks(workspace.id, { userId: session.user.id, limit: 30 }),
+    listWaitlist(workspace.id, mine ? session.user.id : undefined),
+  ]);
   const full = await Promise.all(schedules.map((s) => getSchedule(s.id)));
   const hasHours = full.some((s) => (s?.rules.length ?? 0) > 0);
   const active = events.filter((e) => e.active);
-  const appUrl = process.env.APP_URL ?? "";
-  const pageUrl = profile ? `${appUrl}/${profile.username}` : null;
+  const ready = !!profile && hasHours && active.length > 0;
+  const now = new Date();
+  const today = todayIn(tz);
+  const pending = upcoming.filter((b) => b.status === "pending");
+  const confirmed = upcoming.filter((b) => b.status === "confirmed");
+  const todays = confirmed.filter((b) => utcToZoned(b.startAt, tz).date === today);
+  const later = confirmed.filter((b) => !todays.includes(b)).slice(0, 8);
+  const overdue = tasks.filter((t) => t.dueAt && t.dueAt < now);
 
   const steps: { title: string; detail: string; href: string; done: boolean }[] = [
     {
@@ -38,7 +62,7 @@ async function AdminDashboard() {
     {
       title: "Set your weekly hours",
       detail: hasHours
-        ? "Weekly hours are set. Add date overrides for days off."
+        ? "Weekly hours are set."
         : "Tick the days you take calls and the hours you are free.",
       href: "/admin/availability",
       done: hasHours,
@@ -53,106 +77,265 @@ async function AdminDashboard() {
       done: active.length > 0,
     },
   ];
-  const ready = steps.every((s) => s.done);
 
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Dashboard</h1>
-        <p className="text-sm text-muted-foreground">
-          {workspace.name} · {workspace.timezone}
-        </p>
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight">Inbox</h1>
+          <p className="text-sm text-muted-foreground">
+            {fmtDate(now, tz)} · {todays.length} meeting{todays.length === 1 ? "" : "s"} today ·{" "}
+            {pending.length} request{pending.length === 1 ? "" : "s"} · {overdue.length} overdue
+            task
+            {overdue.length === 1 ? "" : "s"} · {stale.length} to follow up
+          </p>
+        </div>
+        {profile && (
+          <a
+            href={`/${profile.username}`}
+            target="_blank"
+            rel="noreferrer"
+            className="text-sm underline underline-offset-4"
+          >
+            Your booking page ↗
+          </a>
+        )}
       </div>
 
-      <section className="space-y-3">
-        <h2 className="text-lg font-semibold">{ready ? "You are set up" : "Get started"}</h2>
-        <ol className="divide-y rounded-xl border">
-          {steps.map((s, i) => (
-            <li key={s.href}>
-              <Link href={s.href} className="flex items-start gap-4 p-4 hover:bg-muted/40">
-                <span
-                  className={`mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full text-xs font-medium ${
-                    s.done ? "bg-foreground text-background" : "border text-muted-foreground"
-                  }`}
-                  aria-hidden
-                >
-                  {s.done ? "✓" : i + 1}
-                </span>
-                <span className="min-w-0 flex-1">
-                  <span className="block font-medium">{s.title}</span>
-                  <span className="block text-sm text-muted-foreground">{s.detail}</span>
-                </span>
-              </Link>
-            </li>
-          ))}
-        </ol>
-      </section>
-
-      {ready && pageUrl && (
+      {!ready && (
         <section className="space-y-3">
-          <h2 className="text-lg font-semibold">Share your page</h2>
-          <div className="space-y-3 rounded-xl border p-4 text-sm">
-            <p>
-              Your booking page:{" "}
-              <a
-                href={pageUrl}
-                target="_blank"
-                rel="noreferrer"
-                className="underline underline-offset-4"
-              >
-                {pageUrl}
-              </a>
-            </p>
-            <p className="text-muted-foreground">
-              Each event type also has its own link, for example{" "}
-              <span className="font-mono">
-                {pageUrl}/{active[0]?.slug}
-              </span>
-              . To embed a booking button on your website see the{" "}
-              <a
-                href="https://github.com/AhmadHakroosh/bookly/blob/main/docs/embeds.md"
-                className="underline underline-offset-4"
-                target="_blank"
-                rel="noreferrer"
-              >
-                embed guide
-              </a>
-              .
-            </p>
-          </div>
+          <h2 className="text-lg font-semibold">Get started</h2>
+          <ol className="divide-y rounded-xl border">
+            {steps.map((s, i) => (
+              <li key={s.href}>
+                <Link href={s.href} className="flex items-start gap-4 p-4 hover:bg-muted/40">
+                  <span
+                    className={`mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full text-xs font-medium ${s.done ? "bg-foreground text-background" : "border text-muted-foreground"}`}
+                    aria-hidden
+                  >
+                    {s.done ? "✓" : i + 1}
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block font-medium">{s.title}</span>
+                    <span className="block text-sm text-muted-foreground">{s.detail}</span>
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ol>
+        </section>
+      )}
+
+      {pending.length > 0 && (
+        <section className="space-y-3">
+          <h2 className="text-lg font-semibold">Requests</h2>
+          <ul className="space-y-2">
+            {pending.map((b) => (
+              <li key={b.id} className="rounded-xl border p-4 text-sm">
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div>
+                    <p className="font-medium">
+                      {b.eventTitle ?? "Meeting"} with{" "}
+                      {b.contactId ? (
+                        <Link href={`/admin/contacts/${b.contactId}`} className="hover:underline">
+                          {b.attendeeName}
+                        </Link>
+                      ) : (
+                        b.attendeeName
+                      )}
+                    </p>
+                    <p className="text-muted-foreground">
+                      {fmtDateTime(b.startAt, tz)}
+                      {b.notes ? ` · “${b.notes}”` : ""}
+                    </p>
+                    {Object.values(b.answers).filter(Boolean).length > 0 && (
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        {Object.values(b.answers).filter(Boolean).join(" · ")}
+                      </p>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Link
+                      href={`/admin/bookings/${b.id}`}
+                      className="text-sm underline underline-offset-4"
+                    >
+                      Brief
+                    </Link>
+                    <form action={hostConfirm.bind(null, b.id)}>
+                      <Button type="submit" size="sm">
+                        Accept
+                      </Button>
+                    </form>
+                  </div>
+                </div>
+                <details className="mt-2">
+                  <summary className="cursor-pointer text-xs text-muted-foreground">
+                    Reply by email instead of meeting
+                  </summary>
+                  <form
+                    action={replyInstead.bind(null, b.id)}
+                    className="mt-2 flex flex-col gap-2 sm:flex-row"
+                  >
+                    <textarea
+                      name="message"
+                      rows={2}
+                      placeholder="Thanks for reaching out — here is the short answer…"
+                      className="flex-1 rounded-lg border bg-background px-3 py-2 text-sm"
+                    />
+                    <Button type="submit" size="sm" variant="outline">
+                      Send &amp; withdraw request
+                    </Button>
+                  </form>
+                </details>
+              </li>
+            ))}
+          </ul>
         </section>
       )}
 
       <section className="space-y-3">
-        <h2 className="text-lg font-semibold">Next</h2>
-        <ul className="grid gap-3 sm:grid-cols-2">
-          <li className="rounded-xl border p-4">
-            <p className="font-medium">Bookings </p>
-            <p className="text-sm text-muted-foreground">
-              See upcoming and past bookings, confirm or cancel them.{" "}
-              <Link href="/admin/bookings" className="underline underline-offset-4">
-                Open
-              </Link>
-            </p>
-          </li>
-          <li className="rounded-xl border p-4">
-            <p className="font-medium">
-              Calendars &amp; conferencing <Badge variant="secondary">Coming soon</Badge>
-            </p>
-            <p className="text-sm text-muted-foreground">
-              Google Calendar, Outlook, Meet, Zoom, Teams and built-in video.
-            </p>
-          </li>
-        </ul>
+        <h2 className="text-lg font-semibold">Today</h2>
+        {todays.length === 0 ? (
+          <p className="rounded-xl border border-dashed p-6 text-sm text-muted-foreground">
+            No meetings today.
+          </p>
+        ) : (
+          <ul className="divide-y rounded-xl border text-sm">
+            {todays.map((b) => (
+              <li key={b.id} className="flex flex-wrap items-center justify-between gap-3 p-4">
+                <div>
+                  <p className="font-medium">
+                    {fmtTime(b.startAt, tz)} · {b.eventTitle ?? "Meeting"} with{" "}
+                    {b.contactId ? (
+                      <Link href={`/admin/contacts/${b.contactId}`} className="hover:underline">
+                        {b.attendeeName}
+                      </Link>
+                    ) : (
+                      b.attendeeName
+                    )}
+                  </p>
+                  <p className="text-muted-foreground">
+                    {b.meetingUrl ?? locationLabel(b.location)}
+                  </p>
+                  {b.brief && (
+                    <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">{b.brief}</p>
+                  )}
+                </div>
+                <div className="flex items-center gap-2">
+                  {b.meetingUrl && (
+                    <a
+                      href={b.meetingUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-sm underline underline-offset-4"
+                    >
+                      Join
+                    </a>
+                  )}
+                  <Link
+                    href={`/admin/bookings/${b.id}`}
+                    className="text-sm underline underline-offset-4"
+                  >
+                    {b.endAt < now ? "Notes" : "Brief"}
+                  </Link>
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+        {later.length > 0 && (
+          <details>
+            <summary className="cursor-pointer text-sm text-muted-foreground">
+              Coming up ({confirmed.length - todays.length})
+            </summary>
+            <ul className="mt-2 divide-y rounded-xl border text-sm">
+              {later.map((b) => (
+                <li key={b.id} className="flex items-center justify-between gap-3 px-4 py-2">
+                  <span>
+                    {fmtDateTime(b.startAt, tz)} · {b.eventTitle ?? "Meeting"} with {b.attendeeName}
+                  </span>
+                  <Link
+                    href={`/admin/bookings/${b.id}`}
+                    className="text-xs underline underline-offset-4"
+                  >
+                    Brief
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </details>
+        )}
       </section>
+
+      <div className="grid gap-6 lg:grid-cols-2">
+        <section className="space-y-3">
+          <h2 className="text-lg font-semibold">Follow up</h2>
+          {stale.length === 0 ? (
+            <p className="rounded-xl border border-dashed p-6 text-sm text-muted-foreground">
+              Nobody is waiting on you.
+            </p>
+          ) : (
+            <ul className="divide-y rounded-xl border text-sm">
+              {stale.map((c) => {
+                const due = c.nextFollowUpAt && c.nextFollowUpAt <= now;
+                return (
+                  <li key={c.id} className="flex flex-wrap items-center justify-between gap-3 p-4">
+                    <div className="min-w-0">
+                      <Link
+                        href={`/admin/contacts/${c.id}`}
+                        className="font-medium hover:underline"
+                      >
+                        {c.name || c.email}
+                      </Link>
+                      {c.company && <span className="text-muted-foreground"> · {c.company}</span>}
+                      <p className="text-muted-foreground">
+                        {due
+                          ? `Follow-up due ${fmtDate(c.nextFollowUpAt!, tz)}`
+                          : `Quiet since ${fmtDate(c.lastActivityAt, tz)}`}
+                        {" · "}
+                        <Badge variant="secondary" className="capitalize">
+                          {c.stage}
+                        </Badge>
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <a
+                        href={`mailto:${c.email}`}
+                        className="text-sm underline underline-offset-4"
+                      >
+                        Email
+                      </a>
+                      <form action={snoozeContact.bind(null, c.id, 7)}>
+                        <Button type="submit" size="sm" variant="ghost">
+                          Snooze 7d
+                        </Button>
+                      </form>
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </section>
+        <TaskList tasks={tasks} tz={tz} path="/admin" title="Tasks" />
+      </div>
+
+      {waitlist.length > 0 && (
+        <p className="text-sm text-muted-foreground">
+          {waitlist.length} {waitlist.length === 1 ? "person is" : "people are"} on a waitlist.{" "}
+          <Link href="/admin/bookings" className="underline underline-offset-4">
+            See bookings
+          </Link>
+        </p>
+      )}
     </div>
   );
 }
 
-export default function AdminDashboardBoundary() {
+export default function AdminInboxBoundary() {
   return (
     <Suspense fallback={null}>
-      <AdminDashboard />
+      <AdminInbox />
     </Suspense>
   );
 }

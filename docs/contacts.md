@@ -4,6 +4,10 @@ Bookly keeps a **contact** for every person who books, joins a waitlist or fills
 
 `Admin → Contacts` lists everyone (search, filter by stage), and each contact page shows the timeline, upcoming meetings and the editable details. Booking rows link to the attendee's contact. A first completed meeting moves a lead to _active_ automatically; the other stages are yours to set.
 
+## The inbox
+
+`Admin` opens on the **Inbox**: today's meetings with their briefings and join links, booking requests to accept (or answer by email instead, which withdraws the request), contacts to follow up (a due follow-up date, or a lead that has been quiet for a week; snooze pushes it out a week), your open tasks with overdue ones flagged, and a note when people are waiting on a waitlist. Members see their own bookings; owners and admins see the workspace.
+
 ## Pre-meeting briefing
 
 Every upcoming booking has a **briefing** for the host: who the person is, what happened before (last meeting, open threads, no-shows), what they asked for in the booking questions, and what to prepare. Open it from `Admin → Bookings → Brief` or from the contact page; it is also included in the host's reminder email closest to the meeting.

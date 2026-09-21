@@ -52,7 +52,7 @@ export function AdminNav({ cloud = false }: { cloud?: boolean }) {
         href="/admin"
         className={`block rounded-md px-2 py-1.5 font-medium ${active("/admin") ? "bg-muted" : "hover:bg-muted/60"}`}
       >
-        Dashboard
+        Inbox
       </Link>
       {groups.map((g) => (
         <div key={g.label}>

@@ -10,7 +10,7 @@ import { revalidatePath } from "next/cache";
 import { cancelBooking, confirmBooking } from "@/server/booking-flow";
 import { briefForBooking } from "@/server/brief";
 import { addTask, captureMeeting, completeTask, deleteTask, sendFollowUp } from "@/server/capture";
-import { logContactEvent } from "@/server/contacts";
+import { logContactEvent, updateContact } from "@/server/contacts";
 import { trackBooking } from "@/server/contacts";
 import { refreshWorkspace } from "@/server/cache";
 import { parseQuestions, parseQuestionsJson, parseReminders } from "@/server/questions";
@@ -472,6 +472,28 @@ export async function removeTask(id: string, path: string) {
   const { ws } = await ctx();
   await deleteTask(ws.id, id);
   revalidatePath(path);
+}
+
+/** Answers a pending request by email instead of meeting, and withdraws the request. */
+export async function replyInstead(id: string, formData: FormData) {
+  const o = await ownBooking(id);
+  if (!o || o.b.status !== "pending") return;
+  const message = String(formData.get("message") ?? "")
+    .trim()
+    .slice(0, 4000);
+  if (!message) return;
+  await sendFollowUp(o.ws, o.b, `Re: ${o.et?.title ?? "your request"}`, message);
+  await cancelBooking(o.ws, o.b.id, "host", "Answered by email instead", { quiet: true });
+  revalidatePath("/admin");
+}
+
+/** Pushes a contact's follow-up date out by `days` (the inbox's "snooze"). */
+export async function snoozeContact(contactId: string, days: number) {
+  const { ws } = await ctx();
+  await updateContact(ws.id, contactId, {
+    nextFollowUpAt: new Date(Date.now() + Math.max(1, Math.min(90, days)) * 86_400_000),
+  });
+  revalidatePath("/admin");
 }
 
 export async function regenerateBrief(id: string) {
