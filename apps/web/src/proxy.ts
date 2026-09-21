@@ -35,6 +35,10 @@ export async function proxy(request: NextRequest) {
   // Cloud mode: the platform host serves marketing, sign-up, pricing and the operator console.
   if (CLOUD && host === PLATFORM_HOST) {
     if (pathname.startsWith("/platform")) return notFound(request);
+    // Auth redirects (magic links, sign-in) land on the platform host; the admin lives on a
+    // workspace host, so send people to the chooser instead of a 404.
+    if (pathname.startsWith("/admin"))
+      return NextResponse.redirect(new URL("/workspaces", request.url));
     if (
       pathname.startsWith("/api/") ||
       pathname.startsWith("/login") ||

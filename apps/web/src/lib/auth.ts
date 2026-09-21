@@ -63,8 +63,10 @@ export const auth = betterAuth({
     },
   },
   advanced: {
+    // Browsers reject a cookie domain without a dot (e.g. "localhost"), so local cloud-mode
+    // runs on plain localhost fall back to host-only cookies: sign in on the host you use.
     crossSubDomainCookies:
-      env.ROOT_DOMAIN && env.TENANCY === "multi"
+      env.ROOT_DOMAIN && env.TENANCY === "multi" && env.ROOT_DOMAIN.split(":")[0]!.includes(".")
         ? { enabled: true, domain: `.${env.ROOT_DOMAIN.split(":")[0]}` }
         : undefined,
   },
