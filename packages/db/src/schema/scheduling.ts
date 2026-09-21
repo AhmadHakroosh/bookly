@@ -79,6 +79,8 @@ export const schedules = pgTable(
     name: text("name").notNull().default("Working hours"),
     timezone: text("timezone").notNull().default("UTC"),
     isDefault: boolean("is_default").notNull().default(false),
+    /** Max bookings per ISO week for regular visitors (null = no cap); priority contacts bypass it. */
+    weeklyBudget: integer("weekly_budget"),
     ...timestamps,
   },
   (t) => [index("schedules_ws_user_idx").on(t.workspaceId, t.userId)],
@@ -95,6 +97,8 @@ export const scheduleRules = pgTable(
     weekday: integer("weekday").notNull(),
     startMin: integer("start_min").notNull(),
     endMin: integer("end_min").notNull(),
+    /** open = bookable by anyone; focus = protected, only priority contacts can book into it. */
+    kind: text("kind").$type<"open" | "focus">().notNull().default("open"),
   },
   (t) => [index("schedule_rules_schedule_idx").on(t.scheduleId)],
 );

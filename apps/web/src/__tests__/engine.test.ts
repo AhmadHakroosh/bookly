@@ -113,3 +113,58 @@ describe("computeSlots", () => {
     expect(windowsForDate("2026-09-21", rules, [], tz)).toHaveLength(1);
   });
 });
+
+describe("priority-aware availability", () => {
+  const focusRules = [
+    { weekday: 1, startMin: 9 * 60, endMin: 12 * 60 },
+    { weekday: 1, startMin: 13 * 60, endMin: 17 * 60, kind: "focus" as const },
+  ];
+  it("hides focus blocks from regular visitors and shows them to priority contacts", () => {
+    const regular = computeSlots({
+      ...base,
+      rules: focusRules,
+      from: "2026-09-21",
+      to: "2026-09-21",
+    });
+    const vip = computeSlots({
+      ...base,
+      rules: focusRules,
+      priority: true,
+      from: "2026-09-21",
+      to: "2026-09-21",
+    });
+    expect(regular[0]!.slots).toHaveLength(6); // 9:00 … 11:30
+    expect(vip[0]!.slots).toHaveLength(14); // plus 13:00 … 16:30
+  });
+  it("closes the week to regular visitors once the budget is used up", () => {
+    const busy = [0, 1, 2].map((i) => ({
+      start: zonedToUtc("2026-09-22", 9 * 60 + i * 60, tz),
+      end: zonedToUtc("2026-09-22", 9 * 60 + i * 60 + 30, tz),
+    }));
+    const capped = computeSlots({
+      ...base,
+      busy,
+      weeklyBudget: 3,
+      from: "2026-09-23",
+      to: "2026-09-23",
+    });
+    expect(capped).toEqual([]);
+    const nextWeek = computeSlots({
+      ...base,
+      busy,
+      weeklyBudget: 3,
+      from: "2026-09-28",
+      to: "2026-09-28",
+    });
+    expect(nextWeek[0]!.slots.length).toBeGreaterThan(0);
+    const vip = computeSlots({
+      ...base,
+      busy,
+      weeklyBudget: 3,
+      priority: true,
+      from: "2026-09-23",
+      to: "2026-09-23",
+    });
+    expect(vip[0]!.slots.length).toBeGreaterThan(0);
+  });
+});

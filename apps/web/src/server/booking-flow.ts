@@ -18,7 +18,7 @@ import { isPaid, paymentsConfigured, recordPayment, refundBooking } from "./paym
 import { notifyWaitlist } from "./waitlist";
 import { emitEvent } from "./webhooks";
 import { isBlocked } from "./abuse";
-import { trackBooking } from "./contacts";
+import { priorityForEmail, trackBooking } from "./contacts";
 import { refreshWorkspace } from "./cache";
 import { assertBookingQuota, LimitError } from "./limits";
 import { occurrences, recurrenceOf } from "./recurrence";
@@ -33,6 +33,8 @@ export type BookingInput = {
   notes?: string | null;
   answers: Record<string, string>;
   rescheduleToken?: string | null;
+  /** Existing customers may use focus blocks and exceed the weekly budget. */
+  priority?: boolean;
 };
 
 export class BookingError extends Error {}
@@ -206,13 +208,14 @@ export async function planSeries(
   eventType: EventType,
   attendeeTz: string,
   start: Date,
+  priority = false,
 ): Promise<{ start: Date; hostUserId: string | null }[]> {
   const rule = recurrenceOf(eventType.recurrence);
   const starts = rule ? occurrences(start, attendeeTz, rule) : [start];
   return Promise.all(
     starts.map(async (s, i) => ({
       start: s,
-      hostUserId: await pickHost(eventType, attendeeTz, s, { horizon: i === 0 }),
+      hostUserId: await pickHost(eventType, attendeeTz, s, { horizon: i === 0, priority }),
     })),
   );
 }
@@ -259,9 +262,15 @@ export async function createBooking(
   }
 
   const single = !!prev || !recurrenceOf(eventType.recurrence);
+  const priority = input.priority ?? (await priorityForEmail(workspace.id, input.email));
   const plan = single
-    ? [{ start: input.start, hostUserId: await pickHost(eventType, input.timezone, input.start) }]
-    : await planSeries(eventType, input.timezone, input.start);
+    ? [
+        {
+          start: input.start,
+          hostUserId: await pickHost(eventType, input.timezone, input.start, { priority }),
+        },
+      ]
+    : await planSeries(eventType, input.timezone, input.start, priority);
   if (!plan[0]?.hostUserId)
     throw new BookingError("That time is no longer available. Please pick another slot.");
   const bookable = plan.filter((p): p is { start: Date; hostUserId: string } => !!p.hostUserId);

@@ -289,8 +289,11 @@ async function allBusy(
   return [...busy, ...ext];
 }
 
-/** Options for slot validation. `horizon: false` ignores `maxDaysAhead` (later series occurrences). */
-export type SlotOptions = { horizon?: boolean };
+/**
+ * Options for slot listing / validation. `horizon: false` ignores `maxDaysAhead` (later series
+ * occurrences); `priority` lets existing customers into focus blocks and past the weekly budget.
+ */
+export type SlotOptions = { horizon?: boolean; priority?: boolean };
 
 /**
  * Engine input for one host. Collective event types fold every host's busy time into the
@@ -333,6 +336,8 @@ async function engineInput(
     busy: busyAll,
     seats: eventType.seats,
     occupied,
+    priority: opts.priority,
+    weeklyBudget: fallback.weeklyBudget,
     attendeeTz,
   };
 }
@@ -358,15 +363,20 @@ export async function availableSlots(
   attendeeTz: string,
   from: string,
   to: string,
+  opts: SlotOptions = {},
 ) {
   if (eventType.assignment !== "round_robin") {
-    const input = await engineInput(eventType, attendeeTz, from, to);
+    const input = await engineInput(eventType, attendeeTz, from, to, eventType.userId, opts);
     return computeSlots({ ...input, from, to });
   }
   // Round robin: a slot is offered when any host is free.
   const perHost = await Promise.all(
     eventHosts(eventType).map(async (h) =>
-      computeSlots({ ...(await engineInput(eventType, attendeeTz, from, to, h)), from, to }),
+      computeSlots({
+        ...(await engineInput(eventType, attendeeTz, from, to, h, opts)),
+        from,
+        to,
+      }),
     ),
   );
   const byDate = new Map<string, Map<number, Date>>();

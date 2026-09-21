@@ -1,5 +1,6 @@
 import { apiContext, apiError, json, options } from "@/server/api";
 import { addDays, isValidTimezone, todayIn } from "@/lib/time";
+import { priorityForEmail } from "@/server/contacts";
 import { availableSlots, getEventType, getProfileByUsername, slotSeats } from "@/server/scheduling";
 
 export const OPTIONS = options;
@@ -8,8 +9,9 @@ const DAY = /^\d{4}-\d{2}-\d{2}$/;
 const MAX_RANGE_DAYS = 62;
 
 /**
- * GET /api/v1/availability?username=&event=&from=YYYY-MM-DD&to=YYYY-MM-DD&timezone=
- * Free start times for an event type, grouped by day in the given timezone.
+ * GET /api/v1/availability?username=&event=&from=YYYY-MM-DD&to=YYYY-MM-DD&timezone=&email=
+ * Free start times for an event type, grouped by day in the given timezone. `email` of a
+ * known priority contact unlocks focus blocks and the weekly budget.
  */
 export async function GET(req: Request) {
   const ctx = await apiContext(req);
@@ -29,7 +31,8 @@ export async function GET(req: Request) {
     return apiError("from/to must be YYYY-MM-DD with to >= from", 400, "bad_request");
   if (addDays(from, MAX_RANGE_DAYS) < to)
     return apiError(`Range must be at most ${MAX_RANGE_DAYS} days`, 400, "bad_request");
-  const slots = await availableSlots(et, tz, from, to);
+  const priority = await priorityForEmail(ctx.workspace.id, q.get("email"));
+  const slots = await availableSlots(et, tz, from, to, { priority });
   const seats = await slotSeats(
     et,
     slots.flatMap((d) => d.slots),

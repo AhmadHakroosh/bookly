@@ -7,7 +7,8 @@ import { Input } from "@/components/ui/input";
 import { TimezoneField } from "@/components/timezone-field";
 import { saveSchedule } from "../scheduling-actions";
 
-type Day = { weekday: number; label: string; ranges: { start: string; end: string }[] };
+type Range = { start: string; end: string; focus?: boolean };
+type Day = { weekday: number; label: string; ranges: Range[] };
 
 export function ScheduleForm({
   scheduleId,
@@ -15,12 +16,14 @@ export function ScheduleForm({
   timezone,
   zones,
   days,
+  weeklyBudget,
 }: {
   scheduleId: string;
   name: string;
   timezone: string;
   zones: string[];
   days: Day[];
+  weeklyBudget: number | null;
 }) {
   const [state, action, pending] = useActionState(
     saveSchedule,
@@ -45,7 +48,23 @@ export function ScheduleForm({
           <span className="mb-1 block text-xs font-medium">Hours below are in</span>
           <TimezoneField name="timezone" defaultValue={timezone} zones={zones} className="w-72" />
         </label>
+        <label className="text-sm">
+          <span className="mb-1 block text-xs font-medium">Meetings per week (budget)</span>
+          <Input
+            name="weeklyBudget"
+            type="number"
+            min={0}
+            max={200}
+            defaultValue={weeklyBudget ?? 0}
+            className="w-32"
+          />
+        </label>
       </div>
+      <p className="text-xs text-muted-foreground">
+        0 = no budget. Ranges marked <strong>focus</strong> and any time past the weekly budget are
+        offered only to priority contacts (stage active or won, or tagged <code>vip</code>) — your
+        existing customers still get in, new leads see your open hours.
+      </p>
       <ul className="divide-y rounded-xl border">
         {rows.map((d) => (
           <li key={d.weekday} className="flex flex-wrap items-start gap-3 p-3 text-sm">
@@ -95,6 +114,26 @@ export function ScheduleForm({
                     }
                     className="h-8 rounded-md border bg-background px-2"
                   />
+                  <input
+                    type="hidden"
+                    name={`kind_${d.weekday}`}
+                    value={r.focus ? "focus" : "open"}
+                  />
+                  <label className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+                    <input
+                      type="checkbox"
+                      checked={!!r.focus}
+                      onChange={(e) =>
+                        update(d.weekday, (x) => ({
+                          ...x,
+                          ranges: x.ranges.map((y, j) =>
+                            j === i ? { ...y, focus: e.target.checked } : y,
+                          ),
+                        }))
+                      }
+                    />
+                    focus
+                  </label>
                   <button
                     type="button"
                     onClick={() =>

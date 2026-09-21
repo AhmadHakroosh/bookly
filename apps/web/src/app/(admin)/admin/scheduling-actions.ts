@@ -101,21 +101,33 @@ export async function saveSchedule(_prev: { ok?: boolean; error?: string }, form
     ),
   });
   if (!s) return { error: "Schedule not found" };
-  const rules: { weekday: number; startMin: number; endMin: number }[] = [];
+  const rules: { weekday: number; startMin: number; endMin: number; kind: "open" | "focus" }[] = [];
   for (let wd = 0; wd < 7; wd++) {
     if (!formData.get(`on_${wd}`)) continue;
     const starts = formData.getAll(`start_${wd}`).map(String);
     const ends = formData.getAll(`end_${wd}`).map(String);
+    const kinds = formData.getAll(`kind_${wd}`).map(String);
     starts.forEach((st, i) => {
       const a = hhmmToMin(st);
       const b = hhmmToMin(ends[i] ?? "");
-      if (b > a) rules.push({ weekday: wd, startMin: a, endMin: b });
+      if (b > a)
+        rules.push({
+          weekday: wd,
+          startMin: a,
+          endMin: b,
+          kind: kinds[i] === "focus" ? "focus" : "open",
+        });
     });
   }
+  const budget = Math.max(0, Math.min(200, Number(formData.get("weeklyBudget")) || 0));
   await db().transaction(async (tx) => {
     await tx
       .update(schema.schedules)
-      .set({ timezone, name: String(formData.get("name") ?? s.name).trim() || s.name })
+      .set({
+        timezone,
+        name: String(formData.get("name") ?? s.name).trim() || s.name,
+        weeklyBudget: budget || null,
+      })
       .where(eq(schema.schedules.id, s.id));
     await tx.delete(schema.scheduleRules).where(eq(schema.scheduleRules.scheduleId, s.id));
     if (rules.length)

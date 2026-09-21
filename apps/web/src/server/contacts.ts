@@ -207,6 +207,16 @@ export async function updateContact(
   refreshWorkspace(workspaceId);
 }
 
+/** Existing customers (active / won) and anyone tagged `vip` get priority scheduling. */
+export const isPriorityContact = (c: Pick<Contact, "stage" | "tags"> | null | undefined) =>
+  !!c &&
+  (c.stage === "active" || c.stage === "won" || c.tags.some((t) => t.toLowerCase() === "vip"));
+
+export async function priorityForEmail(workspaceId: string, email: string | null | undefined) {
+  if (!email) return false;
+  return isPriorityContact(await getContactByEmail(workspaceId, email));
+}
+
 /** Contacts the host should look at: overdue follow-ups first, then long-quiet leads. */
 export async function staleContacts(workspaceId: string, quietDays = 7, limit = 20) {
   const cutoff = new Date(Date.now() - quietDays * 86_400_000);

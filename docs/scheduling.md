@@ -5,6 +5,14 @@
 - **Event types** (`Admin → Event types`): what people can book — duration, slot interval, buffers before/after, minimum notice, booking horizon, max bookings per day, location (built-in video, Google Meet, Zoom, Teams, phone, in person, custom), booking questions, "requires confirmation", hidden (link-only).
 - **Bookings** (`Admin → Bookings`): upcoming and past, confirm pending requests, cancel with a reason. Attendees get a manage link (`/booking/<token>`) to cancel, reschedule or download the `.ics`.
 
+## Priority-aware availability
+
+Your calendar is governed by intent, not just busy/free:
+
+- **Focus blocks**: mark a range in `Admin → Availability` as _focus_. It counts as available only for priority contacts; everyone else sees your open hours.
+- **Weekly budget**: a cap on meetings per week for new people. Once the week is full, only priority contacts can still book.
+- **Priority contacts** are existing relationships: contacts in stage _active_ or _won_, or tagged `vip`. Bookly recognises them by email, at booking time (the form email is checked before the slot is validated) and on the slot list when the visitor is known, for example when they arrive from a routing form or a link with `?email=`; the API accepts `email` on `/availability` for the same purpose.
+
 ## Group sessions (seats)
 
 `Seats per slot` on an event type (default 1) turns it into a group session: the same start time can be booked by several people until it is full. The public page shows "N seats left" once a session has started filling; the API reports the same in `seatsLeft`. Everyone in a session gets the same meeting link, and the host's calendar holds one event for the session with every attendee as a guest; the guest list is updated as people book or cancel, and the event moves to the next attendee if the first one cancels. Sessions at other times block the host like any booking.

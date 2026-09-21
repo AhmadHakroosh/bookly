@@ -18,6 +18,7 @@ import {
 } from "@/server/scheduling";
 import { formatPrice, paymentsConfigured } from "@/server/payments";
 import { getCurrentWorkspace } from "@/server/workspace";
+import { priorityForEmail } from "@/server/contacts";
 import { fullSessions } from "@/server/waitlist";
 import { BookingForm } from "./booking-form";
 import { WaitlistForm } from "./waitlist-form";
@@ -60,7 +61,9 @@ async function EventPage({ params, searchParams }: PageProps<"/[username]/[event
     ),
     Number(month.split("-")[1]) === 12 ? 0 : -1,
   );
-  const days = await availableSlots(et, tz, monthStart, monthEnd);
+  const knownEmail = typeof sp.email === "string" ? sp.email : prev?.attendeeEmail;
+  const priority = await priorityForEmail(ws.id, knownEmail);
+  const days = await availableSlots(et, tz, monthStart, monthEnd, { priority });
   const availableDates = new Set(days.map((d) => d.date));
   const daySlots = date ? (days.find((d) => d.date === date)?.slots ?? []) : [];
   const seats = await slotSeats(et, daySlots);
@@ -68,7 +71,7 @@ async function EventPage({ params, searchParams }: PageProps<"/[username]/[event
   const waitlist = typeof sp.waitlist === "string" ? sp.waitlist : undefined;
   const rule = prev ? null : recurrenceOf(et.recurrence);
   const plan =
-    slot && !Number.isNaN(slot.getTime()) && rule ? await planSeries(et, tz, slot) : null;
+    slot && !Number.isNaN(slot.getTime()) && rule ? await planSeries(et, tz, slot, priority) : null;
   const bookable = plan?.filter((p) => p.hostUserId).length ?? 1;
   const base = `/${profile.username}/${et.slug}`;
   const makeHref = (over: Record<string, string | undefined>) => {

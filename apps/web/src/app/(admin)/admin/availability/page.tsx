@@ -34,12 +34,17 @@ async function AvailabilityPage() {
         name={s.name}
         timezone={s.timezone}
         zones={timezoneList()}
+        weeklyBudget={s.weeklyBudget}
         days={days.map((label, wd) => ({
           weekday: wd,
           label,
           ranges: s.rules
             .filter((r) => r.weekday === wd)
-            .map((r) => ({ start: minToHHMM(r.startMin), end: minToHHMM(r.endMin) })),
+            .map((r) => ({
+              start: minToHHMM(r.startMin),
+              end: minToHHMM(r.endMin),
+              focus: r.kind === "focus",
+            })),
         }))}
       />
       <section className="space-y-3">
