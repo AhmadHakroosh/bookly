@@ -1,6 +1,6 @@
 # Bookly
 
-**Bookly** is an open-source scheduling platform: booking pages, calendar sync, video links, payments, reminders and team scheduling.
+**Bookly** (from the Arabic بُكْلة, "buckle", the clip that holds things in place) is an open-source scheduling platform: booking pages, calendar sync, video links, payments, reminders and team scheduling.
 
 Bookly is one Next.js application on Postgres that you can run yourself with Docker, or use as a hosted service. Every feature is in the open-source core; the hosted version only adds plans and billing.
 
