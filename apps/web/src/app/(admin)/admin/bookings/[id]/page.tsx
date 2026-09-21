@@ -6,7 +6,11 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { db } from "@/lib/db";
 import { fmtDateTime } from "@/lib/time";
+import { TaskList } from "@/components/task-list";
 import { assistantConfigured, briefForBooking } from "@/server/brief";
+import { listOpenTasks } from "@/server/capture";
+import { contactTimeline } from "@/server/contacts";
+import { CaptureForm } from "./capture-form";
 import { locationLabel } from "@/server/scheduling";
 import { requireStaff } from "@/server/session";
 import { getCurrentWorkspace } from "@/server/workspace";
@@ -24,7 +28,18 @@ async function BookingBriefPage({ params }: PageProps<"/admin/bookings/[id]">) {
   const et = b.eventTypeId
     ? await db().query.eventTypes.findFirst({ where: eq(schema.eventTypes.id, b.eventTypeId) })
     : null;
-  const brief = await briefForBooking(ws, b, et ?? null);
+  const [brief, tasks, timeline] = await Promise.all([
+    briefForBooking(ws, b, et ?? null),
+    listOpenTasks(ws.id, { bookingId: b.id }),
+    b.contactId ? contactTimeline(b.contactId, 50) : Promise.resolve([]),
+  ]);
+  const lastCapture = timeline.find((e) => e.type === "capture" && e.bookingId === b.id);
+  const draft =
+    (
+      lastCapture?.data as
+        { capture?: { followUp?: { subject: string; body: string } | null } } | undefined
+    )?.capture?.followUp ?? null;
+  const past = b.endAt <= new Date() || b.status === "completed" || b.status === "no_show";
   return (
     <div className="max-w-2xl space-y-6">
       <div>
@@ -65,6 +80,26 @@ async function BookingBriefPage({ params }: PageProps<"/admin/bookings/[id]">) {
           {b.briefAt ? ` Updated ${fmtDateTime(b.briefAt, ws.timezone)}.` : ""}
         </p>
       </section>
+      {lastCapture && (
+        <section className="rounded-xl border p-5 text-sm">
+          <h2 className="font-medium">Captured</h2>
+          <p className="mt-2 whitespace-pre-line">{lastCapture.summary}</p>
+          <p className="mt-2 text-xs text-muted-foreground">
+            {fmtDateTime(lastCapture.createdAt, ws.timezone)}
+          </p>
+        </section>
+      )}
+      <TaskList
+        tasks={tasks}
+        tz={ws.timezone}
+        path={`/admin/bookings/${b.id}`}
+        contactId={b.contactId}
+        bookingId={b.id}
+        title="Action items"
+      />
+      {(past || b.status === "confirmed") && (
+        <CaptureForm bookingId={b.id} assistant={assistantConfigured()} draft={draft} />
+      )}
       {Object.keys(b.answers).length > 0 && (
         <section className="rounded-xl border p-5 text-sm">
           <h2 className="font-medium">Their answers</h2>

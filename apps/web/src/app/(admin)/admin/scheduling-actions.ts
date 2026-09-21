@@ -9,6 +9,8 @@ import { fmtDateTime, hhmmToMin, isValidTimezone } from "@/lib/time";
 import { revalidatePath } from "next/cache";
 import { cancelBooking, confirmBooking } from "@/server/booking-flow";
 import { briefForBooking } from "@/server/brief";
+import { addTask, captureMeeting, completeTask, deleteTask, sendFollowUp } from "@/server/capture";
+import { logContactEvent } from "@/server/contacts";
 import { trackBooking } from "@/server/contacts";
 import { refreshWorkspace } from "@/server/cache";
 import { parseQuestions, parseQuestionsJson, parseReminders } from "@/server/questions";
@@ -390,6 +392,86 @@ export async function hostMark(id: string, status: "completed" | "no_show" | "co
 export async function hostConfirm(id: string) {
   const { ws } = await ctx();
   await confirmBooking(ws, id);
+}
+
+async function ownBooking(id: string) {
+  const { ws, session } = await ctx();
+  const b = await db().query.bookings.findFirst({
+    where: and(eq(schema.bookings.id, id), eq(schema.bookings.workspaceId, ws.id)),
+  });
+  if (!b) return null;
+  const et = b.eventTypeId
+    ? await db().query.eventTypes.findFirst({ where: eq(schema.eventTypes.id, b.eventTypeId) })
+    : null;
+  return { ws, session, b, et: et ?? null };
+}
+
+export type CaptureState = {
+  ok?: boolean;
+  error?: string;
+  followUp?: { subject: string; body: string } | null;
+};
+
+/** Notes → summary, tasks, stage suggestion and a follow-up draft. */
+export async function captureNotes(_prev: CaptureState, formData: FormData): Promise<CaptureState> {
+  const o = await ownBooking(String(formData.get("id") ?? ""));
+  if (!o) return { error: "Booking not found" };
+  const notes = String(formData.get("notes") ?? "").trim();
+  if (notes.length < 3) return { error: "Add a few words first." };
+  const { capture } = await captureMeeting(o.ws, o.b, o.et, notes.slice(0, 20000));
+  revalidatePath(`/admin/bookings/${o.b.id}`);
+  return { ok: true, followUp: capture.followUp };
+}
+
+export async function sendFollowUpAction(id: string, formData: FormData) {
+  const o = await ownBooking(id);
+  if (!o) return;
+  const subject = String(formData.get("subject") ?? "")
+    .trim()
+    .slice(0, 200);
+  const body = String(formData.get("body") ?? "")
+    .trim()
+    .slice(0, 4000);
+  if (!subject || !body) return;
+  await sendFollowUp(o.ws, o.b, subject, body);
+  revalidatePath(`/admin/bookings/${id}`);
+}
+
+export async function addTaskAction(formData: FormData) {
+  const { ws, session } = await ctx();
+  const title = String(formData.get("title") ?? "").trim();
+  if (!title) return;
+  const due = String(formData.get("dueAt") ?? "");
+  const contactId = String(formData.get("contactId") ?? "") || null;
+  const bookingId = String(formData.get("bookingId") ?? "") || null;
+  await addTask(ws.id, {
+    userId: session.user.id,
+    title,
+    contactId,
+    bookingId,
+    dueAt: due ? new Date(due) : null,
+  });
+  if (contactId) await logContactEvent(ws.id, contactId, "task", `Task: ${title}`, { bookingId });
+  refreshWorkspace(ws.id);
+  revalidatePath(
+    bookingId
+      ? `/admin/bookings/${bookingId}`
+      : contactId
+        ? `/admin/contacts/${contactId}`
+        : "/admin",
+  );
+}
+
+export async function toggleTask(id: string, done: boolean, path: string) {
+  const { ws } = await ctx();
+  await completeTask(ws.id, id, done);
+  revalidatePath(path);
+}
+
+export async function removeTask(id: string, path: string) {
+  const { ws } = await ctx();
+  await deleteTask(ws.id, id);
+  revalidatePath(path);
 }
 
 export async function regenerateBrief(id: string) {

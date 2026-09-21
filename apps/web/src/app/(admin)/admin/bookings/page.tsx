@@ -108,12 +108,12 @@ async function BookingsPage({ searchParams }: PageProps<"/admin/bookings">) {
               >
                 {b.status.replace("_", " ")}
               </Badge>
-              {!past && (b.status === "confirmed" || b.status === "pending") && (
+              {b.status !== "cancelled" && b.status !== "rescheduled" && (
                 <Link
                   href={`/admin/bookings/${b.id}`}
                   className="text-sm underline underline-offset-4"
                 >
-                  Brief
+                  {past ? "Notes" : "Brief"}
                 </Link>
               )}
               {b.status === "pending" && (

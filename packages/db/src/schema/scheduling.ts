@@ -269,6 +269,33 @@ export const contactEvents = pgTable(
   (t) => [index("contact_events_contact_idx").on(t.contactId, t.createdAt)],
 );
 
+/** Action items captured after meetings (or added by hand), with reminders. */
+export const tasks = pgTable(
+  "tasks",
+  {
+    id: id(),
+    workspaceId: text("workspace_id")
+      .notNull()
+      .references(() => workspaces.id, { onDelete: "cascade" }),
+    contactId: text("contact_id").references(() => contacts.id, { onDelete: "cascade" }),
+    bookingId: text("booking_id"),
+    /** Host responsible (defaults to the booking's host). */
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    title: text("title").notNull(),
+    dueAt: timestamp("due_at", { withTimezone: true }),
+    doneAt: timestamp("done_at", { withTimezone: true }),
+    /** Set once the overdue nudge went out, so it is sent once. */
+    nudgedAt: timestamp("nudged_at", { withTimezone: true }),
+    ...timestamps,
+  },
+  (t) => [
+    index("tasks_ws_due_idx").on(t.workspaceId, t.doneAt, t.dueAt),
+    index("tasks_contact_idx").on(t.contactId),
+  ],
+);
+
 /* ---------------- Bookings ---------------- */
 
 export const bookingStatus = pgEnum("booking_status", [
@@ -428,4 +455,5 @@ export type Booking = typeof bookings.$inferSelect;
 export type WaitlistEntry = typeof waitlistEntries.$inferSelect;
 export type RoutingForm = typeof routingForms.$inferSelect;
 export type Contact = typeof contacts.$inferSelect;
+export type Task = typeof tasks.$inferSelect;
 export type ContactEvent = typeof contactEvents.$inferSelect;

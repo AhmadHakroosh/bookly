@@ -5,6 +5,8 @@ import { CONTACT_STAGES } from "@bookly/db/schema";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { fmtDateTime } from "@/lib/time";
+import { TaskList } from "@/components/task-list";
+import { listOpenTasks } from "@/server/capture";
 import { contactBookings, contactTimeline, getContact } from "@/server/contacts";
 import { requireStaff } from "@/server/session";
 import { getCurrentWorkspace } from "@/server/workspace";
@@ -35,7 +37,11 @@ async function ContactPage({ params }: PageProps<"/admin/contacts/[id]">) {
   if (!ws) return null;
   const c = await getContact(ws.id, id);
   if (!c) notFound();
-  const [events, bookings] = await Promise.all([contactTimeline(c.id), contactBookings(c.id)]);
+  const [events, bookings, tasks] = await Promise.all([
+    contactTimeline(c.id),
+    contactBookings(c.id),
+    listOpenTasks(ws.id, { contactId: c.id }),
+  ]);
   const now = new Date();
   const upcoming = bookings.filter(
     (b) => b.endAt > now && (b.status === "confirmed" || b.status === "pending"),
@@ -149,7 +155,13 @@ async function ContactPage({ params }: PageProps<"/admin/contacts/[id]">) {
             </ol>
           </div>
         </section>
-        <aside>
+        <aside className="space-y-4">
+          <TaskList
+            tasks={tasks}
+            tz={ws.timezone}
+            path={`/admin/contacts/${c.id}`}
+            contactId={c.id}
+          />
           <ContactDetailsForm
             contact={{
               id: c.id,
