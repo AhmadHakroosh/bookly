@@ -4,5 +4,6 @@ node_modules
 .git
 data
 *.md
+!docs/*.md
 .env*
 !.env.example

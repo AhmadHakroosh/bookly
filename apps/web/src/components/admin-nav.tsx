@@ -29,6 +29,7 @@ const GROUPS: { label: string; items: { href: string; label: string }[] }[] = [
       { href: "/admin/api", label: "API & webhooks" },
       { href: "/admin/domains", label: "Domains" },
       { href: "/admin/settings", label: "Settings" },
+      { href: "/docs", label: "Documentation" },
     ],
   },
 ];

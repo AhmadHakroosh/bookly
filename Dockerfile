@@ -30,6 +30,8 @@ COPY --from=build --chown=bookly:bookly /app/apps/web/.next/static ./apps/web/.n
 COPY --from=build --chown=bookly:bookly /app/apps/web/public ./apps/web/public
 COPY --from=build --chown=bookly:bookly /app/packages/db/drizzle ./packages/db/drizzle
 COPY --from=build --chown=bookly:bookly /app/packages/db/dist/migrate.cjs ./packages/db/migrate.cjs
+# In-app documentation at /docs.
+COPY --from=build --chown=bookly:bookly /app/docs ./docs
 USER bookly
 EXPOSE 3000
 # Apply pending migrations, then serve.

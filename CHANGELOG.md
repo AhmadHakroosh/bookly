@@ -14,6 +14,7 @@ Everything below is on `main` ahead of the first release, which will be tagged `
 - Email, SMS and WhatsApp reminders, follow-up emails, no-show tracking, host pings on Slack / text when someone books or joins
 - Teams: invitations and roles, round-robin and collective event types
 - Group sessions: `seats` per event type; a slot stays bookable until full, attendees share one meeting link, seats left shown on the booking page and in the API
+- In-app documentation at `/docs`, rendered from the repository's `docs/` folder
 - Abuse controls: per-visitor throttles on public forms, a workspace email/domain blocklist, and per-plan booking and API budgets in cloud mode
 - Routing forms: a questionnaire at `/r/<slug>` with rules that send visitors to an event type, a link or a message
 - Calendar push notifications: Google watch channels and Microsoft Graph subscriptions refresh busy time the moment a calendar changes (renewed automatically)
