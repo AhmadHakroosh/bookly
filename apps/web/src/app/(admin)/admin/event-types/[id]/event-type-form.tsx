@@ -7,7 +7,9 @@ import { Button } from "@/components/ui/button";
 import { Field, FieldDescription, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import type { EventQuestion, FollowUp } from "@bookly/db/schema";
 import { deleteEventType, saveEventType } from "../../scheduling-actions";
+import { QuestionBuilder } from "./question-builder";
 
 type Values = {
   id: string;
@@ -25,12 +27,16 @@ type Values = {
   locationValue: string;
   color: string;
   scheduleId: string;
-  questions: string;
   requiresConfirmation: boolean;
   hidden: boolean;
   priceCents: number;
   currency: string;
   remindByText: boolean;
+  questionsList: EventQuestion[];
+  reminders: string;
+  followUp: FollowUp;
+  assignment: "single" | "round_robin" | "collective";
+  hostUserIds: string[];
 };
 
 const LOCATIONS: [string, string][] = [
@@ -56,18 +62,21 @@ export function EventTypeForm({
   publicUrl,
   ready,
   paymentsReady,
+  teammates,
 }: {
   initial: Values;
   schedules: { id: string; name: string }[];
   publicUrl: string | null;
   ready: ConferencingReady;
   paymentsReady: boolean;
+  teammates: { userId: string; name: string }[];
 }) {
   const [state, action, pending] = useActionState(
     saveEventType,
     {} as { ok?: boolean; error?: string; slug?: string },
   );
   const [loc, setLoc] = useState(initial.locationType);
+  const [assignment, setAssignment] = useState(initial.assignment);
   useEffect(() => {
     if (state.ok) toast.success("Saved");
     else if (state.error) toast.error(state.error);
@@ -237,22 +246,106 @@ export function EventTypeForm({
           </Field>
         </div>
         <Field>
-          <FieldLabel htmlFor="questions">Booking questions</FieldLabel>
-          <Textarea
-            id="questions"
-            name="questions"
-            rows={4}
-            defaultValue={initial.questions}
-            className="font-mono text-xs"
-            placeholder={
-              "What would you like to discuss? | textarea | required\nCompany | text | optional\nTeam size | select | optional | 1-10,11-50,51+"
-            }
-          />
-          <FieldDescription>
-            One per line: Label | text·textarea·email·phone·select | required·optional | options
-            (select only, comma-separated). Name and email are always asked.
-          </FieldDescription>
+          <FieldLabel>Booking questions</FieldLabel>
+          <QuestionBuilder initial={initial.questionsList} />
         </Field>
+        <div className="grid gap-6 sm:grid-cols-2">
+          <Field>
+            <FieldLabel htmlFor="reminders">Remind attendees (minutes before)</FieldLabel>
+            <Input
+              id="reminders"
+              name="reminders"
+              defaultValue={initial.reminders}
+              placeholder="1440, 60"
+            />
+            <FieldDescription>Comma-separated. 1440 = one day, 60 = one hour.</FieldDescription>
+          </Field>
+          <Field>
+            <FieldLabel htmlFor="assignment">Who hosts</FieldLabel>
+            <select
+              id="assignment"
+              name="assignment"
+              value={assignment}
+              onChange={(e) => setAssignment(e.target.value as Values["assignment"])}
+              className="h-8 rounded-lg border bg-background px-2 text-sm"
+            >
+              <option value="single">Just me</option>
+              <option value="round_robin">Round robin (one of the hosts, evenly)</option>
+              <option value="collective">Collective (all hosts together)</option>
+            </select>
+            {assignment !== "single" && (
+              <div className="mt-2 space-y-1 text-sm">
+                {teammates.length === 0 && (
+                  <p className="text-xs text-muted-foreground">
+                    Invite teammates under Team first.
+                  </p>
+                )}
+                {teammates.map((t) => (
+                  <label key={t.userId} className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      name="hostUserIds"
+                      value={t.userId}
+                      defaultChecked={initial.hostUserIds.includes(t.userId)}
+                    />
+                    {t.name}
+                  </label>
+                ))}
+                <FieldDescription>
+                  {assignment === "round_robin"
+                    ? "Slots are offered when any host is free; the least busy free host takes the booking."
+                    : "Slots are offered only when every host is free; the booking goes on your calendar."}
+                </FieldDescription>
+              </div>
+            )}
+          </Field>
+        </div>
+        <fieldset className="space-y-3 rounded-lg border p-4">
+          <legend className="px-1 text-sm font-medium">Follow-up email after the meeting</legend>
+          <label className="inline-flex items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              name="followUpEnabled"
+              defaultChecked={initial.followUp.enabled}
+            />{" "}
+            Send a follow-up
+          </label>
+          <div className="grid gap-4 sm:grid-cols-[160px_1fr]">
+            <Field>
+              <FieldLabel htmlFor="followUpDelay">Hours after the end</FieldLabel>
+              <Input
+                id="followUpDelay"
+                name="followUpDelay"
+                type="number"
+                min={0}
+                step="0.5"
+                defaultValue={String((initial.followUp.delayMin ?? 60) / 60)}
+              />
+            </Field>
+            <Field>
+              <FieldLabel htmlFor="followUpSubject">Subject</FieldLabel>
+              <Input
+                id="followUpSubject"
+                name="followUpSubject"
+                defaultValue={initial.followUp.subject ?? ""}
+                placeholder="Thanks for your time, {name}"
+              />
+            </Field>
+          </div>
+          <Field>
+            <FieldLabel htmlFor="followUpBody">Message</FieldLabel>
+            <Textarea
+              id="followUpBody"
+              name="followUpBody"
+              rows={4}
+              defaultValue={initial.followUp.body ?? ""}
+              placeholder={"Hi {name},\n\nThanks for the {event} today…"}
+            />
+            <FieldDescription>
+              Placeholders: {"{name} {host} {event} {bookingUrl}"}
+            </FieldDescription>
+          </Field>
+        </fieldset>
         <div className="flex flex-wrap gap-6 text-sm">
           <label className="inline-flex items-center gap-2">
             <input

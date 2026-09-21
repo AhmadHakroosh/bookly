@@ -2,7 +2,12 @@ import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { conferencingAvailability } from "@/server/integrations";
 import { paymentsConfigured } from "@/server/payments";
-import { getEventTypeById, getProfileByUser, listSchedules } from "@/server/scheduling";
+import {
+  getEventTypeById,
+  getProfileByUser,
+  listProfiles,
+  listSchedules,
+} from "@/server/scheduling";
 import { requireStaff } from "@/server/session";
 import { getCurrentWorkspace } from "@/server/workspace";
 import { EventTypeForm } from "./event-type-form";
@@ -18,14 +23,19 @@ async function EditEventTypePage({ params }: PageProps<"/admin/event-types/[id]"
   if (!ws) return null;
   const et = await getEventTypeById(ws.id, id);
   if (!et) notFound();
-  const [schedules, profile, avail] = await Promise.all([
+  const [schedules, profile, avail, profiles] = await Promise.all([
     listSchedules(ws.id, et.userId),
     getProfileByUser(ws.id, session.user.id),
     conferencingAvailability(et.userId),
+    listProfiles(ws.id),
   ]);
+  const teammates = profiles
+    .filter((p) => p.userId !== et.userId)
+    .map((p) => ({ userId: p.userId, name: p.displayName }));
   return (
     <EventTypeForm
       paymentsReady={paymentsConfigured()}
+      teammates={teammates}
       ready={{
         daily: avail.daily,
         google_meet: avail.google_meet,
@@ -48,17 +58,15 @@ async function EditEventTypePage({ params }: PageProps<"/admin/event-types/[id]"
         locationValue: et.location.value ?? "",
         color: et.color,
         scheduleId: et.scheduleId ?? "",
-        questions: et.questions
-          .map((q) =>
-            [q.label, q.type, q.required ? "required" : "optional", q.options?.join(",") ?? ""]
-              .filter((_, i) => i < 3 || q.type === "select")
-              .join(" | "),
-          )
-          .join("\n"),
         requiresConfirmation: et.requiresConfirmation,
         priceCents: et.priceCents ?? 0,
         currency: et.currency ?? "usd",
         remindByText: et.remindByText,
+        questionsList: et.questions,
+        reminders: et.reminders.join(", "),
+        followUp: et.followUp,
+        assignment: et.assignment,
+        hostUserIds: et.hostUserIds,
         hidden: et.hidden,
       }}
       schedules={schedules.map((s) => ({ id: s.id, name: `${s.name} (${s.timezone})` }))}

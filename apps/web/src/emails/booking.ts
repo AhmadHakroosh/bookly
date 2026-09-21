@@ -117,6 +117,28 @@ export function cancellationMail(ctx: BookingMailCtx, forHost: boolean) {
   return { subject, text, html };
 }
 
+/** Post-meeting follow-up from the event type's template (placeholders replaced). */
+export function followUpMail(ctx: BookingMailCtx) {
+  const d = details(ctx, ctx.booking.timezone);
+  const fu = ctx.eventType?.followUp ?? {};
+  const fill = (s: string) =>
+    s
+      .replaceAll("{name}", ctx.booking.attendeeName.split(" ")[0] ?? ctx.booking.attendeeName)
+      .replaceAll("{host}", d.hostName)
+      .replaceAll("{event}", d.title)
+      .replaceAll("{bookingUrl}", `${ctx.baseUrl}/booking/${ctx.booking.manageToken}`);
+  const subject = fill(fu.subject?.trim() || `Thanks for your time, {name}`);
+  const body = fill(
+    fu.body?.trim() ||
+      `Hi {name},\n\nThanks for the {event} today. If anything is unclear or you want to continue the conversation, just reply to this email.\n\n{host}`,
+  );
+  return {
+    subject,
+    text: body,
+    html: `<pre style="font: 15px/1.6 -apple-system, system-ui, sans-serif; white-space: pre-wrap">${esc(body)}</pre>`,
+  };
+}
+
 export function reminderMail(ctx: BookingMailCtx, forHost: boolean, inHours: number) {
   const d = details(ctx, forHost ? ctx.host.timezone : ctx.booking.timezone);
   const subject = `Reminder: ${d.title} ${inHours >= 24 ? "tomorrow" : `in ${inHours} hour${inHours === 1 ? "" : "s"}`}`;

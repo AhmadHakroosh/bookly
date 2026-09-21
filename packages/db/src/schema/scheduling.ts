@@ -120,6 +120,17 @@ export const scheduleOverrides = pgTable(
 export type LocationType =
   "daily" | "google_meet" | "zoom" | "teams" | "phone" | "in_person" | "custom";
 export type EventLocation = { type: LocationType; value?: string };
+/** single = the owner; round_robin = one of the hosts; collective = all hosts together. */
+export type Assignment = "single" | "round_robin" | "collective";
+export type FollowUp = {
+  enabled?: boolean;
+  /** Minutes after the meeting ends. */
+  delayMin?: number;
+  subject?: string;
+  /** Placeholders: {name} {host} {event} {bookingUrl} */
+  body?: string;
+};
+
 export type EventQuestion = {
   id: string;
   label: string;
@@ -161,6 +172,12 @@ export const eventTypes = pgTable(
     currency: text("currency"),
     /** Text (SMS/WhatsApp) reminders to attendees who leave a phone number. */
     remindByText: boolean("remind_by_text").notNull().default(false),
+    /** Minutes before the start at which attendees (and the host) are reminded. */
+    reminders: jsonb("reminders").$type<number[]>().notNull().default([1440, 60]),
+    followUp: jsonb("follow_up").$type<FollowUp>().notNull().default({}),
+    assignment: text("assignment").$type<Assignment>().notNull().default("single"),
+    /** Extra hosts for round-robin / collective event types (the owner is always included). */
+    hostUserIds: jsonb("host_user_ids").$type<string[]>().notNull().default([]),
     ...timestamps,
   },
   (t) => [

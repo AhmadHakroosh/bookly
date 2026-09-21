@@ -8,7 +8,7 @@ import { db } from "@/lib/db";
 import { hhmmToMin, isValidTimezone } from "@/lib/time";
 import { cancelBooking, confirmBooking } from "@/server/booking-flow";
 import { refreshWorkspace } from "@/server/cache";
-import { parseQuestions } from "@/server/questions";
+import { parseQuestions, parseQuestionsJson, parseReminders } from "@/server/questions";
 import { ensureDefaultSchedule, getProfileByUser } from "@/server/scheduling";
 import { requireStaff } from "@/server/session";
 import { getCurrentWorkspace } from "@/server/workspace";
@@ -231,6 +231,17 @@ const eventSchema = z.object({
     .default("#2563eb"),
   scheduleId: z.string().default(""),
   questions: z.string().max(5000).default(""),
+  questionsJson: z.string().max(20000).default(""),
+  reminders: z.string().max(200).default("1440, 60"),
+  followUpEnabled: z.enum(["on", "off"]).default("off"),
+  followUpDelay: z.coerce
+    .number()
+    .min(0)
+    .max(24 * 14)
+    .default(1),
+  followUpSubject: z.string().trim().max(200).default(""),
+  followUpBody: z.string().trim().max(5000).default(""),
+  assignment: z.enum(["single", "round_robin", "collective"]).default("single"),
   requiresConfirmation: z.enum(["on", "off"]).default("off"),
   hidden: z.enum(["on", "off"]).default("off"),
   remindByText: z.enum(["on", "off"]).default("off"),
@@ -253,7 +264,9 @@ export async function saveEventType(
     requiresConfirmation: formData.get("requiresConfirmation") ? "on" : "off",
     hidden: formData.get("hidden") ? "on" : "off",
     remindByText: formData.get("remindByText") ? "on" : "off",
+    followUpEnabled: formData.get("followUpEnabled") ? "on" : "off",
   });
+  const hostUserIds = formData.getAll("hostUserIds").map(String).slice(0, 20);
   if (!parsed.success)
     return { error: parsed.error.issues[0]?.message ?? "Please check the form." };
   const d = parsed.data;
@@ -284,7 +297,18 @@ export async function saveEventType(
       location,
       color: d.color,
       scheduleId: d.scheduleId || existing.scheduleId,
-      questions: parseQuestions(d.questions),
+      questions: d.questionsJson
+        ? parseQuestionsJson(d.questionsJson)
+        : parseQuestions(d.questions),
+      reminders: parseReminders(d.reminders),
+      followUp: {
+        enabled: d.followUpEnabled === "on",
+        delayMin: Math.round(d.followUpDelay * 60),
+        subject: d.followUpSubject || undefined,
+        body: d.followUpBody || undefined,
+      },
+      assignment: d.assignment,
+      hostUserIds: d.assignment === "single" ? [] : hostUserIds,
       requiresConfirmation: d.requiresConfirmation === "on",
       hidden: d.hidden === "on",
       remindByText: d.remindByText === "on",
@@ -311,6 +335,15 @@ export async function deleteEventType(id: string) {
 export async function hostCancel(id: string, formData: FormData) {
   const { ws } = await ctx();
   await cancelBooking(ws, id, "host", String(formData.get("reason") ?? ""));
+}
+
+export async function hostMark(id: string, status: "completed" | "no_show" | "confirmed") {
+  const { ws } = await ctx();
+  await db()
+    .update(schema.bookings)
+    .set({ status })
+    .where(and(eq(schema.bookings.id, id), eq(schema.bookings.workspaceId, ws.id)));
+  refreshWorkspace(ws.id);
 }
 
 export async function hostConfirm(id: string) {

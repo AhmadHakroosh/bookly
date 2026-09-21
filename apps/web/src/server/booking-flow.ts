@@ -17,7 +17,7 @@ import { notifyHost } from "./notify";
 import { isPaid, paymentsConfigured, refundBooking } from "./payments";
 import { emitEvent } from "./webhooks";
 import { refreshWorkspace } from "./cache";
-import { baseUrl, getProfileByUser, locationLabel, newToken, slotIsBookable } from "./scheduling";
+import { baseUrl, getProfileByUser, locationLabel, newToken, pickHost } from "./scheduling";
 
 export type BookingInput = {
   start: Date;
@@ -92,7 +92,8 @@ export async function createBooking(
   eventType: EventType,
   input: BookingInput,
 ): Promise<Booking> {
-  if (!(await slotIsBookable(eventType, input.timezone, input.start)))
+  const hostUserId = await pickHost(eventType, input.timezone, input.start);
+  if (!hostUserId)
     throw new BookingError("That time is no longer available. Please pick another slot.");
   for (const q of eventType.questions) {
     if (q.required && !input.answers[q.id]?.trim())
@@ -126,7 +127,7 @@ export async function createBooking(
     .values({
       workspaceId: workspace.id,
       eventTypeId: eventType.id,
-      hostUserId: eventType.userId,
+      hostUserId,
       startAt: input.start,
       endAt: end,
       timezone: input.timezone,

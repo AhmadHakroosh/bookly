@@ -1,7 +1,7 @@
 import "server-only";
 import { createHash } from "node:crypto";
 import { cacheLife, cacheTag } from "next/cache";
-import { and, asc, desc, eq, gte, inArray, lte, schema } from "@bookly/db";
+import { and, asc, desc, eq, gte, inArray, lte, schema, sql } from "@bookly/db";
 import type {
   Booking,
   EventType,
@@ -203,19 +203,45 @@ export async function externalBusy(hostUserId: string, from: Date, to: Date): Pr
   return fromIntegrations(hostUserId, from, to);
 }
 
-async function engineInput(eventType: EventType, attendeeTz: string, from: string, to: string) {
-  const schedule = eventType.scheduleId ? await getSchedule(eventType.scheduleId) : null;
-  const fallback =
-    schedule ??
-    (await getSchedule(
-      (await ensureDefaultSchedule(eventType.workspaceId, eventType.userId, "UTC")).id,
-    ))!;
+/** Everyone who can host this event type: the owner plus, for team types, the extra hosts. */
+export function eventHosts(eventType: EventType): string[] {
+  if (eventType.assignment === "single") return [eventType.userId];
+  return [...new Set([eventType.userId, ...eventType.hostUserIds])];
+}
+
+async function hostSchedule(eventType: EventType, hostUserId: string) {
+  const own = hostUserId === eventType.userId && eventType.scheduleId;
+  const s = own ? await getSchedule(eventType.scheduleId!) : null;
+  return (
+    s ??
+    (await getSchedule((await ensureDefaultSchedule(eventType.workspaceId, hostUserId, "UTC")).id))!
+  );
+}
+
+async function allBusy(hostUserId: string, rangeStart: Date, rangeEnd: Date) {
+  const [busy, ext] = await Promise.all([
+    hostBusy(hostUserId, rangeStart, rangeEnd),
+    externalBusy(hostUserId, rangeStart, rangeEnd),
+  ]);
+  return [...busy, ...ext];
+}
+
+/**
+ * Engine input for one host. Collective event types fold every host's busy time into the
+ * owner's schedule so only times when the whole team is free remain.
+ */
+async function engineInput(
+  eventType: EventType,
+  attendeeTz: string,
+  from: string,
+  to: string,
+  hostUserId: string = eventType.userId,
+) {
+  const fallback = await hostSchedule(eventType, hostUserId);
   const rangeStart = new Date(`${addDays(from, -2)}T00:00:00Z`);
   const rangeEnd = new Date(`${addDays(to, 2)}T23:59:59Z`);
-  const [busy, ext] = await Promise.all([
-    hostBusy(eventType.userId, rangeStart, rangeEnd),
-    externalBusy(eventType.userId, rangeStart, rangeEnd),
-  ]);
+  const hosts = eventType.assignment === "collective" ? eventHosts(eventType) : [hostUserId];
+  const busyAll = (await Promise.all(hosts.map((h) => allBusy(h, rangeStart, rangeEnd)))).flat();
   return {
     scheduleTz: fallback.timezone,
     rules: fallback.rules,
@@ -227,7 +253,7 @@ async function engineInput(eventType: EventType, attendeeTz: string, from: strin
     minNoticeMin: eventType.minNoticeMin,
     maxDaysAhead: eventType.maxDaysAhead,
     maxPerDay: eventType.maxPerDay,
-    busy: [...busy, ...ext],
+    busy: busyAll,
     attendeeTz,
   };
 }
@@ -238,30 +264,79 @@ export async function availableSlots(
   from: string,
   to: string,
 ) {
-  const input = await engineInput(eventType, attendeeTz, from, to);
-  return computeSlots({ ...input, from, to });
+  if (eventType.assignment !== "round_robin") {
+    const input = await engineInput(eventType, attendeeTz, from, to);
+    return computeSlots({ ...input, from, to });
+  }
+  // Round robin: a slot is offered when any host is free.
+  const perHost = await Promise.all(
+    eventHosts(eventType).map(async (h) =>
+      computeSlots({ ...(await engineInput(eventType, attendeeTz, from, to, h)), from, to }),
+    ),
+  );
+  const byDate = new Map<string, Map<number, Date>>();
+  for (const days of perHost)
+    for (const d of days) {
+      const m = byDate.get(d.date) ?? new Map<number, Date>();
+      for (const s of d.slots) m.set(s.getTime(), s);
+      byDate.set(d.date, m);
+    }
+  return [...byDate.entries()]
+    .sort(([a], [b]) => (a < b ? -1 : 1))
+    .map(([date, m]) => ({
+      date,
+      slots: [...m.values()].sort((a, b) => a.getTime() - b.getTime()),
+    }));
 }
 
-export async function slotIsBookable(
+async function hostCanTake(eventType: EventType, attendeeTz: string, start: Date, host: string) {
+  const day = start.toISOString().slice(0, 10);
+  const input = await engineInput(eventType, attendeeTz, day, day, host);
+  return isSlotAvailable(input, start);
+}
+
+/**
+ * Which host takes a booking at `start`, or null when nobody can. Round robin picks the free
+ * host with the fewest upcoming bookings so load spreads evenly.
+ */
+export async function pickHost(
   eventType: EventType,
   attendeeTz: string,
   start: Date,
-  ignoreBookingId?: string,
-) {
-  const input = await engineInput(
-    eventType,
-    attendeeTz,
-    start.toISOString().slice(0, 10),
-    start.toISOString().slice(0, 10),
-  );
-  if (ignoreBookingId) {
-    const b = await db().query.bookings.findFirst({
-      where: eq(schema.bookings.id, ignoreBookingId),
-      columns: { startAt: true },
-    });
-    if (b) input.busy = input.busy.filter((i) => i.start.getTime() !== b.startAt.getTime());
+): Promise<string | null> {
+  if (eventType.assignment !== "round_robin") {
+    return (await hostCanTake(eventType, attendeeTz, start, eventType.userId))
+      ? eventType.userId
+      : null;
   }
-  return isSlotAvailable(input, start);
+  const hosts = eventHosts(eventType);
+  const free = (
+    await Promise.all(
+      hosts.map(async (h) => ((await hostCanTake(eventType, attendeeTz, start, h)) ? h : null)),
+    )
+  ).filter((h): h is string => !!h);
+  if (!free.length) return null;
+  const loads = await Promise.all(
+    free.map(async (h) => {
+      const rows = await db()
+        .select({ n: sql<number>`count(*)::int` })
+        .from(schema.bookings)
+        .where(
+          and(
+            eq(schema.bookings.hostUserId, h),
+            inArray(schema.bookings.status, ["confirmed", "pending"]),
+            gte(schema.bookings.startAt, new Date()),
+          ),
+        );
+      return { h, n: rows[0]?.n ?? 0 };
+    }),
+  );
+  loads.sort((a, b) => a.n - b.n || hosts.indexOf(a.h) - hosts.indexOf(b.h));
+  return loads[0]!.h;
+}
+
+export async function slotIsBookable(eventType: EventType, attendeeTz: string, start: Date) {
+  return (await pickHost(eventType, attendeeTz, start)) !== null;
 }
 
 /* ---------------- Bookings ---------------- */

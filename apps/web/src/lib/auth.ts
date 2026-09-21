@@ -43,7 +43,16 @@ export const auth = betterAuth({
           if (env.TENANCY !== "single") return;
           const workspace = await db().query.workspaces.findFirst({ columns: { id: true } });
           if (!workspace) return; // first run: the setup wizard creates the owner
-          const invited = ctx?.path?.includes("invitation");
+          const pending = await db().query.invitations.findFirst({
+            where: (t, { and, eq, gt }) =>
+              and(
+                eq(t.email, user.email.toLowerCase()),
+                eq(t.status, "pending"),
+                gt(t.expiresAt, new Date()),
+              ),
+            columns: { id: true },
+          });
+          const invited = !!pending || ctx?.path?.includes("invitation");
           if (!invited)
             throw new APIError("FORBIDDEN", {
               message: "Sign-up is closed. Ask the workspace owner for an invitation.",

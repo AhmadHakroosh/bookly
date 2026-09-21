@@ -7,7 +7,7 @@ import { formatPrice } from "@/server/payments";
 import { getProfileByUser, listBookings, locationLabel } from "@/server/scheduling";
 import { requireStaff } from "@/server/session";
 import { getCurrentWorkspace } from "@/server/workspace";
-import { hostCancel, hostConfirm } from "../scheduling-actions";
+import { hostCancel, hostConfirm, hostMark } from "../scheduling-actions";
 
 export const metadata = { title: "Bookings" };
 
@@ -86,6 +86,20 @@ async function BookingsPage({ searchParams }: PageProps<"/admin/bookings">) {
                 <form action={hostConfirm.bind(null, b.id)}>
                   <Button type="submit" size="sm">
                     Confirm
+                  </Button>
+                </form>
+              )}
+              {past && (b.status === "confirmed" || b.status === "completed") && (
+                <form action={hostMark.bind(null, b.id, "no_show")}>
+                  <Button type="submit" variant="ghost" size="sm">
+                    No-show
+                  </Button>
+                </form>
+              )}
+              {past && b.status === "no_show" && (
+                <form action={hostMark.bind(null, b.id, "completed")}>
+                  <Button type="submit" variant="ghost" size="sm">
+                    Undo no-show
                   </Button>
                 </form>
               )}
