@@ -15,6 +15,7 @@ Everything below is on `main` ahead of the first release, which will be tagged `
 - Teams: invitations and roles, round-robin and collective event types
 - Group sessions: `seats` per event type; a slot stays bookable until full, attendees share one meeting link, seats left shown on the booking page and in the API
 - Auto-capture for built-in video: opt-in or always-on transcription with speaker labels, live notice in the call, transcript on the booking page, retention and deletion; recap with summary, covered asks, decisions and action items with evidence, open questions, objections, next step, stage suggestion and follow-up, each one click; recaps to review in the inbox; client-facing recap email with chosen items; attendees can delete their transcript; cloud plans get a monthly transcription budget
+- Cloud landing page rebuilt around the meeting lifecycle with light-themed mockups of the real inbox, briefing, call, recap, availability, contact and booking screens
 - Polish: icon-based admin navigation, Lucide icons instead of text glyphs everywhere, external links open in a new tab, and a documentation theme with sidebar, table of contents, anchors and prev/next
 - Execution: proposal and payment-request emails from templates (Stripe Checkout link for the amount), HubSpot / Pipedrive sync of contacts, stages and meeting notes, contact and task webhook events and API endpoints
 - Priority-aware availability: focus blocks and a weekly meeting budget that only existing customers (active / won / vip contacts) can book into
