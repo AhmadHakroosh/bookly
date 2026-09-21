@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { BackLink, ExternalLink } from "@/components/links";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { and, eq, schema } from "@bookly/db";
@@ -43,9 +44,7 @@ async function BookingBriefPage({ params }: PageProps<"/admin/bookings/[id]">) {
   return (
     <div className="max-w-2xl space-y-6">
       <div>
-        <Link href="/admin/bookings" className="text-sm text-muted-foreground hover:underline">
-          ← Bookings
-        </Link>
+        <BackLink href="/admin/bookings">Bookings</BackLink>
         <h1 className="mt-1 text-2xl font-semibold tracking-tight">
           {et?.title ?? "Meeting"} with{" "}
           {b.contactId ? (
@@ -57,7 +56,13 @@ async function BookingBriefPage({ params }: PageProps<"/admin/bookings/[id]">) {
           )}
         </h1>
         <p className="text-sm text-muted-foreground">
-          {fmtDateTime(b.startAt, ws.timezone)} · {b.meetingUrl ?? locationLabel(b.location)} ·{" "}
+          {fmtDateTime(b.startAt, ws.timezone)} ·{" "}
+          {b.meetingUrl ? (
+            <ExternalLink href={b.meetingUrl}>Join meeting</ExternalLink>
+          ) : (
+            locationLabel(b.location)
+          )}{" "}
+          ·{" "}
           <Badge variant="secondary" className="capitalize">
             {b.status.replace("_", " ")}
           </Badge>

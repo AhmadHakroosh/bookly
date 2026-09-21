@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { Suspense } from "react";
 import { headers } from "next/headers";
 import { hasFeature } from "@/server/limits";
@@ -32,12 +31,14 @@ async function Shell({ children }: { children: React.ReactNode }) {
           {!(ws && hasFeature(ws, "removeBranding") && footer) && (
             <span>
               Scheduling by{" "}
-              <Link
+              <a
                 href="https://github.com/AhmadHakroosh/bookly"
+                target="_blank"
+                rel="noreferrer"
                 className="underline underline-offset-2 hover:text-foreground"
               >
                 Bookly
-              </Link>
+              </a>
             </span>
           )}
         </footer>

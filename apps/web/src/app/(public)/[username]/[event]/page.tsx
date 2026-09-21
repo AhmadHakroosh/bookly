@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { BackLink } from "@/components/links";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { MonthCalendar } from "@/components/booking/month-calendar";
@@ -97,12 +98,7 @@ async function EventPage({ params, searchParams }: PageProps<"/[username]/[event
       </Suspense>
       <div className="grid gap-8 rounded-2xl border md:grid-cols-[260px_1fr]">
         <aside className="border-b p-6 md:border-r md:border-b-0">
-          <Link
-            href={`/${profile.username}`}
-            className="text-sm text-muted-foreground hover:underline"
-          >
-            ← {profile.displayName}
-          </Link>
+          <BackLink href={`/${profile.username}`}>{profile.displayName}</BackLink>
           <h1 className="mt-3 text-2xl font-semibold tracking-tight">{et.title}</h1>
           <p className="mt-2 text-sm text-muted-foreground">
             {et.durationMin} min · {locationLabel(et.location)}
@@ -155,12 +151,7 @@ async function EventPage({ params, searchParams }: PageProps<"/[username]/[event
         <section className="p-6">
           {waitlist ? (
             <div className="max-w-md">
-              <Link
-                href={makeHref({ waitlist: undefined })}
-                className="text-sm text-muted-foreground hover:underline"
-              >
-                ← Back to times
-              </Link>
+              <BackLink href={makeHref({ waitlist: undefined })}>Back to times</BackLink>
               <h2 className="mt-3 mb-1 text-lg font-semibold">Join the waitlist</h2>
               <p className="mb-4 text-sm text-muted-foreground">
                 {/^\d{4}-\d{2}-\d{2}$/.test(waitlist)
@@ -171,12 +162,7 @@ async function EventPage({ params, searchParams }: PageProps<"/[username]/[event
             </div>
           ) : slot && !Number.isNaN(slot.getTime()) ? (
             <div className="max-w-md">
-              <Link
-                href={makeHref({ slot: undefined })}
-                className="text-sm text-muted-foreground hover:underline"
-              >
-                ← Pick another time
-              </Link>
+              <BackLink href={makeHref({ slot: undefined })}>Pick another time</BackLink>
               <h2 className="mt-3 mb-4 text-lg font-semibold">Your details</h2>
               <BookingForm
                 username={profile.username}

@@ -14,6 +14,7 @@ Everything below is on `main` ahead of the first release, which will be tagged `
 - Email, SMS and WhatsApp reminders, follow-up emails, no-show tracking, host pings on Slack / text when someone books or joins
 - Teams: invitations and roles, round-robin and collective event types
 - Group sessions: `seats` per event type; a slot stays bookable until full, attendees share one meeting link, seats left shown on the booking page and in the API
+- Polish: icon-based admin navigation, Lucide icons instead of text glyphs everywhere, external links open in a new tab, and a documentation theme with sidebar, table of contents, anchors and prev/next
 - Execution: proposal and payment-request emails from templates (Stripe Checkout link for the amount), HubSpot / Pipedrive sync of contacts, stages and meeting notes, contact and task webhook events and API endpoints
 - Priority-aware availability: focus blocks and a weekly meeting budget that only existing customers (active / won / vip contacts) can book into
 - Meeting Inbox as the admin home: today's meetings with briefs, requests with accept / reply-instead, contacts to follow up with snooze, open and overdue tasks

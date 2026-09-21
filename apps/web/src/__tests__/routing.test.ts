@@ -65,3 +65,17 @@ describe("routing rules", () => {
     expect(parseRulesJson("not json", new Set())).toEqual([]);
   });
 });
+
+describe("docs headings", () => {
+  it("adds unique ids and anchors to h2/h3 and collects a table of contents", async () => {
+    const { decorateHeadings, slugify } = await import("@/server/docs");
+    const { html, headings } = decorateHeadings(
+      "<h2>Setup &amp; run</h2><p>x</p><h3>Setup</h3><h2>Setup</h2>",
+    );
+    expect(headings.map((h) => h.id)).toEqual(["setup-run", "setup", "setup-2"]);
+    expect(html).toContain(
+      '<h2 id="setup-run">Setup &amp; run<a href="#setup-run" class="heading-anchor"',
+    );
+    expect(slugify("Cloud (multi-tenant) mode")).toBe("cloud-multi-tenant-mode");
+  });
+});

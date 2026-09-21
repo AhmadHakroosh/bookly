@@ -1,4 +1,5 @@
 import type { Task } from "@bookly/db/schema";
+import { CheckIcon, XIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { fmtDate } from "@/lib/time";
 import { addTaskAction, removeTask, toggleTask } from "@/app/(admin)/admin/scheduling-actions";
@@ -32,9 +33,9 @@ export function TaskList({
                 <button
                   type="submit"
                   aria-label={`Mark done: ${t.title}`}
-                  className="flex size-5 items-center justify-center rounded border text-xs hover:bg-muted"
+                  className="group flex size-5 items-center justify-center rounded border hover:bg-muted"
                 >
-                  {" "}
+                  <CheckIcon className="size-3 opacity-0 group-hover:opacity-100" aria-hidden />
                 </button>
               </form>
               <span className="flex-1">
@@ -53,7 +54,7 @@ export function TaskList({
                   aria-label="Remove task"
                   className="px-1 text-xs text-muted-foreground"
                 >
-                  ✕
+                  <XIcon className="size-3.5" aria-hidden />
                 </button>
               </form>
             </li>

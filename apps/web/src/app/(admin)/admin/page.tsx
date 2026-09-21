@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { ExternalLink } from "@/components/links";
+import { CheckIcon } from "lucide-react";
 import { Suspense } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -90,16 +92,7 @@ async function AdminInbox() {
             {overdue.length === 1 ? "" : "s"} · {stale.length} to follow up
           </p>
         </div>
-        {profile && (
-          <a
-            href={`/${profile.username}`}
-            target="_blank"
-            rel="noreferrer"
-            className="text-sm underline underline-offset-4"
-          >
-            Your booking page ↗
-          </a>
-        )}
+        {profile && <ExternalLink href={`/${profile.username}`}>Your booking page</ExternalLink>}
       </div>
 
       {!ready && (
@@ -113,7 +106,7 @@ async function AdminInbox() {
                     className={`mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full text-xs font-medium ${s.done ? "bg-foreground text-background" : "border text-muted-foreground"}`}
                     aria-hidden
                   >
-                    {s.done ? "✓" : i + 1}
+                    {s.done ? <CheckIcon className="size-3.5" aria-hidden /> : i + 1}
                   </span>
                   <span className="min-w-0 flex-1">
                     <span className="block font-medium">{s.title}</span>
@@ -222,16 +215,7 @@ async function AdminInbox() {
                   )}
                 </div>
                 <div className="flex items-center gap-2">
-                  {b.meetingUrl && (
-                    <a
-                      href={b.meetingUrl}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="text-sm underline underline-offset-4"
-                    >
-                      Join
-                    </a>
-                  )}
+                  {b.meetingUrl && <ExternalLink href={b.meetingUrl}>Join</ExternalLink>}
                   <Link
                     href={`/admin/bookings/${b.id}`}
                     className="text-sm underline underline-offset-4"

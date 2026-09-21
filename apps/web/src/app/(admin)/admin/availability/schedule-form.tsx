@@ -1,5 +1,6 @@
 "use client";
 
+import { XIcon } from "lucide-react";
 import { useActionState, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -145,7 +146,7 @@ export function ScheduleForm({
                     className="text-xs text-muted-foreground"
                     aria-label="Remove range"
                   >
-                    ✕
+                    <XIcon className="size-4" aria-hidden />
                   </button>
                 </div>
               ))}

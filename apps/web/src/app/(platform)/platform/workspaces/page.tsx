@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ArrowRightIcon } from "lucide-react";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import { eq, schema } from "@bookly/db";
@@ -48,7 +49,7 @@ async function WorkspacesPage() {
               </p>
             </div>
             <a href={tenantUrl(ws.slug)} className="underline underline-offset-4">
-              Open →
+              Open <ArrowRightIcon className="ml-1 inline size-3.5" aria-hidden />
             </a>
           </li>
         ))}

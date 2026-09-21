@@ -129,3 +129,18 @@
     @apply font-sans;
   }
 }
+
+/* Documentation: hover-revealed anchor links on headings. */
+.docs-prose .heading-anchor {
+  margin-left: 0.4em;
+  font-weight: 400;
+  text-decoration: none;
+  color: var(--muted-foreground);
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+.docs-prose h2:hover .heading-anchor,
+.docs-prose h3:hover .heading-anchor,
+.docs-prose .heading-anchor:focus-visible {
+  opacity: 1;
+}

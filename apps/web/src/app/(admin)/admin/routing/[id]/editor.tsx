@@ -1,8 +1,9 @@
 "use client";
 
-import Link from "next/link";
 import { useActionState, useEffect, useState } from "react";
 import { toast } from "sonner";
+import { XIcon } from "lucide-react";
+import { BackLink, ExternalLink } from "@/components/links";
 import type { RoutingDestination, RoutingForm, RoutingRule } from "@bookly/db/schema";
 import { Button } from "@/components/ui/button";
 import { Field, FieldDescription, FieldGroup, FieldLabel } from "@/components/ui/field";
@@ -112,19 +113,10 @@ export function RoutingFormEditor({
       <input type="hidden" name="fallbackJson" value={fallback ? JSON.stringify(fallback) : ""} />
       <div className="flex items-center justify-between gap-4">
         <div>
-          <Link href="/admin/routing" className="text-sm text-muted-foreground hover:underline">
-            ← Routing forms
-          </Link>
+          <BackLink href="/admin/routing">Routing forms</BackLink>
           <h1 className="mt-1 text-2xl font-semibold tracking-tight">{form.name}</h1>
         </div>
-        <a
-          href={`/r/${form.slug}`}
-          target="_blank"
-          rel="noreferrer"
-          className="text-sm underline underline-offset-4"
-        >
-          Preview ↗
-        </a>
+        <ExternalLink href={`/r/${form.slug}`}>Preview</ExternalLink>
       </div>
       <FieldGroup>
         <div className="grid gap-6 sm:grid-cols-[1fr_200px]">
@@ -239,7 +231,7 @@ export function RoutingFormEditor({
                         setRule(i, { conditions: r.conditions.filter((_, m) => m !== k) })
                       }
                     >
-                      ✕
+                      <XIcon className="size-4" aria-hidden />
                     </button>
                   </div>
                 ))}

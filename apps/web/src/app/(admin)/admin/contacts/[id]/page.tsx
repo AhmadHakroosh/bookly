@@ -1,4 +1,23 @@
 import Link from "next/link";
+import {
+  ArrowRightIcon,
+  CalendarPlusIcon,
+  CheckCircle2Icon,
+  CheckIcon,
+  CircleIcon,
+  ClipboardCheckIcon,
+  FileTextIcon,
+  HourglassIcon,
+  MailIcon,
+  NotebookPenIcon,
+  PencilLineIcon,
+  RefreshCwIcon,
+  SquareCheckIcon,
+  UserXIcon,
+  XCircleIcon,
+  type LucideIcon,
+} from "lucide-react";
+import { BackLink } from "@/components/links";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { CONTACT_STAGES } from "@bookly/db/schema";
@@ -18,21 +37,21 @@ import { Outreach } from "./outreach";
 
 export const metadata = { title: "Contact" };
 
-const ICON: Record<string, string> = {
-  booked: "📅",
-  confirmed: "✅",
-  cancelled: "✖",
-  rescheduled: "↻",
-  completed: "✔",
-  no_show: "∅",
-  email_sent: "✉",
-  note: "✎",
-  stage_changed: "→",
-  waitlist_joined: "⏳",
-  form_submitted: "☑",
-  brief: "☰",
-  capture: "✎",
-  task: "☐",
+const ICON: Record<string, LucideIcon> = {
+  booked: CalendarPlusIcon,
+  confirmed: CheckCircle2Icon,
+  cancelled: XCircleIcon,
+  rescheduled: RefreshCwIcon,
+  completed: CheckIcon,
+  no_show: UserXIcon,
+  email_sent: MailIcon,
+  note: PencilLineIcon,
+  stage_changed: ArrowRightIcon,
+  waitlist_joined: HourglassIcon,
+  form_submitted: ClipboardCheckIcon,
+  brief: FileTextIcon,
+  capture: NotebookPenIcon,
+  task: SquareCheckIcon,
 };
 
 async function ContactPage({ params }: PageProps<"/admin/contacts/[id]">) {
@@ -53,9 +72,7 @@ async function ContactPage({ params }: PageProps<"/admin/contacts/[id]">) {
     <div className="space-y-8">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <Link href="/admin/contacts" className="text-sm text-muted-foreground hover:underline">
-            ← Contacts
-          </Link>
+          <BackLink href="/admin/contacts">Contacts</BackLink>
           <h1 className="mt-1 text-2xl font-semibold tracking-tight">{c.name || c.email}</h1>
           <p className="text-sm text-muted-foreground">
             {c.email}
@@ -122,8 +139,11 @@ async function ContactPage({ params }: PageProps<"/admin/contacts/[id]">) {
             <ol className="mt-3 space-y-3">
               {events.map((e) => (
                 <li key={e.id} className="flex gap-3 text-sm">
-                  <span className="w-5 shrink-0 text-center text-muted-foreground" aria-hidden>
-                    {ICON[e.type] ?? "•"}
+                  <span className="mt-0.5 w-5 shrink-0 text-muted-foreground" aria-hidden>
+                    {(() => {
+                      const Icon = ICON[e.type] ?? CircleIcon;
+                      return <Icon className="size-4" />;
+                    })()}
                   </span>
                   <div className="min-w-0 flex-1">
                     <p className="whitespace-pre-line">{e.summary}</p>

@@ -1,8 +1,8 @@
 "use client";
 
-import Link from "next/link";
 import { useActionState, useEffect, useState } from "react";
 import { toast } from "sonner";
+import { BackLink, ExternalLink } from "@/components/links";
 import { Button } from "@/components/ui/button";
 import { Field, FieldDescription, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
@@ -96,21 +96,10 @@ export function EventTypeForm({
       <input type="hidden" name="id" value={initial.id} />
       <div className="flex items-center justify-between gap-4">
         <div>
-          <Link href="/admin/event-types" className="text-sm text-muted-foreground hover:underline">
-            ← Event types
-          </Link>
+          <BackLink href="/admin/event-types">Event types</BackLink>
           <h1 className="mt-1 text-2xl font-semibold tracking-tight">{initial.title}</h1>
         </div>
-        {publicUrl && (
-          <a
-            href={publicUrl}
-            target="_blank"
-            rel="noreferrer"
-            className="text-sm underline underline-offset-4"
-          >
-            Preview ↗
-          </a>
-        )}
+        {publicUrl && <ExternalLink href={publicUrl}>Preview</ExternalLink>}
       </div>
       <FieldGroup>
         <div className="grid gap-6 sm:grid-cols-[1fr_200px]">

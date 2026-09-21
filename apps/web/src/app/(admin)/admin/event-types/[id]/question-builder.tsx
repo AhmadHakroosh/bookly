@@ -1,5 +1,6 @@
 "use client";
 
+import { ChevronDownIcon, ChevronUpIcon, XIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 import type { EventQuestion } from "@bookly/db/schema";
 import { Button } from "@/components/ui/button";
@@ -69,7 +70,7 @@ export function QuestionBuilder({
               Required
             </label>
             <button type="button" onClick={() => move(i, -1)} aria-label="Move up" className="px-1">
-              ↑
+              <ChevronUpIcon className="size-4" aria-hidden />
             </button>
             <button
               type="button"
@@ -77,7 +78,7 @@ export function QuestionBuilder({
               aria-label="Move down"
               className="px-1"
             >
-              ↓
+              <ChevronDownIcon className="size-4" aria-hidden />
             </button>
             <button
               type="button"
@@ -85,7 +86,7 @@ export function QuestionBuilder({
               className="px-1 text-destructive"
               aria-label="Remove question"
             >
-              ✕
+              <XIcon className="size-4" aria-hidden />
             </button>
           </div>
           {q.type === "select" && (

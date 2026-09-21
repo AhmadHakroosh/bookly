@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import { auth } from "@/lib/auth";
 import { AdminNav } from "@/components/admin-nav";
+import { ExternalLink } from "@/components/links";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -65,12 +66,12 @@ async function AdminShell({ children }: { children: React.ReactNode }) {
             <Link href="/admin" className="font-semibold tracking-tight">
               {workspace?.name ?? "Bookly"}
             </Link>
-            <Link
+            <ExternalLink
               href="/"
-              className="ml-2 hidden text-sm text-muted-foreground hover:text-foreground sm:inline"
+              className="ml-2 hidden items-center gap-1 text-sm text-muted-foreground hover:text-foreground sm:inline-flex"
             >
-              Booking page ↗
-            </Link>
+              Booking page
+            </ExternalLink>
           </div>
           <div className="flex items-center gap-2">
             <span className="hidden text-sm text-muted-foreground md:inline">
