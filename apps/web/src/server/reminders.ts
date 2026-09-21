@@ -3,6 +3,7 @@ import { and, eq, gte, inArray, lte, schema, sql } from "@bookly/db";
 import { sendEmail } from "@bookly/email";
 import { db } from "@/lib/db";
 import { followUpMail, reminderMail } from "@/emails/booking";
+import { briefForBooking } from "./brief";
 import { trackBooking } from "./contacts";
 import { notifyHost, sendText } from "./notify";
 import { expireUnpaidBookings } from "./payments";
@@ -56,7 +57,8 @@ export async function sendDueReminders(now = new Date()): Promise<number> {
     const m = Math.min(...due);
     const hours = Math.max(1, Math.round(m / 60));
     const a = reminderMail(ctx, false, hours);
-    const h = reminderMail(ctx, true, hours);
+    const brief = await briefForBooking(ws, b, et ?? null).catch(() => null);
+    const h = reminderMail({ ...ctx, brief: brief ?? undefined }, true, hours);
     const line = `Reminder: ${et?.title ?? "Meeting"} with ${host.displayName} in ${hours === 1 ? "1 hour" : `${hours} hours`}. ${b.meetingUrl ?? `${baseUrl()}/booking/${b.manageToken}`}`;
     await Promise.all([
       sendEmail({ to: b.attendeeEmail, subject: a.subject, text: a.text, html: a.html }),

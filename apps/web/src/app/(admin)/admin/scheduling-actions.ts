@@ -6,7 +6,9 @@ import { and, eq, schema } from "@bookly/db";
 import type { EventLocation } from "@bookly/db/schema";
 import { db } from "@/lib/db";
 import { fmtDateTime, hhmmToMin, isValidTimezone } from "@/lib/time";
+import { revalidatePath } from "next/cache";
 import { cancelBooking, confirmBooking } from "@/server/booking-flow";
+import { briefForBooking } from "@/server/brief";
 import { trackBooking } from "@/server/contacts";
 import { refreshWorkspace } from "@/server/cache";
 import { parseQuestions, parseQuestionsJson, parseReminders } from "@/server/questions";
@@ -388,6 +390,19 @@ export async function hostMark(id: string, status: "completed" | "no_show" | "co
 export async function hostConfirm(id: string) {
   const { ws } = await ctx();
   await confirmBooking(ws, id);
+}
+
+export async function regenerateBrief(id: string) {
+  const { ws } = await ctx();
+  const b = await db().query.bookings.findFirst({
+    where: and(eq(schema.bookings.id, id), eq(schema.bookings.workspaceId, ws.id)),
+  });
+  if (!b) return;
+  const et = b.eventTypeId
+    ? await db().query.eventTypes.findFirst({ where: eq(schema.eventTypes.id, b.eventTypeId) })
+    : null;
+  await briefForBooking(ws, b, et ?? null, { force: true });
+  revalidatePath(`/admin/bookings/${id}`);
 }
 
 export async function hostRemoveWaitlist(id: string) {

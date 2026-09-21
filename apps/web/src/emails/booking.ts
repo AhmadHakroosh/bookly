@@ -13,6 +13,8 @@ export type BookingMailCtx = {
   baseUrl: string;
   /** Set when the booking is one occurrence of a recurring series. */
   series?: { index: number; count: number; dates: Date[] };
+  /** Host-only: the pre-meeting briefing, included in reminders. */
+  brief?: string;
 };
 
 /** "Repeats" line for a series: every occurrence on its own line in `tz`. */
@@ -165,7 +167,8 @@ export function followUpMail(ctx: BookingMailCtx) {
 export function reminderMail(ctx: BookingMailCtx, forHost: boolean, inHours: number) {
   const d = details(ctx, forHost ? ctx.host.timezone : ctx.booking.timezone);
   const subject = `Reminder: ${d.title} ${inHours >= 24 ? "tomorrow" : `in ${inHours} hour${inHours === 1 ? "" : "s"}`}`;
-  const text = `${d.title} with ${forHost ? ctx.booking.attendeeName : d.hostName}\nWhen: ${d.when}\nWhere: ${d.where}`;
+  const brief = forHost && ctx.brief ? ctx.brief : "";
+  const text = `${d.title} with ${forHost ? ctx.booking.attendeeName : d.hostName}\nWhen: ${d.when}\nWhere: ${d.where}${brief ? `\n\nBriefing:\n${brief}` : ""}`;
   const html = wrap(
     "Upcoming meeting",
     [
@@ -177,6 +180,7 @@ export function reminderMail(ctx: BookingMailCtx, forHost: boolean, inHours: num
           ? `<a href="${ctx.booking.meetingUrl}">${esc(ctx.booking.meetingUrl)}</a>`
           : esc(d.where),
       ],
+      ...(brief ? ([["Briefing", esc(brief).replace(/\n/g, "<br>")]] as [string, string][]) : []),
     ],
     forHost ? "" : `Need to change it? ${ctx.baseUrl}/booking/${ctx.booking.manageToken}`,
   );

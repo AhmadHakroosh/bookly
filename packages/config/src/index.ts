@@ -51,6 +51,11 @@ export const envSchema = z.object({
   /** Public URL of the built-in meeting pages, e.g. https://meet.example.com. Defaults to APP_URL + /meet. */
   MEET_URL: z.url().optional(),
 
+  // ---- Assistant (briefings, meeting capture) ----
+  /** Anthropic API key; without it briefs are plain summaries and capture is manual. */
+  ANTHROPIC_API_KEY: z.string().optional(),
+  ASSISTANT_MODEL: z.string().default("claude-sonnet-5"),
+
   // ---- Payments (Stripe) ----
   STRIPE_SECRET_KEY: z.string().optional(),
   STRIPE_WEBHOOK_SECRET: z.string().optional(),

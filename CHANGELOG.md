@@ -14,6 +14,7 @@ Everything below is on `main` ahead of the first release, which will be tagged `
 - Email, SMS and WhatsApp reminders, follow-up emails, no-show tracking, host pings on Slack / text when someone books or joins
 - Teams: invitations and roles, round-robin and collective event types
 - Group sessions: `seats` per event type; a slot stays bookable until full, attendees share one meeting link, seats left shown on the booking page and in the API
+- Pre-meeting briefings for hosts, written by the assistant (Anthropic, optional) or as a plain summary; shown in the admin and sent with the last reminder
 - Contacts: one record per person with stage, tags, notes and follow-up date, and a timeline of every booking, email, form answer and note (Admin → Contacts)
 - In-app documentation at `/docs`, rendered from the repository's `docs/` folder
 - Abuse controls: per-visitor throttles on public forms, a workspace email/domain blocklist, and per-plan booking and API budgets in cloud mode

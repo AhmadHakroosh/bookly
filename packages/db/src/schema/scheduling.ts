@@ -313,6 +313,9 @@ export const bookings = pgTable(
     seriesCount: integer("series_count"),
     /** The person this booking belongs to (see `contacts`). */
     contactId: text("contact_id"),
+    /** Pre-meeting briefing for the host (see server/brief.ts). */
+    brief: text("brief"),
+    briefAt: timestamp("brief_at", { withTimezone: true }),
     location: jsonb("location").$type<EventLocation>().notNull().default({ type: "custom" }),
     meetingUrl: text("meeting_url"),
     meetingProvider: text("meeting_provider"),

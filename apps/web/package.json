@@ -14,6 +14,7 @@
     "auth:generate": "pnpm dlx @better-auth/cli@latest generate --config src/lib/auth.ts --output ../../packages/db/src/schema/auth.ts -y"
   },
   "dependencies": {
+    "@ai-sdk/anthropic": "^4.0.58",
     "@base-ui/react": "^1.8.0",
     "@better-auth/drizzle-adapter": "catalog:",
     "@bookly/cloud": "workspace:*",
@@ -23,6 +24,7 @@
     "@bookly/jobs": "workspace:*",
     "@bookly/storage": "workspace:*",
     "@date-fns/tz": "^1.5.0",
+    "ai": "^7.0.107",
     "better-auth": "catalog:",
     "class-variance-authority": "^0.7.1",
     "cn": "^0.3.0",

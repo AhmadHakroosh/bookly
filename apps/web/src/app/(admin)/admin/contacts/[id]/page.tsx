@@ -84,9 +84,9 @@ async function ContactPage({ params }: PageProps<"/admin/contacts/[id]">) {
               <ul className="mt-2 divide-y rounded-xl border text-sm">
                 {upcoming.map((b) => (
                   <li key={b.id} className="flex items-center justify-between gap-3 px-4 py-2">
-                    <span>
+                    <Link href={`/admin/bookings/${b.id}`} className="hover:underline">
                       {b.eventTitle ?? "Meeting"} · {fmtDateTime(b.startAt, ws.timezone)}
-                    </span>
+                    </Link>
                     <Badge
                       variant={b.status === "confirmed" ? "default" : "secondary"}
                       className="capitalize"

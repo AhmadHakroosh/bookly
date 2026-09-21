@@ -108,6 +108,14 @@ async function BookingsPage({ searchParams }: PageProps<"/admin/bookings">) {
               >
                 {b.status.replace("_", " ")}
               </Badge>
+              {!past && (b.status === "confirmed" || b.status === "pending") && (
+                <Link
+                  href={`/admin/bookings/${b.id}`}
+                  className="text-sm underline underline-offset-4"
+                >
+                  Brief
+                </Link>
+              )}
               {b.status === "pending" && (
                 <form action={hostConfirm.bind(null, b.id)}>
                   <Button type="submit" size="sm">

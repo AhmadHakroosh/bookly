@@ -1,0 +1,94 @@
+import Link from "next/link";
+import { notFound } from "next/navigation";
+import { Suspense } from "react";
+import { and, eq, schema } from "@bookly/db";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { db } from "@/lib/db";
+import { fmtDateTime } from "@/lib/time";
+import { assistantConfigured, briefForBooking } from "@/server/brief";
+import { locationLabel } from "@/server/scheduling";
+import { requireStaff } from "@/server/session";
+import { getCurrentWorkspace } from "@/server/workspace";
+import { regenerateBrief } from "../../scheduling-actions";
+
+export const metadata = { title: "Meeting brief" };
+
+async function BookingBriefPage({ params }: PageProps<"/admin/bookings/[id]">) {
+  const [{ id }, , ws] = await Promise.all([params, requireStaff(), getCurrentWorkspace()]);
+  if (!ws) return null;
+  const b = await db().query.bookings.findFirst({
+    where: and(eq(schema.bookings.id, id), eq(schema.bookings.workspaceId, ws.id)),
+  });
+  if (!b) notFound();
+  const et = b.eventTypeId
+    ? await db().query.eventTypes.findFirst({ where: eq(schema.eventTypes.id, b.eventTypeId) })
+    : null;
+  const brief = await briefForBooking(ws, b, et ?? null);
+  return (
+    <div className="max-w-2xl space-y-6">
+      <div>
+        <Link href="/admin/bookings" className="text-sm text-muted-foreground hover:underline">
+          ← Bookings
+        </Link>
+        <h1 className="mt-1 text-2xl font-semibold tracking-tight">
+          {et?.title ?? "Meeting"} with{" "}
+          {b.contactId ? (
+            <Link href={`/admin/contacts/${b.contactId}`} className="hover:underline">
+              {b.attendeeName}
+            </Link>
+          ) : (
+            b.attendeeName
+          )}
+        </h1>
+        <p className="text-sm text-muted-foreground">
+          {fmtDateTime(b.startAt, ws.timezone)} · {b.meetingUrl ?? locationLabel(b.location)} ·{" "}
+          <Badge variant="secondary" className="capitalize">
+            {b.status.replace("_", " ")}
+          </Badge>
+        </p>
+      </div>
+      <section className="rounded-xl border p-5">
+        <div className="flex items-center justify-between gap-3">
+          <h2 className="text-sm font-medium">Briefing</h2>
+          <form action={regenerateBrief.bind(null, b.id)}>
+            <Button type="submit" size="sm" variant="outline">
+              Regenerate
+            </Button>
+          </form>
+        </div>
+        <p className="mt-3 text-sm leading-relaxed whitespace-pre-line">{brief}</p>
+        <p className="mt-3 text-xs text-muted-foreground">
+          {assistantConfigured()
+            ? "Written by the assistant from this contact's timeline and answers."
+            : "Plain summary. Set ANTHROPIC_API_KEY to get a written briefing."}
+          {b.briefAt ? ` Updated ${fmtDateTime(b.briefAt, ws.timezone)}.` : ""}
+        </p>
+      </section>
+      {Object.keys(b.answers).length > 0 && (
+        <section className="rounded-xl border p-5 text-sm">
+          <h2 className="font-medium">Their answers</h2>
+          <dl className="mt-2 space-y-1">
+            {(et?.questions ?? []).map((q) =>
+              b.answers[q.id] ? (
+                <div key={q.id}>
+                  <dt className="inline text-muted-foreground">{q.label}: </dt>
+                  <dd className="inline">{b.answers[q.id]}</dd>
+                </div>
+              ) : null,
+            )}
+          </dl>
+          {b.notes && <p className="mt-2 text-muted-foreground">Note: {b.notes}</p>}
+        </section>
+      )}
+    </div>
+  );
+}
+
+export default function BookingBriefPageBoundary(props: PageProps<"/admin/bookings/[id]">) {
+  return (
+    <Suspense fallback={null}>
+      <BookingBriefPage {...props} />
+    </Suspense>
+  );
+}
