@@ -64,6 +64,13 @@
       "when": 1789982997311,
       "tag": "0008_worried_killraven",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1789983445660,
+      "tag": "0009_illegal_vulcan",
+      "breakpoints": true
     }
   ]
 }

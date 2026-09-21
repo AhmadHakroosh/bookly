@@ -57,6 +57,10 @@ normal calendar invitation (`sendUpdates=all`), in addition to Bookly's confirma
 Teams links come from creating the Outlook event with `isOnlineMeeting`; personal Microsoft
 accounts get Skype/Teams-for-personal links.
 
+## Push notifications (instant conflict updates)
+
+Busy time from connected calendars is cached for 60 seconds. When `APP_URL` is a public HTTPS address, Bookly also subscribes to changes on every conflict calendar (Google watch channels, Microsoft Graph subscriptions) so an event added or removed in the calendar drops the cache immediately. Channels are opened when a calendar is connected or its conflict calendars change, renewed by the `calendar.sync` job (every 6 hours; the cron tick does the same on serverless) and closed on disconnect. The endpoints are `/api/webhooks/calendar/google` and `/api/webhooks/calendar/microsoft`; each notification carries a per-channel secret that is checked before anything happens. Local `http://` servers skip this and rely on the 60-second cache.
+
 ## Zoom
 
 1. Zoom App Marketplace → Develop → Build App → **OAuth** (user-managed).

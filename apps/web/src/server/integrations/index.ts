@@ -17,9 +17,11 @@ import { microsoft, microsoftAccount } from "./microsoft";
 import { exchangeCode, providerConfigured, refreshTokens } from "./oauth";
 import type { CalendarDriver, Interval, MeetingSpec, OAuthTokens } from "./types";
 import { ProviderError } from "./types";
+import { ensureWatches, stopWatches } from "./watch";
 import { zoom, zoomAccount } from "./zoom";
 
 export { authorizeUrl, isProvider, providerConfigured, redirectUri } from "./oauth";
+export { pushSupported, verifyNotification } from "./watch";
 export {
   dailyConfigured,
   dailyRoomUrl,
@@ -95,9 +97,22 @@ export async function connectIntegration(
   } else {
     await db().insert(schema.integrations).values(values);
   }
+  const saved = await getIntegration(userId, provider);
+  if (saved && provider !== "zoom")
+    await ensureWatches(saved, tokens.accessToken).catch((e) =>
+      console.error("[calendar] watch setup failed", e),
+    );
 }
 
 export async function disconnectIntegration(userId: string, provider: IntegrationProvider) {
+  const i = await getIntegration(userId, provider);
+  if (i?.watch.length) {
+    try {
+      await stopWatches(i, await accessToken(i));
+    } catch (e) {
+      console.error("[calendar] stop watches failed", e);
+    }
+  }
   await db()
     .delete(schema.integrations)
     .where(and(eq(schema.integrations.userId, userId), eq(schema.integrations.provider, provider)));
@@ -112,6 +127,33 @@ export async function updateIntegrationSettings(
     .update(schema.integrations)
     .set({ settings })
     .where(and(eq(schema.integrations.userId, userId), eq(schema.integrations.provider, provider)));
+  const i = await getIntegration(userId, provider);
+  if (i && provider !== "zoom") {
+    try {
+      await ensureWatches(i, await accessToken(i));
+    } catch (e) {
+      console.error("[calendar] watch update failed", e);
+    }
+  }
+  invalidateBusy(userId);
+}
+
+/** Renews push channels that expire soon on every connected calendar (job / cron tick). */
+export async function renewCalendarWatches(): Promise<number> {
+  const rows = await db().query.integrations.findMany({
+    where: eq(schema.integrations.status, "ok"),
+  });
+  let touched = 0;
+  for (const i of rows) {
+    if (i.provider === "zoom" || !(i.settings.conflictCalendarIds ?? []).length) continue;
+    try {
+      await ensureWatches(i, await accessToken(i));
+      touched++;
+    } catch (e) {
+      await markError(i, e);
+    }
+  }
+  return touched;
 }
 
 /** Re-reads the calendar list (after the user created a new calendar, say). */

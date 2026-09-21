@@ -18,6 +18,11 @@ export async function register() {
       await retryDueDeliveries();
     });
     await schedule("webhooks.retry", "*/5 * * * *", {});
+    const { renewCalendarWatches } = await import("@/server/integrations");
+    await work("calendar.sync", async () => {
+      await renewCalendarWatches();
+    });
+    await schedule("calendar.sync", "17 */6 * * *", { workspaceId: "*" });
     console.log("[jobs] worker started");
   } catch (err) {
     console.error("[jobs] failed to start worker", err);

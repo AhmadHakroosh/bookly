@@ -78,3 +78,21 @@ describe("oauth", () => {
     expect(u.searchParams.get("scope")).toContain("calendar.events");
   });
 });
+
+describe("calendar push channels", async () => {
+  const { parseWatchToken, googleWatchBody, microsoftSubscriptionBody, watchToken, webhookUrl } =
+    await import("@/server/integrations/watch");
+  it("round-trips the channel token and targets the webhook routes", () => {
+    const t = watchToken("int_1", "s3cret:with:colons");
+    expect(parseWatchToken(t)).toEqual({ integrationId: "int_1", secret: "s3cret:with:colons" });
+    expect(parseWatchToken("nocolon")).toBeNull();
+    const g = googleWatchBody("chan", t);
+    expect(g.address).toBe(webhookUrl("google"));
+    expect(g.address).toMatch(/\/api\/webhooks\/calendar\/google$/);
+    expect(g.type).toBe("web_hook");
+    const m = microsoftSubscriptionBody("cal1", t, new Date("2026-09-21T00:00:00Z"));
+    expect(m.resource).toBe("me/calendars/cal1/events");
+    expect(m.expirationDateTime).toBe("2026-09-23T22:30:00.000Z");
+    expect(m.notificationUrl).toMatch(/\/api\/webhooks\/calendar\/microsoft$/);
+  });
+});

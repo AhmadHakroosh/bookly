@@ -14,6 +14,18 @@ const id = () =>
 export const integrationProvider = pgEnum("integration_provider", ["google", "microsoft", "zoom"]);
 
 export type IntegrationCalendar = { id: string; name: string; primary?: boolean };
+/** A push channel on one calendar (Google watch channel or Graph subscription). */
+export type WatchChannel = {
+  calendarId: string;
+  /** Google channel id / Microsoft subscription id. */
+  id: string;
+  /** Google only: the resource the channel watches (needed to stop it). */
+  resourceId?: string;
+  /** Random secret echoed back in every notification. */
+  secret: string;
+  expiresAt: string;
+};
+
 export type IntegrationSettings = {
   /** Calendars whose busy time blocks availability. */
   conflictCalendarIds?: string[];
@@ -42,6 +54,8 @@ export const integrations = pgTable(
     expiresAt: timestamp("expires_at", { withTimezone: true }),
     calendars: jsonb("calendars").$type<IntegrationCalendar[]>().notNull().default([]),
     settings: jsonb("settings").$type<IntegrationSettings>().notNull().default({}),
+    /** Push notification channels so busy time refreshes when the calendar changes. */
+    watch: jsonb("watch").$type<WatchChannel[]>().notNull().default([]),
     status: text("status").notNull().default("ok"), // ok | error
     lastError: text("last_error"),
     lastSyncedAt: timestamp("last_synced_at", { withTimezone: true }),
