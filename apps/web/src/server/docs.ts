@@ -88,9 +88,7 @@ export function decorateHeadings(html: string): { html: string; headings: Headin
   return { html: out, headings };
 }
 
-export async function renderDoc(
-  slug: string,
-): Promise<{
+export async function renderDoc(slug: string): Promise<{
   title: string;
   html: string;
   headings: Heading[];
