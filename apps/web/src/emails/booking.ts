@@ -81,9 +81,12 @@ export function attendeeConfirmation(ctx: BookingMailCtx) {
       ],
       ["With", esc(d.hostName)],
     ],
-    pending
+    (pending
       ? "You will get another email once the host confirms."
-      : "A calendar invitation is attached.",
+      : "A calendar invitation is attached.") +
+      (ctx.eventType?.autoCapture === "always" && ctx.booking.location.type === "daily"
+        ? " This call is transcribed so both sides get notes afterwards."
+        : ""),
     { label: "Reschedule or cancel", url: manage },
   );
   return { subject, text, html };

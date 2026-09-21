@@ -6,6 +6,8 @@ import { db } from "@/lib/db";
 import { fmtDateTime } from "@/lib/time";
 import { dailyConfigured, dailyRoomUrl } from "@/server/integrations";
 import { getProfileByUser } from "@/server/scheduling";
+import { captureEnabled } from "@/server/transcripts";
+import { Call } from "./call";
 
 export const metadata: Metadata = { title: "Meeting", robots: { index: false, follow: false } };
 
@@ -26,6 +28,9 @@ async function MeetPage({ params }: PageProps<"/meet/[room]">) {
       meetingRef: true,
       eventTypeId: true,
       timezone: true,
+      meetingProvider: true,
+      captureConsent: true,
+      attendeeName: true,
     },
   });
   const b = rows.find((r) => (r.meetingRef as { room?: string } | null)?.room === room);
@@ -34,9 +39,10 @@ async function MeetPage({ params }: PageProps<"/meet/[room]">) {
   const et = b.eventTypeId
     ? await db().query.eventTypes.findFirst({
         where: eq(schema.eventTypes.id, b.eventTypeId),
-        columns: { title: true },
+        columns: { title: true, autoCapture: true },
       })
     : null;
+  const capture = captureEnabled(b, et ?? null);
   return (
     <div className="flex min-h-screen flex-col bg-black text-white">
       <header className="flex items-center justify-between px-4 py-3 text-sm">
@@ -45,11 +51,17 @@ async function MeetPage({ params }: PageProps<"/meet/[room]">) {
         </span>
         <span className="text-white/60">{fmtDateTime(b.startAt, b.timezone)}</span>
       </header>
-      <iframe
-        title="Video call"
-        src={dailyRoomUrl(room)}
-        allow="camera; microphone; display-capture; autoplay; clipboard-write; picture-in-picture; fullscreen"
-        className="w-full flex-1 border-0"
+      {capture && (
+        <p className="bg-amber-500/15 px-4 py-1.5 text-center text-xs text-amber-200">
+          This call is transcribed so both sides get notes and action items afterwards.
+        </p>
+      )}
+      <Call
+        url={dailyRoomUrl(room)}
+        room={room}
+        capture={capture}
+        hostName={host?.displayName ?? ""}
+        attendeeName={b.attendeeName}
       />
     </div>
   );

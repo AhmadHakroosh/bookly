@@ -21,6 +21,7 @@ const schema = z.object({
   notes: z.string().trim().max(2000).optional(),
   reschedule: z.string().optional(),
   website: z.string().max(0).optional(),
+  captureConsent: z.string().optional(),
 });
 
 export type BookState = { error?: string };
@@ -54,6 +55,7 @@ export async function book(_prev: BookState, formData: FormData): Promise<BookSt
       notes: d.notes,
       answers,
       rescheduleToken: d.reschedule || null,
+      captureConsent: et.autoCapture === "ask" ? !!d.captureConsent : null,
     });
     token = b.manageToken;
     skipped = b.skipped?.length ?? 0;

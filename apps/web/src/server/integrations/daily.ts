@@ -46,9 +46,17 @@ export function dailyRoomBody(spec: MeetingSpec) {
       enable_noise_cancellation_ui: true,
       eject_at_room_exp: true,
       max_participants: 10,
+      ...(spec.transcription ? { enable_transcription_storage: true } : {}),
     },
   };
 }
+
+/** Events the workspace webhook subscribes to: joins (notifications) and transcripts (auto-capture). */
+export const DAILY_WEBHOOK_EVENTS = [
+  "participant.joined",
+  "transcript.ready-to-download",
+  "transcript.error",
+] as const;
 
 /** Registers (or replaces) the Daily webhook that reports participant joins. Returns its HMAC key. */
 export async function registerDailyWebhook(url: string, previousId?: string | null) {
@@ -59,7 +67,7 @@ export async function registerDailyWebhook(url: string, previousId?: string | nu
   const hook = await api<{ uuid: string; hmac: string; url: string }>(`${BASE}/webhooks`, {
     method: "POST",
     token: key,
-    body: JSON.stringify({ url, eventTypes: ["participant.joined"] }),
+    body: JSON.stringify({ url, eventTypes: [...DAILY_WEBHOOK_EVENTS] }),
   });
   return { id: hook.uuid, hmac: hook.hmac, url: hook.url };
 }

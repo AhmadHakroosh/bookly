@@ -39,6 +39,7 @@ type Values = {
   hostUserIds: string[];
   seats: number;
   recurrence: Recurrence;
+  autoCapture: "off" | "ask" | "always";
 };
 
 const LOCATIONS: [string, string][] = [
@@ -146,6 +147,25 @@ export function EventTypeForm({
             </FieldDescription>
           </Field>
         </div>
+        {loc === "daily" && (
+          <Field>
+            <FieldLabel htmlFor="autoCapture">Auto-capture (built-in video)</FieldLabel>
+            <select
+              id="autoCapture"
+              name="autoCapture"
+              defaultValue={initial.autoCapture}
+              className="h-8 rounded-lg border bg-background px-2 text-sm"
+            >
+              <option value="off">Off</option>
+              <option value="ask">Ask the attendee when booking</option>
+              <option value="always">Always (stated in the confirmation email)</option>
+            </select>
+            <FieldDescription>
+              Transcribes the call and prepares notes, action items and a follow-up for you to
+              review. Both sides see a notice in the call. Needs a paid Daily plan.
+            </FieldDescription>
+          </Field>
+        )}
         <fieldset className="space-y-3 rounded-lg border p-4">
           <legend className="px-1 text-sm font-medium">Recurring bookings</legend>
           <label className="inline-flex items-center gap-2 text-sm">

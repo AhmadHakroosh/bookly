@@ -173,6 +173,7 @@ async function EventPage({ params, searchParams }: PageProps<"/[username]/[event
                 reschedule={reschedule}
                 paid={!!et.priceCents && paymentsConfigured()}
                 sessions={plan ? bookable : 1}
+                askCapture={et.autoCapture === "ask" && et.location.type === "daily"}
                 defaults={
                   prev
                     ? { name: prev.attendeeName, email: prev.attendeeEmail }

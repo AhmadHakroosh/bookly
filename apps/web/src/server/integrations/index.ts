@@ -315,6 +315,10 @@ export async function provisionBooking(
     host,
     attendee: { name: booking.attendeeName, email: booking.attendeeEmail },
     meetingUrl: null,
+    transcription:
+      !!eventType &&
+      (eventType.autoCapture === "always" ||
+        (eventType.autoCapture === "ask" && booking.captureConsent === true)),
   };
 
   let location = booking.location;

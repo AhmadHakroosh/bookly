@@ -35,6 +35,8 @@ export type BookingInput = {
   rescheduleToken?: string | null;
   /** Existing customers may use focus blocks and exceed the weekly budget. */
   priority?: boolean;
+  /** Attendee's answer to the transcription question (event types with autoCapture = ask). */
+  captureConsent?: boolean | null;
 };
 
 export class BookingError extends Error {}
@@ -308,6 +310,7 @@ export async function createBooking(
         seriesId,
         seriesIndex: prev?.seriesIndex ?? (seriesId ? i + 1 : null),
         seriesCount: prev?.seriesCount ?? (seriesId ? bookable.length : null),
+        captureConsent: input.captureConsent ?? prev?.captureConsent ?? null,
         location: eventType.location,
         amountCents: needsPayment ? eventType.priceCents : null,
         currency: needsPayment ? (eventType.currency ?? "usd") : null,

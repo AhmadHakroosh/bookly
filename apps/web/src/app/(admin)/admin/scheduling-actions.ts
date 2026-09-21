@@ -11,6 +11,7 @@ import { cancelBooking, confirmBooking } from "@/server/booking-flow";
 import { briefForBooking } from "@/server/brief";
 import { addTask, captureMeeting, completeTask, deleteTask, sendFollowUp } from "@/server/capture";
 import { logContactEvent, updateContact } from "@/server/contacts";
+import { deleteTranscript } from "@/server/transcripts";
 import { trackBooking } from "@/server/contacts";
 import { refreshWorkspace } from "@/server/cache";
 import { parseQuestions, parseQuestionsJson, parseReminders } from "@/server/questions";
@@ -268,6 +269,7 @@ const eventSchema = z.object({
   recurFreq: z.enum(["daily", "weekly", "monthly"]).default("weekly"),
   recurInterval: z.coerce.number().int().min(1).max(12).default(1),
   recurCount: z.coerce.number().int().min(2).max(MAX_OCCURRENCES).default(4),
+  autoCapture: z.enum(["off", "ask", "always"]).default("off"),
   requiresConfirmation: z.enum(["on", "off"]).default("off"),
   hidden: z.enum(["on", "off"]).default("off"),
   remindByText: z.enum(["on", "off"]).default("off"),
@@ -350,6 +352,7 @@ export async function saveEventType(
       assignment: d.assignment,
       hostUserIds: d.assignment === "single" ? [] : hostUserIds,
       seats: d.seats,
+      autoCapture: d.locationType === "daily" ? d.autoCapture : "off",
       recurrence:
         d.recurEnabled === "on"
           ? { enabled: true, freq: d.recurFreq, interval: d.recurInterval, count: d.recurCount }
@@ -506,6 +509,13 @@ export async function snoozeContact(contactId: string, days: number) {
     nextFollowUpAt: new Date(Date.now() + Math.max(1, Math.min(90, days)) * 86_400_000),
   });
   revalidatePath("/admin");
+}
+
+export async function deleteTranscriptAction(id: string) {
+  const o = await ownBooking(id);
+  if (!o) return;
+  await deleteTranscript(o.b.id);
+  revalidatePath(`/admin/bookings/${id}`);
 }
 
 export async function regenerateBrief(id: string) {

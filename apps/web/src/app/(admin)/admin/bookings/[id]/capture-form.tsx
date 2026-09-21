@@ -8,12 +8,16 @@ export function CaptureForm({
   bookingId,
   assistant,
   draft,
+  transcript,
 }: {
   bookingId: string;
   assistant: boolean;
   draft: { subject: string; body: string } | null;
+  /** Ready transcript text, offered as the source for capture. */
+  transcript?: string | null;
 }) {
   const [state, action, pending] = useActionState(captureNotes, {} as CaptureState);
+  const [notes, setNotes] = useState("");
   const followUp = state.followUp ?? draft;
   const [subject, setSubject] = useState(followUp?.subject ?? "");
   const [body, setBody] = useState(followUp?.body ?? "");
@@ -33,9 +37,22 @@ export function CaptureForm({
             ? "Paste your notes or a transcript. The assistant extracts decisions, action items with dates, a next step and drafts the follow-up."
             : 'Write your notes. Lines starting with "- " become tasks. Set ANTHROPIC_API_KEY to have decisions, dates and a follow-up extracted for you.'}
         </p>
+        {transcript && (
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            className="mt-3"
+            onClick={() => setNotes(transcript)}
+          >
+            Use the transcript
+          </Button>
+        )}
         <textarea
           name="notes"
           rows={6}
+          value={notes}
+          onChange={(e) => setNotes(e.target.value)}
           placeholder={
             "Agreed to start with a 2-week discovery.\n- Send proposal by Friday\n- They share the API docs"
           }

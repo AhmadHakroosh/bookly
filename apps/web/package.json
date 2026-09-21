@@ -23,6 +23,7 @@
     "@bookly/email": "workspace:*",
     "@bookly/jobs": "workspace:*",
     "@bookly/storage": "workspace:*",
+    "@daily-co/daily-js": "^0.92.2",
     "@date-fns/tz": "^1.5.0",
     "ai": "^7.0.107",
     "better-auth": "catalog:",

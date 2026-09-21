@@ -195,6 +195,8 @@ export const eventTypes = pgTable(
     /** Attendees per slot. >1 makes this a group event: the same start can be booked until full. */
     seats: integer("seats").notNull().default(1),
     recurrence: jsonb("recurrence").$type<Recurrence>().notNull().default({}),
+    /** Built-in video only: transcribe the call and prepare a recap. off | ask | always */
+    autoCapture: text("auto_capture").$type<"off" | "ask" | "always">().notNull().default("off"),
     ...timestamps,
   },
   (t) => [
@@ -347,6 +349,10 @@ export const bookings = pgTable(
     /** Pre-meeting briefing for the host (see server/brief.ts). */
     brief: text("brief"),
     briefAt: timestamp("brief_at", { withTimezone: true }),
+    /** Attendee agreed to transcription (event types with autoCapture = ask). */
+    captureConsent: boolean("capture_consent"),
+    /** null | pending | recording | ready | failed | deleted */
+    transcriptStatus: text("transcript_status"),
     location: jsonb("location").$type<EventLocation>().notNull().default({ type: "custom" }),
     meetingUrl: text("meeting_url"),
     meetingProvider: text("meeting_provider"),
@@ -416,6 +422,42 @@ export const routingForms = pgTable(
   (t) => [uniqueIndex("routing_forms_ws_slug_idx").on(t.workspaceId, t.slug)],
 );
 
+/* ---------------- Meeting transcripts (auto-capture) ---------------- */
+
+export type TranscriptSegment = {
+  /** Seconds from the start of transcription. */
+  t: number;
+  /** "host" | "attendee" | a display name for other participants. */
+  speaker: string;
+  text: string;
+};
+
+export const meetingTranscripts = pgTable(
+  "meeting_transcripts",
+  {
+    id: id(),
+    workspaceId: text("workspace_id")
+      .notNull()
+      .references(() => workspaces.id, { onDelete: "cascade" }),
+    bookingId: text("booking_id").notNull(),
+    /** Daily's transcript id once the stored file exists. */
+    providerRef: text("provider_ref"),
+    segments: jsonb("segments").$type<TranscriptSegment[]>().notNull().default([]),
+    /** live (from the meeting page) | stored (Daily's WebVTT) | merged */
+    source: text("source").notNull().default("live"),
+    language: text("language"),
+    startedAt: timestamp("started_at", { withTimezone: true }),
+    endedAt: timestamp("ended_at", { withTimezone: true }),
+    /** Deleted by the retention job after this. */
+    expiresAt: timestamp("expires_at", { withTimezone: true }),
+    ...timestamps,
+  },
+  (t) => [
+    uniqueIndex("meeting_transcripts_booking_idx").on(t.bookingId),
+    index("meeting_transcripts_expires_idx").on(t.expiresAt),
+  ],
+);
+
 /* ---------------- Waitlist ---------------- */
 
 /**
@@ -460,4 +502,5 @@ export type WaitlistEntry = typeof waitlistEntries.$inferSelect;
 export type RoutingForm = typeof routingForms.$inferSelect;
 export type Contact = typeof contacts.$inferSelect;
 export type Task = typeof tasks.$inferSelect;
+export type MeetingTranscript = typeof meetingTranscripts.$inferSelect;
 export type ContactEvent = typeof contactEvents.$inferSelect;

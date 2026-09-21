@@ -15,6 +15,8 @@ export type MeetingSpec = {
   attendee: { name: string; email: string };
   /** Existing meeting link to put in the calendar event's location, if any. */
   meetingUrl?: string | null;
+  /** Built-in video: persist a transcript of the call (auto-capture). */
+  transcription?: boolean;
 };
 
 export type CreatedEvent = { id: string; url?: string | null; meetingUrl?: string | null };

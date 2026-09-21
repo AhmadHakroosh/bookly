@@ -9,9 +9,12 @@ import { db } from "@/lib/db";
 import { fmtDateTime } from "@/lib/time";
 import { TaskList } from "@/components/task-list";
 import { assistantConfigured, briefForBooking } from "@/server/brief";
+import { renderTranscript } from "@/server/transcript-text";
 import { listOpenTasks } from "@/server/capture";
 import { contactTimeline } from "@/server/contacts";
 import { CaptureForm } from "./capture-form";
+import { TranscriptPanel } from "./transcript-panel";
+import { getTranscript } from "@/server/transcripts";
 import { locationLabel } from "@/server/scheduling";
 import { requireStaff } from "@/server/session";
 import { getCurrentWorkspace } from "@/server/workspace";
@@ -29,10 +32,11 @@ async function BookingBriefPage({ params }: PageProps<"/admin/bookings/[id]">) {
   const et = b.eventTypeId
     ? await db().query.eventTypes.findFirst({ where: eq(schema.eventTypes.id, b.eventTypeId) })
     : null;
-  const [brief, tasks, timeline] = await Promise.all([
+  const [brief, tasks, timeline, transcript] = await Promise.all([
     briefForBooking(ws, b, et ?? null),
     listOpenTasks(ws.id, { bookingId: b.id }),
     b.contactId ? contactTimeline(b.contactId, 50) : Promise.resolve([]),
+    b.transcriptStatus ? getTranscript(b.id) : Promise.resolve(null),
   ]);
   const lastCapture = timeline.find((e) => e.type === "capture" && e.bookingId === b.id);
   const draft =
@@ -102,8 +106,29 @@ async function BookingBriefPage({ params }: PageProps<"/admin/bookings/[id]">) {
         bookingId={b.id}
         title="Action items"
       />
+      {(b.transcriptStatus ||
+        (et && et.autoCapture !== "off" && b.meetingProvider === "daily")) && (
+        <TranscriptPanel
+          bookingId={b.id}
+          status={b.transcriptStatus}
+          consent={b.captureConsent}
+          mode={et?.autoCapture ?? "off"}
+          transcript={transcript}
+          names={{ host: "You", attendee: b.attendeeName }}
+          tz={ws.timezone}
+        />
+      )}
       {(past || b.status === "confirmed") && (
-        <CaptureForm bookingId={b.id} assistant={assistantConfigured()} draft={draft} />
+        <CaptureForm
+          bookingId={b.id}
+          assistant={assistantConfigured()}
+          draft={draft}
+          transcript={
+            transcript && b.transcriptStatus === "ready"
+              ? renderTranscript(transcript.segments, { host: "Host", attendee: b.attendeeName })
+              : null
+          }
+        />
       )}
       {Object.keys(b.answers).length > 0 && (
         <section className="rounded-xl border p-5 text-sm">

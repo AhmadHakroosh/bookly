@@ -69,6 +69,7 @@ async function EditEventTypePage({ params }: PageProps<"/admin/event-types/[id]"
         hostUserIds: et.hostUserIds,
         seats: et.seats,
         recurrence: et.recurrence,
+        autoCapture: et.autoCapture,
         hidden: et.hidden,
       }}
       schedules={schedules.map((s) => ({ id: s.id, name: `${s.name} (${s.timezone})` }))}

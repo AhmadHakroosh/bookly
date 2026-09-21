@@ -15,6 +15,8 @@ type Props = {
   paid?: boolean;
   /** Occurrences this booking reserves (recurring event types). */
   sessions?: number;
+  /** Event types with auto-capture = ask: show the transcription consent checkbox. */
+  askCapture?: boolean;
 };
 
 export function BookingForm({
@@ -27,6 +29,7 @@ export function BookingForm({
   defaults,
   paid = false,
   sessions = 1,
+  askCapture = false,
 }: Props) {
   const [state, action, pending] = useActionState(book, {} as BookState);
   const field =
@@ -115,6 +118,17 @@ export function BookingForm({
           className="w-full rounded-lg border bg-background px-3 py-2 text-sm"
         />
       </label>
+      {askCapture && (
+        <label className="flex items-start gap-2 text-sm">
+          <input type="checkbox" name="captureConsent" className="mt-1" />
+          <span>
+            Transcribe the call so we both get notes and action items afterwards.{" "}
+            <span className="text-muted-foreground">
+              (optional; the transcript can be deleted later)
+            </span>
+          </span>
+        </label>
+      )}
       {state.error && (
         <p className="text-sm text-destructive" role="alert">
           {state.error}
