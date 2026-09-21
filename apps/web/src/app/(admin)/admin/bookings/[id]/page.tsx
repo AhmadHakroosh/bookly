@@ -13,11 +13,12 @@ import { renderTranscript } from "@/server/transcript-text";
 import { listOpenTasks } from "@/server/capture";
 import { contactTimeline } from "@/server/contacts";
 import { CaptureForm } from "./capture-form";
+import { AttendeeRecap } from "./attendee-recap";
 import { RecapPanel } from "./recap-panel";
 import { TranscriptPanel } from "./transcript-panel";
 import { getRecap, recapOf } from "@/server/recaps";
 import { getTranscript } from "@/server/transcripts";
-import { locationLabel } from "@/server/scheduling";
+import { getProfileByUser, locationLabel } from "@/server/scheduling";
 import { requireStaff } from "@/server/session";
 import { getCurrentWorkspace } from "@/server/workspace";
 import { regenerateBrief } from "../../scheduling-actions";
@@ -50,6 +51,7 @@ async function BookingBriefPage({ params }: PageProps<"/admin/bookings/[id]">) {
         { capture?: { followUp?: { subject: string; body: string } | null } } | undefined
     )?.capture?.followUp ??
     null;
+  const hostProfile = await getProfileByUser(ws.id, b.hostUserId);
   const contact = b.contactId
     ? await db().query.contacts.findFirst({
         where: eq(schema.contacts.id, b.contactId),
@@ -125,6 +127,20 @@ async function BookingBriefPage({ params }: PageProps<"/admin/bookings/[id]">) {
           attendeeName={b.attendeeName}
           contactId={b.contactId}
           currentStage={contact?.stage ?? null}
+        />
+      )}
+      {recapRow && recapOf(recapRow) && (
+        <AttendeeRecap
+          bookingId={b.id}
+          attendeeName={b.attendeeName}
+          hostName={hostProfile?.displayName ?? "Host"}
+          draft={recapOf(recapRow)!.attendeeRecap}
+          actions={recapOf(recapRow)!.actions.map((a) => ({
+            title: a.title,
+            owner: a.owner,
+            dueInDays: a.dueInDays,
+          }))}
+          sentAt={recapRow.accepted.recapAt ?? null}
         />
       )}
       {(b.transcriptStatus ||

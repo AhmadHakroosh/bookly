@@ -7,7 +7,17 @@ import { db } from "@/lib/db";
 import { cancelBooking, cancelSeries } from "@/server/booking-flow";
 import { createCheckout, paymentsConfigured } from "@/server/payments";
 import { getBookingByToken } from "@/server/scheduling";
+import { deleteTranscript } from "@/server/transcripts";
 import { getCurrentWorkspace } from "@/server/workspace";
+
+/** Lets the attendee remove the transcript of their own call. */
+export async function deleteMyTranscript(token: string) {
+  const ws = await getCurrentWorkspace();
+  const b = await getBookingByToken(token);
+  if (!ws || !b || b.workspaceId !== ws.id) return;
+  await deleteTranscript(b.id);
+  revalidatePath(`/booking/${token}`);
+}
 
 /** Re-opens Stripe Checkout for a booking still waiting on payment. */
 export async function payNow(token: string) {

@@ -9,7 +9,7 @@ import { bookingSeries } from "@/server/booking-flow";
 import { getBookingByToken, getProfileByUser, locationLabel } from "@/server/scheduling";
 import { getCurrentWorkspace } from "@/server/workspace";
 import { formatPrice } from "@/server/payments";
-import { cancelByAttendee, cancelRemainingByAttendee, payNow } from "./actions";
+import { cancelByAttendee, cancelRemainingByAttendee, deleteMyTranscript, payNow } from "./actions";
 
 export const metadata: Metadata = { title: "Your booking", robots: { index: false } };
 
@@ -124,6 +124,28 @@ async function BookingPage({ params, searchParams }: PageProps<"/booking/[token]
           </dd>
         </div>
       </dl>
+      {(b.transcriptStatus === "recording" || b.transcriptStatus === "ready") && (
+        <div className="mt-6 rounded-xl border p-4 text-sm">
+          <p className="font-medium">This call is transcribed</p>
+          <p className="mt-1 text-muted-foreground">
+            {host?.displayName ?? "The host"} uses the transcript to prepare notes and action items
+            {b.status === "completed" || b.endAt < new Date()
+              ? ""
+              : " once the call has taken place"}
+            . You can have it deleted at any time; a short summary may be kept.
+          </p>
+          <form action={deleteMyTranscript.bind(null, token)} className="mt-2">
+            <button type="submit" className="rounded-lg border px-3 py-1.5 text-sm">
+              Delete the transcript
+            </button>
+          </form>
+        </div>
+      )}
+      {b.transcriptStatus === "deleted" && (
+        <p className="mt-6 text-sm text-muted-foreground">
+          The transcript of this call was deleted.
+        </p>
+      )}
       {b.status !== "cancelled" &&
         b.status !== "rescheduled" &&
         b.status !== "awaiting_payment" && (

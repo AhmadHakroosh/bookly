@@ -24,7 +24,12 @@ import { refreshWorkspace } from "@/server/cache";
 import { parseQuestions, parseQuestionsJson, parseReminders } from "@/server/questions";
 import { MAX_OCCURRENCES } from "@/server/recurrence";
 import { ensureDefaultSchedule, getProfileByUser } from "@/server/scheduling";
-import { assertFeature, assertWithinLimit, LimitError } from "@/server/limits";
+import {
+  assertCaptureFeature,
+  assertFeature,
+  assertWithinLimit,
+  LimitError,
+} from "@/server/limits";
 import { requireStaff } from "@/server/session";
 import { removeWaitlistEntry } from "@/server/waitlist";
 import { getCurrentWorkspace } from "@/server/workspace";
@@ -320,6 +325,7 @@ export async function saveEventType(
   try {
     if (d.price > 0) assertFeature(ws, "payments");
     if (d.assignment !== "single") assertFeature(ws, "teamScheduling");
+    if (d.locationType === "daily" && d.autoCapture !== "off") assertCaptureFeature(ws);
     if (
       d.followUpEnabled === "on" ||
       d.remindByText === "on" ||
@@ -517,6 +523,22 @@ export async function snoozeContact(contactId: string, days: number) {
     nextFollowUpAt: new Date(Date.now() + Math.max(1, Math.min(90, days)) * 86_400_000),
   });
   revalidatePath("/admin");
+}
+
+/** Sends the client-facing recap (edited by the host) to the attendee. */
+export async function sendAttendeeRecapAction(id: string, formData: FormData) {
+  const o = await ownBooking(id);
+  if (!o) return;
+  const subject = String(formData.get("subject") ?? "")
+    .trim()
+    .slice(0, 200);
+  const body = String(formData.get("body") ?? "")
+    .trim()
+    .slice(0, 6000);
+  if (!subject || !body) return;
+  await sendFollowUp(o.ws, o.b, subject, body);
+  await noteRecapEmail(o.b.id, "recapAt");
+  revalidatePath(`/admin/bookings/${id}`);
 }
 
 export async function acceptRecapActionsAction(id: string, formData: FormData) {

@@ -17,6 +17,8 @@ export type Limits = {
   bookingsPerMonth: number | null;
   /** API requests per minute per key. */
   apiRequestsPerMinute: number | null;
+  /** Auto-capture transcription minutes per month (0 = feature off, null = unlimited). */
+  captureMinutesPerMonth: number | null;
   /** Feature gates. */
   payments: boolean;
   workflows: boolean;
@@ -48,6 +50,7 @@ export const PLANS: Record<PlanId, Plan> = {
       domains: 0,
       bookingsPerMonth: 100,
       apiRequestsPerMinute: 60,
+      captureMinutesPerMonth: 0,
       payments: false,
       workflows: false,
       teamScheduling: false,
@@ -74,6 +77,7 @@ export const PLANS: Record<PlanId, Plan> = {
       domains: 1,
       bookingsPerMonth: null,
       apiRequestsPerMinute: 600,
+      captureMinutesPerMonth: 300,
       payments: true,
       workflows: true,
       teamScheduling: false,
@@ -86,6 +90,7 @@ export const PLANS: Record<PlanId, Plan> = {
       "Custom reminders, follow-ups, SMS and WhatsApp",
       "Custom domain",
       "API and webhooks",
+      "Auto-capture: 300 transcribed minutes a month",
       "No Bookly branding",
     ],
   },
@@ -101,6 +106,7 @@ export const PLANS: Record<PlanId, Plan> = {
       domains: 3,
       bookingsPerMonth: null,
       apiRequestsPerMinute: 1200,
+      captureMinutesPerMonth: 1000,
       payments: true,
       workflows: true,
       teamScheduling: true,
@@ -111,6 +117,7 @@ export const PLANS: Record<PlanId, Plan> = {
       "Everything in Pro",
       "Up to 25 members, priced per member",
       "Round-robin and collective event types",
+      "Auto-capture: 1000 transcribed minutes a month",
       "3 custom domains",
     ],
   },
@@ -124,6 +131,7 @@ export const UNLIMITED: Limits = {
   domains: null,
   bookingsPerMonth: null,
   apiRequestsPerMinute: null,
+  captureMinutesPerMonth: null,
   payments: true,
   workflows: true,
   teamScheduling: true,

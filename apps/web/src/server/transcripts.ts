@@ -10,6 +10,7 @@ import type {
 } from "@bookly/db/schema";
 import { db } from "@/lib/db";
 import { trackBooking } from "./contacts";
+import { captureAllowed } from "./limits";
 import { api } from "./integrations/types";
 import { mergeSegments, parseVtt } from "./transcript-text";
 
@@ -59,6 +60,11 @@ export async function startTranscription(ws: Workspace, booking: Booking): Promi
   const key = loadEnv().DAILY_API_KEY;
   if (!room || !key) return false;
   if (booking.transcriptStatus === "recording" || booking.transcriptStatus === "ready") return true;
+  const allowed = await captureAllowed(ws);
+  if (!allowed.ok) {
+    console.warn(`[capture] not started for ${booking.id}: ${allowed.reason}`);
+    return false;
+  }
   const language = ws.settings.capture?.language;
   try {
     await api(`${DAILY}/rooms/${encodeURIComponent(room)}/transcription/start`, {

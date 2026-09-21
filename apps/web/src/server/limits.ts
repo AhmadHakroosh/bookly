@@ -131,6 +131,41 @@ export async function assertBookingQuota(ws: Workspace) {
   );
 }
 
+/** Transcribed minutes this calendar month (UTC). */
+export async function captureMinutesThisMonth(ws: Workspace): Promise<number> {
+  const now = new Date();
+  const start = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
+  const rows = await db()
+    .select({
+      m: sql<number>`coalesce(sum(extract(epoch from (coalesce(${schema.meetingTranscripts.endedAt}, now()) - ${schema.meetingTranscripts.startedAt})) / 60), 0)::int`,
+    })
+    .from(schema.meetingTranscripts)
+    .where(
+      and(
+        eq(schema.meetingTranscripts.workspaceId, ws.id),
+        gte(schema.meetingTranscripts.createdAt, start),
+      ),
+    );
+  return rows[0]?.m ?? 0;
+}
+
+/** Can this workspace start another transcription now? (feature off / budget used up → false) */
+export async function captureAllowed(ws: Workspace): Promise<{ ok: boolean; reason?: string }> {
+  const max = workspaceLimits(ws).captureMinutesPerMonth;
+  if (max === null) return { ok: true };
+  if (max === 0) return { ok: false, reason: `Auto-capture needs the ${PLANS.pro.name} plan.` };
+  const used = await captureMinutesThisMonth(ws);
+  return used < max
+    ? { ok: true }
+    : { ok: false, reason: `This month's ${max} transcribed minutes are used up.` };
+}
+
+/** Throws when the plan has no auto-capture at all (editor guard). */
+export function assertCaptureFeature(ws: Workspace) {
+  if (workspaceLimits(ws).captureMinutesPerMonth === 0)
+    throw new LimitError(`Auto-capture needs the ${PLANS.pro.name} plan.`, "pro");
+}
+
 /** Current usage for the billing page. */
 export async function usageSummary(ws: Workspace) {
   const limits = workspaceLimits(ws);
@@ -148,6 +183,12 @@ export async function usageSummary(ws: Workspace) {
       label: "bookings this month",
       used: await bookingsThisMonth(ws),
       max: limits.bookingsPerMonth,
+    },
+    {
+      key: "captureMinutesPerMonth",
+      label: "transcribed minutes this month",
+      used: await captureMinutesThisMonth(ws),
+      max: limits.captureMinutesPerMonth,
     },
   ];
 }
