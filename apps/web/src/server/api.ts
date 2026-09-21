@@ -2,7 +2,16 @@ import "server-only";
 import { createHash, randomBytes } from "node:crypto";
 import { NextResponse } from "next/server";
 import { and, eq, isNull, schema } from "@bookly/db";
-import type { ApiKey, ApiScope, Booking, EventType, Profile, Workspace } from "@bookly/db/schema";
+import type {
+  ApiKey,
+  ApiScope,
+  Booking,
+  Contact,
+  EventType,
+  Profile,
+  Task,
+  Workspace,
+} from "@bookly/db/schema";
 import { db } from "@/lib/db";
 import { apiBudget } from "@bookly/cloud";
 import { hasFeature, workspaceLimits } from "./limits";
@@ -141,6 +150,35 @@ export function serializeEventType(e: EventType, host: Pick<Profile, "username" 
     recurrence: recurrenceOf(e.recurrence),
     price: e.priceCents != null ? { cents: e.priceCents, currency: e.currency } : null,
     host: { username: host.username, name: host.displayName },
+  };
+}
+
+export function serializeContact(c: Contact) {
+  return {
+    id: c.id,
+    email: c.email,
+    name: c.name,
+    company: c.company,
+    phone: c.phone,
+    tags: c.tags,
+    stage: c.stage,
+    notes: c.notes,
+    nextFollowUpAt: c.nextFollowUpAt?.toISOString() ?? null,
+    lastActivityAt: c.lastActivityAt.toISOString(),
+    bookingsCount: c.bookingsCount,
+    createdAt: c.createdAt.toISOString(),
+  };
+}
+
+export function serializeTask(t: Task) {
+  return {
+    id: t.id,
+    title: t.title,
+    contactId: t.contactId,
+    bookingId: t.bookingId,
+    dueAt: t.dueAt?.toISOString() ?? null,
+    doneAt: t.doneAt?.toISOString() ?? null,
+    createdAt: t.createdAt.toISOString(),
   };
 }
 

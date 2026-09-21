@@ -24,6 +24,13 @@ export type WorkspaceSettings = {
   daily?: { webhookId?: string; hmac?: string; url?: string } | null;
   /** Emails or `@domains` whose bookings are refused. */
   blockedEmails?: string[];
+  /** CRM sync: contacts and meeting notes are pushed here (API key is encrypted at rest). */
+  crm?: { provider: "hubspot" | "pipedrive"; apiKey: string; companyDomain?: string } | null;
+  /** Email templates for the contact page. Placeholders: {name} {company} {host} {amount} {payLink}. */
+  templates?: {
+    proposal?: { subject?: string; body?: string };
+    paymentRequest?: { subject?: string; body?: string };
+  };
   [key: string]: unknown;
 };
 

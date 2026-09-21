@@ -35,6 +35,11 @@ Typical assistant flow: `GET /event-types` → `GET /availability` → `POST /bo
 - `GET /availability` adds `seatsLeft` per day (`{ "<start ISO>": n }`) for group event types.
 - `POST /bookings` on a recurring event type books the whole series and returns the first booking; `meta.skipped` lists occurrences the host could not take. Each booking exposes `series: { id, index, count }`.
 
+### Contacts and tasks
+
+- `GET /contacts?q=&stage=&limit=` (scope `bookings:read`) and `POST /contacts` (scope `bookings:write`, body `{ email, name?, company?, phone?, tags?, stage?, notes? }`, upsert by email).
+- `GET /tasks?contactId=&limit=` (scope `bookings:read`): open tasks, soonest due first.
+
 ## Webhooks
 
 Add an endpoint under **Admin → API & webhooks** and choose events: `booking.created`,

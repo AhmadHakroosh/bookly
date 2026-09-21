@@ -9,7 +9,10 @@ import type {
   Workspace,
 } from "@bookly/db/schema";
 import { db } from "@/lib/db";
+import { serializeContact } from "./api";
 import { refreshWorkspace } from "./cache";
+import { syncContact } from "./crm";
+import { emitEvent } from "./webhooks";
 
 /**
  * Contacts are the relationship layer: one row per email per workspace, with a stage and a
@@ -47,12 +50,28 @@ export async function upsertContact(
     })
     .onConflictDoNothing()
     .returning();
-  return (
+  const contact =
     c ??
     (await db().query.contacts.findFirst({
       where: and(eq(schema.contacts.workspaceId, workspaceId), eq(schema.contacts.email, email)),
-    }))!
-  );
+    }))!;
+  if (c) {
+    emitEvent(workspaceId, "contact.created", { contact: serializeContact(c) });
+    void afterContactChange(workspaceId, c);
+  }
+  return contact;
+}
+
+/** Pushes the contact to the CRM when one is configured (never awaited by callers). */
+async function afterContactChange(workspaceId: string, c: Contact) {
+  try {
+    const ws = await db().query.workspaces.findFirst({
+      where: eq(schema.workspaces.id, workspaceId),
+    });
+    if (ws) await syncContact(ws, c);
+  } catch (e) {
+    console.error("[contacts] crm sync failed", e);
+  }
 }
 
 /** Appends a timeline event and bumps the contact's activity time. Best-effort. */
@@ -126,10 +145,23 @@ export async function setStage(
 ): Promise<void> {
   const c = await db().query.contacts.findFirst({ where: eq(schema.contacts.id, contactId) });
   if (!c || c.workspaceId !== workspaceId || c.stage === stage) return;
-  await db().update(schema.contacts).set({ stage }).where(eq(schema.contacts.id, contactId));
+  const [updated] = await db()
+    .update(schema.contacts)
+    .set({ stage })
+    .where(eq(schema.contacts.id, contactId))
+    .returning();
   await logContactEvent(workspaceId, contactId, "stage_changed", `Stage: ${c.stage} → ${stage}`, {
     data: { from: c.stage, to: stage, by },
   });
+  if (updated) {
+    emitEvent(workspaceId, "contact.stage_changed", {
+      contact: serializeContact(updated),
+      from: c.stage,
+      to: stage,
+      by,
+    });
+    void afterContactChange(workspaceId, updated);
+  }
   refreshWorkspace(workspaceId);
 }
 

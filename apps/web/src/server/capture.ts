@@ -7,7 +7,10 @@ import type { Booking, EventType, Task, Workspace } from "@bookly/db/schema";
 import { sendEmail } from "@bookly/email";
 import { db } from "@/lib/db";
 import { fmtDate, fmtDateTime } from "@/lib/time";
+import { serializeTask } from "./api";
 import { assistantConfigured } from "./brief";
+import { pushNote } from "./crm";
+import { emitEvent } from "./webhooks";
 import { CAPTURE_SYSTEM, dueDate, manualCapture, parseCapture, type Capture } from "./capture-text";
 import { logContactEvent, setStage, trackBooking } from "./contacts";
 import { notifyHost } from "./notify";
@@ -88,6 +91,18 @@ export async function captureMeeting(
     capture.suggestedStage !== "lead"
   )
     await setStage(workspace.id, contact.id, capture.suggestedStage, "capture");
+  emitEvent(workspace.id, "meeting.captured", {
+    bookingId: booking.id,
+    contactId: contact.id,
+    capture,
+    tasks: tasks.map(serializeTask),
+  });
+  for (const t of tasks) emitEvent(workspace.id, "task.created", { task: serializeTask(t) });
+  void pushNote(
+    workspace,
+    contact,
+    `Meeting notes (${eventType?.title ?? "Meeting"}, ${fmtDateTime(booking.startAt, workspace.timezone)}):\n${summaryLine}${tasks.length ? `\n\nAction items:\n${tasks.map((t) => `- ${t.title}`).join("\n")}` : ""}`,
+  );
   if (tasks.length)
     await logContactEvent(
       workspace.id,
@@ -170,6 +185,7 @@ export async function addTask(
       dueAt: input.dueAt ?? null,
     })
     .returning();
+  emitEvent(workspaceId, "task.created", { task: serializeTask(t!) });
   return t!;
 }
 

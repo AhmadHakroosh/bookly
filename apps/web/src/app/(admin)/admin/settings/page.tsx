@@ -24,6 +24,13 @@ async function SettingsPage() {
           locale: workspace.locale,
           timezone: workspace.timezone,
           blocklist: ((workspace.settings.blockedEmails as string[] | undefined) ?? []).join("\n"),
+          crmProvider: workspace.settings.crm?.provider ?? "",
+          crmConnected: !!workspace.settings.crm?.apiKey,
+          crmCompanyDomain: workspace.settings.crm?.companyDomain ?? "",
+          proposalSubject: workspace.settings.templates?.proposal?.subject ?? "",
+          proposalBody: workspace.settings.templates?.proposal?.body ?? "",
+          paymentSubject: workspace.settings.templates?.paymentRequest?.subject ?? "",
+          paymentBody: workspace.settings.templates?.paymentRequest?.body ?? "",
         }}
         zones={timezoneList()}
       />

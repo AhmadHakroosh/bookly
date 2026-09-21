@@ -36,6 +36,10 @@ export const WEBHOOK_EVENTS = [
   "booking.confirmed",
   "booking.cancelled",
   "booking.rescheduled",
+  "contact.created",
+  "contact.stage_changed",
+  "meeting.captured",
+  "task.created",
 ] as const;
 export type WebhookEvent = (typeof WEBHOOK_EVENTS)[number];
 

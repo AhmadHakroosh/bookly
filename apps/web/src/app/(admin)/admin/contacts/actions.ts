@@ -4,6 +4,10 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { CONTACT_STAGES, type ContactStage } from "@bookly/db/schema";
 import { getContact, logContactEvent, setStage, updateContact } from "@/server/contacts";
+import { paymentLink, sendOutreach } from "@/server/outreach";
+import { fillTemplate } from "@/server/outreach-text";
+import { formatPrice } from "@/server/payments";
+import { getProfileByUser } from "@/server/scheduling";
 import { requireStaff } from "@/server/session";
 import { getCurrentWorkspace } from "@/server/workspace";
 
@@ -50,6 +54,68 @@ export async function saveContact(_prev: ContactState, formData: FormData): Prom
   });
   revalidatePath(`/admin/contacts/${d.id}`);
   return { ok: true };
+}
+
+export async function sendProposal(id: string, formData: FormData) {
+  const { ws, session } = await ctx();
+  const c = await getContact(ws.id, id);
+  if (!c) return;
+  const host = await getProfileByUser(ws.id, session.user.id);
+  const t = fillTemplate(
+    { subject: String(formData.get("subject") ?? ""), body: String(formData.get("body") ?? "") },
+    {
+      name: c.name || "there",
+      company: c.company ?? "",
+      host: host?.displayName ?? ws.name,
+      amount: "",
+      payLink: "",
+    },
+  );
+  if (!t.subject || !t.body) return;
+  await sendOutreach(ws, c, session.user.id, "proposal", {
+    ...t,
+    followUpDays: Number(formData.get("followUpDays")) || 0,
+  });
+  revalidatePath(`/admin/contacts/${id}`);
+}
+
+export async function sendPaymentRequest(id: string, formData: FormData) {
+  const { ws, session } = await ctx();
+  const c = await getContact(ws.id, id);
+  if (!c) return;
+  const amountCents = Math.round((Number(formData.get("amount")) || 0) * 100);
+  if (amountCents <= 0) return;
+  const currency =
+    String(formData.get("currency") ?? "usd")
+      .trim()
+      .toLowerCase()
+      .slice(0, 3) || "usd";
+  const host = await getProfileByUser(ws.id, session.user.id);
+  const link = await paymentLink(
+    ws,
+    c,
+    amountCents,
+    currency,
+    String(formData.get("description") ?? ""),
+  ).catch(() => null);
+  const t = fillTemplate(
+    { subject: String(formData.get("subject") ?? ""), body: String(formData.get("body") ?? "") },
+    {
+      name: c.name || "there",
+      company: c.company ?? "",
+      host: host?.displayName ?? ws.name,
+      amount: formatPrice(amountCents, currency),
+      payLink: link ?? "",
+    },
+  );
+  if (!t.subject || !t.body) return;
+  await sendOutreach(ws, c, session.user.id, "paymentRequest", {
+    ...t,
+    amountCents,
+    currency,
+    followUpDays: Number(formData.get("followUpDays")) || 0,
+  });
+  revalidatePath(`/admin/contacts/${id}`);
 }
 
 export async function changeStage(id: string, formData: FormData) {

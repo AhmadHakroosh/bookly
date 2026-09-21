@@ -8,6 +8,12 @@ Bookly keeps a **contact** for every person who books, joins a waitlist or fills
 
 `Admin` opens on the **Inbox**: today's meetings with their briefings and join links, booking requests to accept (or answer by email instead, which withdraws the request), contacts to follow up (a due follow-up date, or a lead that has been quiet for a week; snooze pushes it out a week), your open tasks with overdue ones flagged, and a note when people are waiting on a waitlist. Members see their own bookings; owners and admins see the workspace.
 
+## Executing the outcome
+
+- **Proposal / Payment request** buttons on a contact page send a templated email (edit the templates under `Admin → Settings`; placeholders `{name} {company} {host} {amount} {payLink}`). A payment request with Stripe configured includes a Checkout link for the amount. Both set a follow-up date so the inbox nudges you if there is no answer.
+- **CRM sync** (`Admin → Settings → CRM sync`): with a HubSpot private-app token or a Pipedrive API token, contacts and stage changes are mirrored to the CRM and meeting summaries and sent proposals become notes on the CRM contact. Sync is best-effort and never blocks a booking.
+- **Webhooks and API**: `contact.created`, `contact.stage_changed`, `meeting.captured` and `task.created` events, plus `GET/POST /api/v1/contacts` and `GET /api/v1/tasks`, let any other tool react to what happens in Bookly.
+
 ## Pre-meeting briefing
 
 Every upcoming booking has a **briefing** for the host: who the person is, what happened before (last meeting, open threads, no-shows), what they asked for in the booking questions, and what to prepare. Open it from `Admin → Bookings → Brief` or from the contact page; it is also included in the host's reminder email closest to the meeting.

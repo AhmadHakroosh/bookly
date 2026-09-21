@@ -11,7 +11,10 @@ import { contactBookings, contactTimeline, getContact } from "@/server/contacts"
 import { requireStaff } from "@/server/session";
 import { getCurrentWorkspace } from "@/server/workspace";
 import { addNote, changeStage } from "../actions";
+import { templatesFor } from "@/server/outreach";
+import { paymentsConfigured } from "@/server/payments";
 import { ContactDetailsForm } from "./details-form";
+import { Outreach } from "./outreach";
 
 export const metadata = { title: "Contact" };
 
@@ -156,6 +159,12 @@ async function ContactPage({ params }: PageProps<"/admin/contacts/[id]">) {
           </div>
         </section>
         <aside className="space-y-4">
+          <Outreach
+            contactId={c.id}
+            proposal={templatesFor(ws).proposal}
+            payment={templatesFor(ws).paymentRequest}
+            stripe={paymentsConfigured()}
+          />
           <TaskList
             tasks={tasks}
             tz={ws.timezone}
