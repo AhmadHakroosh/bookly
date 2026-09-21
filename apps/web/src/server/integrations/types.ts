@@ -39,6 +39,13 @@ export interface CalendarDriver {
     opts: { conference: boolean },
   ): Promise<CreatedEvent>;
   deleteEvent(token: string, calendarId: string, eventId: string): Promise<void>;
+  /** Replaces the guest list of an existing event (group sessions add attendees as they book). */
+  setAttendees(
+    token: string,
+    calendarId: string,
+    eventId: string,
+    attendees: { name: string; email: string }[],
+  ): Promise<void>;
 }
 
 export interface ConferencingDriver {

@@ -34,6 +34,11 @@ export function googleEventBody(spec: MeetingSpec, conference: boolean) {
   };
 }
 
+/** PATCH body that replaces an event's guest list — exported for tests. */
+export function googleAttendeesBody(attendees: { name: string; email: string }[]) {
+  return { attendees: attendees.map((a) => ({ email: a.email, displayName: a.name })) };
+}
+
 export const google: CalendarDriver = {
   provider: "google",
   async listCalendars(token) {
@@ -87,5 +92,11 @@ export const google: CalendarDriver = {
     ).catch((e) => {
       if (e?.status !== 404 && e?.status !== 410) throw e;
     });
+  },
+  async setAttendees(token, calendarId, eventId, attendees) {
+    await api(
+      `${BASE}/calendars/${encodeURIComponent(calendarId)}/events/${encodeURIComponent(eventId)}?sendUpdates=all`,
+      { method: "PATCH", token, body: JSON.stringify(googleAttendeesBody(attendees)) },
+    );
   },
 };

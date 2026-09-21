@@ -105,3 +105,25 @@ describe("ics calendars", () => {
     expect(ics).toContain("UID:b3@bookly");
   });
 });
+
+describe("group session guest lists", () => {
+  it("builds provider patch bodies from the attendee list", async () => {
+    const { googleAttendeesBody } = await import("@/server/integrations/google");
+    const { microsoftAttendeesBody } = await import("@/server/integrations/microsoft");
+    const people = [
+      { name: "A", email: "a@x.io" },
+      { name: "B", email: "b@x.io" },
+    ];
+    expect(googleAttendeesBody(people)).toEqual({
+      attendees: [
+        { email: "a@x.io", displayName: "A" },
+        { email: "b@x.io", displayName: "B" },
+      ],
+    });
+    expect(microsoftAttendeesBody(people).attendees).toHaveLength(2);
+    expect(microsoftAttendeesBody(people).attendees[0]).toEqual({
+      emailAddress: { address: "a@x.io", name: "A" },
+      type: "required",
+    });
+  });
+});

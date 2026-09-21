@@ -28,6 +28,16 @@ export function microsoftEventBody(spec: MeetingSpec, conference: boolean) {
   };
 }
 
+/** PATCH body that replaces an event's attendee list — exported for tests. */
+export function microsoftAttendeesBody(attendees: { name: string; email: string }[]) {
+  return {
+    attendees: attendees.map((a) => ({
+      emailAddress: { address: a.email, name: a.name },
+      type: "required",
+    })),
+  };
+}
+
 export const microsoft: CalendarDriver = {
   provider: "microsoft",
   async listCalendars(token) {
@@ -93,6 +103,13 @@ export const microsoft: CalendarDriver = {
       token,
     }).catch((e) => {
       if (e?.status !== 404) throw e;
+    });
+  },
+  async setAttendees(token, _calendarId, eventId, attendees) {
+    await api(`${BASE}/me/events/${encodeURIComponent(eventId)}`, {
+      method: "PATCH",
+      token,
+      body: JSON.stringify(microsoftAttendeesBody(attendees)),
     });
   },
 };

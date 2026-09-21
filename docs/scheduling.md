@@ -7,7 +7,7 @@
 
 ## Group sessions (seats)
 
-`Seats per slot` on an event type (default 1) turns it into a group session: the same start time can be booked by several people until it is full. The public page shows "N seats left" once a session has started filling; the API reports the same in `seatsLeft`. Everyone in a session gets the same meeting link, and the host's calendar holds one event for the session (it moves to the next attendee if the first one cancels). Sessions at other times block the host like any booking.
+`Seats per slot` on an event type (default 1) turns it into a group session: the same start time can be booked by several people until it is full. The public page shows "N seats left" once a session has started filling; the API reports the same in `seatsLeft`. Everyone in a session gets the same meeting link, and the host's calendar holds one event for the session with every attendee as a guest; the guest list is updated as people book or cancel, and the event moves to the next attendee if the first one cancels. Sessions at other times block the host like any booking.
 
 ## Recurring bookings
 

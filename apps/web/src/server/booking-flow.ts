@@ -11,7 +11,7 @@ import {
 } from "@/emails/booking";
 import { fmtDateTime } from "@/lib/time";
 import { buildIcsCalendar, type IcsEvent } from "./ics";
-import { deprovisionBooking, provisionBooking } from "./integrations";
+import { deprovisionBooking, provisionBooking, syncEventAttendees } from "./integrations";
 import { serializeBooking } from "./api";
 import { notifyHost } from "./notify";
 import { isPaid, paymentsConfigured, refundBooking } from "./payments";
@@ -128,9 +128,35 @@ async function sessionSibling(booking: Booking, eventType: EventType | null) {
 }
 
 /**
+ * Puts every confirmed attendee of a group session on the calendar event held by the session's
+ * owner booking (the one carrying `externalEventIds`). Best-effort.
+ */
+async function syncGroupGuests(booking: Booking, eventType: EventType | null) {
+  if (!eventType || eventType.seats <= 1) return;
+  const members = await db()
+    .select()
+    .from(schema.bookings)
+    .where(
+      and(
+        eq(schema.bookings.eventTypeId, eventType.id),
+        eq(schema.bookings.hostUserId, booking.hostUserId),
+        eq(schema.bookings.startAt, booking.startAt),
+        eq(schema.bookings.status, "confirmed"),
+      ),
+    )
+    .orderBy(asc(schema.bookings.createdAt));
+  const owner = members.find((m) => Object.keys(m.externalEventIds).length);
+  if (!owner) return;
+  await syncEventAttendees(
+    owner,
+    members.map((m) => ({ name: m.attendeeName, email: m.attendeeEmail })),
+  ).catch((e) => console.error("[booking] guest sync failed", e));
+}
+
+/**
  * Creates the meeting link + calendar events and stores them on the booking (best-effort).
- * Group sessions share one meeting: later attendees copy the first booking's link and the
- * calendar event stays owned by that first booking.
+ * Group sessions share one meeting: later attendees copy the first booking's link, and the
+ * calendar event stays owned by that first booking with every attendee as a guest.
  */
 async function provision(workspace: Workspace, booking: Booking, eventType: EventType | null) {
   const sibling = await sessionSibling(booking, eventType);
@@ -145,6 +171,7 @@ async function provision(workspace: Workspace, booking: Booking, eventType: Even
       })
       .where(eq(schema.bookings.id, booking.id))
       .returning();
+    await syncGroupGuests(updated ?? booking, eventType);
     return updated ?? booking;
   }
   const host = await getProfileByUser(workspace.id, booking.hostUserId);
@@ -412,8 +439,10 @@ export async function cancelBooking(
       .update(schema.bookings)
       .set({ externalEventIds: b.externalEventIds })
       .where(eq(schema.bookings.id, heir.id));
+    await syncGroupGuests(heir, et ?? null);
   } else {
     await deprovisionBooking(b);
+    if (et && et.seats > 1) await syncGroupGuests(b, et);
   }
   if (b.paymentStatus === "paid") await refundBooking(b);
   void notifyWaitlist(workspace, b, et ?? null).catch((e) => console.error("[waitlist]", e));

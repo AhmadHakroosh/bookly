@@ -361,6 +361,25 @@ export async function provisionBooking(
 }
 
 /** Removes calendar events and the meeting for a cancelled/rescheduled booking (best-effort). */
+/** Rewrites the guest list on the calendar event(s) a group session's owner booking holds. */
+export async function syncEventAttendees(
+  owner: Booking,
+  attendees: { name: string; email: string }[],
+): Promise<void> {
+  const conns = await listIntegrations(owner.hostUserId);
+  for (const [provider, ref] of Object.entries(owner.externalEventIds)) {
+    const c = conns.find((x) => x.provider === provider);
+    if (!c || (provider !== "google" && provider !== "microsoft")) continue;
+    const [calId, eventId] = ref.split("|");
+    if (!calId || !eventId) continue;
+    try {
+      await CALENDARS[provider].setAttendees(await accessToken(c), calId, eventId, attendees);
+    } catch (e) {
+      await markError(c, e);
+    }
+  }
+}
+
 export async function deprovisionBooking(booking: Booking): Promise<void> {
   const conns = await listIntegrations(booking.hostUserId);
   for (const [provider, ref] of Object.entries(booking.externalEventIds)) {
