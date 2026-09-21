@@ -25,11 +25,11 @@ catalog:
   # dev
   typescript: npm:@typescript/typescript6@^6.0.2
   "@typescript/native": npm:typescript@^7.0.2
-  "@types/node": ^24.13.5
+  "@types/node": ^26.6.1
   "@types/pg": ^8.23.1
   "@types/nodemailer": ^8.0.2
   drizzle-kit: ^0.31.10
-  eslint: ^9.39.5
+  eslint: ^10.10.0
   prettier: ^3.9.8
   prettier-plugin-tailwindcss: ^0.8.1
   turbo: ^2.11.2
