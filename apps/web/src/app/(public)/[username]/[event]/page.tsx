@@ -18,7 +18,9 @@ import {
 } from "@/server/scheduling";
 import { formatPrice, paymentsConfigured } from "@/server/payments";
 import { getCurrentWorkspace } from "@/server/workspace";
+import { fullSessions } from "@/server/waitlist";
 import { BookingForm } from "./booking-form";
+import { WaitlistForm } from "./waitlist-form";
 
 export async function generateMetadata({
   params,
@@ -62,6 +64,8 @@ async function EventPage({ params, searchParams }: PageProps<"/[username]/[event
   const availableDates = new Set(days.map((d) => d.date));
   const daySlots = date ? (days.find((d) => d.date === date)?.slots ?? []) : [];
   const seats = await slotSeats(et, daySlots);
+  const full = date ? await fullSessions(et, tz, date) : [];
+  const waitlist = typeof sp.waitlist === "string" ? sp.waitlist : undefined;
   const rule = prev ? null : recurrenceOf(et.recurrence);
   const plan =
     slot && !Number.isNaN(slot.getTime()) && rule ? await planSeries(et, tz, slot) : null;
@@ -137,7 +141,23 @@ async function EventPage({ params, searchParams }: PageProps<"/[username]/[event
         </aside>
 
         <section className="p-6">
-          {slot && !Number.isNaN(slot.getTime()) ? (
+          {waitlist ? (
+            <div className="max-w-md">
+              <Link
+                href={makeHref({ waitlist: undefined })}
+                className="text-sm text-muted-foreground hover:underline"
+              >
+                ← Back to times
+              </Link>
+              <h2 className="mt-3 mb-1 text-lg font-semibold">Join the waitlist</h2>
+              <p className="mb-4 text-sm text-muted-foreground">
+                {/^\d{4}-\d{2}-\d{2}$/.test(waitlist)
+                  ? `We'll email you if a time on ${waitlist} frees up.`
+                  : `We'll email you if a seat frees up for ${fmtDateTime(new Date(waitlist), tz)}.`}
+              </p>
+              <WaitlistForm username={profile.username} event={et.slug} target={waitlist} tz={tz} />
+            </div>
+          ) : slot && !Number.isNaN(slot.getTime()) ? (
             <div className="max-w-md">
               <Link
                 href={makeHref({ slot: undefined })}
@@ -197,8 +217,24 @@ async function EventPage({ params, searchParams }: PageProps<"/[username]/[event
                       </li>
                     );
                   })}
+                  {full.map((s) => (
+                    <li key={`full-${s.toISOString()}`}>
+                      <Link
+                        href={makeHref({ waitlist: s.toISOString() })}
+                        className="block rounded-lg border border-dashed px-3 py-2 text-center text-sm text-muted-foreground hover:border-primary hover:text-primary"
+                      >
+                        {fmtTime(s, tz)}
+                        <span className="block text-xs">Full · join waitlist</span>
+                      </Link>
+                    </li>
+                  ))}
                   {date && daySlots.length === 0 && (
-                    <li className="text-sm text-muted-foreground">No times left this day.</li>
+                    <li className="text-sm text-muted-foreground">
+                      No times left this day.{" "}
+                      <Link href={makeHref({ waitlist: date })} className="underline">
+                        Join the waitlist
+                      </Link>
+                    </li>
                   )}
                 </ul>
               </div>

@@ -15,6 +15,7 @@ import { deprovisionBooking, provisionBooking } from "./integrations";
 import { serializeBooking } from "./api";
 import { notifyHost } from "./notify";
 import { isPaid, paymentsConfigured, refundBooking } from "./payments";
+import { notifyWaitlist } from "./waitlist";
 import { emitEvent } from "./webhooks";
 import { refreshWorkspace } from "./cache";
 import { occurrences, recurrenceOf } from "./recurrence";
@@ -415,6 +416,7 @@ export async function cancelBooking(
     await deprovisionBooking(b);
   }
   if (b.paymentStatus === "paid") await refundBooking(b);
+  void notifyWaitlist(workspace, b, et ?? null).catch((e) => console.error("[waitlist]", e));
   emitEvent(workspace.id, "booking.cancelled", {
     booking: serializeBooking(updated!, { eventType: et ?? null }),
   });

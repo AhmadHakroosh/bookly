@@ -13,6 +13,7 @@ import { MAX_OCCURRENCES } from "@/server/recurrence";
 import { ensureDefaultSchedule, getProfileByUser } from "@/server/scheduling";
 import { assertFeature, assertWithinLimit, LimitError } from "@/server/limits";
 import { requireStaff } from "@/server/session";
+import { removeWaitlistEntry } from "@/server/waitlist";
 import { getCurrentWorkspace } from "@/server/workspace";
 
 async function ctx() {
@@ -378,4 +379,9 @@ export async function hostMark(id: string, status: "completed" | "no_show" | "co
 export async function hostConfirm(id: string) {
   const { ws } = await ctx();
   await confirmBooking(ws, id);
+}
+
+export async function hostRemoveWaitlist(id: string) {
+  const { ws } = await ctx();
+  await removeWaitlistEntry(ws.id, id);
 }

@@ -271,9 +271,44 @@ export const bookings = pgTable(
   ],
 );
 
+/* ---------------- Waitlist ---------------- */
+
+/**
+ * People waiting for a spot: either a specific full group session (`startAt`) or any time on a
+ * day that has no free slots (`date`, YYYY-MM-DD in the attendee's timezone).
+ */
+export const waitlistEntries = pgTable(
+  "waitlist_entries",
+  {
+    id: id(),
+    workspaceId: text("workspace_id")
+      .notNull()
+      .references(() => workspaces.id, { onDelete: "cascade" }),
+    eventTypeId: text("event_type_id")
+      .notNull()
+      .references(() => eventTypes.id, { onDelete: "cascade" }),
+    startAt: timestamp("start_at", { withTimezone: true }),
+    date: text("date"),
+    timezone: text("timezone").notNull().default("UTC"),
+    attendeeName: text("attendee_name").notNull(),
+    attendeeEmail: text("attendee_email").notNull(),
+    /** waiting | notified | left */
+    status: text("status").notNull().default("waiting"),
+    /** Signs the leave-the-waitlist link. */
+    token: text("token").notNull(),
+    notifiedAt: timestamp("notified_at", { withTimezone: true }),
+    ...timestamps,
+  },
+  (t) => [
+    index("waitlist_event_idx").on(t.eventTypeId, t.status),
+    uniqueIndex("waitlist_token_idx").on(t.token),
+  ],
+);
+
 export type Profile = typeof profiles.$inferSelect;
 export type Schedule = typeof schedules.$inferSelect;
 export type ScheduleRule = typeof scheduleRules.$inferSelect;
 export type ScheduleOverride = typeof scheduleOverrides.$inferSelect;
 export type EventType = typeof eventTypes.$inferSelect;
 export type Booking = typeof bookings.$inferSelect;
+export type WaitlistEntry = typeof waitlistEntries.$inferSelect;

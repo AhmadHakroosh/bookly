@@ -6,8 +6,9 @@ import { fmtDateTime } from "@/lib/time";
 import { formatPrice } from "@/server/payments";
 import { getProfileByUser, listBookings, locationLabel } from "@/server/scheduling";
 import { requireStaff } from "@/server/session";
+import { listWaitlist } from "@/server/waitlist";
 import { getCurrentWorkspace } from "@/server/workspace";
-import { hostCancel, hostConfirm, hostMark } from "../scheduling-actions";
+import { hostCancel, hostConfirm, hostMark, hostRemoveWaitlist } from "../scheduling-actions";
 
 export const metadata = { title: "Bookings" };
 
@@ -20,9 +21,10 @@ async function BookingsPage({ searchParams }: PageProps<"/admin/bookings">) {
   if (!ws) return null;
   const past = sp.view === "past";
   const mine = role !== "owner" && role !== "admin";
-  const [rows, profile] = await Promise.all([
+  const [rows, profile, waitlist] = await Promise.all([
     listBookings(ws.id, { upcoming: !past, userId: mine ? session.user.id : undefined }),
     getProfileByUser(ws.id, session.user.id),
+    past ? Promise.resolve([]) : listWaitlist(ws.id, mine ? session.user.id : undefined),
   ]);
   const tz = profile?.timezone ?? ws.timezone;
   // Group sessions: how many seats each (event type, start, host) session has taken.
@@ -141,6 +143,38 @@ async function BookingsPage({ searchParams }: PageProps<"/admin/bookings">) {
           </li>
         )}
       </ul>
+      {waitlist.length > 0 && (
+        <section>
+          <h2 className="text-lg font-semibold tracking-tight">Waitlist</h2>
+          <p className="text-sm text-muted-foreground">
+            People who asked to be told when a spot opens. They are emailed automatically on a
+            cancellation.
+          </p>
+          <ul className="mt-3 space-y-2">
+            {waitlist.map((w) => (
+              <li
+                key={w.id}
+                className="flex flex-wrap items-center justify-between gap-3 rounded-xl border p-4 text-sm"
+              >
+                <div>
+                  <p className="font-medium">
+                    {w.attendeeName} · {w.eventTitle}
+                  </p>
+                  <p className="text-muted-foreground">
+                    {w.startAt ? fmtDateTime(w.startAt, tz) : `Any time on ${w.date}`} ·{" "}
+                    {w.attendeeEmail}
+                  </p>
+                </div>
+                <form action={hostRemoveWaitlist.bind(null, w.id)}>
+                  <Button type="submit" variant="ghost" size="sm">
+                    Remove
+                  </Button>
+                </form>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
     </div>
   );
 }

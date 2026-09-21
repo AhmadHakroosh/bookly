@@ -13,6 +13,10 @@
 
 Turn on `Recurring bookings` on an event type and choose the frequency (daily, weekly, monthly), the interval and the number of sessions (2–52). An attendee picks the first time and sees the whole series before confirming; dates the host cannot take are skipped and reported. Every occurrence is its own booking (own meeting link, calendar event, reminders and manage link) tied together by a series id, so a single session can be rescheduled or cancelled, and the manage page also offers "cancel all remaining sessions". The confirmation email lists all dates and attaches one `.ics` with every occurrence. Recurring event types cannot be paid yet.
 
+## Waitlist
+
+When a group session is full, its time still shows on the booking page as "Full · join waitlist"; when a day has no free times at all, the page offers a waitlist for that day. People leave a name and email and get a confirmation with a leave link. On a cancellation Bookly emails the first person waiting for that session (one per freed seat) and everyone waiting for that day, with a link straight to the freed time; the spot goes to whoever books first. Hosts see and can remove entries under `Admin → Bookings`.
+
 ## Buffers
 
 `Buffer before` is the free time an event type needs before each of its bookings, `buffer after` the free time after. They are applied to the candidate slot: a slot is offered only if `[start − before, end + after]` does not overlap any existing booking or external busy block.
