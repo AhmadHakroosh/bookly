@@ -27,15 +27,28 @@ type DailyEvent = {
   };
 };
 
+/** Daily's registration probe: a body of exactly {"test":"test"}, no event. */
+export function isProbe(body: string): boolean {
+  try {
+    const v = JSON.parse(body) as { test?: unknown; type?: unknown };
+    return v?.test === "test" && v.type === undefined;
+  } catch {
+    return false;
+  }
+}
+
 /**
  * Daily.co → Bookly. `participant.joined` pings the host and, once both sides are in the room,
  * starts transcription for auto-capture event types. `transcript.*` finish or fail a capture.
  */
 export async function POST(req: Request) {
+  const body = await req.text();
+  // Daily verifies a new webhook with {"test":"test"} and needs a 200 within 8 seconds. The
+  // signing key is only stored once registration succeeds, so answer before checking anything.
+  if (isProbe(body)) return NextResponse.json({ ok: true });
   const ws = await getCurrentWorkspace();
   const hmac = ws?.settings.daily?.hmac;
   if (!ws || !hmac) return NextResponse.json({ error: "Webhook not registered" }, { status: 404 });
-  const body = await req.text();
   const ts = req.headers.get("x-webhook-timestamp") ?? "";
   const sig = req.headers.get("x-webhook-signature") ?? "";
   if (!ts || !sig || !verifyDailySignature(hmac, ts, sig, body))

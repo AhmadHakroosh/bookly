@@ -49,3 +49,12 @@ describe("payments", () => {
     expect(PAYMENT_WINDOW_MIN).toBe(30);
   });
 });
+
+describe("daily webhook probe", () => {
+  it("recognises the registration test body and nothing else", async () => {
+    const { isProbe } = await import("@/app/api/webhooks/daily/route");
+    expect(isProbe('{"test":"test"}')).toBe(true);
+    expect(isProbe('{"type":"participant.joined","payload":{}}')).toBe(false);
+    expect(isProbe("not json")).toBe(false);
+  });
+});
