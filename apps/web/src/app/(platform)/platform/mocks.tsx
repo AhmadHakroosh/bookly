@@ -37,6 +37,7 @@ export function BrowserFrame({
 }) {
   return (
     <div
+      aria-hidden
       className={`force-light overflow-hidden rounded-xl border border-black/10 bg-background text-foreground shadow-2xl shadow-black/20 ${className}`}
     >
       <div className="flex items-center gap-2 border-b bg-muted/60 px-3 py-2">
@@ -179,7 +180,7 @@ export function InboxMock() {
                       {t}
                       {due && (
                         <span
-                          className={`ml-2 text-xs ${late ? "text-destructive" : "text-muted-foreground"}`}
+                          className={`ml-2 text-xs ${late ? "text-red-700" : "text-muted-foreground"}`}
                         >
                           {due}
                         </span>
@@ -198,7 +199,10 @@ export function InboxMock() {
 
 export function BriefMock() {
   return (
-    <div className="force-light rounded-xl border border-black/10 bg-background p-4 text-sm text-foreground shadow-xl shadow-black/15">
+    <div
+      aria-hidden
+      className="force-light rounded-xl border border-black/10 bg-background p-4 text-sm text-foreground shadow-xl shadow-black/15"
+    >
       <div className="flex items-center justify-between">
         <h4 className="text-base font-semibold tracking-tight">Briefing</h4>
         <Badge variant="outline">
@@ -220,7 +224,10 @@ export function BriefMock() {
 
 export function CallMock() {
   return (
-    <div className="overflow-hidden rounded-xl border border-black/10 bg-black text-white shadow-xl shadow-black/15">
+    <div
+      aria-hidden
+      className="overflow-hidden rounded-xl border border-black/10 bg-black text-white shadow-xl shadow-black/15"
+    >
       <div className="flex items-center justify-between px-4 py-2 text-xs">
         <span className="font-medium">Discovery call with Omar Haddad</span>
         <span className="text-white/60">Mon, 15:00</span>
@@ -249,7 +256,10 @@ export function CallMock() {
 
 export function RecapMock({ compact = false }: { compact?: boolean }) {
   return (
-    <div className="force-light space-y-4 rounded-xl border border-black/10 bg-background p-4 text-sm text-foreground shadow-xl shadow-black/15">
+    <div
+      aria-hidden
+      className="force-light space-y-4 rounded-xl border border-black/10 bg-background p-4 text-sm text-foreground shadow-xl shadow-black/15"
+    >
       <div className="flex items-center justify-between">
         <h4 className="text-base font-semibold tracking-tight">Meeting recap</h4>
         <Badge variant="outline">warm</Badge>
@@ -302,7 +312,12 @@ export function RecapMock({ compact = false }: { compact?: boolean }) {
             ["Find a clinic reference", null, null],
           ].map(([t, due, q]) => (
             <li key={t as string} className="flex items-start gap-2">
-              <input type="checkbox" defaultChecked readOnly className="mt-1" aria-hidden />
+              <span
+                className="mt-0.5 flex size-4 shrink-0 items-center justify-center rounded border bg-foreground text-background"
+                aria-hidden
+              >
+                <CheckIcon className="size-3" />
+              </span>
               <span>
                 {t}
                 {due && <span className="text-muted-foreground"> · {due}</span>}
@@ -311,14 +326,16 @@ export function RecapMock({ compact = false }: { compact?: boolean }) {
             </li>
           ))}
         </ul>
-        <Button className="pointer-events-none mt-2">Create all tasks</Button>
+        <Button tabIndex={-1} className="pointer-events-none mt-2">
+          Create all tasks
+        </Button>
       </div>
       <div className="flex items-center justify-between gap-3 rounded-lg bg-muted/50 p-3">
         <p>
           <span className="font-medium">Next step: </span>proposal by Wednesday
           <span className="block text-muted-foreground">Suggested stage: active</span>
         </p>
-        <Button variant="outline" className="pointer-events-none">
+        <Button variant="outline" tabIndex={-1} className="pointer-events-none">
           Move to active
         </Button>
       </div>
@@ -335,7 +352,10 @@ export function AvailabilityMock() {
     ["Thu", "10:00 – 16:00", false],
   ];
   return (
-    <div className="force-light rounded-xl border border-black/10 bg-background p-4 text-sm text-foreground shadow-xl shadow-black/15">
+    <div
+      aria-hidden
+      className="force-light rounded-xl border border-black/10 bg-background p-4 text-sm text-foreground shadow-xl shadow-black/15"
+    >
       <div className="flex flex-wrap items-end gap-4">
         <label className="text-xs">
           <span className="block font-medium">Meetings per week (budget)</span>
@@ -377,7 +397,10 @@ export function ContactMock() {
     [ArrowRightIcon, "Stage: lead → active", "June"],
   ] as const;
   return (
-    <div className="force-light rounded-xl border border-black/10 bg-background p-4 text-sm text-foreground shadow-xl shadow-black/15">
+    <div
+      aria-hidden
+      className="force-light rounded-xl border border-black/10 bg-background p-4 text-sm text-foreground shadow-xl shadow-black/15"
+    >
       <div className="flex items-start justify-between gap-3">
         <div>
           <h4 className="text-base font-semibold tracking-tight">Omar Haddad</h4>
@@ -409,7 +432,10 @@ export function BookingPageMock() {
   const days = Array.from({ length: 30 }, (_, i) => i + 1);
   const open = [22, 23, 24, 29, 30];
   return (
-    <div className="force-light rounded-xl border border-black/10 bg-background p-4 text-sm text-foreground shadow-xl shadow-black/15">
+    <div
+      aria-hidden
+      className="force-light rounded-xl border border-black/10 bg-background p-4 text-sm text-foreground shadow-xl shadow-black/15"
+    >
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="text-xs text-muted-foreground">Dana Weiss</p>
@@ -438,7 +464,7 @@ export function BookingPageMock() {
         {days.map((d) => (
           <span
             key={d}
-            className={`flex h-6 items-center justify-center rounded ${open.includes(d) ? "bg-muted font-medium" : "text-muted-foreground/60"} ${d === 22 ? "ring-1 ring-foreground" : ""}`}
+            className={`flex h-6 items-center justify-center rounded ${open.includes(d) ? "bg-muted font-medium" : "text-muted-foreground"} ${d === 22 ? "ring-1 ring-foreground" : ""}`}
           >
             {d}
           </span>

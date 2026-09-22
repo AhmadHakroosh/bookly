@@ -24,7 +24,10 @@ export function LiveTranscriptMock() {
     ["13:02", "Omar", "Our front desk will send the patient list."],
   ];
   return (
-    <div className="overflow-hidden rounded-xl border border-black/10 bg-neutral-950 text-white shadow-xl shadow-black/25">
+    <div
+      aria-hidden
+      className="overflow-hidden rounded-xl border border-black/10 bg-neutral-950 text-white shadow-xl shadow-black/25"
+    >
       <div className="flex items-center justify-between px-4 py-2 text-xs">
         <span className="inline-flex items-center gap-2 font-medium">
           <span className="relative flex size-2">
@@ -54,7 +57,7 @@ export function LiveTranscriptMock() {
             className="transcript-line"
             style={{ "--line-delay": `${i * 900}ms` } as never}
           >
-            <span className="text-white/40">[{t}]</span>{" "}
+            <span className="text-white/60">[{t}]</span>{" "}
             <span className={who === "Dana" ? "text-sky-300" : "text-amber-300"}>{who}:</span>{" "}
             {text}
           </li>
@@ -67,7 +70,7 @@ export function LiveTranscriptMock() {
 /** A routing form the visitor sees before choosing a time. */
 export function RoutingMock() {
   return (
-    <div className={card}>
+    <div aria-hidden className={card}>
       <div className="flex items-center justify-between">
         <h4 className="text-base font-semibold tracking-tight">How can we help?</h4>
         <Badge variant="outline">
@@ -118,7 +121,7 @@ export function RoutingMock() {
 export function SeatsMock() {
   const people = ["Acme Ltd · Noa", "Acme Ltd · Tom", "Acme Ltd · Priya"];
   return (
-    <div className={card}>
+    <div aria-hidden className={card}>
       <div className="flex items-center justify-between">
         <div>
           <h4 className="text-base font-semibold tracking-tight">Working session · Tue 14:30</h4>
@@ -154,7 +157,7 @@ export function SeatsMock() {
 /** The follow-up email Bookly drafts after a call. */
 export function FollowUpMock() {
   return (
-    <div className={card}>
+    <div aria-hidden className={card}>
       <div className="flex items-center justify-between">
         <h4 className="inline-flex items-center gap-1.5 text-base font-semibold tracking-tight">
           <MailIcon className="size-4 text-muted-foreground" aria-hidden />
@@ -178,11 +181,11 @@ export function FollowUpMock() {
         <p>Let me know if I missed anything.</p>
       </div>
       <div className="mt-3 flex gap-2">
-        <Button className="pointer-events-none">
+        <Button tabIndex={-1} className="pointer-events-none">
           <SendIcon data-icon="inline-start" />
           Send
         </Button>
-        <Button variant="outline" className="pointer-events-none">
+        <Button variant="outline" tabIndex={-1} className="pointer-events-none">
           Edit
         </Button>
       </div>

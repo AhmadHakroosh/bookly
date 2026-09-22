@@ -42,4 +42,14 @@ By contributing you agree that your contributions are licensed under the AGPL-3.
 
 ## End-to-end tests
 
+Two Playwright suites run in CI against a production build:
+
+- `pnpm --filter @bookly/web e2e` — single-tenant: booking, admin, capture, accessibility, headers.
+- `pnpm --filter @bookly/web e2e:cloud` — cloud mode: the marketing site, sign-up with consent, a
+  tenant booking on `demo.bookly.test`, the workspace chooser and the operator console. Build first
+  with `APP_URL=http://platform.bookly.test:3011 ROOT_DOMAIN=bookly.test:3011 TENANCY=multi`; the
+  `*.bookly.test` hosts are mapped to 127.0.0.1 inside Chromium, so nothing to add to `/etc/hosts`.
+
+### Details
+
 `pnpm e2e` builds the app (non-standalone), starts it on port 3010 against `DATABASE_URL`, migrates and seeds the demo workspace, and runs the Playwright suite in `apps/web/tests/e2e` (booking, admin, accessibility, security headers). Run `pnpm --filter @bookly/web exec playwright install chromium` once.

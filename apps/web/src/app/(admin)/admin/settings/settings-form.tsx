@@ -95,6 +95,7 @@ export function SettingsForm({
                 value="on"
                 defaultChecked={workspace.telemetryStats}
                 className="mt-0.5"
+                aria-label="Share anonymous usage statistics"
               />
               <span>
                 Share anonymous usage statistics with the project: counts of workspaces, hosts,

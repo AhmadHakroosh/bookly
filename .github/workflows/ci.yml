@@ -77,6 +77,45 @@ jobs:
           path: apps/web/playwright-report
           retention-days: 7
 
+  e2e-cloud:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: bookly
+          POSTGRES_PASSWORD: bookly
+          POSTGRES_DB: bookly
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U bookly" --health-interval 5s --health-timeout 3s --health-retries 20
+    env:
+      DATABASE_URL: postgres://bookly:bookly@localhost:5432/bookly
+      AUTH_SECRET: ci-only-secret-0123456789abcdef0123
+      # Built with the cloud hosts so canonical / Open Graph URLs match what the tests expect.
+      APP_URL: http://platform.bookly.test:3011
+      ROOT_DOMAIN: bookly.test:3011
+      TENANCY: multi
+      PLATFORM_ADMIN_EMAILS: demo@example.com
+      E2E: "1"
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @bookly/web exec playwright install --with-deps chromium
+      - run: pnpm --filter @bookly/web e2e:build
+      - run: pnpm --filter @bookly/web e2e:cloud
+      - uses: actions/upload-artifact@v7
+        if: failure()
+        with:
+          name: playwright-report-cloud
+          path: apps/web/playwright-report
+          retention-days: 7
+
   docker:
     runs-on: ubuntu-latest
     steps:

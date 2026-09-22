@@ -80,7 +80,12 @@ export function SignupForm({
           </Field>
           <Field>
             <label className="flex items-start gap-2 text-sm">
-              <Checkbox name="terms" required className="mt-0.5" />
+              <Checkbox
+                name="terms"
+                required
+                className="mt-0.5"
+                aria-label="I agree to the terms of service"
+              />
               <span>
                 I agree to the{" "}
                 <Link href="/terms" target="_blank" className="underline underline-offset-4">
@@ -90,7 +95,12 @@ export function SignupForm({
               </span>
             </label>
             <label className="flex items-start gap-2 text-sm">
-              <Checkbox name="privacy" required className="mt-0.5" />
+              <Checkbox
+                name="privacy"
+                required
+                className="mt-0.5"
+                aria-label="I have read the privacy policy and consent to the processing it describes"
+              />
               <span>
                 I have read the{" "}
                 <Link href="/privacy" target="_blank" className="underline underline-offset-4">

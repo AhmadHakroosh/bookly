@@ -26,7 +26,8 @@ const csp = [
   "base-uri 'self'",
   "form-action 'self' https://checkout.stripe.com",
   "object-src 'none'",
-  ...(dev ? [] : ["upgrade-insecure-requests"]),
+  // Not for dev or the e2e build, which serve plain http on non-localhost test hosts.
+  ...(dev || process.env.E2E ? [] : ["upgrade-insecure-requests"]),
 ].join("; ");
 
 const securityHeaders = [

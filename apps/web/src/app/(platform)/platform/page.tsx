@@ -517,7 +517,7 @@ export default function LandingPage() {
           title="Your clients' conversations, on your terms."
           mock={
             <pre className="overflow-x-auto rounded-xl border bg-neutral-950 p-5 text-xs leading-relaxed text-neutral-200 shadow-xl">
-              <span className="text-neutral-500"># four commands to a running Bookly</span>
+              <span className="text-neutral-400"># four commands to a running Bookly</span>
               {`
 git clone ${SITE.github}.git && cd bookly
 cp .env.example .env
