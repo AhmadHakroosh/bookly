@@ -8,6 +8,7 @@ Everything below is on `main` ahead of the first release, which will be tagged `
 
 ### Added
 
+- Proposals and payment requests are sent in two steps: edit the prefilled template, then review the exact branded email (recipient, subject, rendered body, and what the Pay button will link to) in a dialog before confirming; the Pay button comes from the request itself rather than a link in the text; proposal and payment templates have Preview links in Settings; a contact without a company gets their name in the default subject
 - Emails rebuilt on React Email with the workspace's branding (logo, name, accent), a details card, buttons and a plain-text alternative; confirmations, reminders, cancellations, follow-ups, proposals, payment requests, client recaps, sign-in links, password resets and invitations. Workspaces can replace the wording of the confirmation, reminder and cancellation emails (Admin → Settings → Guest emails, with previews); defaults remain
 - Guest-facing emails (confirmations, reminders, cancellations, follow-ups, proposals, payment requests, client recaps) are sent as “<host name> via Bookly” at the platform address, with the host's email as Reply-To
 - Plan cards are one shared component on the landing page and the pricing page, with each plan's standout features (contacts and briefings on Free, auto-capture and paid bookings on Pro, team scheduling and the larger capture budget on Team) listed first and emphasised

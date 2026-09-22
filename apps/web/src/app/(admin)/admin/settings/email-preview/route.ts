@@ -11,6 +11,8 @@ import {
 import { db } from "@/lib/db";
 import { getProfileByUser } from "@/server/scheduling";
 import { baseUrl } from "@/server/scheduling";
+import { renderOutreach, templatesFor } from "@/server/outreach";
+import { fillTemplate } from "@/server/outreach-text";
 import { requireStaff } from "@/server/session";
 import { getCurrentWorkspace } from "@/server/workspace";
 
@@ -21,6 +23,26 @@ export async function GET(req: Request) {
   const ws = await getCurrentWorkspace();
   if (!ws) return NextResponse.json({ error: "No workspace" }, { status: 404 });
   const kind = new URL(req.url).searchParams.get("kind") ?? "confirmation";
+  if (kind === "proposal" || kind === "paymentRequest") {
+    const host = await getProfileByUser(ws.id, session.user.id);
+    const t = fillTemplate(templatesFor(ws)[kind], {
+      name: "Sam",
+      company: "Acme Ltd",
+      host: host?.displayName ?? session.user.name,
+      amount: kind === "paymentRequest" ? "$1,200.00" : "",
+      payLink: kind === "paymentRequest" ? "https://checkout.stripe.com/…" : "",
+    });
+    const mail = await renderOutreach(
+      ws,
+      host?.displayName ?? session.user.name,
+      t.subject,
+      t.body,
+      kind === "paymentRequest" ? "https://checkout.stripe.com/" : undefined,
+    );
+    return new NextResponse(mail.html, {
+      headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-store" },
+    });
+  }
   const [host, et] = await Promise.all([
     getProfileByUser(ws.id, session.user.id),
     db().query.eventTypes.findFirst({ where: (t, { eq }) => eq(t.workspaceId, ws.id) }),

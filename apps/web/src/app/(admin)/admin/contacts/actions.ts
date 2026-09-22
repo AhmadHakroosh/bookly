@@ -3,8 +3,9 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { CONTACT_STAGES, type ContactStage } from "@bookly/db/schema";
+import { paymentsConfigured } from "@/server/payments";
 import { getContact, logContactEvent, setStage, updateContact } from "@/server/contacts";
-import { paymentLink, sendOutreach } from "@/server/outreach";
+import { paymentLink, sendOutreach, renderOutreach } from "@/server/outreach";
 import { fillTemplate } from "@/server/outreach-text";
 import { formatPrice } from "@/server/payments";
 import { getProfileByUser } from "@/server/scheduling";
@@ -65,7 +66,7 @@ export async function sendProposal(id: string, formData: FormData) {
     { subject: String(formData.get("subject") ?? ""), body: String(formData.get("body") ?? "") },
     {
       name: c.name || "there",
-      company: c.company ?? "",
+      company: c.company || c.name || "you",
       host: host?.displayName ?? ws.name,
       amount: "",
       payLink: "",
@@ -102,7 +103,7 @@ export async function sendPaymentRequest(id: string, formData: FormData) {
     { subject: String(formData.get("subject") ?? ""), body: String(formData.get("body") ?? "") },
     {
       name: c.name || "there",
-      company: c.company ?? "",
+      company: c.company || c.name || "you",
       host: host?.displayName ?? ws.name,
       amount: formatPrice(amountCents, currency),
       payLink: link ?? "",
@@ -111,6 +112,7 @@ export async function sendPaymentRequest(id: string, formData: FormData) {
   if (!t.subject || !t.body) return;
   await sendOutreach(ws, c, session.user.id, "paymentRequest", {
     ...t,
+    payLink: link ?? undefined,
     amountCents,
     currency,
     followUpDays: Number(formData.get("followUpDays")) || 0,
@@ -134,4 +136,61 @@ export async function addNote(id: string, formData: FormData) {
   if (!text || !(await getContact(ws.id, id))) return;
   await logContactEvent(ws.id, id, "note", text);
   revalidatePath(`/admin/contacts/${id}`);
+}
+
+export type OutreachPreview = {
+  to: string;
+  subject: string;
+  html: string;
+  /** What the "Pay securely" button will link to once sent. */
+  note?: string;
+};
+
+/**
+ * Step one of sending: the exact email, rendered with the host's edits. Nothing is sent and no
+ * Stripe session is created; the payment button is shown with a placeholder link.
+ */
+export async function previewOutreach(
+  id: string,
+  kind: "proposal" | "paymentRequest",
+  formData: FormData,
+): Promise<OutreachPreview | { error: string }> {
+  const { ws, session } = await ctx();
+  const c = await getContact(ws.id, id);
+  if (!c) return { error: "Contact not found." };
+  const host = await getProfileByUser(ws.id, session.user.id);
+  const amountCents = Math.round((Number(formData.get("amount")) || 0) * 100);
+  const currency =
+    String(formData.get("currency") ?? "usd")
+      .trim()
+      .toLowerCase()
+      .slice(0, 3) || "usd";
+  if (kind === "paymentRequest" && amountCents <= 0) return { error: "Enter an amount." };
+  const willLink = kind === "paymentRequest" && paymentsConfigured();
+  const t = fillTemplate(
+    { subject: String(formData.get("subject") ?? ""), body: String(formData.get("body") ?? "") },
+    {
+      name: c.name || "there",
+      company: c.company || c.name || "you",
+      host: host?.displayName ?? ws.name,
+      amount: kind === "paymentRequest" ? formatPrice(amountCents, currency) : "",
+      payLink: willLink ? "https://checkout.stripe.com/…" : "",
+    },
+  );
+  if (!t.subject || !t.body) return { error: "Subject and message are required." };
+  const mail = await renderOutreach(
+    ws,
+    host?.displayName ?? ws.name,
+    t.subject,
+    t.body,
+    willLink ? "https://checkout.stripe.com/" : undefined,
+  );
+  return {
+    to: c.email,
+    subject: mail.subject,
+    html: mail.html,
+    note: willLink
+      ? `The button and link will point to a Stripe Checkout page for ${formatPrice(amountCents, currency)}, created when you send.`
+      : undefined,
+  };
 }

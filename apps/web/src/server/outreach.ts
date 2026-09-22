@@ -21,6 +21,23 @@ export function templatesFor(ws: Workspace) {
   };
 }
 
+/** The exact email a contact receives: used for the preview step and for sending. */
+export function renderOutreach(
+  ws: Workspace,
+  signedBy: string,
+  subject: string,
+  body: string,
+  payLink?: string,
+) {
+  return letterMail({
+    brand: brandFor(ws),
+    subject: subject.trim().slice(0, 200),
+    body: body.trim().slice(0, 8000),
+    signedBy,
+    cta: payLink ? { href: payLink, label: "Pay securely" } : undefined,
+  });
+}
+
 /** A Stripe Checkout link for an arbitrary amount (null when Stripe is not set up). */
 export async function paymentLink(
   ws: Workspace,
@@ -65,6 +82,8 @@ export async function sendOutreach(
     amountCents?: number;
     currency?: string;
     followUpDays?: number;
+    /** Stripe Checkout URL for a payment request; drives the "Pay securely" button. */
+    payLink?: string;
   },
 ) {
   const [host, user] = await Promise.all([
@@ -76,14 +95,7 @@ export async function sendOutreach(
   ]);
   const subject = input.subject.trim().slice(0, 200);
   const body = input.body.trim().slice(0, 8000);
-  const payLink = kind === "paymentRequest" ? body.match(/https?:\/\/\S+/)?.[0] : undefined;
-  const mail = await letterMail({
-    brand: brandFor(ws),
-    subject,
-    body,
-    signedBy: host?.displayName ?? ws.name,
-    cta: payLink ? { href: payLink, label: "Pay securely" } : undefined,
-  });
+  const mail = await renderOutreach(ws, host?.displayName ?? ws.name, subject, body, input.payLink);
   await sendEmail({
     to: c.email,
     subject,
