@@ -197,14 +197,25 @@ function Feature({
 }
 
 function CmpCell({ v }: { v: Cmp }) {
+  // Every state sits in the same 24px box so the column stays aligned with the row text.
+  const box = "inline-flex size-6 items-center justify-center rounded-full align-middle";
   if (v === true)
     return (
-      <span className="inline-flex size-6 items-center justify-center rounded-full bg-(--brand)/15 text-(--brand)">
+      <span className={`${box} bg-(--brand)/15 text-(--brand)`}>
         <CheckIcon className="size-3.5" aria-label="Yes" />
       </span>
     );
-  if (v === "some") return <span className="text-xs text-muted-foreground">Some</span>;
-  return <MinusIcon className="size-4 text-muted-foreground/50" aria-label="No" />;
+  if (v === "some")
+    return (
+      <span className={`${box} w-auto px-1 text-xs text-muted-foreground`} aria-label="Partly">
+        Some
+      </span>
+    );
+  return (
+    <span className={`${box} text-muted-foreground/60`}>
+      <MinusIcon className="size-4" aria-label="No" />
+    </span>
+  );
 }
 
 export default function LandingPage() {
@@ -461,11 +472,11 @@ export default function LandingPage() {
             <tbody>
               {COMPARE.map(([f, a, b]) => (
                 <tr key={f} className="border-b last:border-0">
-                  <td className="p-4">{f}</td>
-                  <td className="p-4 text-center">
+                  <td className="p-4 align-middle">{f}</td>
+                  <td className="p-4 text-center align-middle leading-none">
                     <CmpCell v={a} />
                   </td>
-                  <td className="p-4 text-center">
+                  <td className="p-4 text-center align-middle leading-none">
                     <CmpCell v={b} />
                   </td>
                 </tr>
