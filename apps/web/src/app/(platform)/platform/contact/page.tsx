@@ -11,7 +11,8 @@ import { pageMetadata, SITE } from "../site";
 
 export const metadata: Metadata = pageMetadata({
   title: "Contact",
-  description: "Support, sales questions, bug reports and security disclosures for Bookly.",
+  description:
+    "Reach the people behind Bookly: support and sales by email within a business day, bug reports and feature requests on GitHub, and private security disclosures.",
   path: "/contact",
 });
 

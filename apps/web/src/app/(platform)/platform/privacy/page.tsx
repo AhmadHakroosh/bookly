@@ -6,7 +6,8 @@ import { pageMetadata, SITE } from "../site";
 
 export const metadata: Metadata = pageMetadata({
   title: "Privacy policy",
-  description: "What Bookly collects, why, how long it is kept, and the rights you have over it.",
+  description:
+    "What Bookly collects from hosts and guests, why, which sub-processors see it, how long it is kept, and how to export or delete your data. Plain language first.",
   path: "/privacy",
 });
 

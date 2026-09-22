@@ -6,7 +6,8 @@ import { pageMetadata, SITE } from "../site";
 
 export const metadata: Metadata = pageMetadata({
   title: "About",
-  description: "Why Bookly exists, who builds it, and what it will and will not become.",
+  description:
+    "Why Bookly exists: scheduling was solved, the meeting itself was not. Who builds it, why it is open source under AGPL-3.0, and what it will never become.",
   path: "/about",
 });
 

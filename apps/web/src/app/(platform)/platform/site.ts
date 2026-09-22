@@ -6,7 +6,7 @@ export const SITE = {
   name: "Bookly",
   tagline: "The meeting is booked. Bookly handles the rest.",
   description:
-    "Open-source scheduling that briefs you before the call, transcribes it with consent, and turns every meeting into tasks, follow-ups and a relationship you can see.",
+    "Open-source scheduling that briefs you before each call, transcribes it with consent, and turns every meeting into tasks, follow-ups and relationships.",
   github: "https://github.com/AhmadHakroosh/bookly",
   operator: "Ahmad Hakroosh",
   supportEmail: process.env.SUPPORT_EMAIL ?? "hello@ahmadhakroosh.com",

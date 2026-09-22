@@ -10,7 +10,7 @@ import { pageMetadata, SITE } from "../site";
 export const metadata: Metadata = pageMetadata({
   title: "Pricing",
   description:
-    "Start free, upgrade when it pays for itself. Pro at $12/month, Team at $10 per member. Self-hosting is free with every feature.",
+    "Bookly plans: Free with contacts, briefings and the Meeting Inbox; Pro at $12/month adds auto-capture, paid bookings, a custom domain; Team at $10 a member.",
   path: "/pricing",
 });
 
@@ -95,7 +95,7 @@ export default function PricingPage() {
 
       <div className="mt-12 grid gap-6 md:grid-cols-3">
         {plans.map((p) => (
-          <PlanCard key={p.id} plan={p} />
+          <PlanCard key={p.id} plan={p} heading="h2" />
         ))}
       </div>
 

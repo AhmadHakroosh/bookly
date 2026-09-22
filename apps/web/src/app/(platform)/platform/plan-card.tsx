@@ -5,14 +5,23 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
 /** One plan, the same on the landing page and the pricing page: featured highlights stand out. */
-export function PlanCard({ plan: p, className = "" }: { plan: Plan; className?: string }) {
+export function PlanCard({
+  plan: p,
+  className = "",
+  heading: H = "h3",
+}: {
+  plan: Plan;
+  className?: string;
+  /** h2 on the pricing page (under its h1), h3 on the landing page (under a section h2). */
+  heading?: "h2" | "h3";
+}) {
   const pro = p.id === "pro";
   return (
     <div
       className={`flex flex-col rounded-2xl border bg-background p-6 ${pro ? "border-(--brand) ring-1 ring-(--brand)" : ""} ${className}`}
     >
       <div className="flex items-center justify-between gap-3">
-        <h3 className="text-lg font-semibold tracking-tight">{p.name}</h3>
+        <H className="text-lg font-semibold tracking-tight">{p.name}</H>
         {pro && <Badge>Most popular</Badge>}
       </div>
       <p className="text-sm text-muted-foreground">{p.tagline}</p>

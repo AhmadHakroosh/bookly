@@ -9,7 +9,8 @@ import { pageMetadata, SITE } from "../site";
 
 export const metadata: Metadata = pageMetadata({
   title: "Changelog",
-  description: "Everything that has shipped in Bookly, release by release.",
+  description:
+    "Everything that has shipped in Bookly, release by release: scheduling, calendar sync, auto-capture and recaps, contacts, cloud mode, security and operations.",
   path: "/changelog",
 });
 

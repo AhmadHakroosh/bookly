@@ -6,7 +6,8 @@ import { pageMetadata, SITE } from "../site";
 
 export const metadata: Metadata = pageMetadata({
   title: "Terms of service",
-  description: "The agreement between you and Bookly for the hosted service.",
+  description:
+    "The agreement for the hosted Bookly service: your account, acceptable use, your content and guests, billing and cancellation, AI features, liability, changes.",
   path: "/terms",
 });
 

@@ -1,11 +1,17 @@
+import type { Metadata } from "next";
 import { Suspense } from "react";
 import { loadEnv } from "@bookly/config";
 import { getSession } from "@/server/session";
-import { SITE } from "../site";
+import { pageMetadata, SITE } from "../site";
 import { SignupForm } from "./signup-form";
 import { PageSkeleton } from "@/components/page-skeleton";
 
-export const metadata = { title: "Get started" };
+export const metadata: Metadata = pageMetadata({
+  title: "Get started",
+  description:
+    "Create your Bookly workspace in two minutes: a booking page on your own subdomain, calendar sync, built-in video and the Meeting Inbox. Free plan, no card.",
+  path: "/signup",
+});
 
 async function SignupPage() {
   const session = await getSession();

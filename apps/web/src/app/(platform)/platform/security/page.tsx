@@ -7,7 +7,7 @@ import { pageMetadata, SITE } from "../site";
 export const metadata: Metadata = pageMetadata({
   title: "Security",
   description:
-    "How Bookly protects your data: encryption, authentication, transcripts and consent, infrastructure, and how to report a vulnerability.",
+    "How Bookly protects client conversations: HTTPS, encryption at rest, scoped tokens, consent-based transcription with retention, open code, disclosure process.",
   path: "/security",
 });
 
