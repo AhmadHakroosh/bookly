@@ -1,9 +1,8 @@
 import type { SVGProps } from "react";
 
 /**
- * The Bookly mark: a buckle (بُكلة). A buckle fastens two sides together, which is what Bookly
- * does with a meeting: the frame is the slot on the calendar, the prong points at what comes
- * next. It reads at 16px as a favicon and scales to print.
+ * The Bookly mark: a lowercase "b" that is a buckle (بُكلة). The stem is the strap, the bowl is
+ * the buckle frame, and the prong across it is the accent. Reads as a "b" at 16px.
  */
 export function LogoMark({
   className,
@@ -19,20 +18,15 @@ export function LogoMark({
       className={className}
       {...props}
     >
-      <rect x="6" y="15" width="52" height="34" rx="12" stroke="currentColor" strokeWidth="6" />
-      <path d="M31 15v34" stroke="currentColor" strokeWidth="6" strokeLinecap="round" />
-      <path
-        d="M31 32h21m0 0-6-6m6 6-6 6"
-        stroke={accent}
-        strokeWidth="6"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
+      <rect x="17" y="27" width="36" height="30" rx="12" stroke="currentColor" strokeWidth="6" />
+      <path d="M17 7v22" stroke="currentColor" strokeWidth="6" strokeLinecap="round" />
+      <circle cx="17" cy="42" r="5.5" fill={accent} />
+      <path d="M17 42h29" stroke={accent} strokeWidth="6" strokeLinecap="round" />
     </svg>
   );
 }
 
-export function Logo({ className = "", size = 24 }: { className?: string; size?: number }) {
+export function Logo({ className = "", size = 26 }: { className?: string; size?: number }) {
   return (
     <span className={`inline-flex items-center gap-2 font-semibold tracking-tight ${className}`}>
       <LogoMark style={{ width: size, height: size }} />

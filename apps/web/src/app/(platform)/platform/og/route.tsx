@@ -25,15 +25,10 @@ export function GET() {
     >
       <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
         <svg width="64" height="64" viewBox="0 0 64 64" fill="none">
-          <rect x="6" y="15" width="52" height="34" rx="12" stroke="#fafafa" strokeWidth="6" />
-          <path d="M31 15v34" stroke="#fafafa" strokeWidth="6" strokeLinecap="round" />
-          <path
-            d="M31 32h21m0 0-6-6m6 6-6 6"
-            stroke="#e8965a"
-            strokeWidth="6"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
+          <rect x="17" y="27" width="36" height="30" rx="12" stroke="#fafafa" strokeWidth="6" />
+          <path d="M17 7v22" stroke="#fafafa" strokeWidth="6" strokeLinecap="round" />
+          <circle cx="17" cy="42" r="5.5" fill="#e8965a" />
+          <path d="M17 42h29" stroke="#e8965a" strokeWidth="6" strokeLinecap="round" />
         </svg>
         <div style={{ fontSize: 40, fontWeight: 700, letterSpacing: -1 }}>Bookly</div>
         <div
