@@ -171,7 +171,7 @@ function Feature({
 }) {
   return (
     <div className="grid items-center gap-10 lg:grid-cols-2 lg:gap-16">
-      <div className={flip ? "lg:order-2" : ""} data-reveal>
+      <div className={`min-w-0 ${flip ? "lg:order-2" : ""}`} data-reveal>
         <Eyebrow>{eyebrow}</Eyebrow>
         <h2 className="mt-3 text-3xl font-semibold tracking-tight text-balance">{title}</h2>
         <p className="mt-4 text-muted-foreground">{children}</p>
@@ -187,7 +187,7 @@ function Feature({
         )}
       </div>
       <div
-        className={flip ? "lg:order-1" : ""}
+        className={`min-w-0 ${flip ? "lg:order-1" : ""}`}
         data-reveal
         style={{ "--reveal-delay": "120ms" } as never}
       >
@@ -527,7 +527,7 @@ export default function LandingPage() {
           eyebrow="Open source"
           title="Your clients' conversations, on your terms."
           mock={
-            <pre className="overflow-x-auto rounded-xl border bg-neutral-950 p-5 text-xs leading-relaxed text-neutral-200 shadow-xl">
+            <pre className="max-w-full min-w-0 rounded-xl border bg-neutral-950 p-5 text-xs leading-relaxed break-all whitespace-pre-wrap text-neutral-200 shadow-xl">
               <span className="text-neutral-400"># four commands to a running Bookly</span>
               {`
 git clone ${SITE.github}.git && cd bookly
