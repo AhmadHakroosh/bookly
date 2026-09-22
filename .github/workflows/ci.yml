@@ -138,7 +138,6 @@ jobs:
           APP_URL=http://localhost:3002
           TELEMETRY=off
           ENV
-          # Only what the app needs: Postgres and the image (MinIO is a local-dev convenience).
           docker compose --profile app up -d --no-build postgres app
           for i in $(seq 1 40); do
             if curl -fsS http://localhost:3002/api/health | grep -q '"ok":true'; then echo "healthy after ${i}s"; break; fi

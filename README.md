@@ -62,7 +62,7 @@ Bookly runs as one Next.js app on top of Postgres. Docker Compose is the support
 git clone https://github.com/AhmadHakroosh/bookly.git && cd bookly
 cp .env.example .env
 # edit .env: AUTH_SECRET (openssl rand -base64 32), APP_URL, EMAIL_* at least
-docker compose --profile app up -d                      # app + Postgres + MinIO
+docker compose --profile app up -d                      # app + Postgres
 docker compose --profile app --profile tls up -d        # …plus Caddy with automatic HTTPS
 ```
 
@@ -74,7 +74,6 @@ Open `APP_URL` (default http://localhost:3002). The setup wizard creates your ac
 | ----------------------------------------------------------------------- | ------------------------------------------------------------------------------------- | -------------------------------- |
 | `APP_URL`, `AUTH_SECRET`, `DATABASE_URL`                                | Where the app lives, session signing, Postgres                                        | Yes                              |
 | `EMAIL_DRIVER`, `EMAIL_FROM`, `RESEND_*` / `SMTP_*`                     | Transactional email                                                                   | Yes for production               |
-| `STORAGE_DRIVER`, `S3_*`                                                | Profile photos and uploads (local disk or S3, R2, MinIO)                              | Defaults to local disk           |
 | `GOOGLE_*`, `MICROSOFT_*`, `ZOOM_*`, `DAILY_*`                          | Calendar sync and video                                                               | Per integration you want         |
 | `STRIPE_*`                                                              | Paid bookings                                                                         | Only for payments                |
 | `TWILIO_*`                                                              | SMS and WhatsApp                                                                      | Only for text messages           |
@@ -95,7 +94,7 @@ Every variable is described in [.env.example](.env.example) and validated at boo
 - **Update check:** once a day the install asks for the latest version and sends its own version, tenancy mode, Node version and a random install id, nothing more. The admin shows a notice when a newer release exists. Set `TELEMETRY=off` to disable it. Sharing coarse usage counts (workspaces, hosts, bookings, which integrations) is a separate opt-in under Admin → Settings, never on by default.
 - **Security headers, rate limits and abuse controls** are on by default. Read [SECURITY.md](SECURITY.md) for what is covered and how to report a problem.
 
-The full guide, including Vercel, HTTPS, custom domains, storage and password recovery: [docs/self-hosting.md](docs/self-hosting.md).
+The full guide, including Vercel, HTTPS, custom domains and password recovery: [docs/self-hosting.md](docs/self-hosting.md).
 
 ## Cloud mode
 
@@ -128,7 +127,7 @@ Requirements: Node 24, pnpm 11, Docker.
 ```bash
 pnpm install
 cp .env.example .env.local        # set AUTH_SECRET at least
-pnpm docker:db                    # Postgres (5433) + MinIO for local dev
+pnpm docker:db                    # Postgres (5433) for local dev
 pnpm db:migrate
 pnpm dev                          # http://localhost:3002
 pnpm demo                         # seed a demo workspace you can sign in to
@@ -154,7 +153,6 @@ apps/web              Next.js 16 app: public pages, /admin, /setup, auth, API, m
 packages/config       env schema (zod); per-tenant settings live in the database
 packages/db           Drizzle schema + migrations (Postgres)
 packages/email        email drivers: console | resend | smtp
-packages/storage      storage drivers: local | s3 (S3, R2, MinIO…)
 packages/jobs         background jobs on Postgres (pg-boss)
 packages/cloud        hosted-service plans and limits (proprietary, see License)
 docs/                 user documentation, also served in-app at /docs

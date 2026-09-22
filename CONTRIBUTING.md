@@ -15,7 +15,7 @@ Thanks for helping. This guide keeps contributions smooth for you and for mainta
 ```bash
 pnpm install
 cp .env.example .env.local        # set AUTH_SECRET
-pnpm docker:db                    # Postgres + MinIO
+pnpm docker:db                    # Postgres
 pnpm db:migrate
 pnpm demo                         # optional: demo data; sign in as demo@example.com / demo-password-1234
 pnpm dev                          # http://localhost:3002
@@ -27,7 +27,7 @@ Before pushing: `pnpm format && pnpm lint && pnpm typecheck && pnpm test && pnpm
 
 - Next.js 16 with Cache Components: public data goes through `"use cache"` functions tagged per tenant; server actions call `updateTag`, route handlers `revalidateTag(tag, "max")`. Every page is an `XPage` + `XPageBoundary` (Suspense) pair.
 - Database changes: edit `packages/db/src/schema`, run `pnpm db:generate`, commit the migration. Migrations are additive within a minor version.
-- Vendor SDKs stay behind the package interfaces (`packages/email`, `packages/storage`, provider drivers). Pages and actions never call a vendor API directly.
+- Vendor SDKs stay behind the package interfaces (`packages/email`, `packages/jobs`, provider drivers). Pages and actions never call a vendor API directly.
 - Env: add new variables to `packages/config` and `.env.example` with a comment.
 - Tenancy: every query is scoped by the tenant id; never trust the host header outside `proxy.ts`.
 

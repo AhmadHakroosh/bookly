@@ -58,10 +58,9 @@ const nextConfig: NextConfig = {
     "@bookly/config",
     "@bookly/db",
     "@bookly/email",
-    "@bookly/storage",
     "@bookly/jobs",
   ],
-  serverExternalPackages: ["pg", "pg-boss", "nodemailer", "@aws-sdk/client-s3", "sharp", "shiki"],
+  serverExternalPackages: ["pg", "pg-boss", "nodemailer", "sharp", "shiki"],
   outputFileTracingRoot: new URL("../../", import.meta.url).pathname,
   images: {
     remotePatterns: [

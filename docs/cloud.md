@@ -107,7 +107,7 @@ video `https://meet.bookly-app.io`, `www` redirected to the apex by the proxy.
    keeps a daily `/api/cron/tick` as the safety net behind QStash.
 3. **Environment.** Import `.env.cloud` from the repository root (it is git-ignored and carries
    the fixed values: hosts, drivers, `JOBS_WORKER=false`, `TELEMETRY_URL`) and fill in each
-   `SET:` line: Neon, `AUTH_SECRET`, Resend (verify `bookly-app.io` there first), R2 or S3,
+   `SET:` line: Neon, `AUTH_SECRET`, Resend (verify `bookly-app.io` there first),
    Upstash Redis and QStash, Anthropic, Daily, the OAuth apps and Stripe. `APP_URL` is read at
    build time too, so set it before the first build.
 4. **Database.** From your machine: `DATABASE_URL='<neon pooled url>' pnpm db:migrate`.

@@ -24,7 +24,7 @@
     "db:studio": "pnpm --filter @bookly/db studio",
     "auth:generate": "pnpm --filter @bookly/web auth:generate",
     "demo": "pnpm --filter @bookly/web demo",
-    "docker:db": "docker compose up -d postgres minio"
+    "docker:db": "docker compose up -d postgres"
   },
   "devDependencies": {
     "prettier": "catalog:",

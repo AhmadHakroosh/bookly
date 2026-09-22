@@ -8,7 +8,6 @@ describe("envSchema", () => {
     const env = envSchema.parse(base);
     expect(env.TENANCY).toBe("single");
     expect(env.EMAIL_DRIVER).toBe("console");
-    expect(env.STORAGE_DRIVER).toBe("local");
     expect(env.APP_URL).toBe("http://localhost:3002");
   });
 
@@ -21,10 +20,10 @@ describe("envSchema", () => {
       ...base,
       SMTP_SECURE: "true",
       SMTP_PORT: "465",
-      S3_FORCE_PATH_STYLE: "0",
+      TELEMETRY: "off",
     });
     expect(env.SMTP_SECURE).toBe(true);
     expect(env.SMTP_PORT).toBe(465);
-    expect(env.S3_FORCE_PATH_STYLE).toBe(false);
+    expect(env.TELEMETRY).toBe("off");
   });
 });

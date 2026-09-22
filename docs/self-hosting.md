@@ -1,6 +1,6 @@
 # Self-hosting Bookly
 
-Bookly is one container plus Postgres. Optional: an S3-compatible bucket for uploads and a mail provider.
+Bookly is one container plus Postgres. Optional: a mail provider. There are no file uploads: profile photos and logos are URLs you host anywhere.
 
 ## 1. Docker Compose (recommended)
 
@@ -16,12 +16,11 @@ Edit `.env`:
 | `APP_URL`                                    | The public URL, e.g. `https://bookly.example.com`                                                  |
 | `AUTH_SECRET`                                | `openssl rand -base64 32`                                                                          |
 | `EMAIL_DRIVER`, `EMAIL_FROM` + provider keys | `resend` or `smtp`; without email, sign-in links and notifications only print to the container log |
-| `STORAGE_DRIVER`                             | `local` (files in a volume) or `s3` with the `S3_*` keys                                           |
 
 Then:
 
 ```bash
-docker compose --profile app up -d          # app + Postgres + MinIO
+docker compose --profile app up -d          # app + Postgres
 docker compose --profile app --profile tls up -d   # …plus Caddy with automatic HTTPS
 ```
 
@@ -37,7 +36,6 @@ The same code runs on Vercel:
 
 - Root Directory `apps/web`, Node 24.
 - Postgres: any provider (Neon works well). `DATABASE_URL` = pooled connection string.
-- Storage: Cloudflare R2 or S3 with `STORAGE_DRIVER=s3` and the `S3_*` keys.
 - Set `JOBS_WORKER=false` and configure QStash (`QSTASH_TOKEN` and the two signing keys) so reminders, retries, transcripts and schedules run through it; see [docs/cloud.md](cloud.md#background-jobs-on-qstash). Without QStash, `CRON_SECRET` plus `apps/web/vercel.json` (daily on Hobby) or the GitHub Actions tick is the fallback.
 - Run migrations from your machine: `DATABASE_URL='…' pnpm db:migrate`.
 
@@ -65,7 +63,7 @@ Restore with `gunzip -c file.sql.gz | docker compose exec -T postgres psql -U bo
 
 - **Logs:** `docker compose logs -f app`. Email in `console` mode prints here.
 - **Background jobs:** the container runs a pg-boss worker (reminders, retries) using the same database; nothing else to deploy. Set `JOBS_WORKER=false` only on serverless.
-- **Scaling:** the app is stateless; run several replicas behind a load balancer with one Postgres. Uploads must then use `s3`.
+- **Scaling:** the app is stateless; run several replicas behind a load balancer with one Postgres.
 - **Health:** `GET /api/domains/check?host=<APP_URL host>` returns 200 when the app and database are up.
 
 ## 6. Environment reference

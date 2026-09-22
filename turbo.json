@@ -13,11 +13,9 @@
         "APP_URL",
         "ROOT_DOMAIN",
         "TENANCY",
-        "STORAGE_*",
         "EMAIL_*",
         "RESEND_API_KEY",
-        "SMTP_*",
-        "S3_*"
+        "SMTP_*"
       ]
     },
     "dev": { "cache": false, "persistent": true },

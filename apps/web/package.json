@@ -26,7 +26,6 @@
     "@bookly/db": "workspace:*",
     "@bookly/email": "workspace:*",
     "@bookly/jobs": "workspace:*",
-    "@bookly/storage": "workspace:*",
     "@daily-co/daily-js": "^0.92.2",
     "@date-fns/tz": "^1.5.0",
     "@react-email/components": "^1.0.12",

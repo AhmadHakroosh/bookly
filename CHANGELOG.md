@@ -6,6 +6,10 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 Everything below is on `main` ahead of the first release, which will be tagged `v0.1.0`.
 
+### Removed
+
+- The unused storage layer (`packages/storage`, `STORAGE_*` and `S3_*` variables, the MinIO service in Compose): nothing in Bookly uploads files; profile photos and logos are URLs
+
 ### Added
 
 - Cloud deployment target bookly-app.io: `www` redirects to the apex on the platform host, the update-check default points at `https://bookly-app.io/api/telemetry`, and `docs/cloud.md` gains a Vercel deployment walkthrough (domains, env import, migrations, Stripe endpoints)
