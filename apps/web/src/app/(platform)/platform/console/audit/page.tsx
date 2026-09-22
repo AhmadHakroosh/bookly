@@ -18,7 +18,7 @@ async function AuditPage() {
       <ul className="divide-y rounded-xl border text-sm">
         {rows.map((a) => (
           <li key={a.id} className="flex flex-wrap items-center justify-between gap-3 p-3">
-            <span>
+            <span className="min-w-0 break-words">
               <span className="font-mono text-xs">{a.action}</span> · {a.actorEmail} ·{" "}
               {a.targetType === "workspace" && a.targetId ? (
                 <Link href={`/console/${a.targetId}`} className="underline underline-offset-4">

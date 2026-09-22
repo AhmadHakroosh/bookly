@@ -15,20 +15,28 @@ async function HealthPage() {
     <div className="space-y-6">
       <ul className="divide-y rounded-xl border text-sm">
         {checks.map((c) => (
-          <li key={c.name} className="flex items-center gap-3 p-3">
+          <li key={c.name} className="flex items-start gap-3 p-3">
             {c.ok ? (
-              <CheckCircle2Icon className="size-4 shrink-0 text-emerald-500" aria-label="OK" />
+              <CheckCircle2Icon
+                className="mt-0.5 size-4 shrink-0 text-emerald-500"
+                aria-label="OK"
+              />
             ) : (
-              <XCircleIcon className="size-4 shrink-0 text-destructive" aria-label="Attention" />
+              <XCircleIcon
+                className="mt-0.5 size-4 shrink-0 text-destructive"
+                aria-label="Attention"
+              />
             )}
-            <span className="w-56 shrink-0 font-medium">{c.name}</span>
-            <span className="text-muted-foreground">{c.detail}</span>
+            <div className="min-w-0 flex-1 sm:flex sm:items-start sm:gap-3">
+              <span className="block font-medium sm:w-56 sm:shrink-0">{c.name}</span>
+              <span className="block break-words text-muted-foreground">{c.detail}</span>
+            </div>
           </li>
         ))}
       </ul>
       <section className="rounded-xl border p-4 text-sm">
         <h3 className="text-base font-semibold tracking-tight">Today across all workspaces</h3>
-        <p className="mt-1 text-muted-foreground">
+        <p className="mt-1 break-words text-muted-foreground">
           {Object.keys(usage).length
             ? Object.entries(usage)
                 .map(([k, v]) => `${k}: ${v}`)

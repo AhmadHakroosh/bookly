@@ -75,7 +75,7 @@ async function ConsoleHome({ searchParams }: PageProps<"/platform/console">) {
           name="q"
           defaultValue={q}
           placeholder="Search name, slug or owner email"
-          className="h-8 w-72 rounded-lg border bg-background px-2 text-sm"
+          className="h-8 w-full min-w-0 rounded-lg border bg-background px-2 text-sm sm:w-72"
         />
         <select
           name="plan"
@@ -109,7 +109,7 @@ async function ConsoleHome({ searchParams }: PageProps<"/platform/console">) {
       <ul className="divide-y rounded-xl border text-sm">
         {rows.map(({ ws, ownerEmail, bookings, lastBookingAt }) => (
           <li key={ws.id} className="flex flex-wrap items-center justify-between gap-3 p-4">
-            <div className="min-w-0">
+            <div className="min-w-0 break-words">
               <p className="font-medium">
                 <Link href={`/console/${ws.id}`} className="hover:underline">
                   {ws.name}

@@ -82,8 +82,8 @@ async function InstallsPage() {
                   )}
                 </td>
                 <td className="p-3">{r.nodeVersion ?? "—"}</td>
-                <td className="p-3">{fmtDateTime(r.firstSeenAt, "UTC")}</td>
-                <td className="p-3">{fmtDateTime(r.lastSeenAt, "UTC")}</td>
+                <td className="p-3 whitespace-nowrap">{fmtDateTime(r.firstSeenAt, "UTC")}</td>
+                <td className="p-3 whitespace-nowrap">{fmtDateTime(r.lastSeenAt, "UTC")}</td>
                 <td className="p-3">{r.pings}</td>
                 <td className="p-3 text-xs text-muted-foreground">
                   {r.stats

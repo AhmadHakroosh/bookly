@@ -24,8 +24,8 @@ export const metadata = { title: "Workspace", robots: { index: false } };
 function Row({ k, v }: { k: string; v: React.ReactNode }) {
   return (
     <div className="flex gap-3 py-1 text-sm">
-      <dt className="w-40 shrink-0 text-muted-foreground">{k}</dt>
-      <dd className="min-w-0 flex-1">{v}</dd>
+      <dt className="w-28 shrink-0 text-muted-foreground sm:w-40">{k}</dt>
+      <dd className="min-w-0 flex-1 break-words">{v}</dd>
     </div>
   );
 }
@@ -95,8 +95,8 @@ async function WorkspacePage({ params }: PageProps<"/platform/console/[id]">) {
           <h4 className="mt-4 text-sm font-semibold">Members</h4>
           <ul className="mt-1 space-y-1 text-sm">
             {d.members.map((m) => (
-              <li key={m.userId} className="flex items-center gap-2">
-                <span>{m.email}</span>
+              <li key={m.userId} className="flex flex-wrap items-center gap-2">
+                <span className="break-all">{m.email}</span>
                 <Badge variant="secondary">{m.role}</Badge>
                 {m.banned && <Badge variant="destructive">banned</Badge>}
               </li>
@@ -145,7 +145,7 @@ async function WorkspacePage({ params }: PageProps<"/platform/console/[id]">) {
                 <SubmitButton variant="outline">Unsuspend</SubmitButton>
               </form>
             ) : (
-              <form action={suspendWorkspace.bind(null, ws.id)} className="flex gap-1">
+              <form action={suspendWorkspace.bind(null, ws.id)} className="flex flex-wrap gap-1">
                 <input
                   name="reason"
                   placeholder="Reason"
@@ -201,8 +201,11 @@ async function WorkspacePage({ params }: PageProps<"/platform/console/[id]">) {
           <h3 className="text-base font-semibold tracking-tight">Recent bookings</h3>
           <ul className="mt-2 divide-y text-sm">
             {d.recentBookings.map((b) => (
-              <li key={b.id} className="flex items-center justify-between gap-2 py-1.5">
-                <span className="truncate">
+              <li
+                key={b.id}
+                className="flex flex-col gap-0.5 py-1.5 sm:flex-row sm:items-center sm:justify-between sm:gap-2"
+              >
+                <span className="min-w-0 break-words sm:truncate">
                   {b.title ?? "Meeting"} · {b.attendeeEmail}
                 </span>
                 <span className="shrink-0 text-xs text-muted-foreground">
@@ -224,7 +227,7 @@ async function WorkspacePage({ params }: PageProps<"/platform/console/[id]">) {
         <ul className="mt-2 divide-y text-sm">
           {d.audit.map((a) => (
             <li key={a.id} className="flex flex-wrap justify-between gap-2 py-1.5">
-              <span>
+              <span className="min-w-0 break-words">
                 <span className="font-mono text-xs">{a.action}</span> by {a.actorEmail}
                 {Object.keys(a.data).length ? (
                   <span className="text-muted-foreground"> · {JSON.stringify(a.data)}</span>

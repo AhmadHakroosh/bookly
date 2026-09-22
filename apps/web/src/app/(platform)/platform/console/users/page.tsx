@@ -20,16 +20,16 @@ async function UsersPage({ searchParams }: PageProps<"/platform/console/users">)
           name="q"
           defaultValue={q}
           placeholder="Search email or name"
-          className="h-8 w-72 rounded-lg border bg-background px-2 text-sm"
+          className="h-8 min-w-0 flex-1 rounded-lg border bg-background px-2 text-sm sm:w-72 sm:flex-none"
         />
-        <button type="submit" className="h-8 rounded-lg border px-3 text-sm">
+        <button type="submit" className="h-8 shrink-0 rounded-lg border px-3 text-sm">
           Search
         </button>
       </form>
       <ul className="divide-y rounded-xl border text-sm">
         {rows.map(({ u, lastSeen, workspaces }) => (
           <li key={u.id} className="flex flex-wrap items-center justify-between gap-3 p-4">
-            <div className="min-w-0">
+            <div className="min-w-0 break-words">
               <p className="font-medium">
                 {u.name || u.email} <span className="text-muted-foreground">· {u.email}</span>
                 {u.banned && (

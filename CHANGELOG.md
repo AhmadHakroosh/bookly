@@ -8,6 +8,7 @@ Everything below is on `main` ahead of the first release, which will be tagged `
 
 ### Added
 
+- Operator console reads on a phone: the tab strip wraps, health checks stack their detail under the name, search rows stay on one line, long emails and JSON wrap inside their cards, and the installs table scrolls sideways with dates on one line
 - Branding in Settings: a logo URL and accent colour used in every guest email, on the plans that remove Bookly branding (Pro, Team, and every self-hosted install); Free keeps the Bookly mark and footer
 - Live captions under the built-in video call while auto-capture is on: the last lines transcribed, with speaker and time, as they arrive
 - Landing page: “Emails in your name” section with a mock of the branded confirmation, proposal review and pay button in the follow-up copy, a “Your data, your call” card, two new comparison rows (branded emails, self-service export and deletion) and a note on self-host update notices and opt-in telemetry

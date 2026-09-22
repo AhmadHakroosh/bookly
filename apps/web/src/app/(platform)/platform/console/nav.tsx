@@ -20,13 +20,16 @@ export function ConsoleNav() {
           !TABS.some(([h]) => h !== "/console" && pathname.startsWith(h)))
       : pathname.startsWith(href);
   return (
-    <nav className="flex gap-1 rounded-lg border p-1 text-sm" aria-label="Console">
+    <nav
+      className="flex max-w-full flex-wrap gap-1 rounded-lg border p-1 text-sm"
+      aria-label="Console"
+    >
       {TABS.map(([href, label]) => (
         <Link
           key={href}
           href={href}
           aria-current={on(href) ? "page" : undefined}
-          className={`rounded-md px-3 py-1 ${on(href) ? "bg-muted font-medium" : "text-muted-foreground hover:text-foreground"}`}
+          className={`rounded-md px-3 py-1 whitespace-nowrap ${on(href) ? "bg-muted font-medium" : "text-muted-foreground hover:text-foreground"}`}
         >
           {label}
         </Link>
