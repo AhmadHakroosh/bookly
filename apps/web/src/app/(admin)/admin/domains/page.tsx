@@ -3,14 +3,6 @@ import { loadEnv } from "@bookly/config";
 import { Suspense } from "react";
 import { Badge } from "@/components/ui/badge";
 import { SubmitButton } from "@/components/submit-button";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { dnsTarget, listDomains, VERIFY_PREFIX } from "@/server/domains";
 import { getCurrentWorkspace } from "@/server/workspace";
 import { checkDomain, makePrimary, removeDomain } from "./actions";
@@ -51,67 +43,61 @@ async function DomainsPage() {
 
       <AddDomainForm />
 
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Host</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead />
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {domains.map((d) => (
-            <TableRow key={d.id}>
-              <TableCell>
-                <span className="font-mono text-sm">{d.host}</span>
-                {d.isPrimary && (
-                  <Badge variant="secondary" className="ml-2">
-                    Primary
-                  </Badge>
-                )}
-                {!d.verifiedAt && d.verificationToken && (
-                  <div className="mt-2 space-y-1 text-xs text-muted-foreground">
-                    <p>
-                      1. Add a <strong>TXT</strong> record at{" "}
-                      <code>
-                        {VERIFY_PREFIX}.{d.host}
-                      </code>{" "}
-                      with value <code>{d.verificationToken}</code>
-                    </p>
-                    <p>
-                      2. Point <code>{d.host}</code> at <code>{target}</code> (CNAME, or an A record
-                      to the same IP)
-                    </p>
-                    {d.lastError && <p className="text-destructive">Last check: {d.lastError}</p>}
-                  </div>
-                )}
-              </TableCell>
-              <TableCell>
+      <ul className="divide-y rounded-xl border">
+        {domains.map((d) => (
+          <li key={d.id} className="space-y-3 p-4">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div className="flex min-w-0 flex-wrap items-center gap-2">
+                <span className="font-mono text-sm break-all">{d.host}</span>
                 <Badge variant={d.verifiedAt ? "default" : "outline"}>
                   {d.verifiedAt ? "Verified" : "Pending"}
                 </Badge>
-              </TableCell>
-              <TableCell className="text-right whitespace-nowrap">
+                {d.isPrimary && <Badge variant="secondary">Primary</Badge>}
+              </div>
+              <div className="flex flex-wrap gap-1">
                 {!d.verifiedAt && (
-                  <form action={checkDomain.bind(null, d.id)} className="inline">
+                  <form action={checkDomain.bind(null, d.id)}>
                     <SubmitButton variant="outline">Verify</SubmitButton>
                   </form>
                 )}
                 {d.verifiedAt && !d.isPrimary && (
-                  <form action={makePrimary.bind(null, d.id)} className="inline">
+                  <form action={makePrimary.bind(null, d.id)}>
                     <SubmitButton variant="ghost">Make primary</SubmitButton>
                   </form>
                 )}
                 {!d.isPrimary && (
-                  <form action={removeDomain.bind(null, d.id)} className="inline">
+                  <form action={removeDomain.bind(null, d.id)}>
                     <SubmitButton variant="ghost">Remove</SubmitButton>
                   </form>
                 )}
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+              </div>
+            </div>
+            {!d.verifiedAt && d.verificationToken && (
+              <ol className="space-y-2 rounded-lg bg-muted/50 p-3 text-xs text-muted-foreground">
+                <li className="break-words">
+                  1. Add a <strong>TXT</strong> record at{" "}
+                  <code className="break-all text-foreground">
+                    {VERIFY_PREFIX}.{d.host}
+                  </code>{" "}
+                  with the value{" "}
+                  <code className="break-all text-foreground">{d.verificationToken}</code>
+                </li>
+                <li className="break-words">
+                  2. Point <code className="break-all text-foreground">{d.host}</code> at{" "}
+                  <code className="break-all text-foreground">{target}</code> (CNAME, or an A record
+                  to the same IP), then press Verify.
+                </li>
+                {d.lastError && (
+                  <li className="break-words text-destructive">Last check: {d.lastError}</li>
+                )}
+              </ol>
+            )}
+          </li>
+        ))}
+        {domains.length === 0 && (
+          <li className="p-6 text-center text-sm text-muted-foreground">No domains yet.</li>
+        )}
+      </ul>
 
       <div className="rounded-xl border p-4 text-sm text-muted-foreground">
         <p className="font-medium text-foreground">HTTPS</p>

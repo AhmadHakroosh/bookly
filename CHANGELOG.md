@@ -6,6 +6,10 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 Everything below is on `main` ahead of the first release, which will be tagged `v0.1.0`.
 
+### Fixed
+
+- Admin → Domains: a newly added custom domain no longer stretches the list off the page; each domain is a card and the TXT record, token and target wrap on any screen
+
 ### Removed
 
 - The unused storage layer (`packages/storage`, `STORAGE_*` and `S3_*` variables, the MinIO service in Compose): nothing in Bookly uploads files; profile photos and logos are URLs
