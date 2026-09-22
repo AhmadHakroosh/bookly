@@ -1,3 +1,4 @@
+import { connection } from "next/server";
 import { Suspense } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -7,6 +8,7 @@ import { banUser, unbanUser } from "../actions";
 export const metadata = { title: "Users", robots: { index: false } };
 
 async function UsersPage({ searchParams }: PageProps<"/platform/console/users">) {
+  await connection();
   const sp = await searchParams;
   const q = typeof sp.q === "string" ? sp.q : "";
   const rows = await listUsersForConsole(q);

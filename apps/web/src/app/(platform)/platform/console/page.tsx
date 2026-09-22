@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { connection } from "next/server";
 import { Suspense } from "react";
 import { PLANS } from "@bookly/cloud";
 import { Badge } from "@/components/ui/badge";
@@ -20,6 +21,7 @@ function Stat({ label, value, hint }: { label: string; value: string | number; h
 }
 
 async function ConsoleHome({ searchParams }: PageProps<"/platform/console">) {
+  await connection();
   const sp = await searchParams;
   const q = typeof sp.q === "string" ? sp.q : "";
   const plan = typeof sp.plan === "string" ? sp.plan : "";

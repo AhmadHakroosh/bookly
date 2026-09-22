@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { connection } from "next/server";
 import { Suspense } from "react";
 import { PLANS } from "@bookly/cloud";
 import { Badge } from "@/components/ui/badge";
@@ -30,6 +31,7 @@ function Row({ k, v }: { k: string; v: React.ReactNode }) {
 
 async function WorkspacePage({ params }: PageProps<"/platform/console/[id]">) {
   const { id } = await params;
+  await connection(); // stats use the current time; decide at request time, never at build
   const d = await workspaceDetail(id);
   if (!d) notFound();
   const { ws } = d;
