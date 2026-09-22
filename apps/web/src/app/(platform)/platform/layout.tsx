@@ -247,7 +247,7 @@ function Shell({ children }: { children: React.ReactNode }) {
         <div className="border-t">
           <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-2 px-4 py-5 text-xs text-muted-foreground">
             <span className="inline-flex items-center gap-2">
-              <LogoMark className="size-4" />© {new Date().getFullYear()} {SITE.name}. Built by{" "}
+              <LogoMark className="size-4" />© {SITE.updated.slice(0, 4)} {SITE.name}. Built by{" "}
               {SITE.operator}.
             </span>
             <span>
