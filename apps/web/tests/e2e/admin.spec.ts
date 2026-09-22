@@ -55,3 +55,26 @@ test.describe("admin", () => {
     }
   });
 });
+
+test.describe("pending state", () => {
+  test.use({ storageState: STORAGE });
+
+  test("a submit button shows progress while its action runs", async ({ page }) => {
+    // Hold the server action long enough to observe the pending state.
+    await page.route("**/admin", async (route) => {
+      if (route.request().method() === "POST") await new Promise((r) => setTimeout(r, 1200));
+      await route.continue();
+    });
+    await page.goto("/admin");
+    const title = `Pending ${Date.now()}`;
+    await page.getByPlaceholder("Add a task…").fill(title);
+    const add = page.getByRole("button", { name: "Add" });
+    await add.click();
+    await expect(add).toBeDisabled();
+    await expect(add).toHaveAttribute("aria-busy", "true");
+    await expect(add.getByRole("status", { name: "Loading" })).toBeVisible();
+    await page.unroute("**/admin");
+    await expect(page.getByText(title)).toBeVisible();
+    await expect(add).toBeEnabled();
+  });
+});
