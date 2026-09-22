@@ -32,6 +32,13 @@ const settingsSchema = z.object({
   cancellationSubject: z.string().max(200).default(""),
   cancellationBody: z.string().max(4000).default(""),
   telemetryStats: z.enum(["on"]).optional(),
+  logoUrl: z.string().trim().max(500).default(""),
+  accent: z
+    .string()
+    .trim()
+    .regex(/^#[0-9a-fA-F]{6}$/, "Use a hex colour like #e8965a")
+    .or(z.literal(""))
+    .default(""),
 });
 
 export type SettingsState = { ok?: boolean; error?: string; fields?: Record<string, string[]> };
@@ -62,6 +69,8 @@ export async function updateWorkspaceSettings(
     cancellationSubject,
     cancellationBody,
     telemetryStats,
+    logoUrl,
+    accent,
     ...rest
   } = parsed.data;
   // A blank key keeps the stored one only for the same provider; switching CRMs needs a new
@@ -92,6 +101,11 @@ export async function updateWorkspaceSettings(
         ...workspace.settings,
         blockedEmails: parseBlocklist(blocklist),
         telemetryStats: telemetryStats === "on",
+        branding: {
+          ...workspace.settings.branding,
+          logoUrl: /^https?:\/\//.test(logoUrl) ? logoUrl : null,
+          accent: accent || undefined,
+        },
         crm: crm?.apiKey ? crm : null,
         templates: {
           proposal: { subject: proposalSubject || undefined, body: proposalBody || undefined },

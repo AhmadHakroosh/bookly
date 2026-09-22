@@ -1,7 +1,7 @@
 "use client";
 
 import DailyIframe, { type DailyCall } from "@daily-co/daily-js";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 type Line = { t: number; speaker: string; text: string };
 
@@ -23,6 +23,8 @@ export function Call({
   attendeeName: string;
 }) {
   const container = useRef<HTMLDivElement>(null);
+  /** The last few transcribed lines, shown under the call while capture is on. */
+  const [captions, setCaptions] = useState<{ t: number; speaker: string; text: string }[]>([]);
   useEffect(() => {
     if (!container.current) return;
     const call: DailyCall = DailyIframe.createFrame(container.current, {
@@ -60,11 +62,13 @@ export function Call({
         if (!ev.text?.trim()) return;
         const at = ev.timestamp ? new Date(ev.timestamp).getTime() : Date.now();
         if (startedAt === null) startedAt = at;
-        queue.push({
+        const line = {
           t: Math.max(0, (at - startedAt) / 1000),
           speaker: labelFor(ev.participantId),
           text: ev.text,
-        });
+        };
+        queue.push(line);
+        setCaptions((prev) => [...prev, line].slice(-6));
         if (queue.length >= 10) flush();
       });
       timer = setInterval(flush, 5000);
@@ -78,5 +82,35 @@ export function Call({
       void call.destroy();
     };
   }, [url, room, capture, hostName, attendeeName]);
-  return <div ref={container} className="w-full flex-1" />;
+  return (
+    <div className="flex w-full flex-1 flex-col">
+      <div ref={container} className="w-full flex-1" />
+      {capture && (
+        <div
+          className="border-t border-white/10 bg-neutral-950 px-4 py-2 font-mono text-xs text-white/85"
+          aria-live="polite"
+          aria-label="Live transcript"
+        >
+          {captions.length === 0 ? (
+            <p className="text-white/50">Live transcript: lines appear here as people speak.</p>
+          ) : (
+            <ol className="space-y-0.5">
+              {captions.map((c, i) => (
+                <li key={`${c.t}-${i}`}>
+                  <span className="text-white/40">[{formatClock(c.t)}]</span>{" "}
+                  <span className="text-amber-300">{c.speaker}:</span> {c.text}
+                </li>
+              ))}
+            </ol>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function formatClock(seconds: number) {
+  const m = Math.floor(seconds / 60);
+  const sec = Math.floor(seconds % 60);
+  return `${String(m).padStart(2, "0")}:${String(sec).padStart(2, "0")}`;
 }

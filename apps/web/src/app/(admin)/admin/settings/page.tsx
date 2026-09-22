@@ -43,6 +43,8 @@ async function SettingsPage() {
           cancellationSubject: workspace.settings.templates?.cancellation?.subject ?? "",
           cancellationBody: workspace.settings.templates?.cancellation?.body ?? "",
           telemetryStats: !!workspace.settings.telemetryStats,
+          logoUrl: workspace.settings.branding?.logoUrl ?? "",
+          accent: workspace.settings.branding?.accent ?? "",
         }}
         selfHosted={!isCloud()}
         zones={timezoneList()}

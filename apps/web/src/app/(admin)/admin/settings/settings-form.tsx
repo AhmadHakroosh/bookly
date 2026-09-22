@@ -31,6 +31,8 @@ type Values = {
   cancellationSubject: string;
   cancellationBody: string;
   telemetryStats: boolean;
+  logoUrl: string;
+  accent: string;
 };
 
 export function SettingsForm({
@@ -209,6 +211,49 @@ export function SettingsForm({
               </Field>
             </div>
           )}
+        </fieldset>
+        <fieldset className="space-y-3 rounded-lg border p-4">
+          <legend className="px-1 text-base font-semibold tracking-tight">Branding</legend>
+          <FieldDescription>
+            Shown in every email guests receive: your logo next to the workspace name, and your
+            colour on buttons. Leave blank for the Bookly mark and accent.
+          </FieldDescription>
+          <div className="grid gap-4 sm:grid-cols-[1fr_140px]">
+            <Field>
+              <FieldLabel htmlFor="logoUrl">Logo URL</FieldLabel>
+              <Input
+                id="logoUrl"
+                name="logoUrl"
+                type="url"
+                defaultValue={workspace.logoUrl}
+                placeholder="https://yourdomain.com/logo.png"
+              />
+              <FieldDescription>
+                Square PNG or JPG, at least 112×112, on a public URL.
+              </FieldDescription>
+            </Field>
+            <Field>
+              <FieldLabel htmlFor="accent">Accent colour</FieldLabel>
+              <div className="flex items-center gap-2">
+                <input
+                  type="color"
+                  aria-label="Pick accent colour"
+                  defaultValue={workspace.accent || "#e8965a"}
+                  onChange={(e) => {
+                    const t = document.getElementById("accent") as HTMLInputElement | null;
+                    if (t) t.value = e.target.value;
+                  }}
+                  className="size-8 cursor-pointer rounded border bg-transparent p-0.5"
+                />
+                <Input
+                  id="accent"
+                  name="accent"
+                  defaultValue={workspace.accent}
+                  placeholder="#e8965a"
+                />
+              </div>
+            </Field>
+          </div>
         </fieldset>
         <fieldset className="space-y-3 rounded-lg border p-4">
           <legend className="px-1 text-base font-semibold tracking-tight">Guest emails</legend>
