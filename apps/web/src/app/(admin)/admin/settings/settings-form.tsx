@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect } from "react";
+import { useActionState, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -36,6 +36,7 @@ export function SettingsForm({
   selfHosted?: boolean;
 }) {
   const [state, action, pending] = useActionState(updateWorkspaceSettings, {} as SettingsState);
+  const [crm, setCrm] = useState<Values["crmProvider"]>(workspace.crmProvider);
   useEffect(() => {
     if (state.ok) toast.success("Settings saved");
     else if (state.error && !state.fields) toast.error(state.error);
@@ -110,43 +111,96 @@ export function SettingsForm({
         <fieldset className="space-y-3 rounded-lg border p-4">
           <legend className="px-1 text-base font-semibold tracking-tight">CRM sync</legend>
           <FieldDescription>
-            Contacts, stage changes, meeting notes and sent emails are mirrored to your CRM. The key
-            is stored encrypted.{workspace.crmConnected ? " Connected." : ""}
+            Mirror contacts, stage changes, meeting notes and sent emails to the CRM your team
+            already uses. Pick one; the token is stored encrypted.
           </FieldDescription>
-          <div className="grid gap-4 sm:grid-cols-3">
-            <Field>
-              <FieldLabel htmlFor="crmProvider">Provider</FieldLabel>
-              <select
-                id="crmProvider"
-                name="crmProvider"
-                defaultValue={workspace.crmProvider}
-                className="h-8 rounded-lg border bg-background px-2 text-sm"
+          <div className="grid gap-2 sm:grid-cols-3" role="radiogroup" aria-label="CRM">
+            {(
+              [
+                ["", "None", "Keep contacts in Bookly only."],
+                ["hubspot", "HubSpot", "Contacts, notes and stages as HubSpot properties."],
+                ["pipedrive", "Pipedrive", "Persons, notes and stages in your Pipedrive account."],
+              ] as const
+            ).map(([value, label, hint]) => (
+              <label
+                key={value}
+                className={`flex cursor-pointer flex-col gap-1 rounded-lg border p-3 text-sm ${crm === value ? "border-foreground bg-muted/50" : "hover:bg-muted/30"}`}
               >
-                <option value="">None</option>
-                <option value="hubspot">HubSpot (private app token)</option>
-                <option value="pipedrive">Pipedrive (API token)</option>
-              </select>
-            </Field>
+                <span className="flex items-center gap-2 font-medium">
+                  <input
+                    type="radio"
+                    name="crmProvider"
+                    value={value}
+                    checked={crm === value}
+                    onChange={() => setCrm(value)}
+                    className="accent-foreground"
+                  />
+                  {label}
+                  {value && workspace.crmProvider === value && workspace.crmConnected && (
+                    <span className="ml-auto text-xs font-normal text-muted-foreground">
+                      Connected
+                    </span>
+                  )}
+                </span>
+                <span className="text-xs text-muted-foreground">{hint}</span>
+              </label>
+            ))}
+          </div>
+          {crm === "hubspot" && (
             <Field>
-              <FieldLabel htmlFor="crmApiKey">API key</FieldLabel>
+              <FieldLabel htmlFor="crmApiKey">HubSpot private app access token</FieldLabel>
               <Input
                 id="crmApiKey"
                 name="crmApiKey"
                 type="password"
                 autoComplete="off"
-                placeholder={workspace.crmConnected ? "•••••• (unchanged)" : ""}
+                placeholder={
+                  workspace.crmProvider === "hubspot" && workspace.crmConnected
+                    ? "•••••• (unchanged)"
+                    : "pat-eu1-…"
+                }
               />
+              <FieldDescription>
+                HubSpot → Settings → Integrations → Private apps. The app needs the
+                crm.objects.contacts and crm.objects.notes read/write scopes.
+              </FieldDescription>
             </Field>
-            <Field>
-              <FieldLabel htmlFor="crmCompanyDomain">Pipedrive company domain</FieldLabel>
-              <Input
-                id="crmCompanyDomain"
-                name="crmCompanyDomain"
-                defaultValue={workspace.crmCompanyDomain}
-                placeholder="acme"
-              />
-            </Field>
-          </div>
+          )}
+          {crm === "pipedrive" && (
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Field>
+                <FieldLabel htmlFor="crmApiKey">Pipedrive API token</FieldLabel>
+                <Input
+                  id="crmApiKey"
+                  name="crmApiKey"
+                  type="password"
+                  autoComplete="off"
+                  placeholder={
+                    workspace.crmProvider === "pipedrive" && workspace.crmConnected
+                      ? "•••••• (unchanged)"
+                      : ""
+                  }
+                />
+                <FieldDescription>
+                  Pipedrive → your avatar → Personal preferences → API.
+                </FieldDescription>
+              </Field>
+              <Field>
+                <FieldLabel htmlFor="crmCompanyDomain">Company domain</FieldLabel>
+                <div className="flex items-center gap-1 text-sm">
+                  <Input
+                    id="crmCompanyDomain"
+                    name="crmCompanyDomain"
+                    defaultValue={workspace.crmCompanyDomain}
+                    placeholder="acme"
+                    className="max-w-40"
+                  />
+                  <span className="text-muted-foreground">.pipedrive.com</span>
+                </div>
+                <FieldDescription>The first part of the address you sign in at.</FieldDescription>
+              </Field>
+            </div>
+          )}
         </fieldset>
         <fieldset className="space-y-3 rounded-lg border p-4">
           <legend className="px-1 text-base font-semibold tracking-tight">Email templates</legend>

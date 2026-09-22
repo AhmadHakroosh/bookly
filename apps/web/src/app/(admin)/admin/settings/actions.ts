@@ -49,15 +49,25 @@ export async function updateWorkspaceSettings(
     telemetryStats,
     ...rest
   } = parsed.data;
-  // A blank key keeps the stored one; no provider removes the connection.
+  // A blank key keeps the stored one only for the same provider; switching CRMs needs a new
+  // token, and no provider removes the connection.
+  const sameProvider = workspace.settings.crm?.provider === crmProvider;
   const crm =
     crmProvider === ""
       ? null
       : {
           provider: crmProvider,
-          apiKey: crmApiKey ? encrypt(crmApiKey) : (workspace.settings.crm?.apiKey ?? ""),
+          apiKey: crmApiKey
+            ? encrypt(crmApiKey)
+            : sameProvider
+              ? (workspace.settings.crm?.apiKey ?? "")
+              : "",
           companyDomain: crmCompanyDomain || undefined,
         };
+  if (crmProvider !== "" && !crm?.apiKey)
+    return {
+      error: `Enter your ${crmProvider === "hubspot" ? "HubSpot access token" : "Pipedrive API token"} to connect.`,
+    };
   await db()
     .update(schema.workspaces)
     .set({
