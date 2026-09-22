@@ -30,7 +30,7 @@ export async function PaymentsCard({ ws, canManage }: { ws: Workspace; canManage
         the money is paid out to you by Stripe.
         {fee > 0
           ? ` Bookly keeps a ${fee}% platform fee on each payment; Stripe's own fees apply as usual.`
-          : " Stripe's own fees apply; Bookly does not add a fee."}
+          : " Stripe's own fees apply; no platform fee is set at the moment."}
       </p>
       {!allowed ? (
         <p className="rounded-md border border-(--brand)/40 bg-(--brand)/10 p-3 text-sm">

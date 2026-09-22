@@ -6,6 +6,10 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 Everything below is on `main` ahead of the first release, which will be tagged `v0.1.0`.
 
+### Changed
+
+- The platform fee on hosted paid bookings defaults to 5% and is published: terms §6 and a pricing FAQ entry explain that it is deducted before payout, returned on refunds and does not apply to self-hosted installs; the pricing comparison row says so too. Legal date bumped to September 23, 2026
+
 ### Fixed
 
 - Admin → Domains: a newly added custom domain no longer stretches the list off the page; each domain is a card and the TXT record, token and target wrap on any screen

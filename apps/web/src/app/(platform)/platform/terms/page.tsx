@@ -83,8 +83,16 @@ export default function TermsPage() {
       </ul>
       <h2>6. Payments you take through Bookly</h2>
       <p>
-        Paid bookings are processed by Stripe under your own Stripe account and Stripe&apos;s terms.
-        Bookly does not hold your funds, and refunds and disputes are between you and your guests.
+        Paid bookings and payment requests are processed by Stripe under your own Stripe account and
+        Stripe&apos;s terms. Bookly does not hold your funds, and refunds and disputes are between
+        you and your guests.
+      </p>
+      <p>
+        Bookly charges a platform fee of <strong>5%</strong> of each payment your guests make
+        through Bookly, deducted automatically from the payment before Stripe pays you out.
+        Stripe&apos;s own processing fees apply on top. When you refund a payment, the platform fee
+        is returned with it. The fee applies to the hosted service only; self-hosted installs pay
+        nothing to Bookly. We may change the fee with at least 30 days&apos; notice by email.
       </p>
       <h2>7. AI features</h2>
       <p>

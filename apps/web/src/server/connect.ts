@@ -15,7 +15,8 @@ import { invalidateHostCache } from "./tenancy";
  */
 
 const STATE_KEY = "payments";
-export const DEFAULT_FEE_PERCENT = 0;
+/** The published rate (terms §6, pricing FAQ); the console can override it. */
+export const DEFAULT_FEE_PERCENT = 5;
 
 export type ConnectStatus = NonNullable<Workspace["settings"]["payments"]>;
 

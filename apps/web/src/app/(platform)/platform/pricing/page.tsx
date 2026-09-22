@@ -28,7 +28,7 @@ const ROWS: [string, (l: Limits) => string | boolean][] = [
   ["Contacts, timeline and Meeting Inbox", () => true],
   ["Pre-meeting briefings", () => true],
   ["Group sessions, series, waitlists, routing", () => true],
-  ["Paid bookings via Stripe", (l) => l.payments],
+  ["Paid bookings via Stripe (5% platform fee)", (l) => l.payments],
   ["Custom reminders, SMS and WhatsApp", (l) => l.workflows],
   ["Round-robin and collective events", (l) => l.teamScheduling],
   [
@@ -58,6 +58,10 @@ const FAQ: [string, string][] = [
   [
     "Monthly or yearly?",
     "Both. Yearly is charged up front and works out to two months free ($120 a year for Pro, $100 a member for Team). Yearly plans renew each year; cancelling stops the renewal and the plan stays active until the year ends. Partial years are not refunded unless the law requires it.",
+  ],
+  [
+    "What does a paid booking cost me?",
+    "Guests pay into your own Stripe account, which you connect from Settings. Bookly keeps 5% of each payment as a platform fee, taken automatically before Stripe pays you out; Stripe's processing fee applies on top. Refund a booking and the fee comes back with it. Self-hosted installs pay no fee.",
   ],
   [
     "Can I self-host instead?",

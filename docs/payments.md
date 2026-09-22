@@ -45,8 +45,9 @@ Operator setup, on top of the keys above:
   `checkout.session.completed`, `checkout.session.async_payment_succeeded`, `account.updated`.
   Its signing secret goes into `STRIPE_CONNECT_WEBHOOK_SECRET`.
 - Console → Payments shows what the keys enable, the connected hosts and their status, lets you
-  disconnect one, and sets the **platform fee** (percentage of every payment; per-workspace
-  override on the workspace page). Fee changes are audited.
+  disconnect one, and sets the **platform fee** (default 5%, the rate published in the terms and
+  pricing FAQ; per-workspace override on the workspace page). Fee changes are audited; change the
+  published copy if you change the rate.
 
 Self-hosted installs keep the direct mode: the operator is the host, so one account is right.
 
