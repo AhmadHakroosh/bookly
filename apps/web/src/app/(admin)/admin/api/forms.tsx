@@ -25,7 +25,7 @@ export function ApiKeyForm() {
           name="name"
           placeholder="Key name (e.g. personal workspace)"
           required
-          className="flex-1"
+          className="min-w-56 flex-1"
         />
         <Button type="submit" disabled={pending}>
           Create key
@@ -58,9 +58,13 @@ export function WebhookForm() {
           type="url"
           placeholder="https://example.com/hooks/bookly"
           required
-          className="flex-1"
+          className="min-w-56 flex-1"
         />
-        <Input name="description" placeholder="Description (optional)" className="w-48" />
+        <Input
+          name="description"
+          placeholder="Description (optional)"
+          className="min-w-40 flex-1 sm:w-48 sm:flex-none"
+        />
         <Button type="submit" disabled={pending}>
           Add webhook
         </Button>
