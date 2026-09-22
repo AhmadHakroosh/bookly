@@ -4,6 +4,7 @@ import type { Contact, Workspace } from "@bookly/db/schema";
 import { sendEmail } from "@bookly/email";
 import { db } from "@/lib/db";
 import { brandFor } from "@/emails/brand";
+import type { EmailBrand } from "@/emails/layout";
 import { letterMail } from "@/emails/booking";
 import { logContactEvent, updateContact, noteToCrm } from "./contacts";
 import { DEFAULT_TEMPLATES, type Template } from "./outreach-text";
@@ -28,9 +29,10 @@ export function renderOutreach(
   subject: string,
   body: string,
   payLink?: string,
+  brand: EmailBrand = brandFor(ws),
 ) {
   return letterMail({
-    brand: brandFor(ws),
+    brand,
     subject: subject.trim().slice(0, 200),
     body: body.trim().slice(0, 8000),
     signedBy,

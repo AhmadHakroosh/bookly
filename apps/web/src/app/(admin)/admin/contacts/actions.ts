@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { CONTACT_STAGES, type ContactStage } from "@bookly/db/schema";
+import { brandForPreview } from "@/emails/brand";
 import { paymentsConfigured } from "@/server/payments";
 import { getContact, logContactEvent, setStage, updateContact } from "@/server/contacts";
 import { paymentLink, sendOutreach, renderOutreach } from "@/server/outreach";
@@ -184,6 +185,7 @@ export async function previewOutreach(
     t.subject,
     t.body,
     willLink ? "https://checkout.stripe.com/" : undefined,
+    await brandForPreview(ws),
   );
   return {
     to: c.email,

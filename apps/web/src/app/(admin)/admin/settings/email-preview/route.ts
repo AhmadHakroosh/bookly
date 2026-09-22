@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { connection } from "next/server";
-import { brandFor } from "@/emails/brand";
+import { brandForPreview } from "@/emails/brand";
 import {
   attendeeConfirmation,
   cancellationMail,
@@ -38,6 +38,7 @@ export async function GET(req: Request) {
       t.subject,
       t.body,
       kind === "paymentRequest" ? "https://checkout.stripe.com/" : undefined,
+      await brandForPreview(ws),
     );
     return new NextResponse(mail.html, {
       headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-store" },
@@ -75,7 +76,7 @@ export async function GET(req: Request) {
     }) as never,
     workspaceName: ws.name,
     baseUrl: baseUrl(),
-    brand: brandFor(ws),
+    brand: await brandForPreview(ws),
     templates: ws.settings.templates,
   };
   const mail =
