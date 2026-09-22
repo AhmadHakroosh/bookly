@@ -32,6 +32,7 @@ COPY --from=build --chown=bookly:bookly /app/packages/db/drizzle ./packages/db/d
 COPY --from=build --chown=bookly:bookly /app/packages/db/dist/migrate.cjs ./packages/db/migrate.cjs
 # In-app documentation at /docs.
 COPY --from=build --chown=bookly:bookly /app/docs ./docs
+COPY --from=build --chown=bookly:bookly /app/CHANGELOG.md ./CHANGELOG.md
 USER bookly
 EXPOSE 3000
 # Apply pending migrations, then serve.

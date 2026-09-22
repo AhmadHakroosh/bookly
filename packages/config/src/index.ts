@@ -72,6 +72,8 @@ export const envSchema = z.object({
   STRIPE_PRICE_TEAM: z.string().optional(),
   /** Comma-separated emails allowed into the operator console at /console on the platform host. */
   PLATFORM_ADMIN_EMAILS: z.string().default(""),
+  /** Shown on the marketing site's contact, legal and footer (cloud mode). */
+  SUPPORT_EMAIL: z.string().optional(),
 
   // ---- Text messages (Twilio) for SMS / WhatsApp reminders and host pings ----
   TWILIO_ACCOUNT_SID: z.string().optional(),

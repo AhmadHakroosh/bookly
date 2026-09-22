@@ -25,6 +25,21 @@ const PLATFORM_HOST = (() => {
   }
 })();
 const CLOUD = process.env.TENANCY === "multi";
+/** Top-level paths that exist under app/(platform)/platform; anything else is a 404 on the platform host. */
+const MARKETING_PATHS = new Set([
+  "",
+  "pricing",
+  "signup",
+  "workspaces",
+  "console",
+  "about",
+  "contact",
+  "security",
+  "privacy",
+  "terms",
+  "changelog",
+  "og",
+]);
 /**
  * The host a request is really for. After a server-action `redirect()`, Next renders the
  * target with an internal request whose Host is the server's own address and the original host
@@ -37,8 +52,12 @@ function requestHost(request: NextRequest): string {
     .toLowerCase();
 }
 
+/**
+ * Rewrite to a path no route can match, so Next answers with its not-found page and a real 404
+ * status. (`/not-found` itself would match the public `[username]` route and stream a 200.)
+ */
 const notFound = (req: NextRequest) =>
-  NextResponse.rewrite(new URL("/not-found", req.url), { status: 404 });
+  NextResponse.rewrite(new URL("/_/404/_/404", req.url), { status: 404 });
 
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -47,6 +66,7 @@ export async function proxy(request: NextRequest) {
   // Cloud mode: the platform host serves marketing, sign-up, pricing and the operator console.
   if (CLOUD && host === PLATFORM_HOST) {
     if (pathname.startsWith("/platform")) return notFound(request);
+    if (pathname === "/robots.txt" || pathname === "/sitemap.xml") return NextResponse.next();
     // Auth redirects (magic links, sign-in) land on the platform host; the admin lives on a
     // workspace host, so send people to the chooser instead of a 404.
     if (pathname.startsWith("/admin"))
@@ -61,6 +81,10 @@ export async function proxy(request: NextRequest) {
     )
       return NextResponse.next();
     const url = request.nextUrl.clone();
+    const top = pathname.split("/")[1] ?? "";
+    // A path that no route matches gives a routing-level 404 (status included), which a
+    // rewrite's `status` option would not.
+    if (!MARKETING_PATHS.has(top)) return notFound(request);
     url.pathname = `/platform${pathname === "/" ? "" : pathname}`;
     return NextResponse.rewrite(url);
   }

@@ -34,6 +34,21 @@ plan, owner and booking counts, suspend / unsuspend (public pages and the API go
 shows a banner), and "sign in as owner" (Better Auth admin impersonation, which lands you in that
 workspace's admin). Stop impersonating from the account menu or by signing out.
 
+## Marketing site
+
+The platform host serves the public site: landing page, `/pricing`, `/about`, `/contact`,
+`/security`, `/privacy`, `/terms` and `/changelog` (rendered from the repository's
+`CHANGELOG.md`), plus `/robots.txt`, `/sitemap.xml` and the social card at `/og`. Any other
+path on the platform host is a 404. Tenant hosts stay out of search engines.
+
+- `SUPPORT_EMAIL` is the address shown on the contact page, the legal pages and the footer.
+- `APP_URL` must be set **at build time** as well as at runtime: canonical URLs and Open Graph
+  tags on the marketing pages are prerendered from it. Vercel does this automatically; a Docker
+  image built without it would bake the default into those tags.
+- The legal pages are a starting point written for a sole-operator SaaS. Have them reviewed
+  before you take paying customers, and update `legalUpdated` in
+  `apps/web/src/app/(platform)/platform/site.ts` when you change them.
+
 ## Local development
 
 `TENANCY=multi APP_URL=http://localhost:3002 ROOT_DOMAIN=localhost:3002`. Subdomains of localhost
