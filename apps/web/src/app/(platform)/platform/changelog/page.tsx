@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { cacheLife } from "next/cache";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { marked } from "marked";
@@ -11,7 +12,10 @@ export const metadata: Metadata = pageMetadata({
   path: "/changelog",
 });
 
+/** Read once at build; Cache Components treats a plain fs read as uncached dynamic data. */
 async function changelog(): Promise<string> {
+  "use cache";
+  cacheLife("max");
   try {
     return await readFile(path.join(process.cwd(), "CHANGELOG.md"), "utf8");
   } catch {
