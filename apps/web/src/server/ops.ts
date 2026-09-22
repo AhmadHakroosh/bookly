@@ -395,8 +395,9 @@ export async function listUsersForConsole(q?: string, limit = 100) {
   const rows = await db()
     .select({
       u: schema.users,
-      lastSeen: sql<Date | null>`(select max(s.updated_at) from sessions s where s.user_id = ${schema.users.id})`,
-      workspaces: sql<string>`(select coalesce(string_agg(w.slug, ', '), '') from members m join workspaces w on w.organization_id = m.organization_id where m.user_id = ${schema.users.id})`,
+      // Correlated subqueries must name the outer table: a bare "id" binds to the inner tables.
+      lastSeen: sql<Date | null>`(select max(s.updated_at) from sessions s where s.user_id = users.id)`,
+      workspaces: sql<string>`(select coalesce(string_agg(w.slug, ', '), '') from members m join workspaces w on w.organization_id = m.organization_id where m.user_id = users.id)`,
     })
     .from(schema.users)
     .where(like ? or(ilike(schema.users.email, like), ilike(schema.users.name, like)) : undefined)
