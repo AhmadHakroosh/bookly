@@ -32,7 +32,11 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       suppressHydrationWarning
       className={`${sans.variable} ${mono.variable} h-full antialiased`}
     >
-      <body className="flex min-h-full flex-col bg-background font-sans text-foreground">
+      <body
+        // Browser extensions (Grammarly and friends) add attributes here before hydration.
+        suppressHydrationWarning
+        className="flex min-h-full flex-col bg-background font-sans text-foreground"
+      >
         <ThemeProvider>
           <Suspense fallback={null}>
             <TopProgress />
