@@ -38,7 +38,7 @@ The same code runs on Vercel:
 - Root Directory `apps/web`, Node 24.
 - Postgres: any provider (Neon works well). `DATABASE_URL` = pooled connection string.
 - Storage: Cloudflare R2 or S3 with `STORAGE_DRIVER=s3` and the `S3_*` keys.
-- Set `JOBS_WORKER=false` and `CRON_SECRET`; `apps/web/vercel.json` schedules the daily tick. On the Hobby plan crons run daily; see the docs for what needs a more frequent tick.
+- Set `JOBS_WORKER=false` and configure QStash (`QSTASH_TOKEN` and the two signing keys) so reminders, retries, transcripts and schedules run through it; see [docs/cloud.md](cloud.md#background-jobs-on-qstash). Without QStash, `CRON_SECRET` plus `apps/web/vercel.json` (daily on Hobby) or the GitHub Actions tick is the fallback.
 - Run migrations from your machine: `DATABASE_URL='…' pnpm db:migrate`.
 
 ## 3. Updating

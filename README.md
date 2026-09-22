@@ -70,18 +70,19 @@ Open `APP_URL` (default http://localhost:3002). The setup wizard creates your ac
 
 ### What to configure
 
-| Env var group                                                      | Purpose                                                    | Required?                        |
-| ------------------------------------------------------------------ | ---------------------------------------------------------- | -------------------------------- |
-| `APP_URL`, `AUTH_SECRET`, `DATABASE_URL`                           | Where the app lives, session signing, Postgres             | Yes                              |
-| `EMAIL_DRIVER`, `EMAIL_FROM`, `RESEND_*` / `SMTP_*`                | Transactional email                                        | Yes for production               |
-| `STORAGE_DRIVER`, `S3_*`                                           | Profile photos and uploads (local disk or S3, R2, MinIO)   | Defaults to local disk           |
-| `GOOGLE_*`, `MICROSOFT_*`, `ZOOM_*`, `DAILY_*`                     | Calendar sync and video                                    | Per integration you want         |
-| `STRIPE_*`                                                         | Paid bookings                                              | Only for payments                |
-| `TWILIO_*`                                                         | SMS and WhatsApp                                           | Only for text messages           |
-| `ANTHROPIC_API_KEY`, `ASSISTANT_MODEL`                             | Briefings, recaps, capture                                 | Optional; plain fallback if off  |
-| `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN`               | Shared rate limits across replicas or serverless instances | Only with more than one instance |
-| `SENTRY_DSN`, `NEXT_PUBLIC_SENTRY_DSN`, `METRICS_TOKEN`            | Error tracking, Prometheus metrics at `/api/metrics`       | Optional                         |
-| `TENANCY`, `ROOT_DOMAIN`, `PLATFORM_ADMIN_EMAILS`, `SUPPORT_EMAIL` | Cloud (multi-tenant) mode                                  | Single-tenant by default         |
+| Env var group                                                           | Purpose                                                                               | Required?                        |
+| ----------------------------------------------------------------------- | ------------------------------------------------------------------------------------- | -------------------------------- |
+| `APP_URL`, `AUTH_SECRET`, `DATABASE_URL`                                | Where the app lives, session signing, Postgres                                        | Yes                              |
+| `EMAIL_DRIVER`, `EMAIL_FROM`, `RESEND_*` / `SMTP_*`                     | Transactional email                                                                   | Yes for production               |
+| `STORAGE_DRIVER`, `S3_*`                                                | Profile photos and uploads (local disk or S3, R2, MinIO)                              | Defaults to local disk           |
+| `GOOGLE_*`, `MICROSOFT_*`, `ZOOM_*`, `DAILY_*`                          | Calendar sync and video                                                               | Per integration you want         |
+| `STRIPE_*`                                                              | Paid bookings                                                                         | Only for payments                |
+| `TWILIO_*`                                                              | SMS and WhatsApp                                                                      | Only for text messages           |
+| `ANTHROPIC_API_KEY`, `ASSISTANT_MODEL`                                  | Briefings, recaps, capture                                                            | Optional; plain fallback if off  |
+| `QSTASH_TOKEN`, `QSTASH_CURRENT_SIGNING_KEY`, `QSTASH_NEXT_SIGNING_KEY` | Job queue and schedules on serverless (precise reminders, retries, dead-letter queue) | Only on serverless               |
+| `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN`                    | Shared rate limits across replicas or serverless instances                            | Only with more than one instance |
+| `SENTRY_DSN`, `NEXT_PUBLIC_SENTRY_DSN`, `METRICS_TOKEN`                 | Error tracking, Prometheus metrics at `/api/metrics`                                  | Optional                         |
+| `TENANCY`, `ROOT_DOMAIN`, `PLATFORM_ADMIN_EMAILS`, `SUPPORT_EMAIL`      | Cloud (multi-tenant) mode                                                             | Single-tenant by default         |
 
 Every variable is described in [.env.example](.env.example) and validated at boot with a clear error.
 
@@ -90,7 +91,7 @@ Every variable is described in [.env.example](.env.example) and validated at boo
 - **Updating:** `git pull`, then `docker compose --profile app build app && docker compose --profile app up -d`. Migrations apply on start; see [CHANGELOG.md](CHANGELOG.md) for anything that needs attention.
 - **Backups:** `docker compose exec postgres pg_dump -U bookly bookly | gzip > bookly-$(date +%F).sql.gz`, plus the uploads volume or bucket.
 - **Health and metrics:** `/api/health` for uptime checks; `/api/metrics` (bearer `METRICS_TOKEN`) for Prometheus.
-- **Background jobs:** reminders, calendar watches, transcripts and nudges run in-process on pg-boss. On serverless hosts set `JOBS_WORKER=false` and call `/api/cron/tick` on a schedule.
+- **Background jobs:** reminders, webhook retries, transcripts, CRM sync and housekeeping run in-process on pg-boss. On serverless hosts set `JOBS_WORKER=false` and configure QStash (`QSTASH_TOKEN` + signing keys) so jobs, precise reminders and schedules run through it; `/api/cron/tick` remains a manual fallback.
 - **Update check:** once a day the install asks for the latest version and sends its own version, tenancy mode, Node version and a random install id, nothing more. The admin shows a notice when a newer release exists. Set `TELEMETRY=off` to disable it. Sharing coarse usage counts (workspaces, hosts, bookings, which integrations) is a separate opt-in under Admin → Settings, never on by default.
 - **Security headers, rate limits and abuse controls** are on by default. Read [SECURITY.md](SECURITY.md) for what is covered and how to report a problem.
 

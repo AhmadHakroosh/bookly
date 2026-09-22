@@ -34,6 +34,27 @@ plan, owner and booking counts, suspend / unsuspend (public pages and the API go
 shows a banner), and "sign in as owner" (Better Auth admin impersonation, which lands you in that
 workspace's admin). Stop impersonating from the account menu or by signing out.
 
+## Background jobs on QStash
+
+Serverless has no long-running worker, so on Vercel the app uses [QStash](https://upstash.com/docs/qstash)
+as its queue and scheduler. Set `QSTASH_TOKEN`, `QSTASH_CURRENT_SIGNING_KEY` and
+`QSTASH_NEXT_SIGNING_KEY` (from the Upstash console) and `JOBS_WORKER=false`. Then:
+
+- Every job is an HTTP message to `POST /api/jobs/<name>`, signed by QStash and verified with
+  the signing keys. Handlers are idempotent, so QStash's retries (and the safety-net schedule)
+  never double-send.
+- Reminders and follow-ups are scheduled at their exact time when a booking is confirmed
+  (`booking.remind`, deduplicated per booking and start time); a reschedule simply creates new
+  messages and the old ones find nothing due.
+- Webhook deliveries, transcript download + recap (`capture.process`) and CRM sync/notes run
+  as jobs with retries; failures beyond the retries land in QStash's dead-letter queue.
+- Three schedules are registered on boot with fixed ids (`bookly-booking-reminders` every
+  5 min, `bookly-webhooks-retry` every 5 min, `bookly-calendar-sync` every 6 h). They are
+  idempotent; Console → Health lists them and the dead-letter count.
+
+`/api/cron/tick` with `CRON_SECRET` still works as a manual fallback. Self-hosted installs
+keep the in-process pg-boss worker and need none of this.
+
 ## Shared rate limiting
 
 Public-form throttles, API limits, the live-transcript endpoint and Better Auth's sign-in

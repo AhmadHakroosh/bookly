@@ -9,10 +9,9 @@ import { db } from "@/lib/db";
 import { fmtDate, fmtDateTime } from "@/lib/time";
 import { serializeTask } from "./api";
 import { assistantConfigured } from "./brief";
-import { pushNote } from "./crm";
 import { emitEvent } from "./webhooks";
 import { CAPTURE_SYSTEM, dueDate, manualCapture, parseCapture, type Capture } from "./capture-text";
-import { logContactEvent, setStage, trackBooking } from "./contacts";
+import { logContactEvent, setStage, trackBooking, noteToCrm } from "./contacts";
 import { notifyHost } from "./notify";
 import { baseUrl, getProfileByUser } from "./scheduling";
 
@@ -98,9 +97,9 @@ export async function captureMeeting(
     tasks: tasks.map(serializeTask),
   });
   for (const t of tasks) emitEvent(workspace.id, "task.created", { task: serializeTask(t) });
-  void pushNote(
+  noteToCrm(
     workspace,
-    contact,
+    contact.id,
     `Meeting notes (${eventType?.title ?? "Meeting"}, ${fmtDateTime(booking.startAt, workspace.timezone)}):\n${summaryLine}${tasks.length ? `\n\nAction items:\n${tasks.map((t) => `- ${t.title}`).join("\n")}` : ""}`,
   );
   if (tasks.length)

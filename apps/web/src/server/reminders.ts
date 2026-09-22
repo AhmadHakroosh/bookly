@@ -18,7 +18,11 @@ import { fmtDateTime } from "@/lib/time";
  * Sends reminders at each event type's configured offsets (minutes before the start) and
  * follow-ups after the meeting. Idempotent via `reminders_sent` keys (`r:<min>`, `followup`).
  */
-export async function sendDueReminders(now = new Date()): Promise<number> {
+export async function sendDueReminders(
+  now = new Date(),
+  opts: { bookingId?: string } = {},
+): Promise<number> {
+  const only = opts.bookingId ? eq(schema.bookings.id, opts.bookingId) : undefined;
   let sent = 0;
   // Candidates: confirmed bookings starting within the next 31 days (largest sensible offset).
   const upcoming = await db()
@@ -26,6 +30,7 @@ export async function sendDueReminders(now = new Date()): Promise<number> {
     .from(schema.bookings)
     .where(
       and(
+        only,
         eq(schema.bookings.status, "confirmed"),
         gte(schema.bookings.startAt, now),
         lte(schema.bookings.startAt, new Date(now.getTime() + 31 * 86_400_000)),
@@ -95,6 +100,7 @@ export async function sendDueReminders(now = new Date()): Promise<number> {
     .from(schema.bookings)
     .where(
       and(
+        only,
         inArray(schema.bookings.status, ["confirmed", "completed"]),
         lte(schema.bookings.endAt, now),
         gte(schema.bookings.endAt, new Date(now.getTime() - 7 * 86_400_000)),
@@ -140,6 +146,7 @@ export async function sendDueReminders(now = new Date()): Promise<number> {
     sent++;
   }
 
+  if (only) return sent;
   await expireUnpaidBookings(now).catch((e) => console.error("[payments] expire failed", e));
   await nudgeOverdueTasks(now).catch((e) => console.error("[tasks] nudge failed", e));
   await expireTranscripts(now).catch((e) => console.error("[capture] retention failed", e));

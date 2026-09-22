@@ -3,8 +3,7 @@ import { eq, schema } from "@bookly/db";
 import type { Contact, Workspace } from "@bookly/db/schema";
 import { sendEmail } from "@bookly/email";
 import { db } from "@/lib/db";
-import { logContactEvent, updateContact } from "./contacts";
-import { pushNote } from "./crm";
+import { logContactEvent, updateContact, noteToCrm } from "./contacts";
 import { DEFAULT_TEMPLATES, type Template } from "./outreach-text";
 import { formatPrice, paymentsConfigured, stripe } from "./payments";
 import { baseUrl, getProfileByUser } from "./scheduling";
@@ -83,7 +82,7 @@ export async function sendOutreach(
   await logContactEvent(ws.id, c.id, "email_sent", `${label}: ${subject}`, {
     data: { kind, body, amountCents: input.amountCents ?? null },
   });
-  void pushNote(ws, c, `${label} by ${host?.displayName ?? ws.name}: ${subject}\n\n${body}`);
+  noteToCrm(ws, c.id, `${label} by ${host?.displayName ?? ws.name}: ${subject}\n\n${body}`);
   const days = input.followUpDays ?? 5;
   if (days > 0)
     await updateContact(ws.id, c.id, { nextFollowUpAt: new Date(Date.now() + days * 86_400_000) });

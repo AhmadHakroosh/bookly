@@ -116,6 +116,21 @@ export async function appendLiveSegments(
     .where(eq(schema.meetingTranscripts.id, t.id));
 }
 
+/** Job entry: reload the workspace and booking, skip if already processed, then complete. */
+export async function processCapture(
+  workspaceId: string,
+  bookingId: string,
+  transcriptId: string | null,
+) {
+  const [ws, booking] = await Promise.all([
+    db().query.workspaces.findFirst({ where: eq(schema.workspaces.id, workspaceId) }),
+    db().query.bookings.findFirst({ where: eq(schema.bookings.id, bookingId) }),
+  ]);
+  if (!ws || !booking) return;
+  if (booking.transcriptStatus === "ready" || booking.transcriptStatus === "deleted") return;
+  await completeTranscript(ws, booking, transcriptId);
+}
+
 /** Daily says the stored transcript is ready: fetch the WebVTT, merge, mark ready, tell the host. */
 export async function completeTranscript(
   ws: Workspace,

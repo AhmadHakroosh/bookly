@@ -18,25 +18,19 @@ export async function register() {
     });
   }
   if (process.env.NEXT_RUNTIME !== "nodejs") return;
-  if (process.env.SKIP_ENV_VALIDATION || process.env.JOBS_WORKER === "false") return;
+  if (process.env.SKIP_ENV_VALIDATION) return;
   if (process.env.NEXT_PHASE === "phase-production-build") return;
   try {
-    const { schedule, work } = await import("@bookly/jobs");
-    const { sendDueReminders } = await import("@/server/reminders");
-    await work("booking.reminders", async () => {
-      await sendDueReminders();
-    });
-    await schedule("booking.reminders", "*/10 * * * *", {});
-    const { retryDueDeliveries } = await import("@/server/webhooks");
-    await work("webhooks.retry", async () => {
-      await retryDueDeliveries();
-    });
-    await schedule("webhooks.retry", "*/5 * * * *", {});
-    const { renewCalendarWatches } = await import("@/server/integrations");
-    await work("calendar.sync", async () => {
-      await renewCalendarWatches();
-    });
-    await schedule("calendar.sync", "17 */6 * * *", { workspaceId: "*" });
+    const { jobDriver, runJob, ensureSchedules, SCHEDULES } = await import("@/server/jobs");
+    if (jobDriver() === "qstash") {
+      const n = await ensureSchedules();
+      console.log(`[jobs] QStash driver, ${n} schedules ensured`);
+      return;
+    }
+    if (jobDriver() === "inline") return;
+    const { JOB_NAMES, schedule, work } = await import("@bookly/jobs");
+    for (const name of JOB_NAMES) await work(name, (data) => runJob(name, data as never));
+    for (const s of SCHEDULES) await schedule(s.name, s.cron, {} as never);
     console.log("[jobs] worker started");
   } catch (err) {
     console.error("[jobs] failed to start worker", err);

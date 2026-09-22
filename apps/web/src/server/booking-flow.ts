@@ -17,6 +17,7 @@ import { notifyHost } from "./notify";
 import { isPaid, paymentsConfigured, recordPayment, refundBooking } from "./payments";
 import { notifyWaitlist } from "./waitlist";
 import { emitEvent } from "./webhooks";
+import { scheduleBookingJobs } from "./jobs";
 import { isBlocked } from "./abuse";
 import { priorityForEmail, trackBooking } from "./contacts";
 import { refreshWorkspace } from "./cache";
@@ -411,6 +412,7 @@ export async function finalizeBooking(
   }
   const payload = { booking: serializeBooking(booking, { eventType }) };
   emitEvent(workspace.id, "booking.created", payload);
+  if (booking.status === "confirmed") void scheduleFor(booking, eventType);
   if (rescheduledFromId)
     emitEvent(workspace.id, "booking.rescheduled", {
       ...payload,
@@ -479,6 +481,7 @@ export async function confirmBooking(workspace: Workspace, bookingId: string) {
   emitEvent(workspace.id, "booking.confirmed", {
     booking: serializeBooking(updated!, { eventType: et ?? null }),
   });
+  void scheduleFor(updated!, et ?? null);
   const ctx = await mailCtx(updated!, et ?? null, workspace);
   const a = attendeeConfirmation(ctx);
   await sendEmail({
@@ -695,4 +698,18 @@ export async function bookingIcs(booking: Booking, workspace: Workspace) {
     series: await seriesCtx(booking),
   };
   return icsFor(ctx, booking.status === "cancelled" ? "CANCEL" : "REQUEST");
+}
+
+/** Precise reminder / follow-up jobs for a confirmed booking (no-op on the inline driver). */
+function scheduleFor(
+  b: Pick<Booking, "id" | "startAt" | "endAt">,
+  et: Pick<EventType, "reminders" | "followUp"> | null,
+) {
+  return scheduleBookingJobs({
+    id: b.id,
+    startAt: b.startAt,
+    endAt: b.endAt,
+    reminders: et?.reminders?.length ? et.reminders : [1440, 60],
+    followUpDelayMin: et?.followUp?.enabled ? (et.followUp.delayMin ?? 60) : null,
+  }).catch((e) => console.error("[jobs] schedule failed", e));
 }

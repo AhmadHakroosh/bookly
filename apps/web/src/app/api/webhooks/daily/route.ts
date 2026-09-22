@@ -8,11 +8,11 @@ import { getProfileByUser } from "@/server/scheduling";
 import {
   bookingForRoom,
   captureEnabled,
-  completeTranscript,
   markTranscriptFailed,
   startTranscription,
 } from "@/server/transcripts";
 import { getCurrentWorkspace } from "@/server/workspace";
+import { enqueue } from "@/server/jobs";
 
 type DailyEvent = {
   type: string;
@@ -64,8 +64,13 @@ export async function POST(req: Request) {
 
   if (ev.type === "transcript.ready-to-download") {
     const id = ev.payload?.transcriptId ?? ev.payload?.transcript_id ?? ev.payload?.id ?? null;
-    await completeTranscript(ws, b, id);
-    return NextResponse.json({ ok: true });
+    // Download + recap can take a minute: hand it to the job queue and answer Daily at once.
+    await enqueue(
+      "capture.process",
+      { workspaceId: ws.id, bookingId: b.id, transcriptId: id },
+      { dedupeId: `capture:${b.id}:${id ?? "live"}` },
+    );
+    return NextResponse.json({ ok: true, queued: true });
   }
   if (ev.type === "transcript.error") {
     await markTranscriptFailed(b.id);

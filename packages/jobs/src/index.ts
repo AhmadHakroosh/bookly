@@ -9,11 +9,34 @@ type SendOptions = NonNullable<Parameters<PgBoss["send"]>[2]>;
  * instrumentation in single-process mode, or a dedicated worker later).
  */
 export type Jobs = {
-  "email.send": { to: string; subject: string; text: string; html?: string };
+  /** Scheduled: reminders and follow-ups that are due, plus housekeeping. */
   "booking.reminders": Record<string, never>;
+  /** Scheduled: webhook deliveries whose backoff has elapsed. */
   "webhooks.retry": Record<string, never>;
+  /** Scheduled: renew Google / Microsoft push channels. */
   "calendar.sync": { workspaceId: string; connectionId?: string };
+  /** Precise: one booking's reminder or follow-up at its exact time. */
+  "booking.remind": { bookingId: string };
+  /** One webhook delivery attempt (first try or a retry after backoff). */
+  "webhook.deliver": { deliveryId: string };
+  /** Download a finished transcript and generate the recap. */
+  "capture.process": { workspaceId: string; bookingId: string; transcriptId: string | null };
+  /** Mirror a contact to the workspace's CRM. */
+  "crm.sync": { workspaceId: string; contactId: string };
+  /** Attach a note to a contact in the CRM. */
+  "crm.note": { workspaceId: string; contactId: string; text: string };
 };
+
+export const JOB_NAMES = [
+  "booking.reminders",
+  "webhooks.retry",
+  "calendar.sync",
+  "booking.remind",
+  "webhook.deliver",
+  "capture.process",
+  "crm.sync",
+  "crm.note",
+] as const satisfies readonly (keyof Jobs)[];
 
 export type JobName = keyof Jobs;
 
@@ -22,12 +45,10 @@ const globalForBoss = globalThis as unknown as {
   __booklyBossStarted?: Promise<PgBoss>;
 };
 
-const queueDefaults: Record<JobName, undefined> = {
-  "email.send": undefined,
-  "booking.reminders": undefined,
-  "webhooks.retry": undefined,
-  "calendar.sync": undefined,
-};
+const queueDefaults = Object.fromEntries(JOB_NAMES.map((n) => [n, undefined])) as Record<
+  JobName,
+  undefined
+>;
 
 export async function getBoss(): Promise<PgBoss> {
   if (globalForBoss.__booklyBossStarted) return globalForBoss.__booklyBossStarted;
@@ -69,3 +90,5 @@ export async function stopJobs() {
   globalForBoss.__booklyBoss = undefined;
   globalForBoss.__booklyBossStarted = undefined;
 }
+
+export * from "./qstash";

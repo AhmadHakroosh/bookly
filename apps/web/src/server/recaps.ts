@@ -11,8 +11,7 @@ import { serializeTask } from "./api";
 import { assistantConfigured } from "./brief";
 import { addTask } from "./capture";
 import { dueDate } from "./capture-text";
-import { logContactEvent, setStage, trackBooking } from "./contacts";
-import { pushNote } from "./crm";
+import { logContactEvent, setStage, trackBooking, noteToCrm } from "./contacts";
 import { notifyHost } from "./notify";
 import { parseRecap, RECAP_SYSTEM, type Recap } from "./recap-text";
 import { baseUrl, getProfileByUser } from "./scheduling";
@@ -97,9 +96,9 @@ export async function generateRecap(
     model,
   });
   if (contact)
-    void pushNote(
+    noteToCrm(
       ws,
-      contact,
+      contact.id,
       `Meeting recap (${eventType?.title ?? "Meeting"}, ${fmtDateTime(booking.startAt, ws.timezone)}):\n${summaryLine}`,
     );
   emitEvent(ws.id, "meeting.captured", {

@@ -11,8 +11,8 @@ import type {
 import { db } from "@/lib/db";
 import { serializeContact } from "./api";
 import { refreshWorkspace } from "./cache";
-import { syncContact } from "./crm";
 import { emitEvent } from "./webhooks";
+import { enqueue } from "./jobs";
 
 /**
  * Contacts are the relationship layer: one row per email per workspace, with a stage and a
@@ -62,16 +62,38 @@ export async function upsertContact(
   return contact;
 }
 
-/** Pushes the contact to the CRM when one is configured (never awaited by callers). */
+/** Mirrors the contact to the CRM (when one is configured) through the job queue, with retries. */
 async function afterContactChange(workspaceId: string, c: Contact) {
   try {
-    const ws = await db().query.workspaces.findFirst({
-      where: eq(schema.workspaces.id, workspaceId),
-    });
-    if (ws) await syncContact(ws, c);
+    const ws = await workspaceOf(workspaceId);
+    if (ws?.settings.crm?.apiKey)
+      await enqueue(
+        "crm.sync",
+        { workspaceId, contactId: c.id },
+        { dedupeId: `crm:${c.id}:${Date.now() >> 16}` },
+      );
   } catch (e) {
-    console.error("[contacts] crm sync failed", e);
+    console.error("[contacts] crm sync enqueue failed", e);
   }
+}
+
+export async function workspaceOf(workspaceId: string) {
+  return (
+    (await db().query.workspaces.findFirst({ where: eq(schema.workspaces.id, workspaceId) })) ??
+    null
+  );
+}
+
+/** Attach a note to the contact's CRM record, queued so a CRM outage never blocks the caller. */
+export function noteToCrm(
+  ws: { id: string; settings: { crm?: { apiKey?: string } | null } },
+  contactId: string,
+  text: string,
+) {
+  if (!ws.settings.crm?.apiKey) return;
+  void enqueue("crm.note", { workspaceId: ws.id, contactId, text }).catch((e) =>
+    console.error("[contacts] crm note enqueue failed", e),
+  );
 }
 
 /** Appends a timeline event and bumps the contact's activity time. Best-effort. */

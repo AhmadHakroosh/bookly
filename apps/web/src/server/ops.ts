@@ -16,6 +16,7 @@ import {
 import { loadEnv } from "@bookly/config";
 import { isPlanId, PLANS } from "@bookly/cloud";
 import { db } from "@/lib/db";
+import { jobsHealth } from "./jobs";
 import { getLimiter } from "./ratelimit";
 import { dailyConfigured } from "./integrations";
 import { paymentsConfigured } from "./payments";
@@ -105,8 +106,8 @@ export type HealthCheck = { name: string; ok: boolean; detail: string };
 /** Everything an operator wants to know at a glance about whether the install is healthy. */
 export async function healthReport(now = new Date()): Promise<HealthCheck[]> {
   const env = loadEnv();
-  const [tick, failedHooks, brokenIntegrations, stuckPayments, dbOk, limiterOk] = await Promise.all(
-    [
+  const [tick, failedHooks, brokenIntegrations, stuckPayments, dbOk, limiterOk, jobs] =
+    await Promise.all([
       getState("jobs.lastTick"),
       db()
         .select({ n: count() })
@@ -135,8 +136,8 @@ export async function healthReport(now = new Date()): Promise<HealthCheck[]> {
         .then(() => true)
         .catch(() => false),
       getLimiter().ping(),
-    ],
-  );
+      jobsHealth(),
+    ]);
   const tickAge = tick ? (now.getTime() - tick.updatedAt.getTime()) / 60_000 : null;
   const emailProvider = env.RESEND_API_KEY
     ? "Resend"
@@ -157,11 +158,10 @@ export async function healthReport(now = new Date()): Promise<HealthCheck[]> {
     },
     {
       name: "Background jobs",
-      ok: tickAge !== null && tickAge < 30,
-      detail:
-        tickAge === null
-          ? "never ran: start the worker or call /api/cron/tick"
-          : `last tick ${Math.round(tickAge)} min ago`,
+      ok: jobs.ok && tickAge !== null && tickAge < 30,
+      detail: `${jobs.detail}; ${
+        tickAge === null ? "reminders never ran" : `reminders ran ${Math.round(tickAge)} min ago`
+      }`,
     },
     { name: "Email", ok: !!(env.RESEND_API_KEY || env.SMTP_HOST), detail: emailProvider },
     {

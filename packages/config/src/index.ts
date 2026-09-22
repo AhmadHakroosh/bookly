@@ -85,6 +85,14 @@ export const envSchema = z.object({
    * Unset = per-process memory, which is right for a single self-hosted container.
    */
   UPSTASH_REDIS_REST_URL: z.url().optional(),
+  /**
+   * Background jobs on serverless: QStash publishes to /api/jobs/<name> with delays, retries
+   * and cron schedules. Unset = in-process pg-boss worker (self-host) or inline (JOBS_WORKER=false).
+   */
+  QSTASH_TOKEN: z.string().optional(),
+  QSTASH_URL: z.url().default("https://qstash.upstash.io"),
+  QSTASH_CURRENT_SIGNING_KEY: z.string().optional(),
+  QSTASH_NEXT_SIGNING_KEY: z.string().optional(),
   UPSTASH_REDIS_REST_TOKEN: z.string().optional(),
   TELEMETRY_URL: z.url().default("https://bookly.ahmadhakroosh.com/api/telemetry"),
 

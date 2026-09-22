@@ -4,6 +4,7 @@ import { after } from "next/server";
 import { and, eq, lte, or, schema, sql } from "@bookly/db";
 import type { WebhookEvent } from "@bookly/db/schema";
 import { db } from "@/lib/db";
+import { enqueue } from "./jobs";
 
 export const generateWebhookSecret = () => `whsec_${randomBytes(24).toString("base64url")}`;
 
@@ -45,7 +46,7 @@ export function emitEvent(
           .insert(schema.webhookDeliveries)
           .values({ webhookId: hook.id, event, payload })
           .returning();
-        await attemptDelivery(d!.id);
+        await enqueue("webhook.deliver", { deliveryId: d!.id });
       }
     } catch (e) {
       console.error("[webhooks] emit failed", e);
@@ -64,7 +65,9 @@ export async function attemptDelivery(deliveryId: string) {
   const d = await db().query.webhookDeliveries.findFirst({
     where: eq(schema.webhookDeliveries.id, deliveryId),
   });
-  if (!d || d.status === "delivered") return;
+  if (!d || d.status === "delivered" || d.status === "failed") return;
+  // A retry that arrives before its backoff (tick and queue overlap) waits for the later one.
+  if (d.nextAttemptAt && d.nextAttemptAt.getTime() - Date.now() > 5_000) return;
   const hook = await db().query.webhooks.findFirst({ where: eq(schema.webhooks.id, d.webhookId) });
   if (!hook) return;
   const body = JSON.stringify({
@@ -111,6 +114,16 @@ export async function attemptDelivery(deliveryId: string) {
       deliveredAt: ok ? new Date() : null,
     })
     .where(eq(schema.webhookDeliveries.id, d.id));
+  // Retry at the backoff time through the queue; the 5-minute tick remains the safety net.
+  if (!ok && next)
+    await enqueue(
+      "webhook.deliver",
+      { deliveryId },
+      {
+        delaySeconds: Math.ceil((next.getTime() - Date.now()) / 1000),
+        dedupeId: `wh:${deliveryId}:${attempts}`,
+      },
+    ).catch(() => undefined);
   await db()
     .update(schema.webhooks)
     .set({
