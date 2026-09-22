@@ -1,3 +1,4 @@
+import { hasFeature } from "@/server/limits";
 import { isCloud } from "@/server/platform";
 import { timezoneList } from "@/lib/time";
 import { getCurrentWorkspace } from "@/server/workspace";
@@ -47,6 +48,7 @@ async function SettingsPage() {
           accent: workspace.settings.branding?.accent ?? "",
         }}
         selfHosted={!isCloud()}
+        brandingAllowed={hasFeature(workspace, "removeBranding")}
         zones={timezoneList()}
       />
       <div className="border-t pt-6">

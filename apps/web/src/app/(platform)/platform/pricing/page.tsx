@@ -39,7 +39,7 @@ const ROWS: [string, (l: Limits) => string | boolean][] = [
   ["HubSpot / Pipedrive sync", (l) => l.api],
   ["API and webhooks", (l) => l.api],
   ["API requests per minute", (l) => fmt(l.apiRequestsPerMinute)],
-  ["Remove Bookly branding", (l) => l.removeBranding],
+  ["Your logo and colour, no Bookly branding", (l) => l.removeBranding],
 ];
 
 const FAQ: [string, string][] = [

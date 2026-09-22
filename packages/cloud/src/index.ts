@@ -93,7 +93,7 @@ export const PLANS: Record<PlanId, Plan> = {
       "Paid bookings via Stripe",
       "Custom reminders, follow-ups, SMS and WhatsApp",
       "Unlimited event types",
-      "Custom domain, no Bookly branding",
+      "Custom domain, your logo and colour, no Bookly branding",
       "API, webhooks, HubSpot and Pipedrive sync",
     ],
     featured: [
@@ -183,7 +183,7 @@ export const FEATURE_LABELS: Record<FeatureLimit, string> = {
   workflows: "Custom reminders and follow-ups",
   teamScheduling: "Round-robin and collective event types",
   api: "API and webhooks",
-  removeBranding: "Removing Bookly branding",
+  removeBranding: "Your own branding",
 };
 
 /** First plan (cheapest) that allows `what`. */

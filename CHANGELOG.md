@@ -8,7 +8,7 @@ Everything below is on `main` ahead of the first release, which will be tagged `
 
 ### Added
 
-- Branding in Settings: a logo URL and accent colour used in every guest email (previously only settable in the database)
+- Branding in Settings: a logo URL and accent colour used in every guest email, on the plans that remove Bookly branding (Pro, Team, and every self-hosted install); Free keeps the Bookly mark and footer
 - Live captions under the built-in video call while auto-capture is on: the last lines transcribed, with speaker and time, as they arrive
 - Landing page: “Emails in your name” section with a mock of the branded confirmation, proposal review and pay button in the follow-up copy, a “Your data, your call” card, two new comparison rows (branded emails, self-service export and deletion) and a note on self-host update notices and opt-in telemetry
 - Proposals and payment requests are sent in two steps: edit the prefilled template, then review the exact branded email (recipient, subject, rendered body, and what the Pay button will link to) in a dialog before confirming; the Pay button comes from the request itself rather than a link in the text; proposal and payment templates have Preview links in Settings; a contact without a company gets their name in the default subject

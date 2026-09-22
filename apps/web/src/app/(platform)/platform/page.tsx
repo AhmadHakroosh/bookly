@@ -416,7 +416,7 @@ export default function LandingPage() {
           mock={<EmailMock />}
           bullets={[
             "Arrives as “you via your workspace”, replies go straight to your inbox",
-            "Your logo, name and colour on confirmations, reminders and recaps",
+            "Your logo, name and colour on every email (Pro and Team; self-hosting includes it)",
             "Your own opening words, with a preview before you save them",
             "A plain-text version travels with every email",
           ]}

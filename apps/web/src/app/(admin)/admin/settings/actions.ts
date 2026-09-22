@@ -6,6 +6,7 @@ import { eq, schema } from "@bookly/db";
 import { encrypt } from "@/lib/crypto";
 import { parseBlocklist } from "@/server/abuse";
 import { refreshWorkspace } from "@/server/cache";
+import { hasFeature } from "@/server/limits";
 import { deleteWorkspace } from "@/server/data-rights";
 import { isCloud, platformUrl } from "@/server/platform";
 import { db } from "@/lib/db";
@@ -101,11 +102,13 @@ export async function updateWorkspaceSettings(
         ...workspace.settings,
         blockedEmails: parseBlocklist(blocklist),
         telemetryStats: telemetryStats === "on",
-        branding: {
-          ...workspace.settings.branding,
-          logoUrl: /^https?:\/\//.test(logoUrl) ? logoUrl : null,
-          accent: accent || undefined,
-        },
+        branding: hasFeature(workspace, "removeBranding")
+          ? {
+              ...workspace.settings.branding,
+              logoUrl: /^https?:\/\//.test(logoUrl) ? logoUrl : null,
+              accent: accent || undefined,
+            }
+          : workspace.settings.branding,
         crm: crm?.apiKey ? crm : null,
         templates: {
           proposal: { subject: proposalSubject || undefined, body: proposalBody || undefined },

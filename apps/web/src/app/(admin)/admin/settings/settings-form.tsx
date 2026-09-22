@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useActionState, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -39,10 +40,13 @@ export function SettingsForm({
   workspace,
   zones,
   selfHosted = false,
+  brandingAllowed = true,
 }: {
   workspace: Values;
   zones: string[];
   selfHosted?: boolean;
+  /** Custom logo and colour come with the plans that remove Bookly branding. */
+  brandingAllowed?: boolean;
 }) {
   const [state, action, pending] = useActionState(updateWorkspaceSettings, {} as SettingsState);
   const [crm, setCrm] = useState<Values["crmProvider"]>(workspace.crmProvider);
@@ -218,42 +222,52 @@ export function SettingsForm({
             Shown in every email guests receive: your logo next to the workspace name, and your
             colour on buttons. Leave blank for the Bookly mark and accent.
           </FieldDescription>
-          <div className="grid gap-4 sm:grid-cols-[1fr_140px]">
-            <Field>
-              <FieldLabel htmlFor="logoUrl">Logo URL</FieldLabel>
-              <Input
-                id="logoUrl"
-                name="logoUrl"
-                type="url"
-                defaultValue={workspace.logoUrl}
-                placeholder="https://yourdomain.com/logo.png"
-              />
-              <FieldDescription>
-                Square PNG or JPG, at least 112×112, on a public URL.
-              </FieldDescription>
-            </Field>
-            <Field>
-              <FieldLabel htmlFor="accent">Accent colour</FieldLabel>
-              <div className="flex items-center gap-2">
-                <input
-                  type="color"
-                  aria-label="Pick accent colour"
-                  defaultValue={workspace.accent || "#e8965a"}
-                  onChange={(e) => {
-                    const t = document.getElementById("accent") as HTMLInputElement | null;
-                    if (t) t.value = e.target.value;
-                  }}
-                  className="size-8 cursor-pointer rounded border bg-transparent p-0.5"
-                />
+          {!brandingAllowed && (
+            <p className="rounded-md border border-(--brand)/40 bg-(--brand)/10 p-3 text-sm">
+              Your own logo and colour, and no “Scheduling by Bookly” line, come with Pro and Team.{" "}
+              <Link href="/admin/billing" className="underline underline-offset-4">
+                See plans
+              </Link>
+            </p>
+          )}
+          <fieldset disabled={!brandingAllowed} className="contents">
+            <div className="grid gap-4 sm:grid-cols-[1fr_140px]">
+              <Field>
+                <FieldLabel htmlFor="logoUrl">Logo URL</FieldLabel>
                 <Input
-                  id="accent"
-                  name="accent"
-                  defaultValue={workspace.accent}
-                  placeholder="#e8965a"
+                  id="logoUrl"
+                  name="logoUrl"
+                  type="url"
+                  defaultValue={workspace.logoUrl}
+                  placeholder="https://yourdomain.com/logo.png"
                 />
-              </div>
-            </Field>
-          </div>
+                <FieldDescription>
+                  Square PNG or JPG, at least 112×112, on a public URL.
+                </FieldDescription>
+              </Field>
+              <Field>
+                <FieldLabel htmlFor="accent">Accent colour</FieldLabel>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="color"
+                    aria-label="Pick accent colour"
+                    defaultValue={workspace.accent || "#e8965a"}
+                    onChange={(e) => {
+                      const t = document.getElementById("accent") as HTMLInputElement | null;
+                      if (t) t.value = e.target.value;
+                    }}
+                    className="size-8 cursor-pointer rounded border bg-transparent p-0.5"
+                  />
+                  <Input
+                    id="accent"
+                    name="accent"
+                    defaultValue={workspace.accent}
+                    placeholder="#e8965a"
+                  />
+                </div>
+              </Field>
+            </div>
+          </fieldset>
         </fieldset>
         <fieldset className="space-y-3 rounded-lg border p-4">
           <legend className="px-1 text-base font-semibold tracking-tight">Guest emails</legend>

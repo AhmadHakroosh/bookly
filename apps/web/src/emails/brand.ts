@@ -6,13 +6,15 @@ import { BOOKLY_ACCENT, type EmailBrand } from "./layout";
 /** The workspace's look for outgoing mail; the platform's when no workspace is involved. */
 export function brandFor(ws: Workspace | null): EmailBrand {
   const base = baseUrl();
-  const b = ws?.settings.branding;
+  // One plan feature covers all of it: your logo and colour in, the Bookly footer out.
+  const own = !!ws && hasFeature(ws, "removeBranding");
+  const b = own ? ws.settings.branding : undefined;
   return {
     name: ws?.name ?? "Bookly",
     logoUrl: b?.logoUrl || `${base}/logo-mark.png`,
     accent: b?.accent || BOOKLY_ACCENT,
     baseUrl: base,
-    poweredBy: ws ? !hasFeature(ws, "removeBranding") : true,
+    poweredBy: !own,
   };
 }
 
