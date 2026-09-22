@@ -4,7 +4,14 @@ import * as schema from "./schema/index";
 
 export type Database = NodePgDatabase<typeof schema>;
 
-const globalForDb = globalThis as unknown as { __booklyPool?: Pool; __booklyDb?: Database };
+const globalForDb = globalThis as unknown as {
+  __booklyPool?: Pool;
+  __booklyDb?: Database;
+  __booklySchemaKey?: string;
+};
+
+/** Identifies the schema a cached client was built with, so a hot-reloaded schema (new table) rebuilds it. */
+const schemaKey = () => Object.keys(schema).sort().join(",");
 
 /**
  * Process-wide Drizzle client over node-postgres. Works for self-host (Docker
@@ -20,15 +27,22 @@ export function normalizeConnectionString(url: string | undefined): string | und
 }
 
 export function createDb(connectionString: string): Database {
-  if (globalForDb.__booklyDb) return globalForDb.__booklyDb;
-  const pool = new Pool({ connectionString: normalizeConnectionString(connectionString), max: 10 });
+  const key = schemaKey();
+  if (globalForDb.__booklyDb && globalForDb.__booklySchemaKey === key)
+    return globalForDb.__booklyDb;
+  // Reuse the pool across dev hot reloads; only the Drizzle wrapper depends on the schema.
+  const pool =
+    globalForDb.__booklyPool ??
+    new Pool({ connectionString: normalizeConnectionString(connectionString), max: 10 });
   globalForDb.__booklyPool = pool;
   globalForDb.__booklyDb = drizzle(pool, { schema, casing: "snake_case" });
+  globalForDb.__booklySchemaKey = key;
   return globalForDb.__booklyDb;
 }
 
 export function getDb(): Database {
-  if (globalForDb.__booklyDb) return globalForDb.__booklyDb;
+  if (globalForDb.__booklyDb && globalForDb.__booklySchemaKey === schemaKey())
+    return globalForDb.__booklyDb;
   const url = process.env.DATABASE_URL;
   if (!url) throw new Error("DATABASE_URL is not set");
   return createDb(url);
@@ -38,6 +52,7 @@ export async function closeDb() {
   await globalForDb.__booklyPool?.end();
   globalForDb.__booklyPool = undefined;
   globalForDb.__booklyDb = undefined;
+  globalForDb.__booklySchemaKey = undefined;
 }
 
 export { schema };
