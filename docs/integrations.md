@@ -4,12 +4,13 @@ Bookly hosts connect their own accounts from **Admin → Calendars** and **Admin
 The server admin registers the OAuth apps once and puts the keys in the environment; a provider
 without keys shows as "Not set up on this server".
 
-| Provider  | Gives you                                                              | Env                                                                  |
-| --------- | ---------------------------------------------------------------------- | -------------------------------------------------------------------- |
-| Google    | Calendar conflicts, bookings in Google Calendar, **Google Meet** links | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`                           |
-| Microsoft | Outlook conflicts, bookings in Outlook, **Teams** links                | `MICROSOFT_CLIENT_ID`, `MICROSOFT_CLIENT_SECRET`, `MICROSOFT_TENANT` |
-| Zoom      | Zoom meetings                                                          | `ZOOM_CLIENT_ID`, `ZOOM_CLIENT_SECRET`                               |
-| Daily.co  | **Bookly video** rooms, no account needed by hosts or attendees        | `DAILY_API_KEY`, `DAILY_DOMAIN`, optional `MEET_URL`                 |
+| Provider  | Gives you                                                              | Env                                                                                    |
+| --------- | ---------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
+| Google    | Calendar conflicts, bookings in Google Calendar, **Google Meet** links | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`                                             |
+| Microsoft | Outlook conflicts, bookings in Outlook, **Teams** links                | `MICROSOFT_CLIENT_ID`, `MICROSOFT_CLIENT_SECRET`, `MICROSOFT_TENANT`                   |
+| Zoom      | Zoom meetings                                                          | `ZOOM_CLIENT_ID`, `ZOOM_CLIENT_SECRET`                                                 |
+| Daily.co  | **Bookly video** rooms, no account needed by hosts or attendees        | `DAILY_API_KEY`, `DAILY_DOMAIN`, optional `MEET_URL`                                   |
+| Recall.ai | **Notetaker**: auto-capture on Google Meet, Teams and Zoom calls       | `RECALL_API_KEY`, `RECALL_REGION`, `RECALL_WEBHOOK_SECRET`, optional `RECALL_BOT_NAME` |
 
 Redirect URI for every OAuth provider: `<APP_URL>/api/integrations/<provider>/callback`.
 
@@ -81,6 +82,31 @@ Rooms are public, named after the booking, can be opened any time and expire two
 the end. The `/meet/<room>` page shows the meeting title and embeds Daily Prebuilt with chat, emoji
 reactions, hand raising, picture-in-picture, background effects and noise cancellation enabled.
 Background effects need a browser with insertable-streams support (Chrome, Edge, recent Safari).
+
+## Notetaker (Recall.ai): capture on Meet, Teams and Zoom
+
+Bookly is not inside a Google Meet, Teams or Zoom call, so auto-capture on those providers uses a
+notetaker bot. When a booking on such a call has capture on (event type set to _Always_, or _Ask_
+and the attendee agreed), Bookly books a Recall.ai bot for the meeting link one minute before the
+start. The bot joins as a participant named `RECALL_BOT_NAME` ("Bookly Notetaker"), streams every
+finished utterance to `/api/webhooks/recall/transcript` while the call runs, and when it leaves,
+Bookly downloads the full transcript, merges it with the live lines and runs the same recap as
+Bookly video. The confirmation email says a notetaker joins; hosts admit it from the waiting room
+or Teams lobby when their meeting has one (Zoom without a waiting room lets it straight in).
+
+1. Create a Recall.ai account in the region you want data to stay in (`RECALL_REGION`:
+   `us-west-2`, `us-east-1`, `eu-central-1` or `ap-northeast-1`) and copy the API key into
+   `RECALL_API_KEY`.
+2. Dashboard → Webhooks → add `https://<your-host>/api/webhooks/recall`, and put its signing
+   secret (`whsec_…`) in `RECALL_WEBHOOK_SECRET`. Bot status events drive the capture: recording
+   opens the transcript, `done` triggers the download and recap, `fatal` or a denied recording
+   marks the capture failed.
+3. Nothing to do in Zoom, Google or Microsoft: the bot joins like any guest.
+
+Budget and plan rules are the same as Bookly video: the bot is not booked when the workspace's
+minutes are used up, is sent away if they run out before it starts recording, and its recording
+is capped at the remaining minutes. Cancelling or rescheduling a booking cancels the bot. Without
+`RECALL_API_KEY` the auto-capture setting is only offered on Bookly video event types.
 
 ## Local development
 

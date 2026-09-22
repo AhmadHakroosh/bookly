@@ -56,7 +56,7 @@ const FAQ: [string, string][] = [
   ],
   [
     "What are transcription minutes?",
-    "Auto-capture transcribes calls on Bookly video. Pro includes 300 transcribed minutes a month; Team includes 300 per member, pooled, so a team of four shares 1,200. When the budget runs out, calls still happen; they just are not transcribed until the next month or an upgrade. Paid overage is coming after launch.",
+    "Auto-capture transcribes calls on Bookly video, Google Meet, Zoom and Teams; on the external providers a Bookly notetaker joins the call. Pro includes 300 transcribed minutes a month; Team includes 300 per member, pooled, so a team of four shares 1,200. When the budget runs out, calls still happen; they just are not transcribed until the next month or an upgrade. Paid overage is coming after launch.",
   ],
   [
     "Monthly or yearly?",

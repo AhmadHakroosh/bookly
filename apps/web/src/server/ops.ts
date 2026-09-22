@@ -19,6 +19,7 @@ import { db } from "@/lib/db";
 import { jobsHealth } from "./jobs";
 import { getLimiter } from "./ratelimit";
 import { dailyConfigured } from "./integrations";
+import { notetakerConfigured } from "./integrations/notetaker";
 import { paymentsConfigured } from "./payments";
 import { isCloud } from "./platform";
 import { assistantConfigured } from "./brief";
@@ -187,6 +188,15 @@ export async function healthReport(now = new Date()): Promise<HealthCheck[]> {
       name: "Bookly video (Daily)",
       ok: dailyConfigured(),
       detail: dailyConfigured() ? "configured" : "not configured",
+    },
+    {
+      name: "Notetaker (Recall.ai)",
+      ok: notetakerConfigured(),
+      detail: notetakerConfigured()
+        ? env.RECALL_WEBHOOK_SECRET
+          ? `configured (${env.RECALL_REGION}); capture on Meet, Teams and Zoom`
+          : "key set, RECALL_WEBHOOK_SECRET missing: captures will never finish"
+        : "not configured: capture on Bookly video only",
     },
     {
       name: "Text messages (Twilio)",

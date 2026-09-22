@@ -11,11 +11,12 @@ cp .env.example .env
 
 Edit `.env`:
 
-| Variable                                     | Set to                                                                                             |
-| -------------------------------------------- | -------------------------------------------------------------------------------------------------- |
-| `APP_URL`                                    | The public URL, e.g. `https://bookly.example.com`                                                  |
-| `AUTH_SECRET`                                | `openssl rand -base64 32`                                                                          |
-| `EMAIL_DRIVER`, `EMAIL_FROM` + provider keys | `resend` or `smtp`; without email, sign-in links and notifications only print to the container log |
+| Variable                                     | Set to                                                                                                 |
+| -------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| `APP_URL`                                    | The public URL, e.g. `https://bookly.example.com`                                                      |
+| `AUTH_SECRET`                                | `openssl rand -base64 32`                                                                              |
+| `EMAIL_DRIVER`, `EMAIL_FROM` + provider keys | `resend` or `smtp`; without email, sign-in links and notifications only print to the container log     |
+| `RECALL_API_KEY`, `RECALL_WEBHOOK_SECRET`    | Optional: auto-capture on Google Meet, Teams and Zoom through a notetaker bot (`docs/integrations.md`) |
 
 Then:
 

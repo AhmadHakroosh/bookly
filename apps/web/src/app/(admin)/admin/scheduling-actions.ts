@@ -30,6 +30,7 @@ import {
   assertWithinLimit,
   LimitError,
 } from "@/server/limits";
+import { captureSupportsLocation } from "@/server/integrations/notetaker";
 import { paymentsHint, paymentsReady } from "@/server/payments";
 import { requireStaff } from "@/server/session";
 import { removeWaitlistEntry } from "@/server/waitlist";
@@ -329,13 +330,14 @@ export async function saveEventType(
   });
   if (clash && clash.id !== d.id) slug = `${slug}-${d.id.slice(0, 4)}`;
   const location: EventLocation = { type: d.locationType, value: d.locationValue || undefined };
+  const captureable = captureSupportsLocation(d.locationType);
   try {
     if (d.price > 0) {
       assertFeature(ws, "payments");
       if (!paymentsReady(ws)) return { error: paymentsHint(ws) };
     }
     if (d.assignment !== "single") assertFeature(ws, "teamScheduling");
-    if (d.locationType === "daily" && d.autoCapture !== "off") assertCaptureFeature(ws);
+    if (captureable && d.autoCapture !== "off") assertCaptureFeature(ws);
     if (
       d.followUpEnabled === "on" ||
       d.remindByText === "on" ||
@@ -375,7 +377,7 @@ export async function saveEventType(
       assignment: d.assignment,
       hostUserIds: d.assignment === "single" ? [] : hostUserIds,
       seats: d.seats,
-      autoCapture: d.locationType === "daily" ? d.autoCapture : "off",
+      autoCapture: captureable ? d.autoCapture : "off",
       recurrence:
         d.recurEnabled === "on"
           ? { enabled: true, freq: d.recurFreq, interval: d.recurInterval, count: d.recurCount }

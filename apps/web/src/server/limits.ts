@@ -166,6 +166,17 @@ export async function captureAllowed(ws: Workspace): Promise<{ ok: boolean; reas
     : { ok: false, reason: `This month's ${max} transcribed minutes are used up.` };
 }
 
+/** Minutes left this month, or null when unlimited (0 when the feature is off or used up). */
+export async function captureBudgetLeft(ws: Workspace): Promise<number | null> {
+  const limits = workspaceLimits(ws);
+  if (limits.captureMinutesPerMonth === 0) return 0;
+  const max = isPlanId(ws.plan)
+    ? captureBudget(PLANS[ws.plan], await count(ws, "members"))
+    : limits.captureMinutesPerMonth;
+  if (max === null) return null;
+  return Math.max(0, max - (await captureMinutesThisMonth(ws)));
+}
+
 /** Throws when the plan has no auto-capture at all (editor guard). */
 export function assertCaptureFeature(ws: Workspace) {
   if (workspaceLimits(ws).captureMinutesPerMonth === 0)

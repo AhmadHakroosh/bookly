@@ -66,6 +66,7 @@ export function EventTypeForm({
   ready,
   paymentsReady,
   paymentsHint = "",
+  notetaker = false,
   teammates,
 }: {
   initial: Values;
@@ -75,6 +76,8 @@ export function EventTypeForm({
   paymentsReady: boolean;
   /** Why paid bookings are off, shown under the price field. */
   paymentsHint?: string;
+  /** A notetaker is configured, so Meet, Teams and Zoom calls can be transcribed too. */
+  notetaker?: boolean;
   teammates: { userId: string; name: string }[];
 }) {
   const [state, action, pending] = useActionState(
@@ -150,9 +153,9 @@ export function EventTypeForm({
             </FieldDescription>
           </Field>
         </div>
-        {loc === "daily" && (
+        {(loc === "daily" || (notetaker && ["zoom", "google_meet", "teams"].includes(loc))) && (
           <Field>
-            <FieldLabel htmlFor="autoCapture">Auto-capture (Bookly video)</FieldLabel>
+            <FieldLabel htmlFor="autoCapture">Auto-capture</FieldLabel>
             <select
               id="autoCapture"
               name="autoCapture"
@@ -164,8 +167,9 @@ export function EventTypeForm({
               <option value="always">Always (stated in the confirmation email)</option>
             </select>
             <FieldDescription>
-              Transcribes the call and prepares notes, action items and a follow-up for you to
-              review. Both sides see a notice in the call. Needs a paid Daily plan.
+              {loc === "daily"
+                ? "Transcribes the call and prepares notes, action items and a follow-up for you to review. Both sides see a notice in the call."
+                : "A notetaker named in the invitation joins the call, transcribes it and prepares notes, action items and a follow-up for you to review. Admit it from the waiting room if your meeting has one."}
             </FieldDescription>
           </Field>
         )}

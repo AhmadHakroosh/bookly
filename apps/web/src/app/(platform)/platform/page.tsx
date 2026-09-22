@@ -70,7 +70,7 @@ const TABLE_STAKES: [LucideIcon, string, string][] = [
   [
     VideoIcon,
     "Video, your way",
-    "Google Meet, Zoom, Teams, or Bookly video that can transcribe the call.",
+    "Google Meet, Zoom, Teams, or Bookly video. Every one of them can transcribe the call.",
   ],
   [
     CreditCardIcon,
@@ -358,7 +358,7 @@ export default function LandingPage() {
             [
               <LiveTranscriptMock key="c" />,
               "Take the call, skip the notes",
-              "On Bookly video the call is transcribed with consent and speaker labels. Both sides see the notice. You stay in the conversation instead of typing.",
+              "On Bookly video, Meet, Zoom and Teams the call is transcribed with consent and speaker labels. Both sides see the notice. You stay in the conversation instead of typing.",
             ],
             [
               <RecapMock key="r" compact />,

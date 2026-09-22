@@ -88,9 +88,10 @@ export default function PrivacyPage() {
       <p>
         Sub-processors that host or deliver the service: the hosting and database providers, the
         email, SMS and WhatsApp delivery providers, Daily.co for Bookly video and transcription,
-        Stripe for payments, Anthropic for AI features, and Sentry for error reports. Each is bound
-        by a data-processing agreement. The current list is available on request. Data you choose to
-        sync to Google, Microsoft, Zoom, HubSpot or Pipedrive is governed by their policies.
+        Recall.ai for the notetaker that transcribes Google Meet, Teams and Zoom calls, Stripe for
+        payments, Anthropic for AI features, and Sentry for error reports. Each is bound by a
+        data-processing agreement. The current list is available on request. Data you choose to sync
+        to Google, Microsoft, Zoom, HubSpot or Pipedrive is governed by their policies.
       </p>
       <h2>How long we keep it</h2>
       <ul>

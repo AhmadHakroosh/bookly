@@ -11,18 +11,27 @@ import type {
 import { db } from "@/lib/db";
 import { trackBooking } from "./contacts";
 import { captureAllowed } from "./limits";
+import {
+  captureSupportsLocation,
+  fetchNotetakerTranscript,
+  leaveCall,
+  notetakerRef,
+} from "./integrations/notetaker";
 import { api } from "./integrations/types";
 import { mergeSegments, parseVtt } from "./transcript-text";
 
 const DAILY = "https://api.daily.co/v1";
 const DEFAULT_RETENTION_DAYS = 90;
 
-/** Whether this booking should be transcribed: Bookly video, event type on, consent when asked. */
+/**
+ * Whether this booking should be transcribed: a provider Bookly can capture (Bookly video, or
+ * Meet / Teams / Zoom through the notetaker), the event type on, consent when asked.
+ */
 export function captureEnabled(
   booking: Pick<Booking, "meetingProvider" | "captureConsent">,
   eventType: Pick<EventType, "autoCapture"> | null,
 ) {
-  if (!eventType || booking.meetingProvider !== "daily") return false;
+  if (!eventType || !captureSupportsLocation(booking.meetingProvider)) return false;
   if (eventType.autoCapture === "always") return true;
   if (eventType.autoCapture === "ask") return booking.captureConsent === true;
   return false;
@@ -93,7 +102,29 @@ export async function startTranscription(ws: Workspace, booking: Booking): Promi
   return true;
 }
 
-/** Appends live lines posted by the meeting page. Speakers are already host / attendee / name. */
+/**
+ * The notetaker reports it is recording: open the transcript and mark the booking, unless the
+ * workspace's minute budget is already used up, in which case the bot is sent away.
+ */
+export async function startNotetakerRecording(ws: Workspace, booking: Booking): Promise<boolean> {
+  if (booking.transcriptStatus === "recording" || booking.transcriptStatus === "ready") return true;
+  const allowed = await captureAllowed(ws);
+  const ref = notetakerRef(booking);
+  if (!allowed.ok) {
+    console.warn(`[capture] notetaker sent away for ${booking.id}: ${allowed.reason}`);
+    if (ref) await leaveCall(ref.botId).catch((e) => console.error("[notetaker] leave", e));
+    await markTranscriptFailed(booking.id);
+    return false;
+  }
+  await ensureTranscript(ws, booking);
+  await db()
+    .update(schema.bookings)
+    .set({ transcriptStatus: "recording" })
+    .where(eq(schema.bookings.id, booking.id));
+  return true;
+}
+
+/** Appends live lines posted by the meeting page or the notetaker. Speakers are host / attendee / name. */
 export async function appendLiveSegments(
   ws: Workspace,
   booking: Booking,
@@ -131,26 +162,35 @@ export async function processCapture(
   await completeTranscript(ws, booking, transcriptId);
 }
 
-/** Daily says the stored transcript is ready: fetch the WebVTT, merge, mark ready, tell the host. */
+/** The stored transcript from whichever service recorded the call, or [] when unavailable. */
+async function storedSegments(booking: Booking, transcriptId: string | null) {
+  const nt = notetakerRef(booking);
+  try {
+    if (nt) return await fetchNotetakerTranscript(nt.botId, booking.attendeeName);
+    const key = loadEnv().DAILY_API_KEY;
+    if (!transcriptId || !key) return [];
+    const { link } = await api<{ link: string }>(
+      `${DAILY}/transcript/${encodeURIComponent(transcriptId)}/access-link`,
+      { token: key },
+    );
+    const res = await fetch(link);
+    return res.ok ? parseVtt(await res.text()) : [];
+  } catch (e) {
+    console.error("[capture] fetch transcript failed", e);
+    return [];
+  }
+}
+
+/**
+ * The call is over and the stored transcript exists (Daily's WebVTT, or the notetaker's file):
+ * fetch it, merge with the live lines, mark ready, tell the host.
+ */
 export async function completeTranscript(
   ws: Workspace,
   booking: Booking,
   transcriptId: string | null,
 ) {
-  const key = loadEnv().DAILY_API_KEY;
-  let stored: TranscriptSegment[] = [];
-  if (transcriptId && key) {
-    try {
-      const { link } = await api<{ link: string }>(
-        `${DAILY}/transcript/${encodeURIComponent(transcriptId)}/access-link`,
-        { token: key },
-      );
-      const res = await fetch(link);
-      if (res.ok) stored = parseVtt(await res.text());
-    } catch (e) {
-      console.error("[capture] fetch transcript failed", e);
-    }
-  }
+  const stored: TranscriptSegment[] = await storedSegments(booking, transcriptId);
   const t = await ensureTranscript(ws, booking);
   const segments = mergeSegments(t.segments, stored);
   await db()

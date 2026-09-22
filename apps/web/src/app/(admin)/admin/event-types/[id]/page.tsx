@@ -2,6 +2,7 @@ import { PageSkeleton } from "@/components/page-skeleton";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { conferencingAvailability } from "@/server/integrations";
+import { notetakerConfigured } from "@/server/integrations/notetaker";
 import { paymentsHint, paymentsReady } from "@/server/payments";
 import {
   getEventTypeById,
@@ -37,6 +38,7 @@ async function EditEventTypePage({ params }: PageProps<"/admin/event-types/[id]"
     <EventTypeForm
       paymentsReady={paymentsReady(ws)}
       paymentsHint={paymentsHint(ws)}
+      notetaker={notetakerConfigured()}
       teammates={teammates}
       ready={{
         daily: avail.daily,

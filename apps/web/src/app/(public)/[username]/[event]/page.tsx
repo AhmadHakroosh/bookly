@@ -18,6 +18,7 @@ import {
   locationLabel,
   slotSeats,
 } from "@/server/scheduling";
+import { captureSupportsLocation } from "@/server/integrations/notetaker";
 import { formatPrice, paymentsReady } from "@/server/payments";
 import { getCurrentWorkspace } from "@/server/workspace";
 import { priorityForEmail } from "@/server/contacts";
@@ -173,7 +174,7 @@ async function EventPage({ params, searchParams }: PageProps<"/[username]/[event
                 reschedule={reschedule}
                 paid={!!et.priceCents && paid}
                 sessions={plan ? bookable : 1}
-                askCapture={et.autoCapture === "ask" && et.location.type === "daily"}
+                askCapture={et.autoCapture === "ask" && captureSupportsLocation(et.location.type)}
                 defaults={
                   prev
                     ? { name: prev.attendeeName, email: prev.attendeeEmail }

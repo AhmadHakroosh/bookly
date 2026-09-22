@@ -12,6 +12,15 @@ import { sendEmail } from "@bookly/email";
 import { decrypt, encrypt } from "@/lib/crypto";
 import { db } from "@/lib/db";
 import { daily, dailyConfigured } from "./daily";
+import {
+  cancelNotetaker,
+  NOTETAKER_PROVIDERS,
+  notetakerConfigured,
+  notetakerRef,
+  scheduleNotetaker,
+  type NotetakerRef,
+} from "./notetaker";
+import { captureBudgetLeft } from "@/server/limits";
 import { google, googleAccount } from "./google";
 import { microsoft, microsoftAccount } from "./microsoft";
 import { exchangeCode, providerConfigured, refreshTokens } from "./oauth";
@@ -290,6 +299,30 @@ type Provisioned = Pick<
  * Creates the meeting link and calendar events for a confirmed booking. Every step is
  * best-effort: a provider failure is logged and the booking proceeds without that piece.
  */
+/** Books the notetaker for a Meet / Teams / Zoom call that should be transcribed. */
+async function bookNotetaker(booking: Booking, meetingUrl: string): Promise<NotetakerRef | null> {
+  const ws = await db().query.workspaces.findFirst({
+    where: eq(schema.workspaces.id, booking.workspaceId),
+  });
+  if (!ws) return null;
+  const budget = await captureBudgetLeft(ws);
+  if (budget !== null && budget <= 0) {
+    console.warn(`[notetaker] not booked for ${booking.id}: minute budget used up`);
+    return null;
+  }
+  try {
+    return await scheduleNotetaker({
+      booking,
+      meetingUrl,
+      language: ws.settings.capture?.language,
+      maxSeconds: budget === null ? 8 * 3600 : Math.max(60, budget * 60),
+    });
+  } catch (e) {
+    console.error("[notetaker] booking failed", e);
+    return null;
+  }
+}
+
 export async function provisionBooking(
   booking: Booking,
   eventType: EventType | null,
@@ -388,6 +421,18 @@ export async function provisionBooking(
   }
   spec.meetingUrl = meetingUrl;
 
+  // 1b. Auto-capture on an external provider: the notetaker joins the call.
+  if (
+    spec.transcription &&
+    meetingUrl &&
+    meetingProvider &&
+    NOTETAKER_PROVIDERS.has(meetingProvider) &&
+    notetakerConfigured()
+  ) {
+    const nt = await bookNotetaker(booking, meetingUrl);
+    if (nt) meetingRef = { ...(meetingRef ?? {}), notetaker: nt };
+  }
+
   // 2. Calendar sync into every connected calendar that does not already hold the event.
   for (const c of conns) {
     if (c.provider === "zoom" || c.status === "error" || externalEventIds[c.provider]) continue;
@@ -439,6 +484,8 @@ export async function deprovisionBooking(booking: Booking): Promise<void> {
       await markError(c, e);
     }
   }
+  const nt = notetakerRef(booking);
+  if (nt) await cancelNotetaker(nt).catch((e) => console.error("[notetaker] cancel failed", e));
   try {
     if (booking.meetingProvider === "zoom" && booking.meetingRef) {
       const c = conns.find((x) => x.provider === "zoom");

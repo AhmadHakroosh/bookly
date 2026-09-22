@@ -1,6 +1,7 @@
 import type { Booking, EventType, Profile } from "@bookly/db/schema";
 import { Text } from "@react-email/components";
 import { fmtDateTime } from "@/lib/time";
+import { captureSupportsLocation } from "@/server/integrations/notetaker";
 import { locationLabel } from "@/server/scheduling";
 import { fillEmailTemplate, resolveEmailTemplate, type EmailTemplateOverrides } from "./defaults";
 import { styles, type EmailBrand } from "./layout";
@@ -112,8 +113,12 @@ export async function attendeeConfirmation(ctx: BookingMailCtx): Promise<Mail> {
       }
     : resolveEmailTemplate("confirmation", ctx.templates);
   const { subject, body } = fillEmailTemplate(t, vars(ctx, tz));
-  const transcribed =
-    ctx.eventType?.autoCapture === "always" && ctx.booking.location.type === "daily";
+  const locType = ctx.booking.location.type;
+  const transcribed = ctx.eventType?.autoCapture === "always" && captureSupportsLocation(locType);
+  const transcribedNote =
+    locType === "daily"
+      ? "This call is transcribed so both sides get notes afterwards."
+      : "A notetaker joins the call to transcribe it, so both sides get notes afterwards.";
   const { html, text } = await renderEmail(
     <BookingEmail
       brand={ctx.brand}
@@ -129,7 +134,7 @@ export async function attendeeConfirmation(ctx: BookingMailCtx): Promise<Mail> {
       cta={{ href: manageUrl(ctx), label: "Reschedule or cancel" }}
       note={
         (pending ? "" : "A calendar invitation is attached. ") +
-        (transcribed ? "This call is transcribed so both sides get notes afterwards." : "")
+        (transcribed ? transcribedNote : "")
       }
       signedBy={d.hostName}
     />,

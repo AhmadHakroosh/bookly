@@ -40,6 +40,19 @@ export const envSchema = z.object({
   DAILY_DOMAIN: z.string().optional(),
   /** Public URL of the built-in meeting pages, e.g. https://meet.example.com. Defaults to APP_URL + /meet. */
   MEET_URL: z.url().optional(),
+  /**
+   * Notetaker for auto-capture on Google Meet, Teams and Zoom (Recall.ai). The bot joins the
+   * call, streams the transcript live and delivers the full transcript when the call ends.
+   */
+  RECALL_API_KEY: z.string().optional(),
+  /** Recall data region; the API key belongs to exactly one. */
+  RECALL_REGION: z
+    .enum(["us-west-2", "us-east-1", "eu-central-1", "ap-northeast-1"])
+    .default("us-west-2"),
+  /** Signing secret of the status-change webhook endpoint (Recall dashboard → Webhooks). */
+  RECALL_WEBHOOK_SECRET: z.string().optional(),
+  /** What participants see the bot called. */
+  RECALL_BOT_NAME: z.string().max(100).default("Bookly Notetaker"),
 
   // ---- Observability ----
   /** Sentry DSNs (server and browser). Unset = error tracking off. */
