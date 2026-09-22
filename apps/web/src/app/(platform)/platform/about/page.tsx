@@ -34,7 +34,7 @@ export default function AboutPage() {
       <p>
         Scheduling is the entry point. Around it, Bookly keeps one record per person, briefs you
         before every call from that record, transcribes the call with consent when you use the
-        built-in video, and turns the transcript into a recap you can act on in one click: tasks, a
+        Bookly video, and turns the transcript into a recap you can act on in one click: tasks, a
         stage change, a follow-up email. Your calendar can tell the difference between a customer
         and a cold lead, and defend your focus time from the latter.
       </p>

@@ -23,7 +23,7 @@ const ROWS: [string, (l: Limits) => string | boolean][] = [
   ["Connected calendars / conferencing per member", (l) => fmt(l.integrations)],
   ["Bookings per month", (l) => fmt(l.bookingsPerMonth)],
   ["Custom domains", (l) => (l.domains ? String(l.domains) : false)],
-  ["Google Meet, Zoom, Teams, built-in video", () => true],
+  ["Google Meet, Zoom, Teams, Bookly video", () => true],
   ["Email confirmations and reminders", () => true],
   ["Contacts, timeline and Meeting Inbox", () => true],
   ["Pre-meeting briefings", () => true],
@@ -48,7 +48,7 @@ const ROWS: [string, (l: Limits) => string | boolean][] = [
 const FAQ: [string, string][] = [
   [
     "Is there a free plan?",
-    "Yes. Free gives you a booking page, two event types, one connected calendar, built-in video and email reminders, for as long as you like. No card needed.",
+    "Yes. Free gives you a booking page, two event types, one connected calendar, Bookly video and email reminders, for as long as you like. No card needed.",
   ],
   [
     "What counts as a member?",
@@ -56,7 +56,7 @@ const FAQ: [string, string][] = [
   ],
   [
     "What are transcription minutes?",
-    "Auto-capture transcribes calls on built-in video. Pro includes 300 transcribed minutes a month; Team includes 300 per member, pooled, so a team of four shares 1,200. When the budget runs out, calls still happen; they just are not transcribed until the next month or an upgrade. Paid overage is coming after launch.",
+    "Auto-capture transcribes calls on Bookly video. Pro includes 300 transcribed minutes a month; Team includes 300 per member, pooled, so a team of four shares 1,200. When the budget runs out, calls still happen; they just are not transcribed until the next month or an upgrade. Paid overage is coming after launch.",
   ],
   [
     "Monthly or yearly?",

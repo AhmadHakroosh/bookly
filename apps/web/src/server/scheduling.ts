@@ -495,7 +495,7 @@ export async function listBookings(
 export function locationLabel(loc: EventType["location"]): string {
   switch (loc.type) {
     case "daily":
-      return "Video call";
+      return "Bookly video";
     case "google_meet":
       return "Google Meet";
     case "zoom":

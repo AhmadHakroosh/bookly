@@ -70,7 +70,7 @@ export const PLANS: Record<PlanId, Plan> = {
     },
     highlights: [
       "Contacts, briefings and the Meeting Inbox",
-      "Built-in video, Meet, Zoom, Teams",
+      "Bookly video, Meet, Zoom, Teams",
       "1 booking page, 2 event types",
       "1 connected calendar",
       "Email confirmations and reminders",

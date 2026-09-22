@@ -60,7 +60,7 @@ export const DAILY_WEBHOOK_EVENTS = [
 
 /** Registers (or replaces) the Daily webhook that reports participant joins. Returns its HMAC key. */
 export async function registerDailyWebhook(url: string, previousId?: string | null) {
-  if (!dailyConfigured()) throw new Error("Built-in video is not configured");
+  if (!dailyConfigured()) throw new Error("Bookly video is not configured");
   const key = loadEnv().DAILY_API_KEY!;
   if (previousId)
     await api(`${BASE}/webhooks/${previousId}`, { method: "DELETE", token: key }).catch(() => {});
@@ -95,7 +95,7 @@ export function verifyDailySignature(
 
 export const daily: ConferencingDriver = {
   async createMeeting(_token, spec) {
-    if (!dailyConfigured()) throw new Error("Built-in video is not configured");
+    if (!dailyConfigured()) throw new Error("Bookly video is not configured");
     const key = loadEnv().DAILY_API_KEY!;
     const body = dailyRoomBody(spec);
     const room = await api<{ name: string; url: string }>(`${BASE}/rooms`, {

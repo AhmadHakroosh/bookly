@@ -195,7 +195,7 @@ export const eventTypes = pgTable(
     /** Attendees per slot. >1 makes this a group event: the same start can be booked until full. */
     seats: integer("seats").notNull().default(1),
     recurrence: jsonb("recurrence").$type<Recurrence>().notNull().default({}),
-    /** Built-in video only: transcribe the call and prepare a recap. off | ask | always */
+    /** Bookly video only: transcribe the call and prepare a recap. off | ask | always */
     autoCapture: text("auto_capture").$type<"off" | "ask" | "always">().notNull().default("off"),
     ...timestamps,
   },

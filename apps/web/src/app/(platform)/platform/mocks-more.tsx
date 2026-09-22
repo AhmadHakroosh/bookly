@@ -125,7 +125,7 @@ export function SeatsMock() {
       <div className="flex items-center justify-between">
         <div>
           <h4 className="text-base font-semibold tracking-tight">Working session · Tue 14:30</h4>
-          <p className="text-xs text-muted-foreground">Session 2 of 6 · 60 min · built-in video</p>
+          <p className="text-xs text-muted-foreground">Session 2 of 6 · 60 min · Bookly video</p>
         </div>
         <Badge>
           <UsersIcon className="mr-1 size-3" aria-hidden />3 / 3 seats

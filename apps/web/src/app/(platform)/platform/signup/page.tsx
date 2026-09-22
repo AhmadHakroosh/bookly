@@ -9,7 +9,7 @@ import { PageSkeleton } from "@/components/page-skeleton";
 export const metadata: Metadata = pageMetadata({
   title: "Get started",
   description:
-    "Create your Bookly workspace in two minutes: a booking page on your own subdomain, calendar sync, built-in video and the Meeting Inbox. Free plan, no card.",
+    "Create your Bookly workspace in two minutes: a booking page on your own subdomain, calendar sync, Bookly video and the Meeting Inbox. Free plan, no card.",
   path: "/signup",
 });
 

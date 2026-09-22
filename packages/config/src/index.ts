@@ -35,7 +35,7 @@ export const envSchema = z.object({
   MICROSOFT_TENANT: z.string().default("common"),
   ZOOM_CLIENT_ID: z.string().optional(),
   ZOOM_CLIENT_SECRET: z.string().optional(),
-  /** Daily.co (built-in video). DAILY_DOMAIN is your Daily subdomain, e.g. "acme.daily.co". */
+  /** Daily.co (Bookly video). DAILY_DOMAIN is your Daily subdomain, e.g. "acme.daily.co". */
   DAILY_API_KEY: z.string().optional(),
   DAILY_DOMAIN: z.string().optional(),
   /** Public URL of the built-in meeting pages, e.g. https://meet.example.com. Defaults to APP_URL + /meet. */

@@ -9,7 +9,7 @@ without keys shows as "Not set up on this server".
 | Google    | Calendar conflicts, bookings in Google Calendar, **Google Meet** links | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`                           |
 | Microsoft | Outlook conflicts, bookings in Outlook, **Teams** links                | `MICROSOFT_CLIENT_ID`, `MICROSOFT_CLIENT_SECRET`, `MICROSOFT_TENANT` |
 | Zoom      | Zoom meetings                                                          | `ZOOM_CLIENT_ID`, `ZOOM_CLIENT_SECRET`                               |
-| Daily.co  | **Built-in video** rooms, no account needed by hosts or attendees      | `DAILY_API_KEY`, `DAILY_DOMAIN`, optional `MEET_URL`                 |
+| Daily.co  | **Bookly video** rooms, no account needed by hosts or attendees        | `DAILY_API_KEY`, `DAILY_DOMAIN`, optional `MEET_URL`                 |
 
 Redirect URI for every OAuth provider: `<APP_URL>/api/integrations/<provider>/callback`.
 
@@ -24,7 +24,7 @@ Redirect URI for every OAuth provider: `<APP_URL>/api/integrations/<provider>/ca
    Results are cached for one minute.
 
 Everything is best-effort. If a provider fails, the booking still goes through: Bookly tries
-built-in video next, then leaves the location as the event type's text. A permanently broken
+Bookly video next, then leaves the location as the event type's text. A permanently broken
 connection (revoked token) is marked in the admin and the host gets one email asking to reconnect.
 
 Tokens are stored encrypted (AES-256-GCM, key derived from `AUTH_SECRET`). Changing `AUTH_SECRET`
@@ -69,7 +69,7 @@ Busy time from connected calendars is cached for 60 seconds. When `APP_URL` is a
    `meeting:delete:meeting`, `user:read:user`).
 4. Set `ZOOM_CLIENT_ID` / `ZOOM_CLIENT_SECRET`.
 
-## Daily.co (built-in video)
+## Daily.co (Bookly video)
 
 1. Create a Daily account; note your domain (`something.daily.co`) and create an API key.
 2. Set `DAILY_API_KEY` and `DAILY_DOMAIN=something.daily.co`.

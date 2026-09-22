@@ -74,7 +74,7 @@ export function PrefsForm({
               ["onCancel", "an attendee cancels", prefs.onCancel ?? true],
               [
                 "onJoin",
-                "an attendee joins the video room (built-in video only)",
+                "an attendee joins the video room (Bookly video only)",
                 prefs.onJoin ?? true,
               ],
               ["reminder1h", "a call starts in one hour", prefs.reminder1h ?? false],

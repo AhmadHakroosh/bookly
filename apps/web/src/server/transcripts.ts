@@ -17,7 +17,7 @@ import { mergeSegments, parseVtt } from "./transcript-text";
 const DAILY = "https://api.daily.co/v1";
 const DEFAULT_RETENTION_DAYS = 90;
 
-/** Whether this booking should be transcribed: built-in video, event type on, consent when asked. */
+/** Whether this booking should be transcribed: Bookly video, event type on, consent when asked. */
 export function captureEnabled(
   booking: Pick<Booking, "meetingProvider" | "captureConsent">,
   eventType: Pick<EventType, "autoCapture"> | null,

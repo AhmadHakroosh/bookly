@@ -19,7 +19,7 @@ async function ConferencingPage({ searchParams }: PageProps<"/admin/conferencing
   const zoom = conns.find((c) => c.provider === "zoom") ?? null;
   const rows: { name: string; ok: boolean; note: React.ReactNode; action?: React.ReactNode }[] = [
     {
-      name: "Built-in video",
+      name: "Bookly video",
       ok: avail.daily,
       note: avail.daily
         ? "Ready. A private room is created for every booking; no account needed by anyone."
@@ -86,8 +86,8 @@ async function ConferencingPage({ searchParams }: PageProps<"/admin/conferencing
         <h1 className="text-2xl font-semibold tracking-tight">Conferencing</h1>
         <p className="text-sm text-muted-foreground">
           Each event type picks a location. Anything marked ready gets a real meeting link on every
-          confirmed booking. If a provider fails, Bookly falls back to built-in video, then to a
-          plain note in the email.
+          confirmed booking. If a provider fails, Bookly falls back to Bookly video, then to a plain
+          note in the email.
         </p>
       </div>
       {typeof sp.error === "string" && (

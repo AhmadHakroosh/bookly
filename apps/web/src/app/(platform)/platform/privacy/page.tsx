@@ -58,7 +58,7 @@ export default function PrivacyPage() {
           questions, timezone, and the time you booked.
         </li>
         <li>
-          If the host enabled it and you agreed, a transcript of the call on built-in video, with
+          If the host enabled it and you agreed, a transcript of the call on Bookly video, with
           speaker labels and any recap generated from it.
         </li>
         <li>
@@ -87,7 +87,7 @@ export default function PrivacyPage() {
       <h2>Who else sees it</h2>
       <p>
         Sub-processors that host or deliver the service: the hosting and database providers, the
-        email, SMS and WhatsApp delivery providers, Daily.co for built-in video and transcription,
+        email, SMS and WhatsApp delivery providers, Daily.co for Bookly video and transcription,
         Stripe for payments, Anthropic for AI features, and Sentry for error reports. Each is bound
         by a data-processing agreement. The current list is available on request. Data you choose to
         sync to Google, Microsoft, Zoom, HubSpot or Pipedrive is governed by their policies.

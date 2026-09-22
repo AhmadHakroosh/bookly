@@ -96,7 +96,7 @@ export async function proxy(request: NextRequest) {
   }
   if (pathname.startsWith("/platform")) return notFound(request);
 
-  // Built-in video on its own host (MEET_URL, e.g. meet.example.com): /<room> → /meet/<room>.
+  // Bookly video on its own host (MEET_URL, e.g. meet.example.com): /<room> → /meet/<room>.
   const mh = meetHost();
   if (mh && host === mh && !pathname.startsWith("/meet/")) {
     const url = request.nextUrl.clone();

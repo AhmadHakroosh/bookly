@@ -152,7 +152,7 @@ export function EventTypeForm({
         </div>
         {loc === "daily" && (
           <Field>
-            <FieldLabel htmlFor="autoCapture">Auto-capture (built-in video)</FieldLabel>
+            <FieldLabel htmlFor="autoCapture">Auto-capture (Bookly video)</FieldLabel>
             <select
               id="autoCapture"
               name="autoCapture"
@@ -260,7 +260,7 @@ export function EventTypeForm({
             </select>
             <FieldDescription>
               {loc in ready && !ready[loc as keyof ConferencingReady]
-                ? "This provider is not connected yet. Bookings fall back to built-in video if available, otherwise the email says the link follows. Set it up under Calendars / Conferencing."
+                ? "This provider is not connected yet. Bookings fall back to Bookly video if available, otherwise the email says the link follows. Set it up under Calendars / Conferencing."
                 : loc in ready
                   ? "A meeting link is created automatically for every confirmed booking."
                   : "Shown to attendees in the confirmation email and calendar invite."}

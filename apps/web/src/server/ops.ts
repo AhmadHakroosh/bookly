@@ -184,7 +184,7 @@ export async function healthReport(now = new Date()): Promise<HealthCheck[]> {
           ].join("; "),
     },
     {
-      name: "Built-in video (Daily)",
+      name: "Bookly video (Daily)",
       ok: dailyConfigured(),
       detail: dailyConfigured() ? "configured" : "not configured",
     },

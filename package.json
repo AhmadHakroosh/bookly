@@ -3,7 +3,7 @@
   "private": true,
   "license": "AGPL-3.0-only",
   "version": "0.1.0",
-  "description": "Bookly \u2014 a self-hostable scheduling platform with Google Meet, Zoom, Teams and built-in video.",
+  "description": "Bookly \u2014 a self-hostable scheduling platform with Google Meet, Zoom, Teams and Bookly video.",
   "packageManager": "pnpm@11.25.0",
   "engines": {
     "node": "24.x",

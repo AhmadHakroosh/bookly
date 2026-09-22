@@ -5,11 +5,11 @@ cancellation. Hosts choose how they hear about things under **Admin → Notifica
 
 ## Host pings
 
-Events: someone books, an attendee cancels, an attendee joins the built-in video room, a call
+Events: someone books, an attendee cancels, an attendee joins the Bookly video room, a call
 starts in one hour. Channels: email (always available), WhatsApp or SMS via Twilio, and a Slack
 incoming webhook. Each host sets their own phone, channel and toggles.
 
-## Attendee joined (built-in video)
+## Attendee joined (Bookly video)
 
 Turn it on under Admin → Notifications. Bookly registers a Daily.co webhook for
 `participant.joined` pointing at `<APP_URL>/api/webhooks/daily` and stores the HMAC key on the

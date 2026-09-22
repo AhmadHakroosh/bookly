@@ -12,7 +12,7 @@ import { PageSkeleton } from "@/components/page-skeleton";
 
 export const metadata: Metadata = { title: "Meeting", robots: { index: false, follow: false } };
 
-/** Built-in video: wraps Daily Prebuilt for the room created for a booking. */
+/** Bookly video: wraps Daily Prebuilt for the room created for a booking. */
 async function MeetPage({ params }: PageProps<"/meet/[room]">) {
   const { room } = await params;
   if (!dailyConfigured() || !/^b-[a-z0-9]+$/.test(room)) notFound();

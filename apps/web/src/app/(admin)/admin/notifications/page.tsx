@@ -45,15 +45,15 @@ async function NotificationsPage() {
               </Badge>
             </h2>
             <p className="text-sm text-muted-foreground">
-              Built-in video tells Bookly when the first person enters a room, and Bookly pings you
-              on the channels above. Needs built-in video to be set up.
+              Bookly video tells Bookly when the first person enters a room, and Bookly pings you on
+              the channels above. Needs Bookly video to be set up.
             </p>
           </div>
           {canManage && dailyConfigured() && <JoinToggle enabled={joinEnabled} />}
         </div>
         {!dailyConfigured() && (
           <p className="text-xs text-muted-foreground">
-            Built-in video is not configured on this server.
+            Bookly video is not configured on this server.
           </p>
         )}
       </section>

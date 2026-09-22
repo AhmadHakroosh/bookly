@@ -223,7 +223,7 @@ async function markError(i: Integration, e: unknown) {
 }
 
 export function providerName(p: IntegrationProvider | "daily") {
-  return { google: "Google", microsoft: "Microsoft", zoom: "Zoom", daily: "Built-in video" }[p];
+  return { google: "Google", microsoft: "Microsoft", zoom: "Zoom", daily: "Bookly video" }[p];
 }
 
 /* ---------------- Availability ---------------- */

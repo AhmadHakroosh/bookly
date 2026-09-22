@@ -9,7 +9,7 @@ const id = () =>
 
 /**
  * OAuth providers a host can connect. Google = Calendar + Meet, Microsoft = Outlook + Teams,
- * Zoom = meetings only. Daily.co (built-in video) is configured by env, not per user.
+ * Zoom = meetings only. Daily.co (Bookly video) is configured by env, not per user.
  */
 export const integrationProvider = pgEnum("integration_provider", ["google", "microsoft", "zoom"]);
 

@@ -12,7 +12,7 @@ Third of Ahmad's three products (personal site `ahmadhakroosh.com`, **Warqa** bl
 - Cache Components are enabled: every page is `XPage` + `XPageBoundary` (Suspense); layouts wrap their shell in Suspense; cached data uses `"use cache"` + `workspaceTag`; server actions call `refreshWorkspace`, route handlers `refreshWorkspaceBackground`.
 - Providers behind interfaces: `@bookly/email`, `@bookly/jobs`. No file storage: avatars and logos are URLs the host provides. Calendar and conferencing providers (K2) follow the same pattern under `src/server/integrations/`.
 - Domains: `_bookly.<host>` TXT verification; `/api/domains/check` gates Caddy on-demand TLS.
-- Self-host first: everything must work with `docker compose up` and no third-party accounts (built-in video via Daily.co is optional).
+- Self-host first: everything must work with `docker compose up` and no third-party accounts (Bookly video via Daily.co is optional).
 
 ## Public API & webhooks (K4)
 

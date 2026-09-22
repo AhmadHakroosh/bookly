@@ -13,7 +13,7 @@ const mono = Geist_Mono({ subsets: ["latin"], variable: "--font-geist-mono", dis
 export const metadata: Metadata = {
   title: { default: "Bookly", template: "%s — Bookly" },
   description:
-    "Self-hostable scheduling: booking pages, calendar sync, Meet, Zoom, Teams and built-in video.",
+    "Self-hostable scheduling: booking pages, calendar sync, Meet, Zoom, Teams and Bookly video.",
 };
 
 export const viewport: Viewport = {
