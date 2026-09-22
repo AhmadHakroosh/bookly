@@ -40,7 +40,7 @@ Operator setup, on top of the keys above:
 
 - Stripe Dashboard → Connect → get started with Express accounts, and set the platform's name
   and icon (hosts see them during onboarding).
-- Developers → Webhooks → **Add endpoint**, choose *Listen to events on Connected accounts*,
+- Developers → Webhooks → **Add endpoint**, choose _Listen to events on Connected accounts_,
   URL `https://<platform host>/api/webhooks/stripe/connect`, events
   `checkout.session.completed`, `checkout.session.async_payment_succeeded`, `account.updated`.
   Its signing secret goes into `STRIPE_CONNECT_WEBHOOK_SECRET`.

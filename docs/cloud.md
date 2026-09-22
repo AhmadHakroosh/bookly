@@ -113,7 +113,7 @@ video `https://meet.bookly-app.io`, `www` redirected to the apex by the proxy.
 4. **Database.** From your machine: `DATABASE_URL='<neon pooled url>' pnpm db:migrate`.
 5. **Stripe.** Two webhook endpoints: `https://bookly-app.io/api/webhooks/stripe` on your
    account (subscriptions and Checkout) and `https://bookly-app.io/api/webhooks/stripe/connect`
-   of type *Connected accounts* (`docs/payments.md`, "Cloud mode"). Enable Connect Express and
+   of type _Connected accounts_ (`docs/payments.md`, "Cloud mode"). Enable Connect Express and
    set the platform name and icon hosts see during onboarding. Set the fee in Console → Payments.
 6. **After the first deploy.** Sign in with an address in `PLATFORM_ADMIN_EMAILS`, open
    `/console/health` and `/console/payments`, re-register the Daily webhook from Admin →
