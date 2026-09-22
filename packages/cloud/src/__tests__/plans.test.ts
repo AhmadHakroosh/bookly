@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  billedSeats,
   captureBudget,
   limitsFor,
   monthlyEquivalent,
@@ -27,11 +28,15 @@ describe("plans", () => {
     expect(withinLimit(PLANS.pro.limits, "eventTypes", 999)).toBe(true);
   });
   it("pools Team's capture minutes per member; Pro's are flat", () => {
-    expect(captureBudget(PLANS.pro.limits, 5)).toBe(300);
-    expect(captureBudget(PLANS.team.limits, 1)).toBe(300);
-    expect(captureBudget(PLANS.team.limits, 4)).toBe(1200);
-    expect(captureBudget(PLANS.free.limits, 3)).toBe(0);
-    expect(captureBudget(UNLIMITED, 3)).toBeNull();
+    expect(captureBudget(PLANS.pro, 5)).toBe(300);
+    expect(captureBudget(PLANS.team, 1)).toBe(600); // two seats minimum, two seats of minutes
+    expect(captureBudget(PLANS.team, 4)).toBe(1200);
+    expect(captureBudget(PLANS.free, 3)).toBe(0);
+  });
+  it("bills Team for at least two seats", () => {
+    expect(billedSeats(PLANS.team, 1)).toBe(2);
+    expect(billedSeats(PLANS.team, 5)).toBe(5);
+    expect(billedSeats(PLANS.pro, 1)).toBe(1);
   });
   it("prices yearly at two months free", () => {
     expect(planPrice(PLANS.pro, "month")).toBe(12);

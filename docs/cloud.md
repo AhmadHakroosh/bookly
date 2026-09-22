@@ -26,7 +26,7 @@ quantity follows the member count). Optional `STRIPE_PRICE_PRO_YEARLY` and
 `STRIPE_PRICE_TEAM_YEARLY` add yearly billing (two months free, charged up front): the pricing
 page and Admin → Billing show a monthly/yearly switch, the interval is mirrored onto the workspace
 (`settings.billingInterval`) from the subscription, and the console MRR estimate counts a yearly
-plan at a twelfth of its price. Team seats follow the member count: `syncSeats` updates the
+plan at a twelfth of its price. Team is billed for at least two seats (`minSeats`); above that, seats follow the member count: `syncSeats` updates the
 subscription quantity with proration when someone joins or is removed, and `reconcileSeats` on
 the job tick compares every Team subscription to its member count once a day (`platform_state`
 key `billing.seats`) so a failed update cannot leave seats unbilled. Admin → Billing shows usage, upgrade buttons (Stripe Checkout)

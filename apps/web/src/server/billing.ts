@@ -1,6 +1,6 @@
 import "server-only";
 import type Stripe from "stripe";
-import { isPlanId, PLANS, type BillingInterval, type PlanId } from "@bookly/cloud";
+import { billedSeats, isPlanId, PLANS, type BillingInterval, type PlanId } from "@bookly/cloud";
 import { loadEnv } from "@bookly/config";
 import { and, eq, isNotNull, schema } from "@bookly/db";
 import type { Workspace } from "@bookly/db/schema";
@@ -63,7 +63,9 @@ export async function startUpgrade(
   const session = await stripe().checkout.sessions.create({
     mode: "subscription",
     customer,
-    line_items: [{ price, quantity: plan === "team" ? Math.max(1, await memberCount(ws)) : 1 }],
+    line_items: [
+      { price, quantity: plan === "team" ? billedSeats(PLANS.team, await memberCount(ws)) : 1 },
+    ],
     subscription_data: { metadata: { workspaceId: ws.id, plan, interval } },
     metadata: { workspaceId: ws.id, plan, interval },
     allow_promotion_codes: true,
@@ -139,7 +141,7 @@ export async function syncSeats(ws: Workspace): Promise<boolean> {
   try {
     const sub = await stripe().subscriptions.retrieve(ws.stripeSubscriptionId);
     const item = sub.items.data[0];
-    const n = Math.max(1, await memberCount(ws));
+    const n = billedSeats(PLANS.team, await memberCount(ws));
     if (!item || item.quantity === n) return false;
     await stripe().subscriptionItems.update(item.id, {
       quantity: n,

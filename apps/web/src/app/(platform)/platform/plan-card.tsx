@@ -65,6 +65,7 @@ export function PriceLine({ plan: p, interval }: { plan: Plan; interval: Billing
         {interval === "year"
           ? `billed $${planPrice(p, "year")}${p.id === "team" ? " per member" : ""} a year`
           : "billed monthly"}
+        {p.minSeats > 1 ? ` · ${p.minSeats} seats minimum` : ""}
       </span>
     </p>
   );

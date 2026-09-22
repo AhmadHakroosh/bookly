@@ -37,6 +37,8 @@ export type Plan = {
   priceMonthly: number;
   /** USD per year when billed annually (two months free); 0 on Free. */
   priceYearly: number;
+  /** Seats always billed, whatever the member count (Team starts at two). */
+  minSeats: number;
   limits: Limits;
   /** Shown on plan cards, strongest first. */
   highlights: string[];
@@ -51,6 +53,7 @@ export const PLANS: Record<PlanId, Plan> = {
     tagline: "For one person getting started.",
     priceMonthly: 0,
     priceYearly: 0,
+    minSeats: 1,
     limits: {
       eventTypes: 2,
       members: 1,
@@ -80,6 +83,7 @@ export const PLANS: Record<PlanId, Plan> = {
     tagline: "For professionals who take bookings seriously.",
     priceMonthly: 12,
     priceYearly: 120,
+    minSeats: 1,
     limits: {
       eventTypes: null,
       members: 1,
@@ -113,6 +117,7 @@ export const PLANS: Record<PlanId, Plan> = {
     tagline: "For teams that share the calendar.",
     priceMonthly: 10,
     priceYearly: 100,
+    minSeats: 2,
     limits: {
       eventTypes: null,
       members: 25,
@@ -132,7 +137,7 @@ export const PLANS: Record<PlanId, Plan> = {
       "Everything in Pro",
       "Round-robin and collective event types",
       "Auto-capture: 300 transcribed minutes a month per member, pooled",
-      "Up to 25 members, priced per member",
+      "2 to 25 members, priced per member",
       "3 custom domains",
     ],
     featured: [
@@ -161,11 +166,17 @@ export const UNLIMITED: Limits = {
 export const isPlanId = (p: string): p is PlanId => p in PLANS;
 
 /** How a paid plan is billed. Yearly is charged up front and works out to two months free. */
-/** The workspace's monthly transcription budget: flat, or per member and pooled. */
-export function captureBudget(limits: Limits, members: number): number | null {
-  const m = limits.captureMinutesPerMonth;
+/** Seats a workspace pays for: its members, never fewer than the plan's minimum. */
+export const billedSeats = (plan: Plan, members: number) => Math.max(plan.minSeats, members);
+
+/**
+ * The workspace's monthly transcription budget: flat, or per billed seat and pooled (so a
+ * two-seat minimum on Team also means two seats' worth of minutes).
+ */
+export function captureBudget(plan: Plan, members: number): number | null {
+  const m = plan.limits.captureMinutesPerMonth;
   if (m === null || m === 0) return m;
-  return limits.captureMinutesPerMember ? m * Math.max(1, members) : m;
+  return plan.limits.captureMinutesPerMember ? m * billedSeats(plan, members) : m;
 }
 
 export type BillingInterval = "month" | "year";

@@ -52,7 +52,7 @@ const FAQ: [string, string][] = [
   ],
   [
     "What counts as a member?",
-    "A member is a person who signs in to your workspace and has their own calendar and booking pages. Guests who book with you are never charged for.",
+    "A member is a person who signs in to your workspace and has their own calendar and booking pages. Team is billed per member with a minimum of two seats, and seats are added or credited as people join or leave. Guests who book with you are never charged for.",
   ],
   [
     "What are transcription minutes?",

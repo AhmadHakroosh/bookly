@@ -71,9 +71,10 @@ export default function TermsPage() {
           partial periods unless the law requires it.
         </li>
         <li>
-          The Team plan is priced per member. When a member joins, the seat is charged for the rest
-          of the current billing period and in full from the next one. When a member is removed, the
-          unused part of that seat is credited against your next invoice rather than refunded.
+          The Team plan is priced per member with a minimum of two seats. When a member joins, the
+          seat is charged for the rest of the current billing period and in full from the next one.
+          When a member is removed, the unused part of that seat is credited against your next
+          invoice rather than refunded.
         </li>
         <li>
           We may change prices with at least 30 days&apos; notice by email. Continued use after that
