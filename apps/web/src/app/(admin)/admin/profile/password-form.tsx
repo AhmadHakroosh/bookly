@@ -64,7 +64,7 @@ export function PasswordForm() {
           <FieldLabel htmlFor="confirm">Confirm new password</FieldLabel>
           <Input id="confirm" name="confirm" type="password" autoComplete="new-password" required />
         </Field>
-        <Button type="submit" size="sm" disabled={pending}>
+        <Button type="submit" disabled={pending}>
           {pending ? "Saving…" : "Change password"}
         </Button>
       </FieldGroup>
