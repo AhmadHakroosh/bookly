@@ -19,6 +19,8 @@ export type Limits = {
   apiRequestsPerMinute: number | null;
   /** Auto-capture transcription minutes per month (0 = feature off, null = unlimited). */
   captureMinutesPerMonth: number | null;
+  /** The minutes are per member and pooled across the workspace (Team), not a flat budget. */
+  captureMinutesPerMember?: boolean;
   /** Feature gates. */
   payments: boolean;
   workflows: boolean;
@@ -118,7 +120,8 @@ export const PLANS: Record<PlanId, Plan> = {
       domains: 3,
       bookingsPerMonth: null,
       apiRequestsPerMinute: 1200,
-      captureMinutesPerMonth: 1000,
+      captureMinutesPerMonth: 300,
+      captureMinutesPerMember: true,
       payments: true,
       workflows: true,
       teamScheduling: true,
@@ -128,13 +131,13 @@ export const PLANS: Record<PlanId, Plan> = {
     highlights: [
       "Everything in Pro",
       "Round-robin and collective event types",
-      "Auto-capture: 1000 transcribed minutes a month",
+      "Auto-capture: 300 transcribed minutes a month per member, pooled",
       "Up to 25 members, priced per member",
       "3 custom domains",
     ],
     featured: [
       "Round-robin and collective event types",
-      "Auto-capture: 1000 transcribed minutes a month",
+      "Auto-capture: 300 transcribed minutes a month per member, pooled",
     ],
   },
 };
@@ -158,6 +161,13 @@ export const UNLIMITED: Limits = {
 export const isPlanId = (p: string): p is PlanId => p in PLANS;
 
 /** How a paid plan is billed. Yearly is charged up front and works out to two months free. */
+/** The workspace's monthly transcription budget: flat, or per member and pooled. */
+export function captureBudget(limits: Limits, members: number): number | null {
+  const m = limits.captureMinutesPerMonth;
+  if (m === null || m === 0) return m;
+  return limits.captureMinutesPerMember ? m * Math.max(1, members) : m;
+}
+
 export type BillingInterval = "month" | "year";
 export const isInterval = (i: string): i is BillingInterval => i === "month" || i === "year";
 

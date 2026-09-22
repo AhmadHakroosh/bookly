@@ -33,7 +33,10 @@ const ROWS: [string, (l: Limits) => string | boolean][] = [
   ["Round-robin and collective events", (l) => l.teamScheduling],
   [
     "Auto-capture transcription minutes / month",
-    (l) => (l.captureMinutesPerMonth ? fmt(l.captureMinutesPerMonth) : false),
+    (l) =>
+      l.captureMinutesPerMonth
+        ? `${fmt(l.captureMinutesPerMonth)}${l.captureMinutesPerMember ? " per member, pooled" : ""}`
+        : false,
   ],
   ["AI recap, tasks and follow-up drafts", (l) => (l.captureMinutesPerMonth ? true : false)],
   ["HubSpot / Pipedrive sync", (l) => l.api],
@@ -53,7 +56,7 @@ const FAQ: [string, string][] = [
   ],
   [
     "What are transcription minutes?",
-    "Auto-capture transcribes calls on built-in video. Each plan includes a monthly budget of transcribed minutes. When it runs out, calls still happen; they just are not transcribed until the next month or an upgrade.",
+    "Auto-capture transcribes calls on built-in video. Pro includes 300 transcribed minutes a month; Team includes 300 per member, pooled, so a team of four shares 1,200. When the budget runs out, calls still happen; they just are not transcribed until the next month or an upgrade. Paid overage is coming after launch.",
   ],
   [
     "Monthly or yearly?",

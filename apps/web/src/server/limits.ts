@@ -1,5 +1,6 @@
 import "server-only";
 import {
+  captureBudget,
   FEATURE_LABELS,
   LIMIT_LABELS,
   limitsFor,
@@ -151,9 +152,11 @@ export async function captureMinutesThisMonth(ws: Workspace): Promise<number> {
 
 /** Can this workspace start another transcription now? (feature off / budget used up → false) */
 export async function captureAllowed(ws: Workspace): Promise<{ ok: boolean; reason?: string }> {
-  const max = workspaceLimits(ws).captureMinutesPerMonth;
+  const limits = workspaceLimits(ws);
+  if (limits.captureMinutesPerMonth === 0)
+    return { ok: false, reason: `Auto-capture needs the ${PLANS.pro.name} plan.` };
+  const max = captureBudget(limits, await count(ws, "members"));
   if (max === null) return { ok: true };
-  if (max === 0) return { ok: false, reason: `Auto-capture needs the ${PLANS.pro.name} plan.` };
   const used = await captureMinutesThisMonth(ws);
   return used < max
     ? { ok: true }
@@ -186,9 +189,11 @@ export async function usageSummary(ws: Workspace) {
     },
     {
       key: "captureMinutesPerMonth",
-      label: "transcribed minutes this month",
+      label: limits.captureMinutesPerMember
+        ? "transcribed minutes this month (pooled, per member)"
+        : "transcribed minutes this month",
       used: await captureMinutesThisMonth(ws),
-      max: limits.captureMinutesPerMonth,
+      max: captureBudget(limits, counts[1]!),
     },
   ];
 }

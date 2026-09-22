@@ -8,6 +8,7 @@ Everything below is on `main` ahead of the first release, which will be tagged `
 
 ### Changed
 
+- Team's auto-capture budget is 300 transcribed minutes a month per member, pooled across the workspace (a team of four shares 1,200), instead of a flat 1,000; Pro keeps 300. Billing shows the pooled total. Paid overage is planned after launch
 - The platform fee on hosted paid bookings defaults to 5% and is published: terms §6 and a pricing FAQ entry explain that it is deducted before payout, returned on refunds and does not apply to self-hosted installs; the pricing comparison row says so too. Legal date bumped to September 23, 2026
 
 ### Fixed
