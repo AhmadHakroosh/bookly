@@ -33,6 +33,8 @@ export type Plan = {
   tagline: string;
   /** USD per month, for display; Stripe is the source of truth. */
   priceMonthly: number;
+  /** USD per year when billed annually (two months free); 0 on Free. */
+  priceYearly: number;
   limits: Limits;
   /** Shown on plan cards, strongest first. */
   highlights: string[];
@@ -46,6 +48,7 @@ export const PLANS: Record<PlanId, Plan> = {
     name: "Free",
     tagline: "For one person getting started.",
     priceMonthly: 0,
+    priceYearly: 0,
     limits: {
       eventTypes: 2,
       members: 1,
@@ -74,6 +77,7 @@ export const PLANS: Record<PlanId, Plan> = {
     name: "Pro",
     tagline: "For professionals who take bookings seriously.",
     priceMonthly: 12,
+    priceYearly: 120,
     limits: {
       eventTypes: null,
       members: 1,
@@ -106,6 +110,7 @@ export const PLANS: Record<PlanId, Plan> = {
     name: "Team",
     tagline: "For teams that share the calendar.",
     priceMonthly: 10,
+    priceYearly: 100,
     limits: {
       eventTypes: null,
       members: 25,
@@ -151,6 +156,22 @@ export const UNLIMITED: Limits = {
 };
 
 export const isPlanId = (p: string): p is PlanId => p in PLANS;
+
+/** How a paid plan is billed. Yearly is charged up front and works out to two months free. */
+export type BillingInterval = "month" | "year";
+export const isInterval = (i: string): i is BillingInterval => i === "month" || i === "year";
+
+/** What the customer pays per period for a plan (per member on Team). */
+export const planPrice = (plan: Plan, interval: BillingInterval) =>
+  interval === "year" ? plan.priceYearly : plan.priceMonthly;
+
+/** The yearly price spread over twelve months, for "per month, billed yearly" labels and MRR. */
+export const monthlyEquivalent = (plan: Plan, interval: BillingInterval) =>
+  interval === "year" ? Math.round((plan.priceYearly / 12) * 100) / 100 : plan.priceMonthly;
+
+/** Whole months a year of the plan saves against paying monthly (2 at the standard discount). */
+export const monthsFreeYearly = (plan: Plan) =>
+  plan.priceMonthly ? Math.round(12 - plan.priceYearly / plan.priceMonthly) : 0;
 
 /** Limits for a workspace: cloud plan → that plan, anything else (self-hosted) → unlimited. */
 export function limitsFor(plan: string, status?: string | null): Limits {

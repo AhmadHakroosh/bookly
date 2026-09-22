@@ -62,6 +62,9 @@ export const envSchema = z.object({
   /** Stripe recurring price ids for the Pro and Team plans. */
   STRIPE_PRICE_PRO: z.string().optional(),
   STRIPE_PRICE_TEAM: z.string().optional(),
+  /** Optional yearly prices; without them the plans are monthly only. */
+  STRIPE_PRICE_PRO_YEARLY: z.string().optional(),
+  STRIPE_PRICE_TEAM_YEARLY: z.string().optional(),
   /** Comma-separated emails allowed into the operator console at /console on the platform host. */
   PLATFORM_ADMIN_EMAILS: z.string().default(""),
   /** Shown on the marketing site's contact, legal and footer (cloud mode). */

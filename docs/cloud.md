@@ -22,7 +22,11 @@ custom domains, enabling paid bookings / workflows / team scheduling, the keyed 
 
 Stripe subscriptions, same keys as paid bookings (`STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`),
 plus recurring prices `STRIPE_PRICE_PRO` (per workspace) and `STRIPE_PRICE_TEAM` (per member; the
-quantity follows the member count). Admin → Billing shows usage, upgrade buttons (Stripe Checkout)
+quantity follows the member count). Optional `STRIPE_PRICE_PRO_YEARLY` and
+`STRIPE_PRICE_TEAM_YEARLY` add yearly billing (two months free, charged up front): the pricing
+page and Admin → Billing show a monthly/yearly switch, the interval is mirrored onto the workspace
+(`settings.billingInterval`) from the subscription, and the console MRR estimate counts a yearly
+plan at a twelfth of its price. Admin → Billing shows usage, upgrade buttons (Stripe Checkout)
 and the customer portal. The webhook needs `customer.subscription.created|updated|deleted` and
 `checkout.session.completed`; `syncSubscription` mirrors the subscription onto the workspace.
 A lapsed subscription drops the workspace to Free limits without deleting anything.

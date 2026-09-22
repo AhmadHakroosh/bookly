@@ -31,7 +31,7 @@ import {
   RecapMock,
 } from "./mocks";
 import { EmailMock, FollowUpMock, LiveTranscriptMock, RoutingMock, SeatsMock } from "./mocks-more";
-import { PlanCard } from "./plan-card";
+import { PlanGrid } from "./plan-card";
 import { JsonLd, organizationLd, softwareLd, websiteLd } from "./json-ld";
 import { pageMetadata, SITE } from "./site";
 
@@ -231,7 +231,11 @@ export default function LandingPage() {
           organizationLd(),
           websiteLd(),
           softwareLd(
-            Object.values(PLANS).map((p) => ({ name: p.name, priceMonthly: p.priceMonthly })),
+            Object.values(PLANS).map((p) => ({
+              name: p.name,
+              priceMonthly: p.priceMonthly,
+              priceYearly: p.priceYearly,
+            })),
           ),
         ]}
       />
@@ -593,12 +597,8 @@ open http://localhost:3002`}
             Start free. Pay when it pays for itself.
           </h2>
         </div>
-        <div className="mt-10 grid gap-4 md:grid-cols-3">
-          {Object.values(PLANS).map((p, i) => (
-            <div key={p.id} data-reveal style={{ "--reveal-delay": `${i * 100}ms` } as never}>
-              <PlanCard plan={p} className="h-full" />
-            </div>
-          ))}
+        <div className="mt-10">
+          <PlanGrid plans={Object.values(PLANS)} reveal />
         </div>
         <p className="mt-6 text-center text-sm">
           <Link href="/pricing" className="underline underline-offset-4">

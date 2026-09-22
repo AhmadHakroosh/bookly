@@ -1,6 +1,6 @@
 import "server-only";
 import type Stripe from "stripe";
-import { isPlanId, PLANS, type PlanId } from "@bookly/cloud";
+import { isPlanId, PLANS, type BillingInterval, type PlanId } from "@bookly/cloud";
 import { loadEnv } from "@bookly/config";
 import { eq, schema } from "@bookly/db";
 import type { Workspace } from "@bookly/db/schema";
@@ -12,21 +12,27 @@ import { tenantUrl } from "./platform";
 export const billingConfigured = () =>
   paymentsConfigured() && !!(loadEnv().STRIPE_PRICE_PRO && loadEnv().STRIPE_PRICE_TEAM);
 
-const priceFor = (plan: PlanId) =>
-  plan === "pro"
-    ? loadEnv().STRIPE_PRICE_PRO
-    : plan === "team"
-      ? loadEnv().STRIPE_PRICE_TEAM
-      : null;
+/** Yearly billing is offered only when both yearly prices exist. */
+export const yearlyConfigured = () =>
+  !!(loadEnv().STRIPE_PRICE_PRO_YEARLY && loadEnv().STRIPE_PRICE_TEAM_YEARLY);
 
-const planFromPrice = (priceId: string | undefined): PlanId | null =>
-  !priceId
-    ? null
-    : priceId === loadEnv().STRIPE_PRICE_PRO
-      ? "pro"
-      : priceId === loadEnv().STRIPE_PRICE_TEAM
-        ? "team"
-        : null;
+/** Every configured Stripe price with the plan and interval it stands for. */
+function priceTable(): { id: string; plan: PlanId; interval: BillingInterval }[] {
+  const e = loadEnv();
+  const rows: { id: string | undefined; plan: PlanId; interval: BillingInterval }[] = [
+    { id: e.STRIPE_PRICE_PRO, plan: "pro", interval: "month" },
+    { id: e.STRIPE_PRICE_TEAM, plan: "team", interval: "month" },
+    { id: e.STRIPE_PRICE_PRO_YEARLY, plan: "pro", interval: "year" },
+    { id: e.STRIPE_PRICE_TEAM_YEARLY, plan: "team", interval: "year" },
+  ];
+  return rows.filter((r): r is { id: string; plan: PlanId; interval: BillingInterval } => !!r.id);
+}
+
+const priceFor = (plan: PlanId, interval: BillingInterval) =>
+  priceTable().find((r) => r.plan === plan && r.interval === interval)?.id ?? null;
+
+const planFromPrice = (priceId: string | undefined) =>
+  (priceId && priceTable().find((r) => r.id === priceId)) || null;
 
 async function customerFor(ws: Workspace, email: string) {
   if (ws.stripeCustomerId) return ws.stripeCustomerId;
@@ -43,8 +49,13 @@ async function customerFor(ws: Workspace, email: string) {
 }
 
 /** Stripe Checkout (subscription) for upgrading to `plan`. Returns the redirect URL. */
-export async function startUpgrade(ws: Workspace, plan: PlanId, email: string) {
-  const price = priceFor(plan);
+export async function startUpgrade(
+  ws: Workspace,
+  plan: PlanId,
+  email: string,
+  interval: BillingInterval = "month",
+) {
+  const price = priceFor(plan, interval);
   if (!price) throw new Error("This plan is not available");
   const customer = await customerFor(ws, email);
   const back = tenantUrl(ws.slug, "/admin/billing");
@@ -52,8 +63,8 @@ export async function startUpgrade(ws: Workspace, plan: PlanId, email: string) {
     mode: "subscription",
     customer,
     line_items: [{ price, quantity: plan === "team" ? Math.max(1, await memberCount(ws)) : 1 }],
-    subscription_data: { metadata: { workspaceId: ws.id, plan } },
-    metadata: { workspaceId: ws.id, plan },
+    subscription_data: { metadata: { workspaceId: ws.id, plan, interval } },
+    metadata: { workspaceId: ws.id, plan, interval },
     allow_promotion_codes: true,
     success_url: `${back}?upgraded=1`,
     cancel_url: back,
@@ -91,10 +102,16 @@ export async function syncSubscription(sub: Stripe.Subscription) {
   if (!ws) return;
   // An operator-managed plan (comp, trial) is not touched by Stripe events.
   if (ws.planManagedBy === "operator") return;
-  const priceId = sub.items.data[0]?.price.id;
+  const item = sub.items.data[0];
+  const known = planFromPrice(item?.price.id);
   const plan =
-    planFromPrice(priceId) ??
-    (isPlanId(sub.metadata?.plan ?? "") ? (sub.metadata!.plan as PlanId) : null);
+    known?.plan ?? (isPlanId(sub.metadata?.plan ?? "") ? (sub.metadata!.plan as PlanId) : null);
+  // Stripe's own interval on the price wins; the checkout metadata is the fallback.
+  const interval: BillingInterval =
+    known?.interval ??
+    (item?.price.recurring?.interval === "year" || sub.metadata?.interval === "year"
+      ? "year"
+      : "month");
   const ended = ["canceled", "incomplete_expired", "unpaid"].includes(sub.status);
   const periodEnd = sub.items.data[0]?.current_period_end;
   await db()
@@ -105,6 +122,7 @@ export async function syncSubscription(sub: Stripe.Subscription) {
       planRenewsAt: periodEnd ? new Date(periodEnd * 1000) : null,
       stripeCustomerId: customer,
       stripeSubscriptionId: ended ? null : sub.id,
+      settings: { ...ws.settings, billingInterval: ended || !plan ? undefined : interval },
     })
     .where(eq(schema.workspaces.id, ws.id));
   refreshWorkspace(ws.id);

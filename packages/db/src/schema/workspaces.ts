@@ -28,6 +28,8 @@ export type WorkspaceSettings = {
   crm?: { provider: "hubspot" | "pipedrive"; apiKey: string; companyDomain?: string } | null;
   /** Opt-in: include coarse usage counts in the daily update check (self-hosted only). */
   telemetryStats?: boolean;
+  /** How the current paid plan is billed, mirrored from the Stripe subscription. */
+  billingInterval?: "month" | "year";
   /**
    * Stripe Connect (cloud mode): the state of the workspace's own Stripe account, refreshed from
    * `account.updated` events and on return from onboarding. `feePercent` is an operator override

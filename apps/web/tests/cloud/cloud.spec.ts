@@ -37,6 +37,24 @@ test.describe("marketing site", () => {
       await expect(page.getByRole("heading", { level: 1 })).toContainText(heading);
     });
 
+  test("pricing switches between yearly and monthly", async ({ page }) => {
+    await page.goto("/pricing");
+    // Yearly is the default: Pro shows the monthly equivalent and the yearly charge.
+    await expect(page.getByText("billed $120 a year")).toBeVisible();
+    await page.getByRole("radio", { name: "Monthly" }).click();
+    await expect(page.getByText("billed $120 a year")).toHaveCount(0);
+    await expect(page.getByText("billed monthly").first()).toBeVisible();
+    await expect(page.getByRole("button", { name: "Start with Pro" })).toHaveAttribute(
+      "href",
+      /plan=pro&interval=month/,
+    );
+    await page.getByRole("radio", { name: /Yearly/ }).click();
+    await expect(page.getByRole("button", { name: "Start with Pro" })).toHaveAttribute(
+      "href",
+      /interval=year/,
+    );
+  });
+
   test("social metadata, robots, sitemap, social image and real 404s", async ({ page }) => {
     await page.goto("/");
     await expect(page.locator('meta[property="og:title"]')).toHaveAttribute("content", /Bookly/);

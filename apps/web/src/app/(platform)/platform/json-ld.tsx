@@ -36,7 +36,7 @@ export function websiteLd() {
   };
 }
 
-export function softwareLd(prices: { name: string; priceMonthly: number }[]) {
+export function softwareLd(prices: { name: string; priceMonthly: number; priceYearly?: number }[]) {
   const base = siteUrl();
   return {
     "@context": "https://schema.org",
@@ -48,24 +48,32 @@ export function softwareLd(prices: { name: string; priceMonthly: number }[]) {
     description: SITE.description,
     softwareHelp: `${base}/docs`,
     license: "https://www.gnu.org/licenses/agpl-3.0.html",
-    offers: prices.map((p) => ({
-      "@type": "Offer",
-      name: p.name,
-      price: p.priceMonthly,
-      priceCurrency: "USD",
-      url: `${base}/pricing`,
-      ...(p.priceMonthly
-        ? {
-            priceSpecification: {
-              "@type": "UnitPriceSpecification",
-              price: p.priceMonthly,
-              priceCurrency: "USD",
-              billingIncrement: 1,
-              unitCode: "MON",
-            },
-          }
-        : {}),
-    })),
+    offers: prices.flatMap((p) => {
+      const offer = (price: number, unitCode: "MON" | "ANN", suffix: string) => ({
+        "@type": "Offer",
+        name: `${p.name}${suffix}`,
+        price,
+        priceCurrency: "USD",
+        url: `${base}/pricing`,
+        ...(price
+          ? {
+              priceSpecification: {
+                "@type": "UnitPriceSpecification",
+                price,
+                priceCurrency: "USD",
+                billingIncrement: 1,
+                unitCode,
+              },
+            }
+          : {}),
+      });
+      return p.priceMonthly
+        ? [
+            offer(p.priceMonthly, "MON", ", monthly"),
+            ...(p.priceYearly ? [offer(p.priceYearly, "ANN", ", yearly")] : []),
+          ]
+        : [offer(0, "MON", "")];
+    }),
   };
 }
 

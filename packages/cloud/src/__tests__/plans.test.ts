@@ -1,5 +1,14 @@
 import { describe, expect, it } from "vitest";
-import { limitsFor, planFor, PLANS, UNLIMITED, withinLimit } from "../index";
+import {
+  limitsFor,
+  monthlyEquivalent,
+  monthsFreeYearly,
+  planFor,
+  planPrice,
+  PLANS,
+  UNLIMITED,
+  withinLimit,
+} from "../index";
 
 describe("plans", () => {
   it("self-hosted and unknown plans are unlimited", () => {
@@ -15,6 +24,16 @@ describe("plans", () => {
     expect(withinLimit(PLANS.free.limits, "eventTypes", 1)).toBe(true);
     expect(withinLimit(PLANS.free.limits, "eventTypes", 2)).toBe(false);
     expect(withinLimit(PLANS.pro.limits, "eventTypes", 999)).toBe(true);
+  });
+  it("prices yearly at two months free", () => {
+    expect(planPrice(PLANS.pro, "month")).toBe(12);
+    expect(planPrice(PLANS.pro, "year")).toBe(120);
+    expect(monthlyEquivalent(PLANS.pro, "year")).toBe(10);
+    expect(monthlyEquivalent(PLANS.team, "year")).toBe(8.33);
+    expect(monthsFreeYearly(PLANS.pro)).toBe(2);
+    expect(monthsFreeYearly(PLANS.team)).toBe(2);
+    expect(monthsFreeYearly(PLANS.free)).toBe(0);
+    expect(planPrice(PLANS.free, "year")).toBe(0);
   });
   it("finds the cheapest plan for a need", () => {
     expect(planFor("payments")).toBe("pro");

@@ -14,7 +14,7 @@ import {
   sql,
 } from "@bookly/db";
 import { loadEnv } from "@bookly/config";
-import { isPlanId, PLANS } from "@bookly/cloud";
+import { isPlanId, PLANS, monthlyEquivalent } from "@bookly/cloud";
 import { db } from "@/lib/db";
 import { jobsHealth } from "./jobs";
 import { getLimiter } from "./ratelimit";
@@ -233,9 +233,18 @@ export async function platformStats(now = new Date()) {
         .where(gte(schema.sessions.updatedAt, d7)),
       db().select({ n: count() }).from(schema.bookings).where(gte(schema.bookings.createdAt, d30)),
       db()
-        .select({ plan: schema.workspaces.plan, status: schema.workspaces.planStatus, n: count() })
+        .select({
+          plan: schema.workspaces.plan,
+          status: schema.workspaces.planStatus,
+          interval: sql<string | null>`${schema.workspaces.settings}->>'billingInterval'`,
+          n: count(),
+        })
         .from(schema.workspaces)
-        .groupBy(schema.workspaces.plan, schema.workspaces.planStatus),
+        .groupBy(
+          schema.workspaces.plan,
+          schema.workspaces.planStatus,
+          sql`${schema.workspaces.settings}->>'billingInterval'`,
+        ),
       db()
         .select({
           m: sql<number>`coalesce(sum(extract(epoch from (coalesce(${schema.meetingTranscripts.endedAt}, now()) - ${schema.meetingTranscripts.startedAt})) / 60), 0)::int`,
@@ -262,7 +271,7 @@ export async function platformStats(now = new Date()) {
       p.plan !== "free" &&
       (!p.status || ["active", "trialing", "past_due"].includes(p.status))
     )
-      mrr += PLANS[p.plan].priceMonthly * p.n;
+      mrr += monthlyEquivalent(PLANS[p.plan], p.interval === "year" ? "year" : "month") * p.n;
   }
   return {
     workspaces: workspaces[0]?.n ?? 0,

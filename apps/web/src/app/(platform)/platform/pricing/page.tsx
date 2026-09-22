@@ -4,13 +4,13 @@ import { CheckIcon, MinusIcon } from "lucide-react";
 import { PLANS, type Limits } from "@bookly/cloud";
 import { Button } from "@/components/ui/button";
 import { breadcrumbLd, faqLd, JsonLd } from "../json-ld";
-import { PlanCard } from "../plan-card";
+import { PlanGrid } from "../plan-card";
 import { pageMetadata, SITE } from "../site";
 
 export const metadata: Metadata = pageMetadata({
   title: "Pricing",
   description:
-    "Bookly plans: Free with contacts, briefings and the Meeting Inbox; Pro at $12/month adds auto-capture, paid bookings, a custom domain; Team at $10 a member.",
+    "Bookly plans: Free with contacts, briefings and the Meeting Inbox; Pro at $12/month or $120/year adds auto-capture, paid bookings, a custom domain; Team at $10 a member, two months free yearly.",
   path: "/pricing",
 });
 
@@ -56,6 +56,10 @@ const FAQ: [string, string][] = [
     "Auto-capture transcribes calls on built-in video. Each plan includes a monthly budget of transcribed minutes. When it runs out, calls still happen; they just are not transcribed until the next month or an upgrade.",
   ],
   [
+    "Monthly or yearly?",
+    "Both. Yearly is charged up front and works out to two months free ($120 a year for Pro, $100 a member for Team). Yearly plans renew each year; cancelling stops the renewal and the plan stays active until the year ends. Partial years are not refunded unless the law requires it.",
+  ],
+  [
     "Can I self-host instead?",
     "Yes. Bookly is open source under AGPL-3.0. Run it with Docker Compose and every feature is unlocked with no limits. Bring your own keys for email, video, payments and AI.",
   ],
@@ -93,10 +97,8 @@ export default function PricingPage() {
         </p>
       </div>
 
-      <div className="mt-12 grid gap-6 md:grid-cols-3">
-        {plans.map((p) => (
-          <PlanCard key={p.id} plan={p} heading="h2" />
-        ))}
+      <div className="mt-12">
+        <PlanGrid plans={plans} heading="h2" />
       </div>
 
       <div className="mt-20">

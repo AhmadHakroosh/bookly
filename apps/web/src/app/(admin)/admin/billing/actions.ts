@@ -1,8 +1,8 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { isPlanId } from "@bookly/cloud";
-import { billingConfigured, billingPortal, startUpgrade } from "@/server/billing";
+import { isInterval, isPlanId } from "@bookly/cloud";
+import { billingConfigured, billingPortal, startUpgrade, yearlyConfigured } from "@/server/billing";
 import { requireStaff } from "@/server/session";
 import { getCurrentWorkspace } from "@/server/workspace";
 
@@ -13,10 +13,11 @@ async function owner() {
   return { session, ws };
 }
 
-export async function upgrade(plan: string) {
+export async function upgrade(plan: string, interval = "month") {
   if (!isPlanId(plan) || plan === "free" || !billingConfigured()) return;
+  const period = isInterval(interval) && yearlyConfigured() ? interval : "month";
   const { session, ws } = await owner();
-  redirect(await startUpgrade(ws, plan, session.user.email));
+  redirect(await startUpgrade(ws, plan, session.user.email, period));
 }
 
 export async function manageBilling() {

@@ -60,11 +60,15 @@ export default function TermsPage() {
       </p>
       <h2>5. Plans, billing and cancellation</h2>
       <ul>
-        <li>The Free plan is free. Paid plans are billed monthly in advance through Stripe.</li>
+        <li>
+          The Free plan is free. Paid plans are billed in advance through Stripe, monthly or yearly
+          as you choose at checkout.
+        </li>
         <li>
           You can upgrade, downgrade or cancel at any time from the billing page. Upgrades apply
-          immediately; downgrades and cancellations take effect at the end of the current period. We
-          do not refund partial months unless the law requires it.
+          immediately; downgrades and cancellations take effect at the end of the current billing
+          period, which for yearly plans is the end of the year you paid for. We do not refund
+          partial periods unless the law requires it.
         </li>
         <li>
           We may change prices with at least 30 days&apos; notice by email. Continued use after that
