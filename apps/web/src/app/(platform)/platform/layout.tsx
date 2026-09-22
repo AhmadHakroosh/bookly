@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { notFound, redirect } from "next/navigation";
+import { redirect } from "next/navigation";
 import { headers } from "next/headers";
-import { connection } from "next/server";
 import { Suspense } from "react";
 import { ExternalLinkIcon, MenuIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -11,7 +10,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/co
 import { ThemeToggle } from "@/components/theme-toggle";
 import { GitHubIcon, Logo, LogoMark } from "@/components/brand/logo";
 import { auth } from "@/lib/auth";
-import { isCloud, isPlatformAdmin } from "@/server/platform";
+import { isPlatformAdmin } from "@/server/platform";
 import { getSession } from "@/server/session";
 import { FOOTER, NAV, SITE } from "./site";
 import { Reveal } from "./reveal";
@@ -37,12 +36,13 @@ export const metadata: Metadata = {
   robots: { index: true, follow: true },
 };
 
+/**
+ * The proxy only routes the platform host here (and 404s /platform elsewhere), so the shell is
+ * static: header, footer and page content render at once and only the session-dependent nav
+ * items stream in behind their own boundary. That keeps navigations instant.
+ */
 export default function PlatformLayout({ children }: LayoutProps<"/platform">) {
-  return (
-    <Suspense fallback={null}>
-      <Shell>{children}</Shell>
-    </Suspense>
-  );
+  return <Shell>{children}</Shell>;
 }
 
 function NavLinks({ className = "" }: { className?: string }) {
@@ -63,12 +63,83 @@ function NavLinks({ className = "" }: { className?: string }) {
   );
 }
 
-async function Shell({ children }: { children: React.ReactNode }) {
-  // Decide at request time: at build the env may say single-tenant, which must not bake a 404.
-  await connection();
-  if (!isCloud()) notFound();
+async function sessionState() {
   const session = await getSession();
-  const admin = session && isPlatformAdmin(session.user.email);
+  return { session, admin: !!session && isPlatformAdmin(session.user.email) };
+}
+
+/** Desktop header: sign in, or workspaces / console / sign out. Streams in after the shell. */
+async function SessionNav() {
+  const { session, admin } = await sessionState();
+  if (!session)
+    return (
+      <Button
+        variant="ghost"
+        nativeButton={false}
+        render={<Link href="/login" />}
+        className="hidden sm:inline-flex"
+      >
+        Sign in
+      </Button>
+    );
+  return (
+    <>
+      <Button
+        variant="ghost"
+        nativeButton={false}
+        render={<Link href="/workspaces" />}
+        className="hidden sm:inline-flex"
+      >
+        Your workspaces
+      </Button>
+      {admin && (
+        <Button
+          variant="ghost"
+          nativeButton={false}
+          render={<Link href="/console" />}
+          className="hidden sm:inline-flex"
+        >
+          Console
+        </Button>
+      )}
+      <form action={signOut}>
+        <SubmitButton variant="ghost" className="hidden sm:inline-flex">
+          Sign out
+        </SubmitButton>
+      </form>
+    </>
+  );
+}
+
+/** The same items inside the mobile sheet. */
+async function SessionMenu() {
+  const { session, admin } = await sessionState();
+  if (!session)
+    return (
+      <Link href="/login" className="rounded-md px-2 py-2">
+        Sign in
+      </Link>
+    );
+  return (
+    <>
+      <Link href="/workspaces" className="rounded-md px-2 py-2">
+        Your workspaces
+      </Link>
+      {admin && (
+        <Link href="/console" className="rounded-md px-2 py-2">
+          Console
+        </Link>
+      )}
+      <form action={signOut}>
+        <button type="submit" className="w-full rounded-md px-2 py-2 text-left">
+          Sign out
+        </button>
+      </form>
+    </>
+  );
+}
+
+function Shell({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex min-h-full flex-1 flex-col">
       <a
@@ -96,42 +167,9 @@ async function Shell({ children }: { children: React.ReactNode }) {
               <GitHubIcon className="size-4" />
             </a>
             <ThemeToggle />
-            {session ? (
-              <>
-                <Button
-                  variant="ghost"
-                  nativeButton={false}
-                  render={<Link href="/workspaces" />}
-                  className="hidden sm:inline-flex"
-                >
-                  Your workspaces
-                </Button>
-                {admin && (
-                  <Button
-                    variant="ghost"
-                    nativeButton={false}
-                    render={<Link href="/console" />}
-                    className="hidden sm:inline-flex"
-                  >
-                    Console
-                  </Button>
-                )}
-                <form action={signOut}>
-                  <SubmitButton variant="ghost" className="hidden sm:inline-flex">
-                    Sign out
-                  </SubmitButton>
-                </form>
-              </>
-            ) : (
-              <Button
-                variant="ghost"
-                nativeButton={false}
-                render={<Link href="/login" />}
-                className="hidden sm:inline-flex"
-              >
-                Sign in
-              </Button>
-            )}
+            <Suspense fallback={<span className="hidden h-8 w-16 sm:inline-block" aria-hidden />}>
+              <SessionNav />
+            </Suspense>
             <Button nativeButton={false} render={<Link href="/signup" />}>
               Get started
             </Button>
@@ -160,27 +198,9 @@ async function Shell({ children }: { children: React.ReactNode }) {
                     GitHub
                   </Link>
                   <hr className="my-2" />
-                  {session ? (
-                    <>
-                      <Link href="/workspaces" className="rounded-md px-2 py-2">
-                        Your workspaces
-                      </Link>
-                      {admin && (
-                        <Link href="/console" className="rounded-md px-2 py-2">
-                          Console
-                        </Link>
-                      )}
-                      <form action={signOut}>
-                        <button type="submit" className="w-full rounded-md px-2 py-2 text-left">
-                          Sign out
-                        </button>
-                      </form>
-                    </>
-                  ) : (
-                    <Link href="/login" className="rounded-md px-2 py-2">
-                      Sign in
-                    </Link>
-                  )}
+                  <Suspense fallback={null}>
+                    <SessionMenu />
+                  </Suspense>
                 </nav>
               </SheetContent>
             </Sheet>
