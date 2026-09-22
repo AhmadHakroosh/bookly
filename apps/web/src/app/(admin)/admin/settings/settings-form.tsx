@@ -3,6 +3,7 @@
 import { useActionState, useEffect } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -22,9 +23,18 @@ type Values = {
   proposalBody: string;
   paymentSubject: string;
   paymentBody: string;
+  telemetryStats: boolean;
 };
 
-export function SettingsForm({ workspace, zones }: { workspace: Values; zones: string[] }) {
+export function SettingsForm({
+  workspace,
+  zones,
+  selfHosted = false,
+}: {
+  workspace: Values;
+  zones: string[];
+  selfHosted?: boolean;
+}) {
   const [state, action, pending] = useActionState(updateWorkspaceSettings, {} as SettingsState);
   useEffect(() => {
     if (state.ok) toast.success("Settings saved");
@@ -73,6 +83,30 @@ export function SettingsForm({ workspace, zones }: { workspace: Values; zones: s
             Public forms are also limited to 10 submissions per 10 minutes per visitor.
           </FieldDescription>
         </Field>
+        {selfHosted && (
+          <fieldset className="space-y-3 rounded-lg border p-4">
+            <legend className="px-1 text-base font-semibold tracking-tight">
+              Help improve Bookly
+            </legend>
+            <label className="flex items-start gap-2 text-sm">
+              <Checkbox
+                name="telemetryStats"
+                value="on"
+                defaultChecked={workspace.telemetryStats}
+                className="mt-0.5"
+              />
+              <span>
+                Share anonymous usage statistics with the project: counts of workspaces, hosts,
+                event types, bookings, contacts and which integrations are connected. Never names,
+                emails or content.
+              </span>
+            </label>
+            <FieldDescription>
+              The daily update check itself only sends the version, tenancy mode and a random
+              install id; set <code>TELEMETRY=off</code> to disable it.
+            </FieldDescription>
+          </fieldset>
+        )}
         <fieldset className="space-y-3 rounded-lg border p-4">
           <legend className="px-1 text-base font-semibold tracking-tight">CRM sync</legend>
           <FieldDescription>

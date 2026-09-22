@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import { auth } from "@/lib/auth";
 import { AdminNav } from "@/components/admin-nav";
+import { UpdateNotice } from "@/components/update-notice";
 import { WorkspaceSwitcher } from "@/components/workspace-switcher";
 import { ExternalLink } from "@/components/links";
 import { Button } from "@/components/ui/button";
@@ -122,6 +123,9 @@ async function AdminShell({ children }: { children: React.ReactNode }) {
                 pages are offline. Contact support to resolve this.
               </p>
             )}
+            <Suspense fallback={null}>
+              <UpdateNotice />
+            </Suspense>
             {children}
           </div>
         </main>

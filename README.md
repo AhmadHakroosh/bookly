@@ -90,6 +90,7 @@ Every variable is described in [.env.example](.env.example) and validated at boo
 - **Backups:** `docker compose exec postgres pg_dump -U bookly bookly | gzip > bookly-$(date +%F).sql.gz`, plus the uploads volume or bucket.
 - **Health and metrics:** `/api/health` for uptime checks; `/api/metrics` (bearer `METRICS_TOKEN`) for Prometheus.
 - **Background jobs:** reminders, calendar watches, transcripts and nudges run in-process on pg-boss. On serverless hosts set `JOBS_WORKER=false` and call `/api/cron/tick` on a schedule.
+- **Update check:** once a day the install asks for the latest version and sends its own version, tenancy mode, Node version and a random install id, nothing more. The admin shows a notice when a newer release exists. Set `TELEMETRY=off` to disable it. Sharing coarse usage counts (workspaces, hosts, bookings, which integrations) is a separate opt-in under Admin → Settings, never on by default.
 - **Security headers, rate limits and abuse controls** are on by default. Read [SECURITY.md](SECURITY.md) for what is covered and how to report a problem.
 
 The full guide, including Vercel, HTTPS, custom domains, storage and password recovery: [docs/self-hosting.md](docs/self-hosting.md).

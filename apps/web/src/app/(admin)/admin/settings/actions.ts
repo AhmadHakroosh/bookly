@@ -22,6 +22,7 @@ const settingsSchema = z.object({
   proposalBody: z.string().max(8000).default(""),
   paymentSubject: z.string().max(200).default(""),
   paymentBody: z.string().max(8000).default(""),
+  telemetryStats: z.enum(["on"]).optional(),
 });
 
 export type SettingsState = { ok?: boolean; error?: string; fields?: Record<string, string[]> };
@@ -45,6 +46,7 @@ export async function updateWorkspaceSettings(
     proposalBody,
     paymentSubject,
     paymentBody,
+    telemetryStats,
     ...rest
   } = parsed.data;
   // A blank key keeps the stored one; no provider removes the connection.
@@ -64,6 +66,7 @@ export async function updateWorkspaceSettings(
       settings: {
         ...workspace.settings,
         blockedEmails: parseBlocklist(blocklist),
+        telemetryStats: telemetryStats === "on",
         crm: crm?.apiKey ? crm : null,
         templates: {
           proposal: { subject: proposalSubject || undefined, body: proposalBody || undefined },

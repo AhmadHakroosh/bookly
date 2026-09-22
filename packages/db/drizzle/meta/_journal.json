@@ -134,6 +134,13 @@
       "when": 1790070110454,
       "tag": "0018_past_jubilee",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1790071604100,
+      "tag": "0019_fine_blue_shield",
+      "breakpoints": true
     }
   ]
 }

@@ -1,3 +1,4 @@
+import { isCloud } from "@/server/platform";
 import { timezoneList } from "@/lib/time";
 import { getCurrentWorkspace } from "@/server/workspace";
 import { Suspense } from "react";
@@ -31,7 +32,9 @@ async function SettingsPage() {
           proposalBody: workspace.settings.templates?.proposal?.body ?? "",
           paymentSubject: workspace.settings.templates?.paymentRequest?.subject ?? "",
           paymentBody: workspace.settings.templates?.paymentRequest?.body ?? "",
+          telemetryStats: !!workspace.settings.telemetryStats,
         }}
+        selfHosted={!isCloud()}
         zones={timezoneList()}
       />
     </div>

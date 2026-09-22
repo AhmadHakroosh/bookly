@@ -76,6 +76,25 @@ See `.env.example`; every variable is documented inline and validated at startup
 
 Sign-in works with a password or an emailed link. A forgotten password is reset from "Forgot your password?" on the sign-in page: Bookly emails a link (valid for one hour) to `/reset-password`, so email must be configured (`RESEND_API_KEY` or SMTP; in development links print to the console). Signed-in users change their password under `Admin → Booking page`; changing it signs out every other session.
 
+## Update check and telemetry
+
+Once a day (on the job tick) the install POSTs to `TELEMETRY_URL` and gets back the latest
+released version. When it is newer than what you run, the admin shows a notice with a link to the
+release notes.
+
+What is sent, always: the app version, `TENANCY`, the Node version and a random install id
+generated once and stored in `platform_state`. It is not derived from your hostname, IP, users or
+anything else about you.
+
+What is sent only if you opt in under **Admin → Settings → Help improve Bookly**: counts of
+workspaces, hosts, event types, bookings in the last 30 days and contacts, plus which integration
+providers are connected and whether video capture and payments are configured. Never names,
+emails, transcripts or content.
+
+Set `TELEMETRY=off` to disable the check entirely; the admin then never learns about new
+releases. `GET /api/telemetry` on the platform returns the latest version if you want to check by
+hand.
+
 ## Monitoring and error tracking
 
 - **Errors**: set `SENTRY_DSN` (server) and `NEXT_PUBLIC_SENTRY_DSN` (browser) and Bookly reports exceptions from pages, API routes, the cron tick and the browser to Sentry. Add `SENTRY_ORG`, `SENTRY_PROJECT` and `SENTRY_AUTH_TOKEN` at build time to upload source maps. Leave them unset and nothing is sent anywhere.

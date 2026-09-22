@@ -34,6 +34,14 @@ plan, owner and booking counts, suspend / unsuspend (public pages and the API go
 shows a banner), and "sign in as owner" (Better Auth admin impersonation, which lands you in that
 workspace's admin). Stop impersonating from the account menu or by signing out.
 
+## Installs (telemetry receiver)
+
+The platform host receives the daily update check from self-hosted installs at
+`POST /api/telemetry` and answers with the running platform version as the latest release.
+Console → Installs shows active installs (7 and 30 days), the version spread, and usage totals
+for installs that opted in. Rows live in the `installs` table keyed by the anonymous install id.
+The platform never pings itself.
+
 ## Marketing site
 
 The platform host serves the public site: landing page, `/pricing`, `/about`, `/contact`,

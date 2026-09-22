@@ -74,6 +74,13 @@ export const envSchema = z.object({
   PLATFORM_ADMIN_EMAILS: z.string().default(""),
   /** Shown on the marketing site's contact, legal and footer (cloud mode). */
   SUPPORT_EMAIL: z.string().optional(),
+  /**
+   * Daily update check: the install asks TELEMETRY_URL for the latest version and sends its own
+   * version, tenancy and an anonymous install id. "off" disables it entirely. Usage statistics
+   * are a separate opt-in in workspace settings.
+   */
+  TELEMETRY: z.enum(["on", "off"]).default("on"),
+  TELEMETRY_URL: z.url().default("https://bookly.ahmadhakroosh.com/api/telemetry"),
 
   // ---- Text messages (Twilio) for SMS / WhatsApp reminders and host pings ----
   TWILIO_ACCOUNT_SID: z.string().optional(),

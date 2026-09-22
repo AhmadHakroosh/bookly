@@ -8,6 +8,7 @@ Everything below is on `main` ahead of the first release, which will be tagged `
 
 ### Added
 
+- Update check and telemetry: self-hosted installs ask `TELEMETRY_URL` once a day for the latest version (sending version, tenancy, Node version and a random install id; `TELEMETRY=off` disables), the admin shows an update notice, and workspaces can opt in to share coarse usage counts. The platform records pings in `installs` (migration 0019) and Console → Installs shows active installs, versions and totals
 - `GET /api/health` for uptime checks (200 when Postgres is reachable, 503 otherwise)
 - Cloud sign-up requires accepting the terms of service and privacy policy; acceptance time and policy version are stored on the user (`consent_at`, `consent_version`, migration 0018) and shown in the operator console
 - README rewritten with the new mark, a feature map, self-hosting requirements, env overview and operations, and a contributor section

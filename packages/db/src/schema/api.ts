@@ -79,6 +79,19 @@ export const usageCounters = pgTable(
 );
 
 /** Small key/value state for health checks (last job tick, last webhook, …). */
+/** Self-hosted installs that phone in through the update check (cloud/platform side). */
+export const installs = pgTable("installs", {
+  id: text("id").primaryKey(),
+  version: text("version").notNull(),
+  tenancy: text("tenancy").notNull(),
+  nodeVersion: text("node_version"),
+  firstSeenAt: timestamp("first_seen_at", { withTimezone: true }).notNull().defaultNow(),
+  lastSeenAt: timestamp("last_seen_at", { withTimezone: true }).notNull().defaultNow(),
+  pings: integer("pings").notNull().default(1),
+  /** Opt-in usage counts, null when the install does not share them. */
+  stats: jsonb("stats").$type<Record<string, unknown>>(),
+});
+
 export const platformState = pgTable("platform_state", {
   key: text("key").primaryKey(),
   value: jsonb("value").$type<Record<string, unknown>>().notNull().default({}),
