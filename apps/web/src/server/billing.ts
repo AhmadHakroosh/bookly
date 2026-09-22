@@ -2,10 +2,11 @@ import "server-only";
 import type Stripe from "stripe";
 import { isPlanId, PLANS, type BillingInterval, type PlanId } from "@bookly/cloud";
 import { loadEnv } from "@bookly/config";
-import { eq, schema } from "@bookly/db";
+import { and, eq, isNotNull, schema } from "@bookly/db";
 import type { Workspace } from "@bookly/db/schema";
 import { db } from "@/lib/db";
 import { refreshWorkspace } from "./cache";
+import { getState, setState } from "./ops";
 import { paymentsConfigured, stripe } from "./payments";
 import { tenantUrl } from "./platform";
 
@@ -128,21 +129,53 @@ export async function syncSubscription(sub: Stripe.Subscription) {
   refreshWorkspace(ws.id);
 }
 
-/** Keeps the Team subscription quantity in step with the member count. */
-export async function syncSeats(ws: Workspace) {
-  if (ws.plan !== "team" || !ws.stripeSubscriptionId || !paymentsConfigured()) return;
+/**
+ * Keeps the Team subscription quantity in step with the member count. Called when a member
+ * joins or leaves; `reconcileSeats` repeats it daily in case a call failed. Returns true when
+ * Stripe was updated.
+ */
+export async function syncSeats(ws: Workspace): Promise<boolean> {
+  if (ws.plan !== "team" || !ws.stripeSubscriptionId || !paymentsConfigured()) return false;
   try {
     const sub = await stripe().subscriptions.retrieve(ws.stripeSubscriptionId);
     const item = sub.items.data[0];
     const n = Math.max(1, await memberCount(ws));
-    if (item && item.quantity !== n)
-      await stripe().subscriptionItems.update(item.id, {
-        quantity: n,
-        proration_behavior: "create_prorations",
-      });
+    if (!item || item.quantity === n) return false;
+    await stripe().subscriptionItems.update(item.id, {
+      quantity: n,
+      proration_behavior: "create_prorations",
+    });
+    return true;
   } catch (e) {
     console.error("[billing] seat sync failed", e);
+    return false;
   }
+}
+
+const SEATS_STATE = "billing.seats";
+const SEATS_INTERVAL_MS = 24 * 60 * 60 * 1000;
+
+/**
+ * Safety net for seat billing: once a day, every Team workspace with a subscription has its
+ * quantity compared to its member count and corrected. Catches a failed sync at join or leave
+ * time and any path that adds members without one. Safe to call on every tick.
+ */
+export async function reconcileSeats(now = new Date(), force = false) {
+  if (!paymentsConfigured()) return { checked: 0, corrected: 0 };
+  const last = await getState(SEATS_STATE);
+  const lastAt = typeof last?.value.at === "string" ? Date.parse(last.value.at) : 0;
+  if (!force && now.getTime() - lastAt < SEATS_INTERVAL_MS) return { checked: 0, corrected: 0 };
+  const teams = await db()
+    .select()
+    .from(schema.workspaces)
+    .where(
+      and(eq(schema.workspaces.plan, "team"), isNotNull(schema.workspaces.stripeSubscriptionId)),
+    );
+  let corrected = 0;
+  for (const ws of teams) if (await syncSeats(ws)) corrected++;
+  await setState(SEATS_STATE, { at: now.toISOString(), checked: teams.length, corrected });
+  if (corrected) console.warn(`[billing] seat reconcile corrected ${corrected} subscription(s)`);
+  return { checked: teams.length, corrected };
 }
 
 export const planName = (plan: string) => (isPlanId(plan) ? PLANS[plan].name : "Self-hosted");
