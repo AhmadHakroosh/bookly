@@ -123,6 +123,8 @@ test.describe("sign-up and tenants", () => {
     await page.goto(
       `${tenantUrl(DEMO.username)}/${DEMO.username}/intro-call?tz=UTC&month=${date.slice(0, 7)}&date=${date}`,
     );
+    // The demo tenant is on Free: Bookly stays visible on its pages.
+    await expect(page.getByRole("link", { name: /Powered by Bookly/ })).toBeVisible();
     const slot = page.locator('a[href*="slot="]').first();
     await expect(slot).toBeVisible();
     await slot.click();

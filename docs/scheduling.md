@@ -1,6 +1,6 @@
 # Scheduling model
 
-- **Booking page** (`Admin → Booking page`): each workspace member has a public profile at `/<username>` with a display name, bio and timezone.
+- **Booking page** (`Admin → Booking page`): each workspace member has a public profile at `/<username>` with a display name, bio and timezone. Every public page carries the workspace name with the Bookly mark and a "Powered by Bookly" footer; on plans that remove branding (Pro, Team, self-hosted) the logo URL and accent colour from `Admin → Settings → Branding` replace them, and the colour drives buttons, selected days and focus rings.
 - **Availability** (`Admin → Availability`): a schedule holds weekly hours in its own timezone plus date overrides (custom hours or a whole day off). A default Mon–Fri 9–17 schedule is created with the profile.
 - **Event types** (`Admin → Event types`): what people can book — duration, slot interval, buffers before/after, minimum notice, booking horizon, max bookings per day, location (built-in video, Google Meet, Zoom, Teams, phone, in person, custom), booking questions, "requires confirmation", hidden (link-only).
 - **Bookings** (`Admin → Bookings`): upcoming and past, confirm pending requests, cancel with a reason. Attendees get a manage link (`/booking/<token>`) to cancel, reschedule or download the `.ics`.

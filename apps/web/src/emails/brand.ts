@@ -1,20 +1,19 @@
 import type { Workspace } from "@bookly/db/schema";
-import { hasFeature } from "@/server/limits";
+import { workspaceBrand } from "@/server/brand";
 import { baseUrl } from "@/server/scheduling";
-import { BOOKLY_ACCENT, type EmailBrand } from "./layout";
+import type { EmailBrand } from "./layout";
 
 /** The workspace's look for outgoing mail; the platform's when no workspace is involved. */
 export function brandFor(ws: Workspace | null): EmailBrand {
   const base = baseUrl();
-  // One plan feature covers all of it: your logo and colour in, the Bookly footer out.
-  const own = !!ws && hasFeature(ws, "removeBranding");
-  const b = own ? ws.settings.branding : undefined;
+  // The same rule as the booking pages: your logo and colour in, the Bookly footer out.
+  const b = workspaceBrand(ws);
   return {
-    name: ws?.name ?? "Bookly",
-    logoUrl: b?.logoUrl || `${base}/logo-mark.png`,
-    accent: b?.accent || BOOKLY_ACCENT,
+    name: b.name,
+    logoUrl: b.logoUrl ?? `${base}/logo-mark.png`,
+    accent: b.accent,
     baseUrl: base,
-    poweredBy: !own,
+    poweredBy: b.poweredBy,
   };
 }
 

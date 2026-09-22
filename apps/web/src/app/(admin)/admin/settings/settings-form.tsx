@@ -219,12 +219,14 @@ export function SettingsForm({
         <fieldset className="space-y-3 rounded-lg border p-4">
           <legend className="px-1 text-base font-semibold tracking-tight">Branding</legend>
           <FieldDescription>
-            Shown in every email guests receive: your logo next to the workspace name, and your
-            colour on buttons. Leave blank for the Bookly mark and accent.
+            Shown on your booking pages and in every email guests receive: your logo next to the
+            workspace name, and your colour on buttons and selected dates. Leave blank for the
+            Bookly mark and accent.
           </FieldDescription>
           {!brandingAllowed && (
             <p className="rounded-md border border-(--brand)/40 bg-(--brand)/10 p-3 text-sm">
-              Your own logo and colour, and no “Scheduling by Bookly” line, come with Pro and Team.{" "}
+              Your own logo and colour on booking pages and emails, and no “Powered by Bookly” line,
+              come with Pro and Team.{" "}
               <Link href="/admin/billing" className="underline underline-offset-4">
                 See plans
               </Link>

@@ -1,7 +1,11 @@
 import { Suspense } from "react";
+import Link from "next/link";
 import { headers } from "next/headers";
-import { hasFeature } from "@/server/limits";
+import { LogoMark } from "@/components/brand/logo";
+import { accentVars, workspaceBrand } from "@/server/brand";
+import { isCloud } from "@/server/platform";
 import { getCurrentWorkspace } from "@/server/workspace";
+import { loadEnv } from "@bookly/config";
 
 export default function PublicLayout({ children }: LayoutProps<"/">) {
   return (
@@ -11,9 +15,15 @@ export default function PublicLayout({ children }: LayoutProps<"/">) {
   );
 }
 
+/**
+ * Every guest-facing page (profiles, event pages, manage links, routing forms, waitlists) sits
+ * in this shell: the workspace's name and mark on top, the plan's footer at the bottom. On plans
+ * that remove Bookly branding the workspace's own logo and colour take over (buttons, selected
+ * days and focus rings follow the accent) and the "Powered by Bookly" line disappears. Embeds
+ * get the bare page.
+ */
 async function Shell({ children }: { children: React.ReactNode }) {
   const ws = await getCurrentWorkspace();
-  const footer = ws?.settings.footerText;
   const embedded = (await headers()).get("x-bookly-embed") === "1";
   if (ws?.suspendedAt)
     return (
@@ -22,27 +32,50 @@ async function Shell({ children }: { children: React.ReactNode }) {
         <p className="mt-2 text-sm text-muted-foreground">The workspace has been suspended.</p>
       </main>
     );
+  const brand = workspaceBrand(ws);
+  const style = accentVars(brand) as React.CSSProperties | undefined;
+  if (embedded)
+    return (
+      <main className="flex-1" style={style}>
+        {children}
+      </main>
+    );
+  const footer = ws?.settings.footerText || (brand.own ? brand.name : null);
+  // Bookly's line links to the product: the marketing site in cloud mode, the repo elsewhere.
+  const booklyUrl = isCloud() ? loadEnv().APP_URL : "https://github.com/AhmadHakroosh/bookly";
   return (
-    <>
-      <main className="flex-1">{children}</main>
-      {!embedded && (
-        <footer className="mx-auto flex w-full max-w-3xl flex-wrap items-center justify-between gap-2 px-4 py-6 text-xs text-muted-foreground">
-          <span>{footer || ws?.name}</span>
-          {!(ws && hasFeature(ws, "removeBranding") && footer) && (
-            <span>
-              Scheduling by{" "}
-              <a
-                href="https://github.com/AhmadHakroosh/bookly"
-                target="_blank"
-                rel="noreferrer"
-                className="underline underline-offset-2 hover:text-foreground"
-              >
-                Bookly
-              </a>
-            </span>
-          )}
-        </footer>
+    <div className="flex flex-1 flex-col" style={style}>
+      {ws && (
+        <header className="mx-auto w-full max-w-3xl px-4 pt-6">
+          <Link
+            href="/"
+            className="inline-flex items-center gap-2.5 text-sm font-semibold tracking-tight"
+            aria-label={`${ws.name} home`}
+          >
+            {brand.logoUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={brand.logoUrl} alt="" className="size-7 rounded-md object-contain" />
+            ) : (
+              <LogoMark className="size-7" accent={brand.accent} />
+            )}
+            <span>{ws.name}</span>
+          </Link>
+        </header>
       )}
-    </>
+      <main className="flex-1">{children}</main>
+      <footer className="mx-auto flex w-full max-w-3xl flex-wrap items-center justify-between gap-2 px-4 py-6 text-xs text-muted-foreground">
+        <span>{footer}</span>
+        {brand.poweredBy && (
+          <a
+            href={booklyUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center gap-1.5 hover:text-foreground"
+          >
+            Powered by <LogoMark className="size-3.5" /> <span className="font-medium">Bookly</span>
+          </a>
+        )}
+      </footer>
+    </div>
   );
 }

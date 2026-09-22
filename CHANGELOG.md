@@ -8,6 +8,7 @@ Everything below is on `main` ahead of the first release, which will be tagged `
 
 ### Added
 
+- Booking pages carry the workspace name with the Bookly mark and a “Powered by Bookly” footer; on plans that remove branding (Pro, Team, self-hosted) the logo and accent colour from Settings → Branding replace them, and the colour recolours buttons, selected days and focus rings. Emails say “Powered by Bookly” too
 - Operator console reads on a phone: the tab strip wraps, health checks stack their detail under the name, search rows stay on one line, long emails and JSON wrap inside their cards, and the installs table scrolls sideways with dates on one line
 - Branding in Settings: a logo URL and accent colour used in every guest email, on the plans that remove Bookly branding (Pro, Team, and every self-hosted install); Free keeps the Bookly mark and footer
 - Live captions under the built-in video call while auto-capture is on: the last lines transcribed, with speaker and time, as they arrive

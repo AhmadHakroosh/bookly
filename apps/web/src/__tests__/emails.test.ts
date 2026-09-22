@@ -64,7 +64,7 @@ describe("email templates", () => {
     expect(m.html).toContain("Acme");
     expect(m.html).toContain("#336699");
     expect(m.html).toContain("https://meet.example/room");
-    expect(m.html).not.toContain("Scheduling by");
+    expect(m.html).not.toContain("Powered by");
   });
 
   it("uses defaults when nothing is customised, for reminders and cancellations too", async () => {

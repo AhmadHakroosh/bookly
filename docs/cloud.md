@@ -16,7 +16,7 @@ Set `TENANCY=multi`. Then:
 `plan` + `plan_status` decide what applies; `self-hosted` (the default outside cloud mode) means no
 limits. Enforcement points: creating event types, inviting members, connecting integrations, adding
 custom domains, enabling paid bookings / workflows / team scheduling, the keyed API, and the
-"Scheduling by Bookly" footer.
+"Powered by Bookly" line on booking pages and emails (and the workspace's own logo and colour in its place).
 
 ## Billing
 

@@ -44,7 +44,7 @@ requests and client recaps. The platform name comes from the display name in `EM
 Emails are rendered with React Email in the workspace's look: your logo and name in the
 header (Admin → Settings → Branding: logo URL and accent colour, on Pro, Team and self-hosted installs; the Free plan keeps the Bookly mark), your accent colour on
 buttons, the booking details in a card, and a plain-text alternative generated from the same
-template. "Scheduling by Bookly" appears in the footer unless the plan removes branding.
+template. "Powered by Bookly" appears in the footer unless the plan removes branding. The same logo, colour and footer rule applies to the booking pages themselves.
 
 Under Admin → Settings → Guest emails you can replace the opening words of the confirmation,
 reminder and cancellation emails; the details block, buttons and branding are always added.

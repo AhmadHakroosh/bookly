@@ -5,6 +5,9 @@ test.describe("public booking", () => {
   test("profile and event page render", async ({ page }) => {
     await page.goto(`/${DEMO.username}`);
     await expect(page.getByRole("link", { name: /Intro call/ })).toBeVisible();
+    // Self-hosted installs own their branding: the workspace mark on top, no Bookly footer.
+    await expect(page.getByRole("banner").getByRole("link", { name: /home/ })).toBeVisible();
+    await expect(page.getByText("Powered by")).toHaveCount(0);
     await page.goto(`/${DEMO.username}/intro-call`);
     await expect(page.getByRole("heading", { name: "Intro call" })).toBeVisible();
   });

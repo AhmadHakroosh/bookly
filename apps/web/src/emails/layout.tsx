@@ -28,7 +28,7 @@ export type EmailBrand = {
   poweredBy: boolean;
 };
 
-export const BOOKLY_ACCENT = "#e8965a";
+export { BOOKLY_ACCENT } from "@/server/brand";
 
 const font = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif';
 
@@ -116,7 +116,7 @@ export function EmailLayout({
             {footer}
             {brand.poweredBy && (
               <Text style={{ ...styles.muted, marginTop: "6px" }}>
-                Scheduling by{" "}
+                Powered by{" "}
                 <Link href="https://github.com/AhmadHakroosh/bookly" style={{ color: "#71717a" }}>
                   Bookly
                 </Link>

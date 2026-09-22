@@ -62,7 +62,19 @@ export async function seedDemo() {
       });
     user = (await db().query.users.findFirst({ where: eq(schema.users.id, id) }))!;
   }
-  let ws = await db().query.workspaces.findFirst();
+  // In cloud mode the demo tenant is an ordinary Free workspace (Bookly branding and all);
+  // elsewhere it is the install's own, unlimited workspace.
+  const plan = env.TENANCY === "multi" ? "free" : "self-hosted";
+  let ws =
+    (await db().query.workspaces.findFirst({ where: eq(schema.workspaces.slug, "demo") })) ??
+    (await db().query.workspaces.findFirst());
+  if (ws && ws.plan !== plan && (ws.plan === "self-hosted" || ws.plan === "free")) {
+    [ws] = await db()
+      .update(schema.workspaces)
+      .set({ plan })
+      .where(eq(schema.workspaces.id, ws.id))
+      .returning();
+  }
   if (!ws) {
     const orgId = crypto.randomUUID();
     await db()
@@ -70,7 +82,7 @@ export async function seedDemo() {
       .values({ id: orgId, name: "Demo Workspace", slug: "demo", createdAt: new Date() });
     const [w] = await db()
       .insert(schema.workspaces)
-      .values({ organizationId: orgId, slug: "demo", name: "Demo Workspace" })
+      .values({ organizationId: orgId, slug: "demo", name: "Demo Workspace", plan })
       .returning();
     ws = w!;
     await db()
