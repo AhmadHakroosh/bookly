@@ -1,0 +1,78 @@
+import { Suspense } from "react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { listUsersForConsole } from "@/server/ops";
+import { banUser, unbanUser } from "../actions";
+
+export const metadata = { title: "Users", robots: { index: false } };
+
+async function UsersPage({ searchParams }: PageProps<"/platform/console/users">) {
+  const sp = await searchParams;
+  const q = typeof sp.q === "string" ? sp.q : "";
+  const rows = await listUsersForConsole(q);
+  return (
+    <div className="space-y-4">
+      <form className="flex gap-2">
+        <input
+          name="q"
+          defaultValue={q}
+          placeholder="Search email or name"
+          className="h-8 w-72 rounded-lg border bg-background px-2 text-sm"
+        />
+        <button type="submit" className="h-8 rounded-lg border px-3 text-sm">
+          Search
+        </button>
+      </form>
+      <ul className="divide-y rounded-xl border text-sm">
+        {rows.map(({ u, lastSeen, workspaces }) => (
+          <li key={u.id} className="flex flex-wrap items-center justify-between gap-3 p-4">
+            <div className="min-w-0">
+              <p className="font-medium">
+                {u.name || u.email} <span className="text-muted-foreground">· {u.email}</span>
+                {u.banned && (
+                  <Badge variant="destructive" className="ml-2">
+                    banned
+                  </Badge>
+                )}
+              </p>
+              <p className="text-muted-foreground">
+                {workspaces || "no workspace"} · joined {u.createdAt.toLocaleDateString()} · last
+                seen {lastSeen ? new Date(lastSeen).toLocaleString() : "never"}
+                {u.banReason ? ` · ${u.banReason}` : ""}
+              </p>
+            </div>
+            {u.banned ? (
+              <form action={unbanUser.bind(null, u.id)}>
+                <Button type="submit" variant="outline" size="sm">
+                  Unban
+                </Button>
+              </form>
+            ) : (
+              <form action={banUser.bind(null, u.id)} className="flex gap-1">
+                <input
+                  name="reason"
+                  placeholder="Reason"
+                  className="h-8 w-40 rounded-md border bg-background px-2 text-sm"
+                />
+                <Button type="submit" variant="ghost" size="sm">
+                  Ban
+                </Button>
+              </form>
+            )}
+          </li>
+        ))}
+        {rows.length === 0 && (
+          <li className="p-8 text-center text-muted-foreground">No users match.</li>
+        )}
+      </ul>
+    </div>
+  );
+}
+
+export default function UsersPageBoundary(props: PageProps<"/platform/console/users">) {
+  return (
+    <Suspense fallback={null}>
+      <UsersPage {...props} />
+    </Suspense>
+  );
+}

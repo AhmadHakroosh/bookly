@@ -6,6 +6,7 @@ import { followUpMail, reminderMail } from "@/emails/booking";
 import { briefForBooking } from "./brief";
 import { nudgeOverdueTasks } from "./capture";
 import { expireTranscripts } from "./transcripts";
+import { expireManualPlans, setState } from "./ops";
 import { trackBooking } from "./contacts";
 import { notifyHost, sendText } from "./notify";
 import { expireUnpaidBookings } from "./payments";
@@ -141,6 +142,8 @@ export async function sendDueReminders(now = new Date()): Promise<number> {
   await expireUnpaidBookings(now).catch((e) => console.error("[payments] expire failed", e));
   await nudgeOverdueTasks(now).catch((e) => console.error("[tasks] nudge failed", e));
   await expireTranscripts(now).catch((e) => console.error("[capture] retention failed", e));
+  await expireManualPlans(now).catch((e) => console.error("[ops] plan expiry failed", e));
+  await setState("jobs.lastTick", { at: now.toISOString(), reminders: sent });
   // Mark finished meetings as completed (and note it on the contact's timeline).
   const done = await db()
     .update(schema.bookings)

@@ -1,4 +1,13 @@
-import { index, integer, jsonb, pgTable, text, timestamp, uniqueIndex } from "drizzle-orm/pg-core";
+import {
+  index,
+  integer,
+  jsonb,
+  pgTable,
+  primaryKey,
+  text,
+  timestamp,
+  uniqueIndex,
+} from "drizzle-orm/pg-core";
 import { workspaces } from "./workspaces";
 
 const id = () =>
@@ -30,6 +39,51 @@ export const apiKeys = pgTable(
     index("api_keys_ws_idx").on(t.workspaceId),
   ],
 );
+
+/* ---------------- Operations: audit, usage, health ---------------- */
+
+/** Every operator action in the console, for accountability. */
+export const operatorAuditLog = pgTable(
+  "operator_audit_log",
+  {
+    id: id(),
+    actorEmail: text("actor_email").notNull(),
+    action: text("action").notNull(),
+    targetType: text("target_type").notNull(), // workspace | user | platform
+    targetId: text("target_id"),
+    data: jsonb("data").$type<Record<string, unknown>>().notNull().default({}),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    index("operator_audit_created_idx").on(t.createdAt),
+    index("operator_audit_target_idx").on(t.targetType, t.targetId),
+  ],
+);
+
+/** Per-workspace, per-day counters (api requests, emails, …) kept cheaply with upserts. */
+export const usageCounters = pgTable(
+  "usage_counters",
+  {
+    workspaceId: text("workspace_id")
+      .notNull()
+      .references(() => workspaces.id, { onDelete: "cascade" }),
+    /** YYYY-MM-DD (UTC). */
+    day: text("day").notNull(),
+    metric: text("metric").notNull(),
+    n: integer("n").notNull().default(0),
+  },
+  (t) => [
+    primaryKey({ columns: [t.workspaceId, t.day, t.metric] }),
+    index("usage_counters_ws_idx").on(t.workspaceId, t.day),
+  ],
+);
+
+/** Small key/value state for health checks (last job tick, last webhook, …). */
+export const platformState = pgTable("platform_state", {
+  key: text("key").primaryKey(),
+  value: jsonb("value").$type<Record<string, unknown>>().notNull().default({}),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});
 
 export const WEBHOOK_EVENTS = [
   "booking.created",

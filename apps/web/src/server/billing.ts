@@ -89,6 +89,8 @@ export async function syncSubscription(sub: Stripe.Subscription) {
       where: eq(schema.workspaces.stripeCustomerId, customer),
     }));
   if (!ws) return;
+  // An operator-managed plan (comp, trial) is not touched by Stripe events.
+  if (ws.planManagedBy === "operator") return;
   const priceId = sub.items.data[0]?.price.id;
   const plan =
     planFromPrice(priceId) ??

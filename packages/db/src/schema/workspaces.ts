@@ -56,6 +56,12 @@ export const workspaces = pgTable(
     settings: jsonb("settings").$type<WorkspaceSettings>().notNull().default({}),
     /** self-hosted | free | pro | team */
     plan: text("plan").notNull().default("self-hosted"),
+    /** stripe (default) | operator: a manual plan that Stripe webhooks must not overwrite. */
+    planManagedBy: text("plan_managed_by").notNull().default("stripe"),
+    /** Operator's note for a manual plan (comp, trial, partner). */
+    planNote: text("plan_note"),
+    /** Manual plans can expire; the health tick drops them back to free. */
+    planExpiresAt: timestamp("plan_expires_at", { withTimezone: true }),
     /** Stripe subscription status (active, trialing, past_due, canceled…); null for free/self-hosted. */
     planStatus: text("plan_status"),
     planRenewsAt: timestamp("plan_renews_at", { withTimezone: true }),

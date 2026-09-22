@@ -12,3 +12,18 @@ describe("blocklist", () => {
     expect(isBlocked("fine@example.com", undefined)).toBe(false);
   });
 });
+
+describe("metrics text", () => {
+  it("renders gauges with help/type once per name and escaped labels", async () => {
+    const { renderMetrics } = await import("@/server/metrics-text");
+    const out = renderMetrics([
+      { name: "a", help: "A", value: 1 },
+      { name: "b", help: "B", value: 2, labels: { plan: "pro" } },
+      { name: "b", help: "B", value: 3, labels: { plan: 'x"y' } },
+    ]);
+    expect(out).toContain("# HELP a A\n# TYPE a gauge\na 1");
+    expect(out.match(/# TYPE b gauge/g)).toHaveLength(1);
+    expect(out).toContain('b{plan="pro"} 2');
+    expect(out).toContain('b{plan="x\\"y"} 3');
+  });
+});

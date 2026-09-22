@@ -15,6 +15,7 @@ import type {
 import { db } from "@/lib/db";
 import { apiBudget } from "@bookly/cloud";
 import { hasFeature, workspaceLimits } from "./limits";
+import { bump } from "./ops";
 import { recurrenceOf } from "./recurrence";
 import { baseUrl, locationLabel } from "./scheduling";
 import { getCurrentWorkspace } from "./workspace";
@@ -121,6 +122,7 @@ export async function apiContext(
     ? rateLimit(`key:${key.id}`, apiBudget(workspaceLimits(workspace)))
     : rateLimit(`ip:${workspace.id}:${ip}`, 60);
   if (!rl.ok) return apiError("Rate limit exceeded", 429, "rate_limited");
+  bump(workspace.id, key ? "api.requests" : "api.public");
   return { workspace, key };
 }
 

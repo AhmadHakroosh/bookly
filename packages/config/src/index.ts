@@ -51,6 +51,10 @@ export const envSchema = z.object({
   /** Public URL of the built-in meeting pages, e.g. https://meet.example.com. Defaults to APP_URL + /meet. */
   MEET_URL: z.url().optional(),
 
+  // ---- Observability ----
+  /** Bearer token for GET /api/metrics (Prometheus text format). Unset = endpoint disabled. */
+  METRICS_TOKEN: z.string().optional(),
+
   // ---- Assistant (briefings, meeting capture) ----
   /** Anthropic API key; without it briefs are plain summaries and capture is manual. */
   ANTHROPIC_API_KEY: z.string().optional(),
