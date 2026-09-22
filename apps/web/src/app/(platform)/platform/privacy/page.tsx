@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { breadcrumbLd, JsonLd } from "../json-ld";
 import { Prose } from "../prose";
 import { pageMetadata, SITE } from "../site";
 
@@ -16,6 +17,7 @@ export default function PrivacyPage() {
       lede="Plain language first, the formal parts after. If anything here is unclear, ask us."
       updated={SITE.legalUpdated}
     >
+      <JsonLd data={breadcrumbLd([["Privacy policy", "/privacy"]])} />
       <h2>Who we are</h2>
       <p>
         The hosted Bookly service (“Bookly”, “we”) is operated by {SITE.operator}. You can reach us

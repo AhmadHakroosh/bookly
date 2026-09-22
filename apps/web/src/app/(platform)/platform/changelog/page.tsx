@@ -3,6 +3,7 @@ import { cacheLife } from "next/cache";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { marked } from "marked";
+import { breadcrumbLd, JsonLd } from "../json-ld";
 import { Prose } from "../prose";
 import { pageMetadata, SITE } from "../site";
 
@@ -37,6 +38,7 @@ export default async function ChangelogPage() {
       title="Changelog"
       lede="What shipped, in the order it shipped. Versions follow SemVer; releases are tagged on GitHub."
     >
+      <JsonLd data={breadcrumbLd([["Changelog", "/changelog"]])} />
       {html ? (
         <div dangerouslySetInnerHTML={{ __html: html }} />
       ) : (

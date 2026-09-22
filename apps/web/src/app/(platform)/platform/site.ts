@@ -12,6 +12,8 @@ export const SITE = {
   supportEmail: process.env.SUPPORT_EMAIL ?? "hello@ahmadhakroosh.com",
   /** Date the legal pages were last revised. */
   legalUpdated: "September 22, 2026",
+  /** Last meaningful change to the marketing pages (sitemap lastmod). */
+  updated: "2026-09-22",
 } as const;
 
 export const siteUrl = () => loadEnv().APP_URL.replace(/\/$/, "");

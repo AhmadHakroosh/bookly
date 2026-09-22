@@ -1,3 +1,4 @@
+import { breadcrumbLd, JsonLd } from "../json-ld";
 import type { Metadata } from "next";
 import {
   BugIcon,
@@ -48,6 +49,7 @@ const WAYS: [LucideIcon, string, string, string, string][] = [
 export default function ContactPage() {
   return (
     <div className="mx-auto max-w-4xl px-4 py-14 md:py-20">
+      <JsonLd data={breadcrumbLd([["Contact", "/contact"]])} />
       <h1 className="text-3xl font-semibold tracking-tight md:text-4xl">Contact</h1>
       <p className="mt-3 max-w-2xl text-lg text-muted-foreground">
         A real person reads every message. Expect a reply within one business day; usually much

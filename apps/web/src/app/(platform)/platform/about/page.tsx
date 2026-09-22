@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { breadcrumbLd, JsonLd } from "../json-ld";
 import { Prose } from "../prose";
 import { pageMetadata, SITE } from "../site";
 
@@ -15,6 +16,7 @@ export default function AboutPage() {
       title="About Bookly"
       lede="Bookly started as a booking page and turned into the thing around the meeting."
     >
+      <JsonLd data={breadcrumbLd([["About", "/about"]])} />
       <h2>The problem</h2>
       <p>
         If you make a living from conversations, scheduling was solved years ago. What is not solved

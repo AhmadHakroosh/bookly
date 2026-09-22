@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { breadcrumbLd, JsonLd } from "../json-ld";
 import { Prose } from "../prose";
 import { pageMetadata, SITE } from "../site";
 
@@ -17,6 +18,7 @@ export default function SecurityPage() {
       lede="Client conversations are the most sensitive data a small business holds. Here is how Bookly treats them."
       updated={SITE.legalUpdated}
     >
+      <JsonLd data={breadcrumbLd([["Security", "/security"]])} />
       <h2>Open source</h2>
       <p>
         Every line that handles your data is public on{" "}

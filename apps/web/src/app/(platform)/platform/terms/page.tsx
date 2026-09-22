@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { breadcrumbLd, JsonLd } from "../json-ld";
 import { Prose } from "../prose";
 import { pageMetadata, SITE } from "../site";
 
@@ -16,6 +17,7 @@ export default function TermsPage() {
       lede="These terms apply to the hosted Bookly service. The open-source software is licensed separately under the AGPL-3.0."
       updated={SITE.legalUpdated}
     >
+      <JsonLd data={breadcrumbLd([["Terms of service", "/terms"]])} />
       <h2>1. The agreement</h2>
       <p>
         By creating a workspace you agree to these terms on behalf of yourself or the organisation

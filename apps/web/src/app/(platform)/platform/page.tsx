@@ -30,6 +30,7 @@ import {
   RecapMock,
 } from "./mocks";
 import { FollowUpMock, LiveTranscriptMock, RoutingMock, SeatsMock } from "./mocks-more";
+import { JsonLd, organizationLd, softwareLd, websiteLd } from "./json-ld";
 import { pageMetadata, SITE } from "./site";
 
 export const metadata: Metadata = pageMetadata({ absoluteTitle: `${SITE.name} — ${SITE.tagline}` });
@@ -221,6 +222,15 @@ function CmpCell({ v }: { v: Cmp }) {
 export default function LandingPage() {
   return (
     <div>
+      <JsonLd
+        data={[
+          organizationLd(),
+          websiteLd(),
+          softwareLd(
+            Object.values(PLANS).map((p) => ({ name: p.name, priceMonthly: p.priceMonthly })),
+          ),
+        ]}
+      />
       {/* Hero */}
       <section className="relative overflow-hidden">
         <div className="marketing-grid absolute inset-0 -z-10" aria-hidden />
@@ -462,21 +472,22 @@ export default function LandingPage() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b bg-muted/50 text-left">
-                <th className="p-4 font-medium">What you get</th>
-                <th className="w-32 p-4 text-center font-medium text-muted-foreground">
-                  Typical scheduler
+                <th className="p-3 font-medium sm:p-4">What you get</th>
+                <th className="w-20 p-3 text-center font-medium text-muted-foreground sm:w-32 sm:p-4">
+                  <span className="sm:hidden">Others</span>
+                  <span className="hidden sm:inline">Typical scheduler</span>
                 </th>
-                <th className="w-24 p-4 text-center font-medium">Bookly</th>
+                <th className="w-16 p-3 text-center font-medium sm:w-24 sm:p-4">Bookly</th>
               </tr>
             </thead>
             <tbody>
               {COMPARE.map(([f, a, b]) => (
                 <tr key={f} className="border-b last:border-0">
-                  <td className="p-4 align-middle">{f}</td>
-                  <td className="p-4 text-center align-middle leading-none">
+                  <td className="p-3 align-middle text-pretty sm:p-4">{f}</td>
+                  <td className="p-3 text-center align-middle leading-none sm:p-4">
                     <CmpCell v={a} />
                   </td>
-                  <td className="p-4 text-center align-middle leading-none">
+                  <td className="p-3 text-center align-middle leading-none sm:p-4">
                     <CmpCell v={b} />
                   </td>
                 </tr>

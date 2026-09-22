@@ -8,6 +8,7 @@ Everything below is on `main` ahead of the first release, which will be tagged `
 
 ### Added
 
+- Marketing SEO and mobile pass: JSON-LD (Organization, WebSite, SoftwareApplication with offers, FAQPage on pricing, breadcrumbs on every subpage), web manifest, light/dark theme colour, stable sitemap dates, noindex on the workspace chooser, a comparison table that reads at 320px, and a movement-only hero entrance so the headline paints immediately; Lighthouse mobile: SEO 100, accessibility 100, best practices 100
 - Loading states everywhere: a navigation progress bar, route and page skeletons instead of blank streaming, and every form submit button disables itself with a spinner while its action runs (server-action forms included); task complete / remove controls show progress too
 - Cloud-mode end-to-end suite in CI (`e2e-cloud` job): marketing pages, social metadata, robots and sitemap, real 404s, telemetry receiver, sign-up consent (API and UI), a tenant booking, the workspace chooser and the operator console, plus axe checks; the e2e build omits `upgrade-insecure-requests` so plain-http test hosts work
 - Accessibility: light-theme muted text darkened to pass AA contrast; consent and telemetry checkboxes have accessible names; landing-page mocks are marked decorative

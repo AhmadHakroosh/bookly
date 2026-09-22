@@ -4,6 +4,7 @@ import { CheckIcon, MinusIcon } from "lucide-react";
 import { PLANS, type Limits, type Plan } from "@bookly/cloud";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { breadcrumbLd, faqLd, JsonLd } from "../json-ld";
 import { pageMetadata, SITE } from "../site";
 
 export const metadata: Metadata = pageMetadata({
@@ -92,6 +93,7 @@ function Price({ p }: { p: Plan }) {
 export default function PricingPage() {
   return (
     <div className="mx-auto max-w-6xl px-4 py-14 md:py-20">
+      <JsonLd data={[breadcrumbLd([["Pricing", "/pricing"]]), faqLd(FAQ)]} />
       <div className="mx-auto max-w-2xl text-center">
         <h1 className="text-3xl font-semibold tracking-tight md:text-5xl">
           Start free. Pay when it pays for itself.

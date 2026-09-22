@@ -9,7 +9,7 @@ import { listUserWorkspaces } from "@/server/platform";
 import { getSession } from "@/server/session";
 import { PageSkeleton } from "@/components/page-skeleton";
 
-export const metadata = { title: "Your workspaces" };
+export const metadata = { title: "Your workspaces", robots: { index: false } };
 
 async function WorkspacesPage() {
   const session = await getSession();
