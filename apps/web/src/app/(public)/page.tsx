@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { listProfiles } from "@/server/scheduling";
 import { getCurrentWorkspace } from "@/server/workspace";
+import { PageSkeleton } from "@/components/page-skeleton";
 
 async function HomePage() {
   const workspace = await getCurrentWorkspace();
@@ -46,7 +47,7 @@ async function HomePage() {
 
 export default function HomePageBoundary() {
   return (
-    <Suspense fallback={null}>
+    <Suspense fallback={<PageSkeleton />}>
       <HomePage />
     </Suspense>
   );

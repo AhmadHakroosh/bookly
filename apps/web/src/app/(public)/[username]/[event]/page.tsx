@@ -1,3 +1,4 @@
+import { PageSkeleton } from "@/components/page-skeleton";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { BackLink } from "@/components/links";
@@ -93,7 +94,7 @@ async function EventPage({ params, searchParams }: PageProps<"/[username]/[event
 
   return (
     <div className="mx-auto w-full max-w-4xl px-4 py-12">
-      <Suspense fallback={null}>
+      <Suspense fallback={<PageSkeleton />}>
         <TzDetect />
       </Suspense>
       <div className="grid gap-8 rounded-2xl border md:grid-cols-[260px_1fr]">
@@ -142,7 +143,7 @@ async function EventPage({ params, searchParams }: PageProps<"/[username]/[event
             </div>
           )}
           <div className="mt-4">
-            <Suspense fallback={null}>
+            <Suspense fallback={<PageSkeleton />}>
               <TzPicker value={tz} zones={timezoneList()} />
             </Suspense>
           </div>
@@ -254,7 +255,7 @@ async function EventPage({ params, searchParams }: PageProps<"/[username]/[event
 
 export default function EventPageBoundary(props: PageProps<"/[username]/[event]">) {
   return (
-    <Suspense fallback={null}>
+    <Suspense fallback={<PageSkeleton />}>
       <EventPage {...props} />
     </Suspense>
   );

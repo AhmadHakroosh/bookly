@@ -5,6 +5,7 @@ import { listAllEventTypes, listProfiles } from "@/server/scheduling";
 import { requireStaff } from "@/server/session";
 import { getCurrentWorkspace } from "@/server/workspace";
 import { RoutingFormEditor } from "./editor";
+import { PageSkeleton } from "@/components/page-skeleton";
 
 export const metadata = { title: "Edit routing form" };
 
@@ -27,7 +28,7 @@ async function EditRoutingPage({ params }: PageProps<"/admin/routing/[id]">) {
 
 export default function EditRoutingPageBoundary(props: PageProps<"/admin/routing/[id]">) {
   return (
-    <Suspense fallback={null}>
+    <Suspense fallback={<PageSkeleton />}>
       <EditRoutingPage {...props} />
     </Suspense>
   );

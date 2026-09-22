@@ -1,13 +1,14 @@
 import { Suspense } from "react";
 import { and, eq, schema } from "@bookly/db";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { SubmitButton } from "@/components/submit-button";
 import { db } from "@/lib/db";
 import { listProfiles } from "@/server/scheduling";
 import { requireStaff } from "@/server/session";
 import { getCurrentWorkspace } from "@/server/workspace";
 import { cancelInvite, removeMember, setRole } from "./actions";
 import { InviteForm } from "./invite-form";
+import { PageSkeleton } from "@/components/page-skeleton";
 
 export const metadata = { title: "Team" };
 
@@ -71,14 +72,12 @@ async function TeamPage() {
               {canManage && m.role !== "owner" && m.userId !== session.user.id && (
                 <>
                   <form action={setRole.bind(null, m.id, m.role === "admin" ? "member" : "admin")}>
-                    <Button type="submit" variant="ghost">
+                    <SubmitButton variant="ghost">
                       {m.role === "admin" ? "Make member" : "Make admin"}
-                    </Button>
+                    </SubmitButton>
                   </form>
                   <form action={removeMember.bind(null, m.id)}>
-                    <Button type="submit" variant="ghost">
-                      Remove
-                    </Button>
+                    <SubmitButton variant="ghost">Remove</SubmitButton>
                   </form>
                 </>
               )}
@@ -97,9 +96,7 @@ async function TeamPage() {
                 </span>
                 {canManage && (
                   <form action={cancelInvite.bind(null, i.id)}>
-                    <Button type="submit" variant="ghost">
-                      Cancel
-                    </Button>
+                    <SubmitButton variant="ghost">Cancel</SubmitButton>
                   </form>
                 )}
               </li>
@@ -113,7 +110,7 @@ async function TeamPage() {
 
 export default function TeamPageBoundary() {
   return (
-    <Suspense fallback={null}>
+    <Suspense fallback={<PageSkeleton />}>
       <TeamPage />
     </Suspense>
   );

@@ -6,6 +6,7 @@ import { eq, schema } from "@bookly/db";
 import { db } from "@/lib/db";
 import { getSession } from "@/server/session";
 import { AcceptForm } from "./accept-form";
+import { PageSkeleton } from "@/components/page-skeleton";
 
 export const metadata: Metadata = { title: "Join the team", robots: { index: false } };
 
@@ -51,7 +52,7 @@ async function AcceptPage({ params }: PageProps<"/accept-invitation/[id]">) {
 
 export default function AcceptPageBoundary(props: PageProps<"/accept-invitation/[id]">) {
   return (
-    <Suspense fallback={null}>
+    <Suspense fallback={<PageSkeleton />}>
       <AcceptPage {...props} />
     </Suspense>
   );

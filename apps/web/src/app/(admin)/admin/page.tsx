@@ -1,9 +1,10 @@
+import { PageSkeleton } from "@/components/page-skeleton";
 import Link from "next/link";
 import { ExternalLink } from "@/components/links";
 import { CheckIcon } from "lucide-react";
 import { Suspense } from "react";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { SubmitButton } from "@/components/submit-button";
 import { TaskList } from "@/components/task-list";
 import { fmtDate, fmtDateTime, fmtTime, todayIn, utcToZoned } from "@/lib/time";
 import { listOpenTasks } from "@/server/capture";
@@ -157,7 +158,7 @@ async function AdminInbox() {
                       Brief
                     </Link>
                     <form action={hostConfirm.bind(null, b.id)}>
-                      <Button type="submit">Accept</Button>
+                      <SubmitButton>Accept</SubmitButton>
                     </form>
                   </div>
                 </div>
@@ -175,9 +176,7 @@ async function AdminInbox() {
                       placeholder="Thanks for reaching out — here is the short answer…"
                       className="flex-1 rounded-lg border bg-background px-3 py-2 text-sm"
                     />
-                    <Button type="submit" variant="outline">
-                      Send &amp; withdraw request
-                    </Button>
+                    <SubmitButton variant="outline">Send &amp; withdraw request</SubmitButton>
                   </form>
                 </details>
               </li>
@@ -318,9 +317,7 @@ async function AdminInbox() {
                         Email
                       </a>
                       <form action={snoozeContact.bind(null, c.id, 7)}>
-                        <Button type="submit" variant="ghost">
-                          Snooze 7d
-                        </Button>
+                        <SubmitButton variant="ghost">Snooze 7d</SubmitButton>
                       </form>
                     </div>
                   </li>
@@ -346,7 +343,7 @@ async function AdminInbox() {
 
 export default function AdminInboxBoundary() {
   return (
-    <Suspense fallback={null}>
+    <Suspense fallback={<PageSkeleton />}>
       <AdminInbox />
     </Suspense>
   );

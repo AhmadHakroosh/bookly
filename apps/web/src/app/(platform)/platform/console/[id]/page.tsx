@@ -1,10 +1,11 @@
+import { PageSkeleton } from "@/components/page-skeleton";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { connection } from "next/server";
 import { Suspense } from "react";
 import { PLANS } from "@bookly/cloud";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { SubmitButton } from "@/components/submit-button";
 import { BackLink, ExternalLink } from "@/components/links";
 import { fmtDateTime } from "@/lib/time";
 import { planName } from "@/server/billing";
@@ -137,15 +138,11 @@ async function WorkspacePage({ params }: PageProps<"/platform/console/[id]">) {
           <h3 className="text-base font-semibold tracking-tight">Actions</h3>
           <div className="mt-3 flex flex-wrap items-center gap-2">
             <form action={impersonateOwner.bind(null, ws.id)}>
-              <Button type="submit" variant="outline">
-                Sign in as owner
-              </Button>
+              <SubmitButton variant="outline">Sign in as owner</SubmitButton>
             </form>
             {ws.suspendedAt ? (
               <form action={unsuspendWorkspace.bind(null, ws.id)}>
-                <Button type="submit" variant="outline">
-                  Unsuspend
-                </Button>
+                <SubmitButton variant="outline">Unsuspend</SubmitButton>
               </form>
             ) : (
               <form action={suspendWorkspace.bind(null, ws.id)} className="flex gap-1">
@@ -154,9 +151,7 @@ async function WorkspacePage({ params }: PageProps<"/platform/console/[id]">) {
                   placeholder="Reason"
                   className="h-8 w-40 rounded-md border bg-background px-2 text-sm"
                 />
-                <Button type="submit" variant="ghost">
-                  Suspend
-                </Button>
+                <SubmitButton variant="ghost">Suspend</SubmitButton>
               </form>
             )}
           </div>
@@ -193,13 +188,11 @@ async function WorkspacePage({ params }: PageProps<"/platform/console/[id]">) {
               defaultValue={ws.planNote ?? ""}
               className="h-8 w-52 rounded-lg border bg-background px-2 text-sm"
             />
-            <Button type="submit">Set plan</Button>
+            <SubmitButton>Set plan</SubmitButton>
           </form>
           {ws.planManagedBy === "operator" && (
             <form action={releasePlan.bind(null, ws.id)} className="mt-2">
-              <Button type="submit" variant="ghost">
-                Release to Stripe
-              </Button>
+              <SubmitButton variant="ghost">Release to Stripe</SubmitButton>
             </form>
           )}
         </section>
@@ -254,7 +247,7 @@ async function WorkspacePage({ params }: PageProps<"/platform/console/[id]">) {
 
 export default function WorkspacePageBoundary(props: PageProps<"/platform/console/[id]">) {
   return (
-    <Suspense fallback={null}>
+    <Suspense fallback={<PageSkeleton />}>
       <WorkspacePage {...props} />
     </Suspense>
   );

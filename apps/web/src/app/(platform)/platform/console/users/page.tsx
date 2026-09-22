@@ -1,9 +1,10 @@
 import { connection } from "next/server";
 import { Suspense } from "react";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { SubmitButton } from "@/components/submit-button";
 import { listUsersForConsole } from "@/server/ops";
 import { banUser, unbanUser } from "../actions";
+import { PageSkeleton } from "@/components/page-skeleton";
 
 export const metadata = { title: "Users", robots: { index: false } };
 
@@ -49,9 +50,7 @@ async function UsersPage({ searchParams }: PageProps<"/platform/console/users">)
             </div>
             {u.banned ? (
               <form action={unbanUser.bind(null, u.id)}>
-                <Button type="submit" variant="outline">
-                  Unban
-                </Button>
+                <SubmitButton variant="outline">Unban</SubmitButton>
               </form>
             ) : (
               <form action={banUser.bind(null, u.id)} className="flex gap-1">
@@ -60,9 +59,7 @@ async function UsersPage({ searchParams }: PageProps<"/platform/console/users">)
                   placeholder="Reason"
                   className="h-8 w-40 rounded-md border bg-background px-2 text-sm"
                 />
-                <Button type="submit" variant="ghost">
-                  Ban
-                </Button>
+                <SubmitButton variant="ghost">Ban</SubmitButton>
               </form>
             )}
           </li>
@@ -77,7 +74,7 @@ async function UsersPage({ searchParams }: PageProps<"/platform/console/users">)
 
 export default function UsersPageBoundary(props: PageProps<"/platform/console/users">) {
   return (
-    <Suspense fallback={null}>
+    <Suspense fallback={<PageSkeleton />}>
       <UsersPage {...props} />
     </Suspense>
   );

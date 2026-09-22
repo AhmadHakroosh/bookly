@@ -3,6 +3,7 @@ import type { Integration } from "@bookly/db/schema";
 import { listIntegrations, providerConfigured } from "@/server/integrations";
 import { requireStaff } from "@/server/session";
 import { CalendarCard } from "./calendar-card";
+import { PageSkeleton } from "@/components/page-skeleton";
 
 export const metadata = { title: "Calendars" };
 
@@ -56,7 +57,7 @@ async function CalendarsPage({ searchParams }: PageProps<"/admin/calendars">) {
 
 export default function CalendarsPageBoundary(props: PageProps<"/admin/calendars">) {
   return (
-    <Suspense fallback={null}>
+    <Suspense fallback={<PageSkeleton />}>
       <CalendarsPage {...props} />
     </Suspense>
   );

@@ -1,6 +1,6 @@
 import type { MeetingTranscript } from "@bookly/db/schema";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { SubmitButton } from "@/components/submit-button";
 import { fmtDateTime } from "@/lib/time";
 import { renderTranscript, transcriptWords } from "@/server/transcript-text";
 import { deleteTranscriptAction } from "../../scheduling-actions";
@@ -72,9 +72,7 @@ export function TranscriptPanel({
             </pre>
           </details>
           <form action={deleteTranscriptAction.bind(null, bookingId)} className="mt-3">
-            <Button type="submit" variant="ghost">
-              Delete transcript
-            </Button>
+            <SubmitButton variant="ghost">Delete transcript</SubmitButton>
           </form>
         </>
       )}

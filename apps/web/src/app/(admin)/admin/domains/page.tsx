@@ -1,7 +1,8 @@
+import { PageSkeleton } from "@/components/page-skeleton";
 import { loadEnv } from "@bookly/config";
 import { Suspense } from "react";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { SubmitButton } from "@/components/submit-button";
 import {
   Table,
   TableBody,
@@ -93,23 +94,17 @@ async function DomainsPage() {
               <TableCell className="text-right whitespace-nowrap">
                 {!d.verifiedAt && (
                   <form action={checkDomain.bind(null, d.id)} className="inline">
-                    <Button type="submit" variant="outline">
-                      Verify
-                    </Button>
+                    <SubmitButton variant="outline">Verify</SubmitButton>
                   </form>
                 )}
                 {d.verifiedAt && !d.isPrimary && (
                   <form action={makePrimary.bind(null, d.id)} className="inline">
-                    <Button type="submit" variant="ghost">
-                      Make primary
-                    </Button>
+                    <SubmitButton variant="ghost">Make primary</SubmitButton>
                   </form>
                 )}
                 {!d.isPrimary && (
                   <form action={removeDomain.bind(null, d.id)} className="inline">
-                    <Button type="submit" variant="ghost">
-                      Remove
-                    </Button>
+                    <SubmitButton variant="ghost">Remove</SubmitButton>
                   </form>
                 )}
               </TableCell>
@@ -133,7 +128,7 @@ async function DomainsPage() {
 /** Suspense boundary for Cache Components: the page reads request data and streams in. */
 export default function DomainsPageBoundary() {
   return (
-    <Suspense fallback={null}>
+    <Suspense fallback={<PageSkeleton />}>
       <DomainsPage />
     </Suspense>
   );

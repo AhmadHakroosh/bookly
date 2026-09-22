@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { Suspense } from "react";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
+import { TopProgress } from "@/components/top-progress";
 import "./globals.css";
 
 const sans = Geist({ subsets: ["latin"], variable: "--font-sans", display: "swap" });
@@ -24,6 +25,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     >
       <body className="flex min-h-full flex-col bg-background font-sans text-foreground">
         <ThemeProvider>
+          <Suspense fallback={null}>
+            <TopProgress />
+          </Suspense>
           {/* Everything below depends on the request host (tenant), so it streams in. */}
           <Suspense fallback={null}>{children}</Suspense>
           <Toaster />

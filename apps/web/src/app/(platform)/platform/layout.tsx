@@ -6,6 +6,7 @@ import { connection } from "next/server";
 import { Suspense } from "react";
 import { ExternalLinkIcon, MenuIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { SubmitButton } from "@/components/submit-button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { GitHubIcon, Logo, LogoMark } from "@/components/brand/logo";
@@ -116,9 +117,9 @@ async function Shell({ children }: { children: React.ReactNode }) {
                   </Button>
                 )}
                 <form action={signOut}>
-                  <Button variant="ghost" type="submit" className="hidden sm:inline-flex">
+                  <SubmitButton variant="ghost" className="hidden sm:inline-flex">
                     Sign out
-                  </Button>
+                  </SubmitButton>
                 </form>
               </>
             ) : (

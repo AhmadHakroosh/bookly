@@ -10,6 +10,7 @@ import { getBookingByToken, getProfileByUser, locationLabel } from "@/server/sch
 import { getCurrentWorkspace } from "@/server/workspace";
 import { formatPrice } from "@/server/payments";
 import { cancelByAttendee, cancelRemainingByAttendee, deleteMyTranscript, payNow } from "./actions";
+import { PageSkeleton } from "@/components/page-skeleton";
 
 export const metadata: Metadata = { title: "Your booking", robots: { index: false } };
 
@@ -231,7 +232,7 @@ async function BookingPage({ params, searchParams }: PageProps<"/booking/[token]
 
 export default function BookingPageBoundary(props: PageProps<"/booking/[token]">) {
   return (
-    <Suspense fallback={null}>
+    <Suspense fallback={<PageSkeleton />}>
       <BookingPage {...props} />
     </Suspense>
   );

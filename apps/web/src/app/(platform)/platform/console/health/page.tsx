@@ -3,6 +3,7 @@ import { Suspense } from "react";
 import { CheckCircle2Icon, XCircleIcon } from "lucide-react";
 import { loadEnv } from "@bookly/config";
 import { healthReport, usageSince } from "@/server/ops";
+import { PageSkeleton } from "@/components/page-skeleton";
 
 export const metadata = { title: "Health", robots: { index: false } };
 
@@ -49,7 +50,7 @@ async function HealthPage() {
 
 export default function HealthPageBoundary() {
   return (
-    <Suspense fallback={null}>
+    <Suspense fallback={<PageSkeleton />}>
       <HealthPage />
     </Suspense>
   );

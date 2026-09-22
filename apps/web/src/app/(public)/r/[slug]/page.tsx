@@ -4,6 +4,7 @@ import { Suspense } from "react";
 import { getRoutingForm } from "@/server/routing";
 import { getCurrentWorkspace } from "@/server/workspace";
 import { RoutingFormView } from "./form";
+import { PageSkeleton } from "@/components/page-skeleton";
 
 export async function generateMetadata({ params }: PageProps<"/r/[slug]">): Promise<Metadata> {
   const { slug } = await params;
@@ -37,7 +38,7 @@ async function RoutingPage({ params, searchParams }: PageProps<"/r/[slug]">) {
 
 export default function RoutingPageBoundary(props: PageProps<"/r/[slug]">) {
   return (
-    <Suspense fallback={null}>
+    <Suspense fallback={<PageSkeleton />}>
       <RoutingPage {...props} />
     </Suspense>
   );

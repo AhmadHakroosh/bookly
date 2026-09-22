@@ -7,6 +7,7 @@ import { ExternalLink } from "@/components/links";
 import { planName } from "@/server/billing";
 import { listUserWorkspaces } from "@/server/platform";
 import { getSession } from "@/server/session";
+import { PageSkeleton } from "@/components/page-skeleton";
 
 export const metadata = { title: "Your workspaces" };
 
@@ -57,7 +58,7 @@ async function WorkspacesPage() {
 
 export default function WorkspacesPageBoundary() {
   return (
-    <Suspense fallback={null}>
+    <Suspense fallback={<PageSkeleton />}>
       <WorkspacesPage />
     </Suspense>
   );

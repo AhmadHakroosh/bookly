@@ -1,3 +1,4 @@
+import { PageSkeleton } from "@/components/page-skeleton";
 import Link from "next/link";
 import {
   ArrowRightIcon,
@@ -22,7 +23,7 @@ import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { CONTACT_STAGES } from "@bookly/db/schema";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { SubmitButton } from "@/components/submit-button";
 import { fmtDateTime } from "@/lib/time";
 import { TaskList } from "@/components/task-list";
 import { listOpenTasks } from "@/server/capture";
@@ -102,9 +103,7 @@ async function ContactPage({ params }: PageProps<"/admin/contacts/[id]">) {
               </option>
             ))}
           </select>
-          <Button type="submit" variant="outline">
-            Update
-          </Button>
+          <SubmitButton variant="outline">Update</SubmitButton>
         </form>
       </div>
 
@@ -138,7 +137,7 @@ async function ContactPage({ params }: PageProps<"/admin/contacts/[id]">) {
                 placeholder="Add a note…"
                 className="h-9 flex-1 rounded-lg border bg-background px-3 text-sm"
               />
-              <Button type="submit">Add</Button>
+              <SubmitButton>Add</SubmitButton>
             </form>
             <ol className="mt-3 space-y-3">
               {events.map((e) => (
@@ -207,7 +206,7 @@ async function ContactPage({ params }: PageProps<"/admin/contacts/[id]">) {
 
 export default function ContactPageBoundary(props: PageProps<"/admin/contacts/[id]">) {
   return (
-    <Suspense fallback={null}>
+    <Suspense fallback={<PageSkeleton />}>
       <ContactPage {...props} />
     </Suspense>
   );

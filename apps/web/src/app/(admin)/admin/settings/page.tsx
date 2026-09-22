@@ -5,6 +5,7 @@ import { Suspense } from "react";
 import { requireStaff } from "@/server/session";
 import { DangerZone } from "./danger-zone";
 import { SettingsForm } from "./settings-form";
+import { PageSkeleton } from "@/components/page-skeleton";
 
 export const metadata = { title: "Settings" };
 
@@ -54,7 +55,7 @@ async function SettingsPage() {
 /** Suspense boundary for Cache Components: the page reads request data and streams in. */
 export default function SettingsPageBoundary() {
   return (
-    <Suspense fallback={null}>
+    <Suspense fallback={<PageSkeleton />}>
       <SettingsPage />
     </Suspense>
   );

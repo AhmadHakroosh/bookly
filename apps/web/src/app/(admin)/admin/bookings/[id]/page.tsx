@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { and, eq, schema } from "@bookly/db";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { SubmitButton } from "@/components/submit-button";
 import { db } from "@/lib/db";
 import { fmtDateTime } from "@/lib/time";
 import { TaskList } from "@/components/task-list";
@@ -22,6 +22,7 @@ import { getProfileByUser, locationLabel } from "@/server/scheduling";
 import { requireStaff } from "@/server/session";
 import { getCurrentWorkspace } from "@/server/workspace";
 import { regenerateBrief } from "../../scheduling-actions";
+import { PageSkeleton } from "@/components/page-skeleton";
 
 export const metadata = { title: "Meeting brief" };
 
@@ -91,9 +92,7 @@ async function BookingBriefPage({ params }: PageProps<"/admin/bookings/[id]">) {
         <div className="flex items-center justify-between gap-3">
           <h2 className="text-base font-semibold tracking-tight">Briefing</h2>
           <form action={regenerateBrief.bind(null, b.id)}>
-            <Button type="submit" variant="outline">
-              Regenerate
-            </Button>
+            <SubmitButton variant="outline">Regenerate</SubmitButton>
           </form>
         </div>
         <p className="mt-3 text-sm leading-relaxed whitespace-pre-line">{brief}</p>
@@ -190,7 +189,7 @@ async function BookingBriefPage({ params }: PageProps<"/admin/bookings/[id]">) {
 
 export default function BookingBriefPageBoundary(props: PageProps<"/admin/bookings/[id]">) {
   return (
-    <Suspense fallback={null}>
+    <Suspense fallback={<PageSkeleton />}>
       <BookingBriefPage {...props} />
     </Suspense>
   );

@@ -282,3 +282,28 @@
     animation: none;
   }
 }
+
+/* Navigation progress bar: grows quickly, then creeps, until the route commits. */
+@keyframes top-progress {
+  0% {
+    transform: scaleX(0);
+  }
+  20% {
+    transform: scaleX(0.4);
+  }
+  60% {
+    transform: scaleX(0.75);
+  }
+  100% {
+    transform: scaleX(0.92);
+  }
+}
+.top-progress-run {
+  animation: top-progress 6s cubic-bezier(0.1, 0.6, 0.3, 1) forwards;
+}
+@media (prefers-reduced-motion: reduce) {
+  .top-progress-run {
+    animation: none;
+    transform: scaleX(0.9);
+  }
+}

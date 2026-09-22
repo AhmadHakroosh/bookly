@@ -1,8 +1,9 @@
+import { PageSkeleton } from "@/components/page-skeleton";
 import { Suspense } from "react";
 import { desc, eq, inArray, schema } from "@bookly/db";
 import { loadEnv } from "@bookly/config";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { SubmitButton } from "@/components/submit-button";
 import {
   Table,
   TableBody,
@@ -94,9 +95,7 @@ async function ApiPage() {
                     <Badge variant="secondary">Revoked</Badge>
                   ) : (
                     <form action={revokeApiKey.bind(null, k.id)}>
-                      <Button type="submit" variant="ghost">
-                        Revoke
-                      </Button>
+                      <SubmitButton variant="ghost">Revoke</SubmitButton>
                     </form>
                   )}
                 </TableCell>
@@ -149,19 +148,13 @@ async function ApiPage() {
                 </TableCell>
                 <TableCell className="text-right whitespace-nowrap">
                   <form action={pingWebhook.bind(null, h.id)} className="inline">
-                    <Button type="submit" variant="ghost">
-                      Ping
-                    </Button>
+                    <SubmitButton variant="ghost">Ping</SubmitButton>
                   </form>
                   <form action={toggleWebhook.bind(null, h.id, !h.active)} className="inline">
-                    <Button type="submit" variant="ghost">
-                      {h.active ? "Disable" : "Enable"}
-                    </Button>
+                    <SubmitButton variant="ghost">{h.active ? "Disable" : "Enable"}</SubmitButton>
                   </form>
                   <form action={deleteWebhook.bind(null, h.id)} className="inline">
-                    <Button type="submit" variant="ghost">
-                      Delete
-                    </Button>
+                    <SubmitButton variant="ghost">Delete</SubmitButton>
                   </form>
                 </TableCell>
               </TableRow>
@@ -209,9 +202,7 @@ async function ApiPage() {
                     <TableCell className="text-right">
                       {d.status !== "delivered" && (
                         <form action={retryDelivery.bind(null, d.id)}>
-                          <Button type="submit" variant="ghost">
-                            Retry
-                          </Button>
+                          <SubmitButton variant="ghost">Retry</SubmitButton>
                         </form>
                       )}
                     </TableCell>
@@ -228,7 +219,7 @@ async function ApiPage() {
 
 export default function ApiPageBoundary() {
   return (
-    <Suspense fallback={null}>
+    <Suspense fallback={<PageSkeleton />}>
       <ApiPage />
     </Suspense>
   );

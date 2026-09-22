@@ -1,11 +1,12 @@
 import Link from "next/link";
 import { Suspense } from "react";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { SubmitButton } from "@/components/submit-button";
 import { conferencingAvailability, listIntegrations } from "@/server/integrations";
 import { requireStaff } from "@/server/session";
 import { ConnectButton } from "@/components/connect-button";
 import { disconnect } from "../integrations-actions";
+import { PageSkeleton } from "@/components/page-skeleton";
 
 export const metadata = { title: "Conferencing" };
 
@@ -71,9 +72,7 @@ async function ConferencingPage({ searchParams }: PageProps<"/admin/conferencing
             variant="outline"
           />
           <form action={() => disconnect("zoom")}>
-            <Button variant="ghost" type="submit">
-              Disconnect
-            </Button>
+            <SubmitButton variant="ghost">Disconnect</SubmitButton>
           </form>
         </div>
       ) : avail.configured.zoom ? (
@@ -118,7 +117,7 @@ async function ConferencingPage({ searchParams }: PageProps<"/admin/conferencing
 
 export default function ConferencingPageBoundary(props: PageProps<"/admin/conferencing">) {
   return (
-    <Suspense fallback={null}>
+    <Suspense fallback={<PageSkeleton />}>
       <ConferencingPage {...props} />
     </Suspense>
   );

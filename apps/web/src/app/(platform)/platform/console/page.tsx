@@ -7,6 +7,7 @@ import { planName } from "@/server/billing";
 import { listWorkspacesForConsole, platformStats } from "@/server/ops";
 import { ExternalLink } from "@/components/links";
 import { tenantUrl } from "@/server/platform";
+import { PageSkeleton } from "@/components/page-skeleton";
 
 export const metadata = { title: "Console", robots: { index: false } };
 
@@ -150,7 +151,7 @@ async function ConsoleHome({ searchParams }: PageProps<"/platform/console">) {
 
 export default function ConsoleHomeBoundary(props: PageProps<"/platform/console">) {
   return (
-    <Suspense fallback={null}>
+    <Suspense fallback={<PageSkeleton />}>
       <ConsoleHome {...props} />
     </Suspense>
   );

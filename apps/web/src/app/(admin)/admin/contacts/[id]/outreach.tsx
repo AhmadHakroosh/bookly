@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { SubmitButton } from "@/components/submit-button";
 import { sendPaymentRequest, sendProposal } from "../actions";
 
 type T = { subject: string; body: string };
@@ -60,7 +61,7 @@ export function Outreach({
             />
             days
           </label>
-          <Button type="submit">Send proposal</Button>
+          <SubmitButton>Send proposal</SubmitButton>
         </form>
       )}
       {open === "payment" && (
@@ -103,7 +104,7 @@ export function Outreach({
             />
             days
           </label>
-          <Button type="submit">Send request</Button>
+          <SubmitButton>Send request</SubmitButton>
         </form>
       )}
     </section>

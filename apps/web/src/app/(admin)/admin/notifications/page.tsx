@@ -7,6 +7,7 @@ import { requireStaff } from "@/server/session";
 import { getCurrentWorkspace } from "@/server/workspace";
 import { JoinToggle } from "./join-toggle";
 import { PrefsForm } from "./prefs-form";
+import { PageSkeleton } from "@/components/page-skeleton";
 
 export const metadata = { title: "Notifications" };
 
@@ -62,7 +63,7 @@ async function NotificationsPage() {
 
 export default function NotificationsPageBoundary() {
   return (
-    <Suspense fallback={null}>
+    <Suspense fallback={<PageSkeleton />}>
       <NotificationsPage />
     </Suspense>
   );

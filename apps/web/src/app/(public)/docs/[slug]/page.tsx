@@ -5,6 +5,7 @@ import { Suspense } from "react";
 import { ArrowLeftIcon, ArrowRightIcon } from "lucide-react";
 import { ExternalLink } from "@/components/links";
 import { DOCS_REPO_URL, renderDoc } from "@/server/docs";
+import { PageSkeleton } from "@/components/page-skeleton";
 
 export async function generateMetadata({ params }: PageProps<"/docs/[slug]">): Promise<Metadata> {
   const { slug } = await params;
@@ -99,7 +100,7 @@ async function DocPage({ params }: PageProps<"/docs/[slug]">) {
 
 export default function DocPageBoundary(props: PageProps<"/docs/[slug]">) {
   return (
-    <Suspense fallback={null}>
+    <Suspense fallback={<PageSkeleton />}>
       <DocPage {...props} />
     </Suspense>
   );

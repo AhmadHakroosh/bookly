@@ -4,6 +4,7 @@ import { Suspense } from "react";
 import { ArrowRightIcon } from "lucide-react";
 import { ExternalLink } from "@/components/links";
 import { DOCS_REPO_URL, listDocs } from "@/server/docs";
+import { PageSkeleton } from "@/components/page-skeleton";
 
 export const metadata: Metadata = { title: "Documentation" };
 
@@ -52,7 +53,7 @@ async function DocsIndex() {
 
 export default function DocsIndexBoundary() {
   return (
-    <Suspense fallback={null}>
+    <Suspense fallback={<PageSkeleton />}>
       <DocsIndex />
     </Suspense>
   );

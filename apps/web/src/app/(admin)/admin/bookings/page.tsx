@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Suspense } from "react";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { SubmitButton } from "@/components/submit-button";
 import { fmtDateTime } from "@/lib/time";
 import { formatPrice } from "@/server/payments";
 import { getProfileByUser, listBookings, locationLabel } from "@/server/scheduling";
@@ -9,6 +9,7 @@ import { requireStaff } from "@/server/session";
 import { listWaitlist } from "@/server/waitlist";
 import { getCurrentWorkspace } from "@/server/workspace";
 import { hostCancel, hostConfirm, hostMark, hostRemoveWaitlist } from "../scheduling-actions";
+import { PageSkeleton } from "@/components/page-skeleton";
 
 export const metadata = { title: "Bookings" };
 
@@ -118,21 +119,17 @@ async function BookingsPage({ searchParams }: PageProps<"/admin/bookings">) {
               )}
               {b.status === "pending" && (
                 <form action={hostConfirm.bind(null, b.id)}>
-                  <Button type="submit">Confirm</Button>
+                  <SubmitButton>Confirm</SubmitButton>
                 </form>
               )}
               {past && (b.status === "confirmed" || b.status === "completed") && (
                 <form action={hostMark.bind(null, b.id, "no_show")}>
-                  <Button type="submit" variant="ghost">
-                    No-show
-                  </Button>
+                  <SubmitButton variant="ghost">No-show</SubmitButton>
                 </form>
               )}
               {past && b.status === "no_show" && (
                 <form action={hostMark.bind(null, b.id, "completed")}>
-                  <Button type="submit" variant="ghost">
-                    Undo no-show
-                  </Button>
+                  <SubmitButton variant="ghost">Undo no-show</SubmitButton>
                 </form>
               )}
               {(b.status === "confirmed" || b.status === "pending") && b.endAt > new Date() && (
@@ -142,9 +139,7 @@ async function BookingsPage({ searchParams }: PageProps<"/admin/bookings">) {
                     placeholder="Reason"
                     className="h-7 w-32 rounded-md border bg-background px-2 text-xs"
                   />
-                  <Button type="submit" variant="ghost">
-                    Cancel
-                  </Button>
+                  <SubmitButton variant="ghost">Cancel</SubmitButton>
                 </form>
               )}
             </div>
@@ -179,9 +174,7 @@ async function BookingsPage({ searchParams }: PageProps<"/admin/bookings">) {
                   </p>
                 </div>
                 <form action={hostRemoveWaitlist.bind(null, w.id)}>
-                  <Button type="submit" variant="ghost">
-                    Remove
-                  </Button>
+                  <SubmitButton variant="ghost">Remove</SubmitButton>
                 </form>
               </li>
             ))}
@@ -194,7 +187,7 @@ async function BookingsPage({ searchParams }: PageProps<"/admin/bookings">) {
 
 export default function BookingsPageBoundary(props: PageProps<"/admin/bookings">) {
   return (
-    <Suspense fallback={null}>
+    <Suspense fallback={<PageSkeleton />}>
       <BookingsPage {...props} />
     </Suspense>
   );

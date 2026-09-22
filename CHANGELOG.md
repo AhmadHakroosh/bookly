@@ -8,6 +8,7 @@ Everything below is on `main` ahead of the first release, which will be tagged `
 
 ### Added
 
+- Loading states everywhere: a navigation progress bar, route and page skeletons instead of blank streaming, and every form submit button disables itself with a spinner while its action runs (server-action forms included); task complete / remove controls show progress too
 - Cloud-mode end-to-end suite in CI (`e2e-cloud` job): marketing pages, social metadata, robots and sitemap, real 404s, telemetry receiver, sign-up consent (API and UI), a tenant booking, the workspace chooser and the operator console, plus axe checks; the e2e build omits `upgrade-insecure-requests` so plain-http test hosts work
 - Accessibility: light-theme muted text darkened to pass AA contrast; consent and telemetry checkboxes have accessible names; landing-page mocks are marked decorative
 - Jobs on QStash for serverless: one job registry with pg-boss (self-host), QStash (`QSTASH_TOKEN` + signing keys; signed `POST /api/jobs/<name>`, delays, retries, dead-letter queue, cron schedules registered on boot) and inline drivers; reminders and follow-ups scheduled at their exact time per booking; webhook deliveries, transcript processing and CRM sync/notes run as retried jobs; Console → Health shows schedules and dead-letter count

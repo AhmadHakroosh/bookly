@@ -1,11 +1,12 @@
 import Link from "next/link";
 import { Suspense } from "react";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { SubmitButton } from "@/components/submit-button";
 import { getProfileByUser, listAllEventTypes, locationLabel } from "@/server/scheduling";
 import { requireStaff } from "@/server/session";
 import { getCurrentWorkspace } from "@/server/workspace";
 import { createEventType } from "../scheduling-actions";
+import { PageSkeleton } from "@/components/page-skeleton";
 
 export const metadata = { title: "Event types" };
 
@@ -58,7 +59,7 @@ async function EventTypesPage({ searchParams }: PageProps<"/admin/event-types">)
           </p>
         </div>
         <form action={createEventType}>
-          <Button type="submit">New event type</Button>
+          <SubmitButton>New event type</SubmitButton>
         </form>
       </div>
       <ul className="space-y-2">
@@ -95,7 +96,7 @@ async function EventTypesPage({ searchParams }: PageProps<"/admin/event-types">)
 
 export default function EventTypesPageBoundary(props: PageProps<"/admin/event-types">) {
   return (
-    <Suspense fallback={null}>
+    <Suspense fallback={<PageSkeleton />}>
       <EventTypesPage {...props} />
     </Suspense>
   );

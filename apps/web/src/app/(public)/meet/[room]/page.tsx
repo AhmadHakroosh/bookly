@@ -8,6 +8,7 @@ import { dailyConfigured, dailyRoomUrl } from "@/server/integrations";
 import { getProfileByUser } from "@/server/scheduling";
 import { captureEnabled } from "@/server/transcripts";
 import { Call } from "./call";
+import { PageSkeleton } from "@/components/page-skeleton";
 
 export const metadata: Metadata = { title: "Meeting", robots: { index: false, follow: false } };
 
@@ -69,7 +70,7 @@ async function MeetPage({ params }: PageProps<"/meet/[room]">) {
 
 export default function MeetPageBoundary(props: PageProps<"/meet/[room]">) {
   return (
-    <Suspense fallback={null}>
+    <Suspense fallback={<PageSkeleton />}>
       <MeetPage {...props} />
     </Suspense>
   );

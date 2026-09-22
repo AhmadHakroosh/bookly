@@ -2,13 +2,14 @@ import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { PLANS, isPlanId } from "@bookly/cloud";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { SubmitButton } from "@/components/submit-button";
 import { billingConfigured, planName } from "@/server/billing";
 import { usageSummary } from "@/server/limits";
 import { isCloud } from "@/server/platform";
 import { requireStaff } from "@/server/session";
 import { getCurrentWorkspace } from "@/server/workspace";
 import { manageBilling, upgrade } from "./actions";
+import { PageSkeleton } from "@/components/page-skeleton";
 
 export const metadata = { title: "Billing" };
 
@@ -78,9 +79,9 @@ async function BillingPage({ searchParams }: PageProps<"/admin/billing">) {
               </ul>
               {canManage && p.id !== current && p.id !== "free" && billingConfigured() && (
                 <form action={upgrade.bind(null, p.id)} className="mt-4">
-                  <Button type="submit" className="w-full">
+                  <SubmitButton className="w-full">
                     {current === "free" ? `Upgrade to ${p.name}` : `Switch to ${p.name}`}
-                  </Button>
+                  </SubmitButton>
                 </form>
               )}
             </div>
@@ -95,9 +96,9 @@ async function BillingPage({ searchParams }: PageProps<"/admin/billing">) {
 
       {canManage && ws.stripeCustomerId && (
         <form action={manageBilling}>
-          <Button type="submit" variant="outline">
+          <SubmitButton variant="outline">
             Manage payment method, invoices and cancellation
-          </Button>
+          </SubmitButton>
         </form>
       )}
     </div>
@@ -106,7 +107,7 @@ async function BillingPage({ searchParams }: PageProps<"/admin/billing">) {
 
 export default function BillingPageBoundary(props: PageProps<"/admin/billing">) {
   return (
-    <Suspense fallback={null}>
+    <Suspense fallback={<PageSkeleton />}>
       <BillingPage {...props} />
     </Suspense>
   );

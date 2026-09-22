@@ -7,6 +7,7 @@ import { ownerOf } from "@/server/data-rights";
 import { DeleteAccount } from "./delete-account";
 import { PasswordForm } from "./password-form";
 import { ProfileForm } from "./profile-form";
+import { PageSkeleton } from "@/components/page-skeleton";
 
 export const metadata = { title: "Booking page" };
 
@@ -53,7 +54,7 @@ async function ProfilePage({ searchParams }: PageProps<"/admin/profile">) {
 
 export default function ProfilePageBoundary(props: PageProps<"/admin/profile">) {
   return (
-    <Suspense fallback={null}>
+    <Suspense fallback={<PageSkeleton />}>
       <ProfilePage {...props} />
     </Suspense>
   );

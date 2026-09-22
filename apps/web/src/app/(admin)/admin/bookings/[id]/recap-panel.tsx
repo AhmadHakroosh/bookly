@@ -2,7 +2,7 @@ import Link from "next/link";
 import { CheckIcon, ThermometerIcon } from "lucide-react";
 import type { MeetingRecap } from "@bookly/db/schema";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { SubmitButton } from "@/components/submit-button";
 import type { Recap } from "@/server/recap-text";
 import {
   acceptRecapActionsAction,
@@ -59,15 +59,11 @@ export function RecapPanel({
             <Badge variant="secondary">Reviewed</Badge>
           ) : (
             <form action={markRecapReviewedAction.bind(null, bookingId)}>
-              <Button type="submit" variant="ghost">
-                Mark reviewed
-              </Button>
+              <SubmitButton variant="ghost">Mark reviewed</SubmitButton>
             </form>
           )}
           <form action={regenerateRecapAction.bind(null, bookingId)}>
-            <Button type="submit" variant="ghost">
-              Regenerate
-            </Button>
+            <SubmitButton variant="ghost">Regenerate</SubmitButton>
           </form>
         </div>
       </div>
@@ -162,9 +158,9 @@ export function RecapPanel({
             })}
           </ul>
           {pending.length > 0 && (
-            <Button type="submit" className="mt-2">
+            <SubmitButton className="mt-2">
               Create {pending.length === r.actions.length ? "all" : "selected"} tasks
-            </Button>
+            </SubmitButton>
           )}
         </form>
       )}
@@ -219,9 +215,7 @@ export function RecapPanel({
           </p>
           {stageMove && !row.accepted.stage && contactId && (
             <form action={applyRecapStageAction.bind(null, bookingId)}>
-              <Button type="submit" variant="outline">
-                Move to {r.suggestedStage}
-              </Button>
+              <SubmitButton variant="outline">Move to {r.suggestedStage}</SubmitButton>
             </form>
           )}
         </div>

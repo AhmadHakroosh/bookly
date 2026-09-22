@@ -4,6 +4,7 @@ import { Suspense } from "react";
 import { getSession } from "@/server/session";
 import { needsSetup } from "@/server/workspace";
 import { SetupForm } from "./setup-form";
+import { PageSkeleton } from "@/components/page-skeleton";
 
 export const metadata = { title: "Set up Bookly", robots: { index: false } };
 
@@ -39,7 +40,7 @@ async function SetupPage() {
 /** Suspense boundary for Cache Components: the page reads request data and streams in. */
 export default function SetupPageBoundary() {
   return (
-    <Suspense fallback={null}>
+    <Suspense fallback={<PageSkeleton />}>
       <SetupPage />
     </Suspense>
   );

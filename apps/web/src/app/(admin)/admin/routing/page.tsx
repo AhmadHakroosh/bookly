@@ -1,11 +1,12 @@
 import Link from "next/link";
 import { Suspense } from "react";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { SubmitButton } from "@/components/submit-button";
 import { listRoutingForms } from "@/server/routing";
 import { requireStaff } from "@/server/session";
 import { getCurrentWorkspace } from "@/server/workspace";
 import { createRoutingForm } from "./actions";
+import { PageSkeleton } from "@/components/page-skeleton";
 
 export const metadata = { title: "Routing forms" };
 
@@ -23,7 +24,7 @@ async function RoutingListPage() {
           </p>
         </div>
         <form action={createRoutingForm}>
-          <Button type="submit">New form</Button>
+          <SubmitButton>New form</SubmitButton>
         </form>
       </div>
       <ul className="space-y-2">
@@ -55,7 +56,7 @@ async function RoutingListPage() {
 
 export default function RoutingListPageBoundary() {
   return (
-    <Suspense fallback={null}>
+    <Suspense fallback={<PageSkeleton />}>
       <RoutingListPage />
     </Suspense>
   );

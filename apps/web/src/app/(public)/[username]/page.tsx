@@ -5,6 +5,7 @@ import { Suspense } from "react";
 import { formatPrice, paymentsConfigured } from "@/server/payments";
 import { getProfileByUsername, listEventTypes, locationLabel } from "@/server/scheduling";
 import { getCurrentWorkspace } from "@/server/workspace";
+import { PageSkeleton } from "@/components/page-skeleton";
 
 export async function generateMetadata({ params }: PageProps<"/[username]">): Promise<Metadata> {
   const { username } = await params;
@@ -68,7 +69,7 @@ async function ProfilePage({ params }: PageProps<"/[username]">) {
 
 export default function ProfilePageBoundary(props: PageProps<"/[username]">) {
   return (
-    <Suspense fallback={null}>
+    <Suspense fallback={<PageSkeleton />}>
       <ProfilePage {...props} />
     </Suspense>
   );

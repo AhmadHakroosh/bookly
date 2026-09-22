@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Suspense } from "react";
 import { ResetForm } from "./reset-form";
+import { PageSkeleton } from "@/components/page-skeleton";
 
 export const metadata = { title: "Choose a new password", robots: { index: false } };
 
@@ -33,7 +34,7 @@ async function ResetPage({ searchParams }: PageProps<"/reset-password">) {
 
 export default function ResetPageBoundary(props: PageProps<"/reset-password">) {
   return (
-    <Suspense fallback={null}>
+    <Suspense fallback={<PageSkeleton />}>
       <ResetPage {...props} />
     </Suspense>
   );

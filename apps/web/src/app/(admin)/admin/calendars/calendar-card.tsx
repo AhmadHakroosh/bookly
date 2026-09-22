@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import type { Integration } from "@bookly/db/schema";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { SubmitButton } from "@/components/submit-button";
 import { ConnectButton } from "@/components/connect-button";
 import { disconnect, reloadCalendars, saveCalendarSettings } from "../integrations-actions";
 
@@ -77,9 +78,7 @@ export function CalendarCard({
             variant="outline"
           />
           <form action={() => disconnect(integration.provider)}>
-            <Button variant="ghost" type="submit">
-              Disconnect
-            </Button>
+            <SubmitButton variant="ghost">Disconnect</SubmitButton>
           </form>
         </div>
       </div>

@@ -1,3 +1,4 @@
+import { PageSkeleton } from "@/components/page-skeleton";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { conferencingAvailability } from "@/server/integrations";
@@ -80,7 +81,7 @@ async function EditEventTypePage({ params }: PageProps<"/admin/event-types/[id]"
 
 export default function EditEventTypePageBoundary(props: PageProps<"/admin/event-types/[id]">) {
   return (
-    <Suspense fallback={null}>
+    <Suspense fallback={<PageSkeleton />}>
       <EditEventTypePage {...props} />
     </Suspense>
   );

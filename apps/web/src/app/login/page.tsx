@@ -3,6 +3,7 @@ import { Suspense } from "react";
 import { onPlatformHost } from "@/server/platform";
 import { getSession } from "@/server/session";
 import { LoginForm } from "./login-form";
+import { PageSkeleton } from "@/components/page-skeleton";
 
 export const metadata = { title: "Sign in", robots: { index: false } };
 
@@ -31,7 +32,7 @@ async function LoginPage({ searchParams }: PageProps<"/login">) {
 /** Suspense boundary for Cache Components: the page reads request data and streams in. */
 export default function LoginPageBoundary(props: PageProps<"/login">) {
   return (
-    <Suspense fallback={null}>
+    <Suspense fallback={<PageSkeleton />}>
       <LoginPage {...props} />
     </Suspense>
   );

@@ -3,6 +3,7 @@ import { loadEnv } from "@bookly/config";
 import { getSession } from "@/server/session";
 import { SITE } from "../site";
 import { SignupForm } from "./signup-form";
+import { PageSkeleton } from "@/components/page-skeleton";
 
 export const metadata = { title: "Get started" };
 
@@ -25,7 +26,7 @@ async function SignupPage() {
 
 export default function SignupPageBoundary() {
   return (
-    <Suspense fallback={null}>
+    <Suspense fallback={<PageSkeleton />}>
       <SignupPage />
     </Suspense>
   );

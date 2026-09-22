@@ -1,12 +1,13 @@
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
-import { Button } from "@/components/ui/button";
+import { SubmitButton } from "@/components/submit-button";
 import { minToHHMM, timezoneList } from "@/lib/time";
 import { ensureDefaultSchedule, getProfileByUser, getSchedule } from "@/server/scheduling";
 import { requireStaff } from "@/server/session";
 import { getCurrentWorkspace } from "@/server/workspace";
 import { addOverride, removeOverride } from "../scheduling-actions";
 import { ScheduleForm } from "./schedule-form";
+import { PageSkeleton } from "@/components/page-skeleton";
 
 export const metadata = { title: "Availability" };
 
@@ -77,7 +78,7 @@ async function AvailabilityPage() {
           <label className="inline-flex items-center gap-1 pb-1.5">
             <input type="checkbox" name="blocked" /> Unavailable all day
           </label>
-          <Button type="submit">Add</Button>
+          <SubmitButton>Add</SubmitButton>
         </form>
         <ul className="space-y-1 text-sm">
           {s.overrides.map((o) => (
@@ -92,9 +93,7 @@ async function AvailabilityPage() {
                   : `${minToHHMM(o.startMin)}–${minToHHMM(o.endMin!)}`}
               </span>
               <form action={removeOverride.bind(null, o.id)}>
-                <Button type="submit" variant="ghost">
-                  Remove
-                </Button>
+                <SubmitButton variant="ghost">Remove</SubmitButton>
               </form>
             </li>
           ))}
@@ -107,7 +106,7 @@ async function AvailabilityPage() {
 
 export default function AvailabilityPageBoundary() {
   return (
-    <Suspense fallback={null}>
+    <Suspense fallback={<PageSkeleton />}>
       <AvailabilityPage />
     </Suspense>
   );

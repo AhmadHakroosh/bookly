@@ -7,6 +7,7 @@ import { UpdateNotice } from "@/components/update-notice";
 import { WorkspaceSwitcher } from "@/components/workspace-switcher";
 import { ExternalLink } from "@/components/links";
 import { Button } from "@/components/ui/button";
+import { SubmitButton } from "@/components/submit-button";
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { isCloud, listUserWorkspaces, platformUrl } from "@/server/platform";
@@ -103,9 +104,7 @@ async function AdminShell({ children }: { children: React.ReactNode }) {
             </span>
             <ThemeToggle />
             <form action={signOut}>
-              <Button variant="outline" type="submit">
-                Sign out
-              </Button>
+              <SubmitButton variant="outline">Sign out</SubmitButton>
             </form>
           </div>
         </div>
