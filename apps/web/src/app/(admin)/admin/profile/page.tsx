@@ -3,6 +3,8 @@ import { timezoneList } from "@/lib/time";
 import { getProfileByUser } from "@/server/scheduling";
 import { requireStaff } from "@/server/session";
 import { getCurrentWorkspace } from "@/server/workspace";
+import { ownerOf } from "@/server/data-rights";
+import { DeleteAccount } from "./delete-account";
 import { PasswordForm } from "./password-form";
 import { ProfileForm } from "./profile-form";
 
@@ -41,6 +43,10 @@ async function ProfilePage({ searchParams }: PageProps<"/admin/profile">) {
         zones={timezoneList()}
       />
       <PasswordForm />
+      <DeleteAccount
+        email={session.user.email}
+        ownsWorkspaces={(await ownerOf(session.user.id)).map((w) => w.name)}
+      />
     </div>
   );
 }

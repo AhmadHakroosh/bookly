@@ -6,6 +6,7 @@ import { loadEnv } from "@bookly/config";
 import { schema } from "@bookly/db";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { getSession } from "@/server/session";
 import { needsSetup } from "@/server/workspace";
 import { invalidateHostCache } from "@/server/tenancy";
 
@@ -19,9 +20,10 @@ const slugify = (s: string) =>
 
 const schemaSetup = z.object({
   workspaceName: z.string().trim().min(2).max(80),
-  name: z.string().trim().min(2).max(80),
-  email: z.email(),
-  password: z.string().min(10, "Use at least 10 characters.").max(128),
+  // Account fields are absent when someone already signed in (e.g. after deleting a workspace).
+  name: z.string().trim().min(2).max(80).optional(),
+  email: z.email().optional(),
+  password: z.string().min(10, "Use at least 10 characters.").max(128).optional(),
 });
 
 export type SetupState = { error?: string; fields?: Record<string, string[]> };
@@ -34,12 +36,18 @@ export async function completeSetup(_prev: SetupState, formData: FormData): Prom
     return { error: "Please check the form.", fields: z.flattenError(parsed.error).fieldErrors };
   const { workspaceName, name, email, password } = parsed.data;
 
-  // 1. Owner account (sets the session cookie via nextCookies()).
-  const res = await auth.api
-    .signUpEmail({ body: { name, email, password } })
-    .catch((e: Error) => ({ error: e.message }));
-  if ("error" in res) return { error: res.error };
-  const userId = res.user.id;
+  // 1. Owner account: the signed-in user if there is one, otherwise a new one (sets the cookie).
+  let userId: string;
+  const existing = await getSession();
+  if (existing) userId = existing.user.id;
+  else {
+    if (!name || !email || !password) return { error: "Please fill in the owner account." };
+    const res = await auth.api
+      .signUpEmail({ body: { name, email, password } })
+      .catch((e: Error) => ({ error: e.message }));
+    if ("error" in res) return { error: res.error };
+    userId = res.user.id;
+  }
 
   // 2. Organization (ownership layer) + workspace + primary host, in one transaction.
   const env = loadEnv();

@@ -2,6 +2,8 @@ import { isCloud } from "@/server/platform";
 import { timezoneList } from "@/lib/time";
 import { getCurrentWorkspace } from "@/server/workspace";
 import { Suspense } from "react";
+import { requireStaff } from "@/server/session";
+import { DangerZone } from "./danger-zone";
 import { SettingsForm } from "./settings-form";
 
 export const metadata = { title: "Settings" };
@@ -9,6 +11,7 @@ export const metadata = { title: "Settings" };
 async function SettingsPage() {
   const workspace = await getCurrentWorkspace();
   if (!workspace) return null;
+  const { role } = await requireStaff();
   return (
     <div className="max-w-xl space-y-6">
       <div>
@@ -37,6 +40,13 @@ async function SettingsPage() {
         selfHosted={!isCloud()}
         zones={timezoneList()}
       />
+      <div className="border-t pt-6">
+        <h2 className="mb-1 text-xl font-semibold tracking-tight">Your data</h2>
+        <p className="mb-4 text-sm text-muted-foreground">
+          Take a copy of everything, or delete the workspace for good.
+        </p>
+        <DangerZone slug={workspace.slug} owner={role === "owner"} cloud={isCloud()} />
+      </div>
     </div>
   );
 }

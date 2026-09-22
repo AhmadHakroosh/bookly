@@ -97,13 +97,21 @@ export async function proxy(request: NextRequest) {
     url.pathname = pathname === "/" ? "/meet" : `/meet${pathname}`;
     return NextResponse.rewrite(url);
   }
-  const workspace = await resolveWorkspaceByHost(host);
+  // /setup is rare and must see a just-deleted workspace as gone, so it skips the 30s cache.
+  const workspace = await resolveWorkspaceByHost(host, { fresh: pathname.startsWith("/setup") });
 
   if (!workspace) {
     if (pathname.startsWith("/api/")) return NextResponse.next();
     // Cloud: unknown tenant host → nothing here. Self-host: first run → setup wizard.
     if (CLOUD) return notFound(request);
-    if (pathname.startsWith("/setup")) return NextResponse.next();
+    // Auth pages stay reachable so an existing user can sign in and own the new workspace.
+    if (
+      pathname.startsWith("/setup") ||
+      pathname.startsWith("/login") ||
+      pathname.startsWith("/forgot-password") ||
+      pathname.startsWith("/reset-password")
+    )
+      return NextResponse.next();
     return NextResponse.redirect(new URL("/setup", request.url));
   }
   if (pathname.startsWith("/setup")) return NextResponse.redirect(new URL("/admin", request.url));

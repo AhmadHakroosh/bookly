@@ -72,6 +72,16 @@ Restore with `gunzip -c file.sql.gz | docker compose exec -T postgres psql -U bo
 
 See `.env.example`; every variable is documented inline and validated at startup by `packages/config`.
 
+## Export and deletion
+
+Admin → Settings → Your data lets the workspace owner download everything as one JSON file
+(workspace, members, event types, availability, bookings, contacts and timeline, tasks, routing
+forms, transcripts, recaps; tokens and keys excluded) and delete the workspace permanently.
+Deletion removes the owning organization, which cascades through every table; on a
+single-tenant install the app returns to the setup wizard. Users delete their own account from
+Admin → Booking page once they own no workspace. Neither action touches your backups, so keep
+their retention in mind when someone asks for erasure.
+
 ## Accounts and passwords
 
 Sign-in works with a password or an emailed link. A forgotten password is reset from "Forgot your password?" on the sign-in page: Bookly emails a link (valid for one hour) to `/reset-password`, so email must be configured (`RESEND_API_KEY` or SMTP; in development links print to the console). Signed-in users change their password under `Admin → Booking page`; changing it signs out every other session.

@@ -7,7 +7,7 @@ import { LoginForm } from "./login-form";
 export const metadata = { title: "Sign in", robots: { index: false } };
 
 async function LoginPage({ searchParams }: PageProps<"/login">) {
-  const { next } = await searchParams;
+  const { next, deleted } = await searchParams;
   const fallback = (await onPlatformHost()) ? "/workspaces" : "/admin";
   const target = typeof next === "string" && next.startsWith("/") ? next : fallback;
   if (await getSession()) redirect(target);
@@ -15,6 +15,11 @@ async function LoginPage({ searchParams }: PageProps<"/login">) {
     <main className="flex flex-1 items-center justify-center px-4 py-16">
       <div className="w-full max-w-sm">
         <h1 className="text-2xl font-semibold tracking-tight">Sign in</h1>
+        {deleted === "1" && (
+          <p className="mt-3 rounded-md border p-3 text-sm text-muted-foreground">
+            Your account has been deleted. Thanks for using Bookly.
+          </p>
+        )}
         <div className="mt-8">
           <LoginForm next={target} />
         </div>

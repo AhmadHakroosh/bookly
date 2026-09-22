@@ -15,11 +15,14 @@ const TTL_MISS = 2_000;
  * subdomain or a verified custom domain from `workspace_domains`.
  * Cached in-process for 30s; a Redis-backed cache slots in here later.
  */
-export async function resolveWorkspaceByHost(hostHeader: string | null): Promise<Resolved> {
+export async function resolveWorkspaceByHost(
+  hostHeader: string | null,
+  opts: { fresh?: boolean } = {},
+): Promise<Resolved> {
   const env = loadEnv();
   const host = (hostHeader ?? "").toLowerCase();
   const key = env.TENANCY === "single" ? "*" : host;
-  const hit = cache.get(key);
+  const hit = opts.fresh ? undefined : cache.get(key);
   if (hit && Date.now() - hit.at < (hit.value ? TTL_HIT : TTL_MISS)) return hit.value;
 
   let value: Resolved = null;

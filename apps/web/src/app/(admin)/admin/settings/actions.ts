@@ -1,10 +1,13 @@
 "use server";
 
+import { redirect } from "next/navigation";
 import { z } from "zod";
 import { eq, schema } from "@bookly/db";
 import { encrypt } from "@/lib/crypto";
 import { parseBlocklist } from "@/server/abuse";
 import { refreshWorkspace } from "@/server/cache";
+import { deleteWorkspace } from "@/server/data-rights";
+import { isCloud, platformUrl } from "@/server/platform";
 import { db } from "@/lib/db";
 import { requireStaff } from "@/server/session";
 import { getCurrentWorkspace } from "@/server/workspace";
@@ -87,4 +90,22 @@ export async function updateWorkspaceSettings(
     .where(eq(schema.workspaces.id, workspace.id));
   refreshWorkspace(workspace.id);
   return { ok: true };
+}
+
+const deleteSchema = z.object({ confirm: z.string().trim() });
+
+/** Owner-only, irreversible. The typed slug guards against a slip; the cascade does the rest. */
+export async function deleteWorkspaceAction(
+  _prev: SettingsState,
+  formData: FormData,
+): Promise<SettingsState> {
+  const { role } = await requireStaff();
+  const workspace = await getCurrentWorkspace();
+  if (!workspace) return { error: "No workspace." };
+  if (role !== "owner") return { error: "Only the owner can delete the workspace." };
+  const parsed = deleteSchema.safeParse(Object.fromEntries(formData));
+  if (!parsed.success || parsed.data.confirm !== workspace.slug)
+    return { error: `Type “${workspace.slug}” to confirm.` };
+  await deleteWorkspace(workspace);
+  redirect(isCloud() ? platformUrl("/workspaces") : "/setup");
 }
