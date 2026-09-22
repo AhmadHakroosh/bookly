@@ -4,36 +4,20 @@ import { usePathname } from "next/navigation";
 import { useEffect } from "react";
 
 /**
- * Fades `[data-reveal]` elements in as they scroll into view. The hidden state comes from CSS
- * (`.js-reveal [data-reveal]`, globals.css) and the reveal is a Web Animation, so nothing here
- * writes attributes or classes that React owns: a refresh mid-page hydrates the streamed
- * sections after this effect has already run, and any attribute we set would show up as a
- * hydration mismatch. Re-arms on client-side navigation and on late-streamed content.
+ * Adds `data-reveal="in"` to elements as they scroll into view (see globals.css). Re-arms on
+ * client-side navigation and on late-streamed content so nothing stays hidden.
  */
 export function Reveal() {
   const pathname = usePathname();
   useEffect(() => {
-    // Under reduced motion the stylesheet keeps everything visible; nothing to animate.
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    const shown = new WeakSet<Element>();
-    const show = (el: HTMLElement) => {
-      shown.add(el);
-      const delay = parseFloat(getComputedStyle(el).getPropertyValue("--reveal-delay")) || 0;
-      el.animate(
-        [
-          { opacity: 0, translate: "0 18px" },
-          { opacity: 1, translate: "0 0" },
-        ],
-        { duration: 700, delay, easing: "cubic-bezier(0.2, 0.7, 0.2, 1)", fill: "forwards" },
-      );
-    };
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const io =
-      "IntersectionObserver" in window
+      "IntersectionObserver" in window && !reduce
         ? new IntersectionObserver(
             (entries) => {
               for (const e of entries)
                 if (e.isIntersecting) {
-                  show(e.target as HTMLElement);
+                  (e.target as HTMLElement).dataset.reveal = "in";
                   io?.unobserve(e.target);
                 }
             },
@@ -41,11 +25,9 @@ export function Reveal() {
           )
         : null;
     const arm = () => {
-      document.querySelectorAll<HTMLElement>("[data-reveal]").forEach((el) => {
-        if (shown.has(el)) return;
-        if (io) io.observe(el);
-        else show(el);
-      });
+      document
+        .querySelectorAll<HTMLElement>("[data-reveal]:not([data-reveal='in'])")
+        .forEach((el) => (io ? io.observe(el) : (el.dataset.reveal = "in")));
     };
     document.documentElement.classList.add("js-reveal");
     arm();
