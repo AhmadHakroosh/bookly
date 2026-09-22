@@ -60,6 +60,7 @@
     "eslint": "catalog:",
     "eslint-config-next": "16.3.5",
     "tailwindcss": "^4.3.3",
+    "tsx": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:"
   },
