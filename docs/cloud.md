@@ -34,6 +34,18 @@ plan, owner and booking counts, suspend / unsuspend (public pages and the API go
 shows a banner), and "sign in as owner" (Better Auth admin impersonation, which lands you in that
 workspace's admin). Stop impersonating from the account menu or by signing out.
 
+## Shared rate limiting
+
+Public-form throttles, API limits, the live-transcript endpoint and Better Auth's sign-in
+limiter all go through one limiter. Without configuration it counts per process, which is
+correct for a single container but not for Vercel, where every instance would count alone.
+Set `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN` (any Upstash Redis database; the
+free tier is plenty) and every instance shares the same counters over Upstash's REST API. No
+SDK is involved: the app sends `INCR` + `PEXPIRE NX` + `PTTL` as one pipeline per check.
+
+If Upstash is unreachable, requests are allowed and the failure is logged rather than taking
+bookings down; Console → Health shows the limiter's state.
+
 ## Installs (telemetry receiver)
 
 The platform host receives the daily update check from self-hosted installs at

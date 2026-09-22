@@ -6,6 +6,7 @@ import { loadEnv } from "@bookly/config";
 import { schema } from "@bookly/db";
 import { sendEmail } from "@bookly/email";
 import { db } from "./db";
+import { authStorage, getLimiter } from "@/server/ratelimit";
 
 const env = loadEnv();
 
@@ -34,7 +35,16 @@ export const auth = betterAuth({
       });
     },
   },
-  session: { expiresIn: 60 * 60 * 24 * 30, updateAge: 60 * 60 * 24 },
+  session: {
+    expiresIn: 60 * 60 * 24 * 30,
+    updateAge: 60 * 60 * 24,
+    // Sessions stay in Postgres; secondary storage below is only for the sign-in rate limiter.
+    storeSessionInDatabase: true,
+  },
+  // With Upstash configured every instance shares sign-in attempt counts; otherwise per process.
+  ...(getLimiter().name === "upstash"
+    ? { secondaryStorage: authStorage(), rateLimit: { storage: "secondary-storage" as const } }
+    : {}),
   user: {
     additionalFields: {
       consentAt: { type: "date", required: false, input: true },

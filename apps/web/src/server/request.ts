@@ -1,7 +1,7 @@
 import "server-only";
 import { headers } from "next/headers";
 import { PUBLIC_FORM_LIMIT } from "./abuse";
-import { rateLimit } from "./api";
+import { rateLimit } from "./ratelimit";
 
 /** Best-effort client IP behind a proxy / Vercel. */
 export async function clientIp(): Promise<string> {
@@ -15,9 +15,10 @@ export async function clientIp(): Promise<string> {
  */
 export async function throttlePublicForm(workspaceId: string, what: string): Promise<boolean> {
   const ip = await clientIp();
-  return rateLimit(
+  const rl = await rateLimit(
     `${what}:${workspaceId}:${ip}`,
     PUBLIC_FORM_LIMIT.max,
     PUBLIC_FORM_LIMIT.windowMs,
-  ).ok;
+  );
+  return rl.ok;
 }

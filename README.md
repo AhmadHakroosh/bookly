@@ -70,17 +70,18 @@ Open `APP_URL` (default http://localhost:3002). The setup wizard creates your ac
 
 ### What to configure
 
-| Env var group                                                      | Purpose                                                  | Required?                       |
-| ------------------------------------------------------------------ | -------------------------------------------------------- | ------------------------------- |
-| `APP_URL`, `AUTH_SECRET`, `DATABASE_URL`                           | Where the app lives, session signing, Postgres           | Yes                             |
-| `EMAIL_DRIVER`, `EMAIL_FROM`, `RESEND_*` / `SMTP_*`                | Transactional email                                      | Yes for production              |
-| `STORAGE_DRIVER`, `S3_*`                                           | Profile photos and uploads (local disk or S3, R2, MinIO) | Defaults to local disk          |
-| `GOOGLE_*`, `MICROSOFT_*`, `ZOOM_*`, `DAILY_*`                     | Calendar sync and video                                  | Per integration you want        |
-| `STRIPE_*`                                                         | Paid bookings                                            | Only for payments               |
-| `TWILIO_*`                                                         | SMS and WhatsApp                                         | Only for text messages          |
-| `ANTHROPIC_API_KEY`, `ASSISTANT_MODEL`                             | Briefings, recaps, capture                               | Optional; plain fallback if off |
-| `SENTRY_DSN`, `NEXT_PUBLIC_SENTRY_DSN`, `METRICS_TOKEN`            | Error tracking, Prometheus metrics at `/api/metrics`     | Optional                        |
-| `TENANCY`, `ROOT_DOMAIN`, `PLATFORM_ADMIN_EMAILS`, `SUPPORT_EMAIL` | Cloud (multi-tenant) mode                                | Single-tenant by default        |
+| Env var group                                                      | Purpose                                                    | Required?                        |
+| ------------------------------------------------------------------ | ---------------------------------------------------------- | -------------------------------- |
+| `APP_URL`, `AUTH_SECRET`, `DATABASE_URL`                           | Where the app lives, session signing, Postgres             | Yes                              |
+| `EMAIL_DRIVER`, `EMAIL_FROM`, `RESEND_*` / `SMTP_*`                | Transactional email                                        | Yes for production               |
+| `STORAGE_DRIVER`, `S3_*`                                           | Profile photos and uploads (local disk or S3, R2, MinIO)   | Defaults to local disk           |
+| `GOOGLE_*`, `MICROSOFT_*`, `ZOOM_*`, `DAILY_*`                     | Calendar sync and video                                    | Per integration you want         |
+| `STRIPE_*`                                                         | Paid bookings                                              | Only for payments                |
+| `TWILIO_*`                                                         | SMS and WhatsApp                                           | Only for text messages           |
+| `ANTHROPIC_API_KEY`, `ASSISTANT_MODEL`                             | Briefings, recaps, capture                                 | Optional; plain fallback if off  |
+| `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN`               | Shared rate limits across replicas or serverless instances | Only with more than one instance |
+| `SENTRY_DSN`, `NEXT_PUBLIC_SENTRY_DSN`, `METRICS_TOKEN`            | Error tracking, Prometheus metrics at `/api/metrics`       | Optional                         |
+| `TENANCY`, `ROOT_DOMAIN`, `PLATFORM_ADMIN_EMAILS`, `SUPPORT_EMAIL` | Cloud (multi-tenant) mode                                  | Single-tenant by default         |
 
 Every variable is described in [.env.example](.env.example) and validated at boot with a clear error.
 

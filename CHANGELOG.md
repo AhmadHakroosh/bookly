@@ -8,6 +8,7 @@ Everything below is on `main` ahead of the first release, which will be tagged `
 
 ### Added
 
+- Shared rate limiting: one limiter behind public forms, the API, the live-transcript endpoint and Better Auth's sign-in limiter, counting in memory by default and in Upstash Redis (REST, no SDK) when `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN` are set, so Vercel instances and replicas share counts; store outages fail open with a log line; Console → Health reports the limiter
 - Data rights: owners can download a JSON export of the whole workspace (Admin → Settings → Your data, `GET /api/admin/export`, secrets excluded) and delete the workspace permanently after typing its slug (cancels the cloud subscription; single-tenant installs return to the setup wizard); users can delete their account from the profile page once they own no workspace
 - Update check and telemetry: self-hosted installs ask `TELEMETRY_URL` once a day for the latest version (sending version, tenancy, Node version and a random install id; `TELEMETRY=off` disables), the admin shows an update notice, and workspaces can opt in to share coarse usage counts. The platform records pings in `installs` (migration 0019) and Console → Installs shows active installs, versions and totals
 - `GET /api/health` for uptime checks (200 when Postgres is reachable, 503 otherwise)

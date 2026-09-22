@@ -86,6 +86,12 @@ their retention in mind when someone asks for erasure.
 
 Sign-in works with a password or an emailed link. A forgotten password is reset from "Forgot your password?" on the sign-in page: Bookly emails a link (valid for one hour) to `/reset-password`, so email must be configured (`RESEND_API_KEY` or SMTP; in development links print to the console). Signed-in users change their password under `Admin → Booking page`; changing it signs out every other session.
 
+## Rate limiting across replicas
+
+One container needs nothing: limits are counted in memory. If you run several replicas behind
+a load balancer, set `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN` so booking-form,
+API and sign-in limits are shared; otherwise each replica allows the full quota on its own.
+
 ## Update check and telemetry
 
 Once a day (on the job tick) the install POSTs to `TELEMETRY_URL` and gets back the latest

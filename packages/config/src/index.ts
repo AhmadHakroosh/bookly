@@ -80,6 +80,12 @@ export const envSchema = z.object({
    * are a separate opt-in in workspace settings.
    */
   TELEMETRY: z.enum(["on", "off"]).default("on"),
+  /**
+   * Shared rate limiting (public forms, API, sign-in) across instances via Upstash Redis REST.
+   * Unset = per-process memory, which is right for a single self-hosted container.
+   */
+  UPSTASH_REDIS_REST_URL: z.url().optional(),
+  UPSTASH_REDIS_REST_TOKEN: z.string().optional(),
   TELEMETRY_URL: z.url().default("https://bookly.ahmadhakroosh.com/api/telemetry"),
 
   // ---- Text messages (Twilio) for SMS / WhatsApp reminders and host pings ----

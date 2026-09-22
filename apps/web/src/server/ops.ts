@@ -16,6 +16,7 @@ import {
 import { loadEnv } from "@bookly/config";
 import { isPlanId, PLANS } from "@bookly/cloud";
 import { db } from "@/lib/db";
+import { getLimiter } from "./ratelimit";
 import { dailyConfigured } from "./integrations";
 import { paymentsConfigured } from "./payments";
 import { assistantConfigured } from "./brief";
@@ -104,35 +105,38 @@ export type HealthCheck = { name: string; ok: boolean; detail: string };
 /** Everything an operator wants to know at a glance about whether the install is healthy. */
 export async function healthReport(now = new Date()): Promise<HealthCheck[]> {
   const env = loadEnv();
-  const [tick, failedHooks, brokenIntegrations, stuckPayments, dbOk] = await Promise.all([
-    getState("jobs.lastTick"),
-    db()
-      .select({ n: count() })
-      .from(schema.webhookDeliveries)
-      .where(
-        and(
-          eq(schema.webhookDeliveries.status, "failed"),
-          gte(schema.webhookDeliveries.createdAt, new Date(now.getTime() - 86_400_000)),
+  const [tick, failedHooks, brokenIntegrations, stuckPayments, dbOk, limiterOk] = await Promise.all(
+    [
+      getState("jobs.lastTick"),
+      db()
+        .select({ n: count() })
+        .from(schema.webhookDeliveries)
+        .where(
+          and(
+            eq(schema.webhookDeliveries.status, "failed"),
+            gte(schema.webhookDeliveries.createdAt, new Date(now.getTime() - 86_400_000)),
+          ),
         ),
-      ),
-    db()
-      .select({ n: count() })
-      .from(schema.integrations)
-      .where(eq(schema.integrations.status, "error")),
-    db()
-      .select({ n: count() })
-      .from(schema.bookings)
-      .where(
-        and(
-          eq(schema.bookings.status, "awaiting_payment"),
-          lte(schema.bookings.createdAt, new Date(now.getTime() - 3600_000)),
+      db()
+        .select({ n: count() })
+        .from(schema.integrations)
+        .where(eq(schema.integrations.status, "error")),
+      db()
+        .select({ n: count() })
+        .from(schema.bookings)
+        .where(
+          and(
+            eq(schema.bookings.status, "awaiting_payment"),
+            lte(schema.bookings.createdAt, new Date(now.getTime() - 3600_000)),
+          ),
         ),
-      ),
-    db()
-      .execute(sql`select 1`)
-      .then(() => true)
-      .catch(() => false),
-  ]);
+      db()
+        .execute(sql`select 1`)
+        .then(() => true)
+        .catch(() => false),
+      getLimiter().ping(),
+    ],
+  );
   const tickAge = tick ? (now.getTime() - tick.updatedAt.getTime()) / 60_000 : null;
   const emailProvider = env.RESEND_API_KEY
     ? "Resend"
@@ -141,6 +145,16 @@ export async function healthReport(now = new Date()): Promise<HealthCheck[]> {
       : "console (dev only)";
   return [
     { name: "Database", ok: dbOk, detail: dbOk ? "reachable" : "query failed" },
+    {
+      name: "Rate limiting",
+      ok: limiterOk,
+      detail:
+        getLimiter().name === "upstash"
+          ? limiterOk
+            ? "Upstash reachable, shared across instances"
+            : "Upstash unreachable: limits are not enforced"
+          : "per process (set UPSTASH_REDIS_REST_URL to share across instances)",
+    },
     {
       name: "Background jobs",
       ok: tickAge !== null && tickAge < 30,

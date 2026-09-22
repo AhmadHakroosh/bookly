@@ -50,19 +50,10 @@ export async function authenticateKey(req: Request, workspaceId: string): Promis
   return key;
 }
 
-/* ---------------- Rate limiting (per instance) ---------------- */
+/* ---------------- Rate limiting ---------------- */
 
-const buckets = new Map<string, { n: number; reset: number }>();
-export function rateLimit(id: string, limit: number, windowMs = 60_000) {
-  const now = Date.now();
-  const b = buckets.get(id);
-  if (!b || b.reset < now) {
-    buckets.set(id, { n: 1, reset: now + windowMs });
-    return { ok: true, remaining: limit - 1, reset: now + windowMs };
-  }
-  b.n++;
-  return { ok: b.n <= limit, remaining: Math.max(0, limit - b.n), reset: b.reset };
-}
+export { rateLimit } from "./ratelimit";
+import { rateLimit } from "./ratelimit";
 
 /* ---------------- Responses ---------------- */
 
@@ -119,8 +110,8 @@ export async function apiContext(
   }
   const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
   const rl = key
-    ? rateLimit(`key:${key.id}`, apiBudget(workspaceLimits(workspace)))
-    : rateLimit(`ip:${workspace.id}:${ip}`, 60);
+    ? await rateLimit(`key:${key.id}`, apiBudget(workspaceLimits(workspace)))
+    : await rateLimit(`ip:${workspace.id}:${ip}`, 60);
   if (!rl.ok) return apiError("Rate limit exceeded", 429, "rate_limited");
   bump(workspace.id, key ? "api.requests" : "api.public");
   return { workspace, key };

@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { eq, schema } from "@bookly/db";
 import { db } from "@/lib/db";
-import { rateLimit } from "@/server/api";
+import { rateLimit } from "@/server/ratelimit";
 import { appendLiveSegments, bookingForRoom, captureEnabled } from "@/server/transcripts";
 import { getCurrentWorkspace } from "@/server/workspace";
 
@@ -20,7 +20,7 @@ export async function POST(req: Request, ctx: RouteContext<"/api/meet/[room]/tra
   const { room } = await ctx.params;
   if (!ws || !/^b-[a-z0-9]+$/.test(room))
     return NextResponse.json({ error: "Not found" }, { status: 404 });
-  if (!rateLimit(`live:${room}`, 120, 60_000).ok)
+  if (!(await rateLimit(`live:${room}`, 120, 60_000)).ok)
     return NextResponse.json({ error: "Too many" }, { status: 429 });
   const b = await bookingForRoom(ws.id, room);
   if (!b || b.transcriptStatus === "deleted")

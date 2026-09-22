@@ -29,9 +29,9 @@ describe("api keys", () => {
     expect(k.hash).toBe(hashKey(k.raw));
     expect(k.hash).not.toContain(k.raw.slice(3, 10));
   });
-  it("rate limits per bucket", () => {
-    for (let i = 0; i < 3; i++) expect(rateLimit("t", 3).ok).toBe(true);
-    expect(rateLimit("t", 3).ok).toBe(false);
-    expect(rateLimit("other", 3).ok).toBe(true);
+  it("rate limits per bucket", async () => {
+    for (let i = 0; i < 3; i++) expect((await rateLimit("t", 3)).ok).toBe(true);
+    expect((await rateLimit("t", 3)).ok).toBe(false);
+    expect((await rateLimit("other", 3)).ok).toBe(true);
   });
 });
