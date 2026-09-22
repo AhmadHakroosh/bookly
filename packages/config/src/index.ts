@@ -52,6 +52,9 @@ export const envSchema = z.object({
   MEET_URL: z.url().optional(),
 
   // ---- Observability ----
+  /** Sentry DSNs (server and browser). Unset = error tracking off. */
+  SENTRY_DSN: z.string().optional(),
+  NEXT_PUBLIC_SENTRY_DSN: z.string().optional(),
   /** Bearer token for GET /api/metrics (Prometheus text format). Unset = endpoint disabled. */
   METRICS_TOKEN: z.string().optional(),
 

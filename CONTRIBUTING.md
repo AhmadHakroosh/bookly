@@ -39,3 +39,7 @@ Before pushing: `pnpm format && pnpm lint && pnpm typecheck && pnpm test && pnpm
 4. A maintainer reviews; expect questions rather than silence.
 
 By contributing you agree that your contributions are licensed under the AGPL-3.0, like the rest of the project. Contributions to `packages/cloud` are not accepted from outside the core team.
+
+## End-to-end tests
+
+`pnpm e2e` builds the app (non-standalone), starts it on port 3010 against `DATABASE_URL`, migrates and seeds the demo workspace, and runs the Playwright suite in `apps/web/tests/e2e` (booking, admin, accessibility, security headers). Run `pnpm --filter @bookly/web exec playwright install chromium` once.

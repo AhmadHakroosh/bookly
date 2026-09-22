@@ -15,6 +15,7 @@ Everything below is on `main` ahead of the first release, which will be tagged `
 - Teams: invitations and roles, round-robin and collective event types
 - Group sessions: `seats` per event type; a slot stays bookable until full, attendees share one meeting link, seats left shown on the booking page and in the API
 - Auto-capture for built-in video: opt-in or always-on transcription with speaker labels, live notice in the call, transcript on the booking page, retention and deletion; recap with summary, covered asks, decisions and action items with evidence, open questions, objections, next step, stage suggestion and follow-up, each one click; recaps to review in the inbox; client-facing recap email with chosen items; attendees can delete their transcript; cloud plans get a monthly transcription budget
+- Production hardening: Playwright end-to-end suite (booking, admin, accessibility, headers) in CI, optional Sentry error tracking, and security headers (CSP, HSTS, Permissions-Policy, frame protection)
 - Operator console: stats and sign-up trend, search and filters, workspace detail with usage and billing, manual plan overrides with expiry, users with ban / unban, audit log of operator actions, health checks, and a Prometheus metrics endpoint (`METRICS_TOKEN`)
 - Workspace switcher in the admin header (cloud mode): current workspace, switch to any other, all workspaces, new workspace
 - Password reset by email ("Forgot your password?") and password change from the profile page

@@ -8,5 +8,9 @@ export default defineConfig({
       "server-only": path.resolve(__dirname, "src/__tests__/__mocks__/server-only.ts"),
     },
   },
-  test: { include: ["src/**/*.test.ts"], environment: "node" },
+  test: {
+    exclude: ["**/node_modules/**", "tests/e2e/**"],
+    include: ["src/**/*.test.ts"],
+    environment: "node",
+  },
 });

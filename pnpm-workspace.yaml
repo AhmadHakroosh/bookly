@@ -6,6 +6,8 @@ allowBuilds:
   sharp: true
   esbuild: true
   unrs-resolver: false
+  # Postinstall downloads a binary only needed for source-map upload.
+  "@sentry/cli": false
 
 catalog:
   # runtime

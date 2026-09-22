@@ -10,6 +10,8 @@
     "lint": "eslint .",
     "typecheck": "next typegen && tsc --noEmit",
     "test": "vitest run",
+    "e2e": "playwright test",
+    "e2e:build": "E2E=1 next build",
     "demo": "tsx scripts/demo.ts",
     "auth:generate": "pnpm dlx @better-auth/cli@latest generate --config src/lib/auth.ts --output ../../packages/db/src/schema/auth.ts -y"
   },
@@ -25,6 +27,7 @@
     "@bookly/storage": "workspace:*",
     "@daily-co/daily-js": "^0.92.2",
     "@date-fns/tz": "^1.5.0",
+    "@sentry/nextjs": "^10.75.0",
     "ai": "^7.0.107",
     "better-auth": "catalog:",
     "class-variance-authority": "^0.7.1",
@@ -44,6 +47,8 @@
     "zod": "catalog:"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.13.0",
+    "@playwright/test": "^1.63.0",
     "@tailwindcss/postcss": "^4.3.3",
     "@tailwindcss/typography": "^0.5.20",
     "@types/node": "catalog:",

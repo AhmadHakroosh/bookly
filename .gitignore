@@ -15,3 +15,7 @@ next-env.d.ts
 data/
 
 packages/db/dist
+# Playwright output
+test-results
+playwright-report
+apps/web/tests/e2e/.auth

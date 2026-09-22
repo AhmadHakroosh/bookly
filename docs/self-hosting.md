@@ -75,3 +75,9 @@ See `.env.example`; every variable is documented inline and validated at startup
 ## Accounts and passwords
 
 Sign-in works with a password or an emailed link. A forgotten password is reset from "Forgot your password?" on the sign-in page: Bookly emails a link (valid for one hour) to `/reset-password`, so email must be configured (`RESEND_API_KEY` or SMTP; in development links print to the console). Signed-in users change their password under `Admin → Booking page`; changing it signs out every other session.
+
+## Monitoring and error tracking
+
+- **Errors**: set `SENTRY_DSN` (server) and `NEXT_PUBLIC_SENTRY_DSN` (browser) and Bookly reports exceptions from pages, API routes, the cron tick and the browser to Sentry. Add `SENTRY_ORG`, `SENTRY_PROJECT` and `SENTRY_AUTH_TOKEN` at build time to upload source maps. Leave them unset and nothing is sent anywhere.
+- **Metrics**: set `METRICS_TOKEN` and scrape `GET /api/metrics` (see `docs/cloud.md`).
+- **Security headers**: every response carries a Content-Security-Policy limited to Bookly's own origin plus Daily, Stripe and Sentry, `X-Content-Type-Options`, `Referrer-Policy`, a `Permissions-Policy` that grants camera and microphone only to the call page, and HSTS in production. Booking pages may be embedded on HTTPS sites; the admin and console send `X-Frame-Options: DENY`. If you serve avatars or uploads from another host, add it to `img-src` in `apps/web/next.config.ts`.
