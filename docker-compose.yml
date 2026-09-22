@@ -31,8 +31,9 @@ services:
   app:
     profiles: [app]
     build: .
-    # Or use the published image instead of building:
-    # image: ghcr.io/ahmadhakroosh/bookly:latest
+    # `docker compose --profile app up` builds locally; set APP_IMAGE to run a prebuilt image
+    # instead (CI does, and so can you with ghcr.io/ahmadhakroosh/bookly:latest).
+    image: ${APP_IMAGE:-bookly:local}
     restart: unless-stopped
     depends_on:
       postgres: { condition: service_healthy }

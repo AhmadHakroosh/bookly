@@ -125,5 +125,27 @@ jobs:
         with:
           context: .
           push: false
+          load: true
+          tags: bookly:ci
           cache-from: type=gha
           cache-to: type=gha,mode=max
+      # Smoke test the self-host path: Postgres + the image, migrations on boot, health, setup wizard.
+      - name: Boot with Compose and check health
+        run: |
+          cat > .env <<'ENV'
+          APP_IMAGE=bookly:ci
+          AUTH_SECRET=ci-only-secret-0123456789abcdef0123
+          APP_URL=http://localhost:3002
+          TELEMETRY=off
+          ENV
+          docker compose --profile app up -d --no-build
+          for i in $(seq 1 40); do
+            if curl -fsS http://localhost:3002/api/health | grep -q '"ok":true'; then echo "healthy after ${i}s"; break; fi
+            if [ "$i" = "40" ]; then echo "app never became healthy"; docker compose logs app; exit 1; fi
+            sleep 3
+          done
+          status=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:3002/setup)
+          test "$status" = "200" || { echo "setup wizard returned $status"; docker compose logs app; exit 1; }
+          docker compose logs app | grep -q "Migrations applied" || { echo "migrations did not run"; docker compose logs app; exit 1; }
+      - if: always()
+        run: docker compose --profile app down -v
