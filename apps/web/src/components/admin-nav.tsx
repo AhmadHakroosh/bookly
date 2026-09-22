@@ -110,15 +110,15 @@ export function AdminNav({
     </a>
   );
   return (
-    <nav className="flex min-h-full flex-col gap-6 text-sm" aria-label="Admin">
+    <nav className="flex min-h-full flex-col gap-4 text-sm" aria-label="Admin">
       <Link href="/admin" className={itemClass(active("/admin"))}>
         <InboxIcon className="size-4 shrink-0" aria-hidden />
         Inbox
       </Link>
       {groups.map((g) => (
-        <div key={g.label}>
-          <p className="mb-1 flex items-center gap-1.5 px-2 text-[11px] font-medium tracking-wide text-muted-foreground uppercase">
-            <g.icon className="size-3.5" aria-hidden />
+        <div key={g.label} className="border-t pt-3">
+          <p className="mb-1.5 flex items-center gap-2 px-2 text-xs font-semibold tracking-wider text-foreground uppercase">
+            <g.icon className="size-4 text-muted-foreground" aria-hidden />
             {g.label}
           </p>
           <ul className="space-y-0.5">
@@ -137,8 +137,9 @@ export function AdminNav({
           </ul>
         </div>
       ))}
-      <div className="mt-auto border-t pt-4">
-        <p className="mb-1 px-2 text-[11px] font-medium tracking-wide text-muted-foreground uppercase">
+      <div className="mt-auto border-t pt-3">
+        <p className="mb-1.5 flex items-center gap-2 px-2 text-xs font-semibold tracking-wider text-foreground uppercase">
+          <LifeBuoyIcon className="size-4 text-muted-foreground" aria-hidden />
           Help
         </p>
         <ul className="space-y-0.5">

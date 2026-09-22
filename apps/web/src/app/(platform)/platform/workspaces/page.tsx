@@ -1,9 +1,9 @@
 import Link from "next/link";
-import { ArrowRightIcon } from "lucide-react";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { ExternalLink } from "@/components/links";
 import { planName } from "@/server/billing";
 import { listUserWorkspaces } from "@/server/platform";
 import { getSession } from "@/server/session";
@@ -15,7 +15,7 @@ async function WorkspacesPage() {
   if (!session) redirect("/login?next=/workspaces");
   const rows = await listUserWorkspaces(session.user.id);
   return (
-    <div className="mx-auto max-w-2xl space-y-6">
+    <div className="mx-auto max-w-2xl space-y-6 px-4 py-14 md:py-20">
       <div className="flex items-end justify-between gap-4">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">Your workspaces</h1>
@@ -39,9 +39,12 @@ async function WorkspacesPage() {
                 )}
               </p>
             </div>
-            <a href={ws.url} className="underline underline-offset-4">
-              Open <ArrowRightIcon className="ml-1 inline size-3.5" aria-hidden />
-            </a>
+            <ExternalLink
+              href={ws.url}
+              className="inline-flex shrink-0 items-center gap-1 underline underline-offset-4"
+            >
+              Open
+            </ExternalLink>
           </li>
         ))}
         {rows.length === 0 && (

@@ -8,7 +8,7 @@ export const metadata = { title: "Get started" };
 async function SignupPage() {
   const session = await getSession();
   return (
-    <div className="mx-auto max-w-md">
+    <div className="mx-auto max-w-md px-4 py-14 md:py-20">
       <h1 className="text-2xl font-semibold tracking-tight">Create your booking page</h1>
       <p className="mt-1 text-sm text-muted-foreground">Free to start. No card needed.</p>
       <div className="mt-8">
