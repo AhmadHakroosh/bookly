@@ -38,12 +38,9 @@ export const metadata: Metadata = {
 
 export default function PlatformLayout({ children }: LayoutProps<"/platform">) {
   return (
-    <>
-      <Suspense fallback={null}>
-        <Shell>{children}</Shell>
-      </Suspense>
-      <Reveal />
-    </>
+    <Suspense fallback={null}>
+      <Shell>{children}</Shell>
+    </Suspense>
   );
 }
 
@@ -243,6 +240,8 @@ async function Shell({ children }: { children: React.ReactNode }) {
           </div>
         </div>
       </footer>
+      {/* Mounted with the streamed shell: its DOM writes must come after hydration of the page. */}
+      <Reveal />
     </div>
   );
 }
