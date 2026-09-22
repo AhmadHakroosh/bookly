@@ -16,6 +16,9 @@ export const users = pgTable("users", {
   banned: boolean("banned").default(false),
   banReason: text("ban_reason"),
   banExpires: timestamp("ban_expires"),
+  /** When the person accepted the terms and privacy policy at sign-up (cloud mode), and which version. */
+  consentAt: timestamp("consent_at"),
+  consentVersion: text("consent_version"),
 });
 
 export const sessions = pgTable(

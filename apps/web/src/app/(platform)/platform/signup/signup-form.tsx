@@ -1,15 +1,26 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useActionState, useState } from "react";
 import { authClient } from "@/lib/auth-client";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Field, FieldDescription, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { createWorkspace, type CreateState } from "./actions";
 
 /** Two steps on one page: create the account (client, Better Auth), then the workspace (server action). */
-export function SignupForm({ rootDomain, signedIn }: { rootDomain: string; signedIn: boolean }) {
+export function SignupForm({
+  rootDomain,
+  signedIn,
+  legalVersion,
+}: {
+  rootDomain: string;
+  signedIn: boolean;
+  /** Date of the terms/privacy revision being accepted, stored with the account. */
+  legalVersion: string;
+}) {
   const [step, setStep] = useState<1 | 2>(signedIn ? 2 : 1);
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
@@ -33,6 +44,8 @@ export function SignupForm({ rootDomain, signedIn }: { rootDomain: string; signe
       name: String(fd.get("name")),
       email: String(fd.get("email")),
       password: String(fd.get("password")),
+      consentAt: new Date(),
+      consentVersion: legalVersion,
     });
     setPending(false);
     if (res.error) return setError(res.error.message ?? "Sign-up failed");
@@ -64,6 +77,28 @@ export function SignupForm({ rootDomain, signedIn }: { rootDomain: string; signe
               autoComplete="new-password"
             />
             <FieldDescription>At least 10 characters.</FieldDescription>
+          </Field>
+          <Field>
+            <label className="flex items-start gap-2 text-sm">
+              <Checkbox name="terms" required className="mt-0.5" />
+              <span>
+                I agree to the{" "}
+                <Link href="/terms" target="_blank" className="underline underline-offset-4">
+                  terms of service
+                </Link>
+                .
+              </span>
+            </label>
+            <label className="flex items-start gap-2 text-sm">
+              <Checkbox name="privacy" required className="mt-0.5" />
+              <span>
+                I have read the{" "}
+                <Link href="/privacy" target="_blank" className="underline underline-offset-4">
+                  privacy policy
+                </Link>{" "}
+                and consent to Bookly processing my data as it describes.
+              </span>
+            </label>
           </Field>
           {error && <p className="text-sm text-destructive">{error}</p>}
           <Button type="submit" disabled={pending}>

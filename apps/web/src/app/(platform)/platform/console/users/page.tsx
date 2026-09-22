@@ -39,6 +39,10 @@ async function UsersPage({ searchParams }: PageProps<"/platform/console/users">)
                 {workspaces || "no workspace"} · joined {u.createdAt.toLocaleDateString()} · last
                 seen {lastSeen ? new Date(lastSeen).toLocaleString() : "never"}
                 {u.banReason ? ` · ${u.banReason}` : ""}
+                {" · "}
+                {u.consentAt
+                  ? `consented ${u.consentAt.toLocaleDateString()} (terms of ${u.consentVersion ?? "unknown"})`
+                  : "no consent record"}
               </p>
             </div>
             {u.banned ? (

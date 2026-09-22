@@ -35,11 +35,26 @@ export const auth = betterAuth({
     },
   },
   session: { expiresIn: 60 * 60 * 24 * 30, updateAge: 60 * 60 * 24 },
+  user: {
+    additionalFields: {
+      consentAt: { type: "date", required: false, input: true },
+      consentVersion: { type: "string", required: false, input: true },
+    },
+  },
   databaseHooks: {
     user: {
       create: {
-        // Single-tenant: once the workspace exists, only invitations may add accounts (public sign-up is closed).
         before: async (user, ctx) => {
+          // Cloud: public sign-up must record acceptance of the terms and privacy policy.
+          if (env.TENANCY === "multi" && ctx?.path === "/sign-up/email") {
+            const u = user as typeof user & { consentAt?: Date | string | null };
+            if (!u.consentAt)
+              throw new APIError("BAD_REQUEST", {
+                message: "Please accept the terms of service and privacy policy.",
+              });
+            return { data: { ...user, consentAt: new Date(u.consentAt) } };
+          }
+          // Single-tenant: once the workspace exists, only invitations may add accounts (public sign-up is closed).
           if (env.TENANCY !== "single") return;
           const workspace = await db().query.workspaces.findFirst({ columns: { id: true } });
           if (!workspace) return; // first run: the setup wizard creates the owner

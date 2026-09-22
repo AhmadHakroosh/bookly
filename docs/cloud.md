@@ -45,6 +45,7 @@ path on the platform host is a 404. Tenant hosts stay out of search engines.
 - `APP_URL` must be set **at build time** as well as at runtime: canonical URLs and Open Graph
   tags on the marketing pages are prerendered from it. Vercel does this automatically; a Docker
   image built without it would bake the default into those tags.
+- Sign-up records acceptance of the terms and privacy policy on the user (`consent_at`, `consent_version` = the `legalUpdated` date). Bump `legalUpdated` when the policies change; users who accepted an older version are visible in the console.
 - The legal pages are a starting point written for a sole-operator SaaS. Have them reviewed
   before you take paying customers, and update `legalUpdated` in
   `apps/web/src/app/(platform)/platform/site.ts` when you change them.

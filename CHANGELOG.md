@@ -8,6 +8,9 @@ Everything below is on `main` ahead of the first release, which will be tagged `
 
 ### Added
 
+- `GET /api/health` for uptime checks (200 when Postgres is reachable, 503 otherwise)
+- Cloud sign-up requires accepting the terms of service and privacy policy; acceptance time and policy version are stored on the user (`consent_at`, `consent_version`, migration 0018) and shown in the operator console
+- README rewritten with the new mark, a feature map, self-hosting requirements, env overview and operations, and a contributor section
 - Marketing site (cloud mode): rebuilt landing page with the meeting lifecycle, live-transcript, routing, seats and follow-up mocks, a comparison table, scroll animations, a full header and footer; pricing page with plan comparison and FAQ; about, contact, security, privacy, terms and changelog pages; `robots.txt`, `sitemap.xml`, Open Graph and Twitter cards with a generated social image at `/og`; real 404s for unknown paths on the platform host
 - Admin: a Help group pinned to the bottom of the sidebar (Documentation, Support, GitHub); Support goes to `SUPPORT_EMAIL` in cloud mode and to the issue tracker when self-hosted; sticky header and sidebar
 - Brand: the buckle logo mark (بُكلة), SVG favicon, ICO and Apple touch icon
