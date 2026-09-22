@@ -70,7 +70,14 @@ export async function sendDueReminders(
     const h = reminderMail({ ...ctx, brief: brief ?? undefined }, true, hours);
     const line = `Reminder: ${et?.title ?? "Meeting"} with ${host.displayName} in ${hours === 1 ? "1 hour" : `${hours} hours`}. ${b.meetingUrl ?? `${baseUrl()}/booking/${b.manageToken}`}`;
     await Promise.all([
-      sendEmail({ to: b.attendeeEmail, subject: a.subject, text: a.text, html: a.html }),
+      sendEmail({
+        to: b.attendeeEmail,
+        subject: a.subject,
+        text: a.text,
+        html: a.html,
+        replyTo: hostUser?.email ?? undefined,
+        fromName: host.displayName,
+      }),
       hostUser?.email
         ? sendEmail({ to: hostUser.email, subject: h.subject, text: h.text, html: h.html })
         : Promise.resolve(),
@@ -137,6 +144,7 @@ export async function sendDueReminders(
       text: mail.text,
       html: mail.html,
       replyTo: hostUser?.email ?? undefined,
+      fromName: host?.displayName ?? ws.name,
     }).catch((e) => console.error("[followup]", e));
     await db()
       .update(schema.bookings)

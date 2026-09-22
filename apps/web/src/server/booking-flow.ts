@@ -438,6 +438,7 @@ async function notifyCreated(workspace: Workspace, booking: Booking, eventType: 
       text: a.text,
       html: a.html,
       replyTo: hostTo ?? undefined,
+      fromName: ctx.host.displayName,
       attachments:
         booking.status === "confirmed"
           ? [{ filename: "invite.ics", content: ics, contentType: "text/calendar; method=REQUEST" }]
@@ -566,6 +567,7 @@ export async function cancelBooking(
       subject: a.subject,
       text: a.text,
       html: a.html,
+      fromName: ctx.host.displayName,
       attachments: [
         { filename: "cancel.ics", content: ics, contentType: "text/calendar; method=CANCEL" },
       ],
@@ -645,6 +647,7 @@ export async function cancelSeries(
       subject: a.subject,
       text: a.text,
       html: a.html,
+      fromName: ctx.host.displayName,
       attachments,
     }),
     hostTo

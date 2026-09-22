@@ -8,6 +8,7 @@ Everything below is on `main` ahead of the first release, which will be tagged `
 
 ### Added
 
+- Guest-facing emails (confirmations, reminders, cancellations, follow-ups, proposals, payment requests, client recaps) are sent as “<host name> via Bookly” at the platform address, with the host's email as Reply-To
 - Plan cards are one shared component on the landing page and the pricing page, with each plan's standout features (contacts and briefings on Free, auto-capture and paid bookings on Pro, team scheduling and the larger capture budget on Team) listed first and emphasised
 - Marketing SEO and mobile pass: JSON-LD (Organization, WebSite, SoftwareApplication with offers, FAQPage on pricing, breadcrumbs on every subpage), web manifest, light/dark theme colour, stable sitemap dates, noindex on the workspace chooser, a comparison table that reads at 320px, and a movement-only hero entrance so the headline paints immediately; Lighthouse mobile: SEO 100, accessibility 100, best practices 100
 - Loading states everywhere: a navigation progress bar, route and page skeletons instead of blank streaming, and every form submit button disables itself with a spinner while its action runs (server-action forms included); task complete / remove controls show progress too

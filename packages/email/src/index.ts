@@ -9,10 +9,34 @@ export type EmailMessage = {
   html?: string;
   replyTo?: string;
   from?: string;
+  /** Send on someone's behalf: the From line becomes "<name> via <platform>" at the platform address. */
+  fromName?: string;
   attachments?: EmailAttachment[];
   /** Extra headers, e.g. List-Unsubscribe. */
   headers?: Record<string, string>;
 };
+
+/**
+ * "Dana Weiss via Bookly" <noreply@example.com>: a personal sender line on the verified platform
+ * address, so SPF/DKIM stay intact while the inbox shows who wrote it.
+ */
+export function senderFor(name: string, base: string): string {
+  const m = base.trim().match(/^(?:"?([^"<]*?)"?\s*)?<([^>]+)>$/);
+  const address = m ? m[2]!.trim() : base.trim();
+  const platform = (m?.[1] ?? "").trim() || "Bookly";
+  const clean = name
+    .replace(/[\r\n"<>]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, 64);
+  if (!clean) return base;
+  return `"${clean} via ${platform}" <${address}>`;
+}
+
+function resolveFrom(m: EmailMessage, base: string) {
+  if (m.from) return m.from;
+  return m.fromName ? senderFor(m.fromName, base) : base;
+}
 
 export interface EmailDriver {
   send(message: EmailMessage): Promise<{ id?: string }>;
@@ -21,7 +45,7 @@ export interface EmailDriver {
 class ConsoleDriver implements EmailDriver {
   async send(m: EmailMessage) {
     console.log(
-      `\n📧 [email:console] to=${m.to} subject="${m.subject}"${m.attachments?.length ? ` attachments=${m.attachments.map((a) => a.filename).join(",")}` : ""}\n${m.text}\n`,
+      `\n📧 [email:console] from=${resolveFrom(m, loadEnv().EMAIL_FROM)} to=${m.to} subject="${m.subject}"${m.replyTo ? ` reply-to=${m.replyTo}` : ""}${m.attachments?.length ? ` attachments=${m.attachments.map((a) => a.filename).join(",")}` : ""}\n${m.text}\n`,
     );
     return {};
   }
@@ -32,7 +56,7 @@ class ResendDriver implements EmailDriver {
   async send(m: EmailMessage) {
     const { Resend } = await import("resend");
     const { data, error } = await new Resend(this.apiKey).emails.send({
-      from: m.from ?? loadEnv().EMAIL_FROM,
+      from: resolveFrom(m, loadEnv().EMAIL_FROM),
       to: m.to,
       subject: m.subject,
       text: m.text,
@@ -62,7 +86,7 @@ class SmtpDriver implements EmailDriver {
       auth: env.SMTP_USER ? { user: env.SMTP_USER, pass: env.SMTP_PASS } : undefined,
     });
     const info = await transport.sendMail({
-      from: m.from ?? env.EMAIL_FROM,
+      from: resolveFrom(m, env.EMAIL_FROM),
       to: m.to,
       subject: m.subject,
       text: m.text,

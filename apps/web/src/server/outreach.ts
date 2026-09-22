@@ -74,7 +74,13 @@ export async function sendOutreach(
   ]);
   const subject = input.subject.trim().slice(0, 200);
   const body = input.body.trim().slice(0, 8000);
-  await sendEmail({ to: c.email, subject, text: body, replyTo: user?.email ?? undefined });
+  await sendEmail({
+    to: c.email,
+    subject,
+    text: body,
+    replyTo: user?.email ?? undefined,
+    fromName: host?.displayName ?? ws.name,
+  });
   const label =
     kind === "proposal"
       ? "Proposal sent"

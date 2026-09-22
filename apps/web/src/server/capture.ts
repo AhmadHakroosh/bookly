@@ -134,6 +134,7 @@ export async function sendFollowUp(
       subject: subject.trim(),
       text: signed,
       replyTo: user?.email ?? undefined,
+      fromName: host?.displayName ?? workspace.name,
     });
   } catch (e) {
     console.error("[capture] follow-up failed", e);

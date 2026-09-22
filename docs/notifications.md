@@ -30,3 +30,11 @@ sender). Either sender may be omitted; the admin shows which channels are availa
 WhatsApp business messaging needs an approved sender and, outside a 24-hour conversation window, an
 approved message template. The sandbox is enough to test; production needs the Twilio WhatsApp
 onboarding.
+
+## Who the guest sees as the sender
+
+Every email to a guest is sent from the verified platform address in `EMAIL_FROM` (so SPF and
+DKIM hold), but with the host's name in the sender line, `"Dana Weiss via Bookly"
+<noreply@example.com>`, and the host's own address as Reply-To. Replies go straight to the
+host. Applies to confirmations, reminders, cancellations, follow-ups, proposals, payment
+requests and client recaps. The platform name comes from the display name in `EMAIL_FROM`.
