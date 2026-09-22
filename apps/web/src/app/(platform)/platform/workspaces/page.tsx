@@ -2,12 +2,10 @@ import Link from "next/link";
 import { ArrowRightIcon } from "lucide-react";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
-import { eq, schema } from "@bookly/db";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { db } from "@/lib/db";
 import { planName } from "@/server/billing";
-import { tenantUrl } from "@/server/platform";
+import { listUserWorkspaces } from "@/server/platform";
 import { getSession } from "@/server/session";
 
 export const metadata = { title: "Your workspaces" };
@@ -15,14 +13,7 @@ export const metadata = { title: "Your workspaces" };
 async function WorkspacesPage() {
   const session = await getSession();
   if (!session) redirect("/login?next=/workspaces");
-  const rows = await db()
-    .select({ ws: schema.workspaces, role: schema.members.role })
-    .from(schema.members)
-    .innerJoin(
-      schema.workspaces,
-      eq(schema.workspaces.organizationId, schema.members.organizationId),
-    )
-    .where(eq(schema.members.userId, session.user.id));
+  const rows = await listUserWorkspaces(session.user.id);
   return (
     <div className="mx-auto max-w-2xl space-y-6">
       <div className="flex items-end justify-between gap-4">
@@ -35,20 +26,20 @@ async function WorkspacesPage() {
         </Button>
       </div>
       <ul className="divide-y rounded-xl border">
-        {rows.map(({ ws, role }) => (
+        {rows.map((ws) => (
           <li key={ws.id} className="flex items-center justify-between gap-3 p-4 text-sm">
             <div>
               <p className="font-medium">{ws.name}</p>
               <p className="text-muted-foreground">
-                {ws.slug} · {role} · {planName(ws.plan)}
-                {ws.suspendedAt && (
+                {ws.slug} · {ws.role} · {planName(ws.plan)}
+                {ws.suspended && (
                   <Badge variant="secondary" className="ml-2">
                     Suspended
                   </Badge>
                 )}
               </p>
             </div>
-            <a href={tenantUrl(ws.slug)} className="underline underline-offset-4">
+            <a href={ws.url} className="underline underline-offset-4">
               Open <ArrowRightIcon className="ml-1 inline size-3.5" aria-hidden />
             </a>
           </li>

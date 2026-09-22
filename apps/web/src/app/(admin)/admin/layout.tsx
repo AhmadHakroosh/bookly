@@ -1,14 +1,14 @@
-import Link from "next/link";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import { auth } from "@/lib/auth";
 import { AdminNav } from "@/components/admin-nav";
+import { WorkspaceSwitcher } from "@/components/workspace-switcher";
 import { ExternalLink } from "@/components/links";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { isCloud } from "@/server/platform";
+import { isCloud, listUserWorkspaces, platformUrl } from "@/server/platform";
 import { getSession, getStaffRole } from "@/server/session";
 import { getCurrentWorkspace } from "@/server/workspace";
 import { MenuIcon } from "lucide-react";
@@ -38,6 +38,19 @@ async function AdminShell({ children }: { children: React.ReactNode }) {
     redirect("/login");
   };
 
+  const switcher = isCloud()
+    ? {
+        workspaces: (await listUserWorkspaces(session.user.id)).map((w) => ({
+          id: w.id,
+          name: w.name,
+          slug: w.slug,
+          role: w.role,
+          url: w.url,
+        })),
+        allUrl: platformUrl("/workspaces"),
+        newUrl: platformUrl("/signup"),
+      }
+    : undefined;
   return (
     <div className="flex min-h-full flex-1 flex-col">
       <header className="border-b">
@@ -63,9 +76,12 @@ async function AdminShell({ children }: { children: React.ReactNode }) {
                 <AdminNav cloud={isCloud()} />
               </SheetContent>
             </Sheet>
-            <Link href="/admin" className="font-semibold tracking-tight">
-              {workspace?.name ?? "Bookly"}
-            </Link>
+            <WorkspaceSwitcher
+              current={{ id: workspace?.id ?? "", name: workspace?.name ?? "Bookly" }}
+              workspaces={switcher?.workspaces}
+              allUrl={switcher?.allUrl}
+              newUrl={switcher?.newUrl}
+            />
             <ExternalLink
               href="/"
               className="ml-2 hidden items-center gap-1 text-sm text-muted-foreground hover:text-foreground sm:inline-flex"

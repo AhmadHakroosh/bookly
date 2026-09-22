@@ -1,6 +1,8 @@
 import "server-only";
 import { headers } from "next/headers";
 import { loadEnv } from "@bookly/config";
+import { eq, schema } from "@bookly/db";
+import { db } from "@/lib/db";
 
 export const isCloud = () => loadEnv().TENANCY === "multi";
 
@@ -36,4 +38,41 @@ export function isPlatformAdmin(email: string | null | undefined) {
     .map((s) => s.trim().toLowerCase())
     .filter(Boolean)
     .includes(email.toLowerCase());
+}
+
+export type UserWorkspace = {
+  id: string;
+  name: string;
+  slug: string;
+  role: string;
+  plan: string;
+  suspended: boolean;
+  url: string;
+};
+
+/** Every workspace the user belongs to, with the URL of its admin. */
+export async function listUserWorkspaces(userId: string): Promise<UserWorkspace[]> {
+  const rows = await db()
+    .select({ ws: schema.workspaces, role: schema.members.role })
+    .from(schema.members)
+    .innerJoin(
+      schema.workspaces,
+      eq(schema.workspaces.organizationId, schema.members.organizationId),
+    )
+    .where(eq(schema.members.userId, userId))
+    .orderBy(schema.workspaces.name);
+  return rows.map(({ ws, role }) => ({
+    id: ws.id,
+    name: ws.name,
+    slug: ws.slug,
+    role,
+    plan: ws.plan,
+    suspended: !!ws.suspendedAt,
+    url: tenantUrl(ws.slug),
+  }));
+}
+
+/** Absolute URL of the platform host (landing, chooser, sign-up) in cloud mode. */
+export function platformUrl(path = "/") {
+  return `${loadEnv().APP_URL.replace(/\/$/, "")}${path}`;
 }
