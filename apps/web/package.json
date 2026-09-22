@@ -11,6 +11,7 @@
     "typecheck": "next typegen && tsc --noEmit",
     "test": "vitest run",
     "e2e": "playwright test",
+    "e2e:prepare": "pnpm --filter @bookly/db migrate && pnpm demo",
     "e2e:build": "E2E=1 next build",
     "demo": "tsx scripts/demo.ts",
     "auth:generate": "pnpm dlx @better-auth/cli@latest generate --config src/lib/auth.ts --output ../../packages/db/src/schema/auth.ts -y"

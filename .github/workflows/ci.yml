@@ -24,7 +24,7 @@ jobs:
           --health-cmd "pg_isready -U bookly" --health-interval 5s --health-timeout 3s --health-retries 20
     env:
       DATABASE_URL: postgres://bookly:bookly@localhost:5432/bookly
-      AUTH_SECRET: ci-only-secret-0123456789abcdef
+      AUTH_SECRET: ci-only-secret-0123456789abcdef0123
       APP_URL: http://localhost:3002
     steps:
       - uses: actions/checkout@v7
@@ -55,7 +55,7 @@ jobs:
           --health-cmd "pg_isready -U bookly" --health-interval 5s --health-timeout 3s --health-retries 20
     env:
       DATABASE_URL: postgres://bookly:bookly@localhost:5432/bookly
-      AUTH_SECRET: ci-only-secret-0123456789abcdef
+      AUTH_SECRET: ci-only-secret-0123456789abcdef0123
       APP_URL: http://localhost:3010
       TENANCY: single
       E2E: "1"
