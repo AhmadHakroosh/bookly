@@ -25,6 +25,12 @@ const settingsSchema = z.object({
   proposalBody: z.string().max(8000).default(""),
   paymentSubject: z.string().max(200).default(""),
   paymentBody: z.string().max(8000).default(""),
+  confirmationSubject: z.string().max(200).default(""),
+  confirmationBody: z.string().max(4000).default(""),
+  reminderSubject: z.string().max(200).default(""),
+  reminderBody: z.string().max(4000).default(""),
+  cancellationSubject: z.string().max(200).default(""),
+  cancellationBody: z.string().max(4000).default(""),
   telemetryStats: z.enum(["on"]).optional(),
 });
 
@@ -49,6 +55,12 @@ export async function updateWorkspaceSettings(
     proposalBody,
     paymentSubject,
     paymentBody,
+    confirmationSubject,
+    confirmationBody,
+    reminderSubject,
+    reminderBody,
+    cancellationSubject,
+    cancellationBody,
     telemetryStats,
     ...rest
   } = parsed.data;
@@ -84,6 +96,15 @@ export async function updateWorkspaceSettings(
         templates: {
           proposal: { subject: proposalSubject || undefined, body: proposalBody || undefined },
           paymentRequest: { subject: paymentSubject || undefined, body: paymentBody || undefined },
+          confirmation: {
+            subject: confirmationSubject || undefined,
+            body: confirmationBody || undefined,
+          },
+          reminder: { subject: reminderSubject || undefined, body: reminderBody || undefined },
+          cancellation: {
+            subject: cancellationSubject || undefined,
+            body: cancellationBody || undefined,
+          },
         },
       },
     })

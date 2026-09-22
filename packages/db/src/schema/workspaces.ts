@@ -30,10 +30,17 @@ export type WorkspaceSettings = {
   telemetryStats?: boolean;
   /** Auto-capture: transcript retention (days, default 90) and Deepgram language (default auto). */
   capture?: { retentionDays?: number; language?: string };
-  /** Email templates for the contact page. Placeholders: {name} {company} {host} {amount} {payLink}. */
+  /**
+   * Email wording. Contact page: proposal / paymentRequest ({name} {company} {host} {amount}
+   * {payLink}). Guest emails: confirmation / reminder / cancellation ({name} {host} {event}
+   * {when} {where} {duration} {bookingUrl} {workspace}; reminder also {relative}). Blank = default.
+   */
   templates?: {
     proposal?: { subject?: string; body?: string };
     paymentRequest?: { subject?: string; body?: string };
+    confirmation?: { subject?: string; body?: string };
+    reminder?: { subject?: string; body?: string };
+    cancellation?: { subject?: string; body?: string };
   };
   [key: string]: unknown;
 };

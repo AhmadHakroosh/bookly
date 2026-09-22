@@ -6,9 +6,17 @@ process.env.APP_URL ??= "http://localhost:3002";
 
 const { followUpMail } = await import("@/emails/booking");
 
+const brand = {
+  name: "W",
+  logoUrl: "https://b.example/logo-mark.png",
+  accent: "#e8965a",
+  baseUrl: "https://b.example",
+  poweredBy: true,
+};
+
 describe("followUpMail", () => {
-  it("fills placeholders from the template", () => {
-    const m = followUpMail({
+  it("fills placeholders from the template and renders a branded letter", async () => {
+    const m = await followUpMail({
       booking: {
         attendeeName: "Sam Lee",
         manageToken: "tok",
@@ -25,8 +33,11 @@ describe("followUpMail", () => {
       host: { displayName: "Ahmad", timezone: "UTC" } as never,
       workspaceName: "W",
       baseUrl: "https://b.example",
+      brand,
     });
     expect(m.subject).toBe("Thanks Sam");
-    expect(m.text).toBe("Ahmad here about Intro call: https://b.example/booking/tok");
+    expect(m.text).toContain("Ahmad here about Intro call: https://b.example/booking/tok");
+    expect(m.html.replace(/<!-- -->/g, "")).toContain("Sent by Ahmad via W");
+    expect(m.html).toContain('src="https://b.example/logo-mark.png"');
   });
 });

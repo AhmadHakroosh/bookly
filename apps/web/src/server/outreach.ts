@@ -3,6 +3,8 @@ import { eq, schema } from "@bookly/db";
 import type { Contact, Workspace } from "@bookly/db/schema";
 import { sendEmail } from "@bookly/email";
 import { db } from "@/lib/db";
+import { brandFor } from "@/emails/brand";
+import { letterMail } from "@/emails/booking";
 import { logContactEvent, updateContact, noteToCrm } from "./contacts";
 import { DEFAULT_TEMPLATES, type Template } from "./outreach-text";
 import { formatPrice, paymentsConfigured, stripe } from "./payments";
@@ -74,10 +76,19 @@ export async function sendOutreach(
   ]);
   const subject = input.subject.trim().slice(0, 200);
   const body = input.body.trim().slice(0, 8000);
+  const payLink = kind === "paymentRequest" ? body.match(/https?:\/\/\S+/)?.[0] : undefined;
+  const mail = await letterMail({
+    brand: brandFor(ws),
+    subject,
+    body,
+    signedBy: host?.displayName ?? ws.name,
+    cta: payLink ? { href: payLink, label: "Pay securely" } : undefined,
+  });
   await sendEmail({
     to: c.email,
     subject,
-    text: body,
+    text: mail.text,
+    html: mail.html,
     replyTo: user?.email ?? undefined,
     fromName: host?.displayName ?? ws.name,
   });

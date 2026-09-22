@@ -28,10 +28,16 @@ export const auth = betterAuth({
     enabled: true,
     minPasswordLength: 10,
     sendResetPassword: async ({ user, url }) => {
+      const { accountMail } = await import("@/emails/account");
       await sendEmail({
         to: user.email,
-        subject: "Reset your Bookly password",
-        text: `Reset your password: ${url}\n\nIf you didn't request this, ignore this email.`,
+        ...(await accountMail({
+          subject: "Reset your Bookly password",
+          title: "Reset your password",
+          body: `Hi ${user.name || "there"},\n\nSomeone asked to reset the password for this account. If that was you, use the button below; the link expires in one hour.`,
+          cta: { href: url, label: "Choose a new password" },
+          note: "If you didn't request this, you can ignore this email.",
+        })),
       });
     },
   },
@@ -98,10 +104,16 @@ export const auth = betterAuth({
   plugins: [
     magicLink({
       sendMagicLink: async ({ email, url }) => {
+        const { accountMail } = await import("@/emails/account");
         await sendEmail({
           to: email,
-          subject: "Sign in to Bookly",
-          text: `Click to sign in: ${url}\n\nThis link expires in 5 minutes.`,
+          ...(await accountMail({
+            subject: "Sign in to Bookly",
+            title: "Your sign-in link",
+            body: "Use the button below to sign in. It works once and expires in 5 minutes.",
+            cta: { href: url, label: "Sign in" },
+            note: "If you didn't request this, you can ignore this email.",
+          })),
         });
       },
     }),
@@ -109,10 +121,15 @@ export const auth = betterAuth({
       allowUserToCreateOrganization: async () => env.TENANCY === "multi",
       creatorRole: "owner",
       sendInvitationEmail: async ({ email, organization: org, inviter, id }) => {
+        const { accountMail } = await import("@/emails/account");
         await sendEmail({
           to: email,
-          subject: `${inviter.user.name} invited you to ${org.name} on Bookly`,
-          text: `Accept the invitation: ${env.APP_URL}/accept-invitation/${id}`,
+          ...(await accountMail({
+            subject: `${inviter.user.name} invited you to ${org.name} on Bookly`,
+            title: `Join ${org.name}`,
+            body: `${inviter.user.name} invited you to work together in ${org.name} on Bookly: shared booking pages, contacts and meeting notes.`,
+            cta: { href: `${env.APP_URL}/accept-invitation/${id}`, label: "Accept the invitation" },
+          })),
         });
       },
     }),

@@ -36,6 +36,12 @@ async function SettingsPage() {
           proposalBody: workspace.settings.templates?.proposal?.body ?? "",
           paymentSubject: workspace.settings.templates?.paymentRequest?.subject ?? "",
           paymentBody: workspace.settings.templates?.paymentRequest?.body ?? "",
+          confirmationSubject: workspace.settings.templates?.confirmation?.subject ?? "",
+          confirmationBody: workspace.settings.templates?.confirmation?.body ?? "",
+          reminderSubject: workspace.settings.templates?.reminder?.subject ?? "",
+          reminderBody: workspace.settings.templates?.reminder?.body ?? "",
+          cancellationSubject: workspace.settings.templates?.cancellation?.subject ?? "",
+          cancellationBody: workspace.settings.templates?.cancellation?.body ?? "",
           telemetryStats: !!workspace.settings.telemetryStats,
         }}
         selfHosted={!isCloud()}

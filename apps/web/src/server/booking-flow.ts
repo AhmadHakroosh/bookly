@@ -17,6 +17,7 @@ import { notifyHost } from "./notify";
 import { isPaid, paymentsConfigured, recordPayment, refundBooking } from "./payments";
 import { notifyWaitlist } from "./waitlist";
 import { emitEvent } from "./webhooks";
+import { brandFor } from "@/emails/brand";
 import { scheduleBookingJobs } from "./jobs";
 import { isBlocked } from "./abuse";
 import { priorityForEmail, trackBooking } from "./contacts";
@@ -78,7 +79,15 @@ async function mailCtx(
   workspace: Workspace,
 ): Promise<BookingMailCtx> {
   const host = (await getProfileByUser(workspace.id, booking.hostUserId))!;
-  return { booking, eventType, host, workspaceName: workspace.name, baseUrl: baseUrl() };
+  return {
+    booking,
+    eventType,
+    host,
+    workspaceName: workspace.name,
+    baseUrl: baseUrl(),
+    brand: brandFor(workspace),
+    templates: workspace.settings.templates,
+  };
 }
 
 function icsEvent(
@@ -428,8 +437,8 @@ async function notifyCreated(workspace: Workspace, booking: Booking, eventType: 
     series: await seriesCtx(booking),
   };
   const ics = await icsFor(ctx, "REQUEST");
-  const a = attendeeConfirmation(ctx);
-  const h = hostNotification(ctx);
+  const a = await attendeeConfirmation(ctx);
+  const h = await hostNotification(ctx);
   const hostTo = await hostEmail(booking.hostUserId);
   await Promise.all([
     sendEmail({
@@ -484,7 +493,7 @@ export async function confirmBooking(workspace: Workspace, bookingId: string) {
   });
   void scheduleFor(updated!, et ?? null);
   const ctx = await mailCtx(updated!, et ?? null, workspace);
-  const a = attendeeConfirmation(ctx);
+  const a = await attendeeConfirmation(ctx);
   await sendEmail({
     to: b.attendeeEmail,
     subject: a.subject,
@@ -559,8 +568,8 @@ export async function cancelBooking(
   const ctx = await mailCtx(updated!, et ?? null, workspace);
   const ics = await icsFor(ctx, "CANCEL", 2);
   const hostTo = await hostEmail(b.hostUserId);
-  const a = cancellationMail(ctx, false);
-  const h = cancellationMail(ctx, true);
+  const a = await cancellationMail(ctx, false);
+  const h = await cancellationMail(ctx, true);
   await Promise.all([
     sendEmail({
       to: b.attendeeEmail,
@@ -636,8 +645,8 @@ export async function cancelSeries(
     "CANCEL",
   );
   const hostTo = await hostEmail(first.hostUserId);
-  const a = cancellationMail(ctx, false);
-  const h = cancellationMail(ctx, true);
+  const a = await cancellationMail(ctx, false);
+  const h = await cancellationMail(ctx, true);
   const attachments = [
     { filename: "cancel.ics", content: ics, contentType: "text/calendar; method=CANCEL" },
   ];

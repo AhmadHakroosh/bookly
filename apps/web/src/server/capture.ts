@@ -6,6 +6,8 @@ import { loadEnv } from "@bookly/config";
 import type { Booking, EventType, Task, Workspace } from "@bookly/db/schema";
 import { sendEmail } from "@bookly/email";
 import { db } from "@/lib/db";
+import { brandFor } from "@/emails/brand";
+import { letterMail } from "@/emails/booking";
 import { fmtDate, fmtDateTime } from "@/lib/time";
 import { serializeTask } from "./api";
 import { assistantConfigured } from "./brief";
@@ -128,11 +130,18 @@ export async function sendFollowUp(
     }),
   ]);
   const signed = `${body.trim()}\n\n${host?.displayName ?? workspace.name}`;
+  const mail = await letterMail({
+    brand: brandFor(workspace),
+    subject: subject.trim(),
+    body: signed,
+    signedBy: host?.displayName ?? workspace.name,
+  });
   try {
     await sendEmail({
       to: booking.attendeeEmail,
       subject: subject.trim(),
-      text: signed,
+      text: mail.text,
+      html: mail.html,
       replyTo: user?.email ?? undefined,
       fromName: host?.displayName ?? workspace.name,
     });
