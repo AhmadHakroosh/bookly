@@ -100,10 +100,11 @@ export function Outreach({
       </div>
 
       {open && (
+        // Keyed by kind: switching remounts the form with the other template's subject and body.
         <form
+          key={open}
           ref={formRef}
           onSubmit={(e) => e.preventDefault()}
-
           className="mt-3 space-y-2"
         >
           {open === "payment" && (
