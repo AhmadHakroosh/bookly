@@ -7,9 +7,10 @@ import { Button } from "@/components/ui/button";
 import { Field, FieldDescription, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import type { EventQuestion, FollowUp, Recurrence } from "@bookly/db/schema";
+import type { EventLocation, EventQuestion, FollowUp, Recurrence } from "@bookly/db/schema";
 import { deleteEventType, saveEventType } from "../../scheduling-actions";
 import { QuestionBuilder } from "./question-builder";
+import { LocationsEditor, type ConferencingReady } from "./locations-editor";
 
 type Values = {
   id: string;
@@ -23,8 +24,7 @@ type Values = {
   minNoticeMin: number;
   maxDaysAhead: number;
   maxPerDay: number;
-  locationType: string;
-  locationValue: string;
+  locations: EventLocation[];
   color: string;
   scheduleId: string;
   requiresConfirmation: boolean;
@@ -40,23 +40,6 @@ type Values = {
   seats: number;
   recurrence: Recurrence;
   autoCapture: "off" | "ask" | "always";
-};
-
-const LOCATIONS: [string, string][] = [
-  ["daily", "Video call (built-in)"],
-  ["google_meet", "Google Meet"],
-  ["zoom", "Zoom"],
-  ["teams", "Microsoft Teams"],
-  ["phone", "Phone call"],
-  ["in_person", "In person"],
-  ["custom", "Custom text / link"],
-];
-
-export type ConferencingReady = {
-  daily: boolean;
-  google_meet: boolean;
-  teams: boolean;
-  zoom: boolean;
 };
 
 export function EventTypeForm({
@@ -84,7 +67,11 @@ export function EventTypeForm({
     saveEventType,
     {} as { ok?: boolean; error?: string; slug?: string },
   );
-  const [loc, setLoc] = useState(initial.locationType);
+  const [locs, setLocs] = useState<EventLocation[]>(initial.locations);
+  const types = locs.map((l) => l.type);
+  const captureable = types.some(
+    (t) => t === "daily" || (notetaker && ["zoom", "google_meet", "teams"].includes(t)),
+  );
   const [assignment, setAssignment] = useState(initial.assignment);
   const [repeats, setRepeats] = useState(!!initial.recurrence.enabled);
   useEffect(() => {
@@ -153,7 +140,7 @@ export function EventTypeForm({
             </FieldDescription>
           </Field>
         </div>
-        {(loc === "daily" || (notetaker && ["zoom", "google_meet", "teams"].includes(loc))) && (
+        {captureable && (
           <Field>
             <FieldLabel htmlFor="autoCapture">Auto-capture</FieldLabel>
             <select
@@ -167,9 +154,9 @@ export function EventTypeForm({
               <option value="always">Always (stated in the confirmation email)</option>
             </select>
             <FieldDescription>
-              {loc === "daily"
+              {types.every((t) => t === "daily" || !["zoom", "google_meet", "teams"].includes(t))
                 ? "Transcribes the call and prepares notes, action items and a follow-up for you to review. Both sides see a notice in the call."
-                : "A notetaker named in the invitation joins the call, transcribes it and prepares notes, action items and a follow-up for you to review. Admit it from the waiting room if your meeting has one."}
+                : "Transcribes the call and prepares notes, action items and a follow-up for you to review. On Bookly video both sides see a notice in the call; on Meet, Teams and Zoom a notetaker named in the invitation joins, so admit it from the waiting room if your meeting has one."}
             </FieldDescription>
           </Field>
         )}
@@ -242,47 +229,10 @@ export function EventTypeForm({
             "How far into the future people can book",
           )}
         </div>
-        <div className="grid gap-6 sm:grid-cols-2">
-          <Field>
-            <FieldLabel htmlFor="locationType">Location</FieldLabel>
-            <select
-              id="locationType"
-              name="locationType"
-              value={loc}
-              onChange={(e) => setLoc(e.target.value)}
-              className="h-8 rounded-lg border bg-background px-2 text-sm"
-            >
-              {LOCATIONS.map(([v, l]) => {
-                const conf = v in ready ? ready[v as keyof ConferencingReady] : null;
-                return (
-                  <option key={v} value={v}>
-                    {l}
-                    {conf === false ? (v === "daily" ? " — not set up" : " — not connected") : ""}
-                  </option>
-                );
-              })}
-            </select>
-            <FieldDescription>
-              {loc in ready && !ready[loc as keyof ConferencingReady]
-                ? "This provider is not connected yet. Bookings fall back to Bookly video if available, otherwise the email says the link follows. Set it up under Calendars / Conferencing."
-                : loc in ready
-                  ? "A meeting link is created automatically for every confirmed booking."
-                  : "Shown to attendees in the confirmation email and calendar invite."}
-            </FieldDescription>
-          </Field>
-          {(loc === "phone" || loc === "in_person" || loc === "custom") && (
-            <Field>
-              <FieldLabel htmlFor="locationValue">
-                {loc === "phone"
-                  ? "Phone number"
-                  : loc === "in_person"
-                    ? "Address"
-                    : "Text or link"}
-              </FieldLabel>
-              <Input id="locationValue" name="locationValue" defaultValue={initial.locationValue} />
-            </Field>
-          )}
-        </div>
+        <Field>
+          <FieldLabel>Where to meet</FieldLabel>
+          <LocationsEditor initial={initial.locations} ready={ready} onChange={setLocs} />
+        </Field>
         <div className="grid gap-6 sm:grid-cols-2">
           <Field>
             <FieldLabel htmlFor="scheduleId">Availability schedule</FieldLabel>

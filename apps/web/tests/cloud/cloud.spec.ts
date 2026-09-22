@@ -146,6 +146,8 @@ test.describe("sign-up and tenants", () => {
     const slot = page.locator('a[href*="slot="]').first();
     await expect(slot).toBeVisible();
     await slot.click();
+    // The demo event offers two ways to meet: pick the phone call.
+    await page.getByRole("radio", { name: /We call you/ }).check();
     await page.getByLabel("Name", { exact: true }).fill("Cloud Guest");
     await page.getByLabel("Email", { exact: true }).fill(`cloud-guest-${Date.now()}@example.com`);
     for (const q of await page.locator('[name^="q_"]').all()) {

@@ -175,7 +175,10 @@ export const eventTypes = pgTable(
     minNoticeMin: integer("min_notice_min").notNull().default(120),
     maxDaysAhead: integer("max_days_ahead").notNull().default(60),
     maxPerDay: integer("max_per_day"),
+    /** The default location (the first of `locations`, kept for older rows and readers). */
     location: jsonb("location").$type<EventLocation>().notNull().default({ type: "daily" }),
+    /** Every way to meet the attendee may pick from; empty means just `location`. */
+    locations: jsonb("locations").$type<EventLocation[]>().notNull().default([]),
     questions: jsonb("questions").$type<EventQuestion[]>().notNull().default([]),
     requiresConfirmation: boolean("requires_confirmation").notNull().default(false),
     color: text("color").notNull().default("#2563eb"),

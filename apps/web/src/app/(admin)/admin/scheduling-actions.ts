@@ -23,7 +23,7 @@ import { trackBooking } from "@/server/contacts";
 import { refreshWorkspace } from "@/server/cache";
 import { parseQuestions, parseQuestionsJson, parseReminders } from "@/server/questions";
 import { MAX_OCCURRENCES } from "@/server/recurrence";
-import { ensureDefaultSchedule, getProfileByUser } from "@/server/scheduling";
+import { parseLocations, ensureDefaultSchedule, getProfileByUser } from "@/server/scheduling";
 import {
   assertCaptureFeature,
   assertFeature,
@@ -265,8 +265,10 @@ const eventSchema = z.object({
     .default(120),
   maxDaysAhead: z.coerce.number().int().min(1).max(365).default(60),
   maxPerDay: z.coerce.number().int().min(0).max(100).default(0),
-  locationType: z.enum(LOCATIONS),
+  locationType: z.enum(LOCATIONS).optional(),
   locationValue: z.string().trim().max(300).default(""),
+  /** JSON array of { type, value? } from the locations editor; overrides locationType. */
+  locationsJson: z.string().max(4000).default(""),
   color: z
     .string()
     .regex(/^#[0-9a-f]{6}$/i)
@@ -329,8 +331,10 @@ export async function saveEventType(
     columns: { id: true },
   });
   if (clash && clash.id !== d.id) slug = `${slug}-${d.id.slice(0, 4)}`;
-  const location: EventLocation = { type: d.locationType, value: d.locationValue || undefined };
-  const captureable = captureSupportsLocation(d.locationType);
+  const locations = parseLocations(d.locationsJson, d.locationType, d.locationValue);
+  if (!locations.length) return { error: "Choose at least one way to meet." };
+  const location: EventLocation = locations[0]!;
+  const captureable = locations.some((l) => captureSupportsLocation(l.type));
   try {
     if (d.price > 0) {
       assertFeature(ws, "payments");
@@ -362,6 +366,7 @@ export async function saveEventType(
       maxDaysAhead: d.maxDaysAhead,
       maxPerDay: d.maxPerDay || null,
       location,
+      locations,
       color: d.color,
       scheduleId: d.scheduleId || existing.scheduleId,
       questions: d.questionsJson

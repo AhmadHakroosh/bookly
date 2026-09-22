@@ -492,6 +492,70 @@ export async function listBookings(
   return rows.map((r) => ({ ...r.b, eventTitle: r.eventTitle, eventSeats: r.eventSeats }));
 }
 
+export const LOCATION_TYPES = [
+  "daily",
+  "google_meet",
+  "zoom",
+  "teams",
+  "phone",
+  "in_person",
+  "custom",
+] as const;
+
+/** The editor's JSON, or the legacy single fields; deduplicated by type, values trimmed. */
+export function parseLocations(
+  json: string,
+  legacyType?: string,
+  legacyValue?: string,
+): EventType["location"][] {
+  let raw: unknown = null;
+  if (json) {
+    try {
+      raw = JSON.parse(json);
+    } catch {
+      raw = null;
+    }
+  }
+  const list = Array.isArray(raw)
+    ? raw
+    : legacyType
+      ? [{ type: legacyType, value: legacyValue || undefined }]
+      : [];
+  const out: EventType["location"][] = [];
+  for (const item of list as { type?: unknown; value?: unknown }[]) {
+    const type = String(item?.type ?? "");
+    if (!(LOCATION_TYPES as readonly string[]).includes(type) || out.some((l) => l.type === type))
+      continue;
+    const value = typeof item.value === "string" ? item.value.trim().slice(0, 300) : "";
+    out.push({ type: type as EventType["location"]["type"], ...(value ? { value } : {}) });
+  }
+  return out.slice(0, 7);
+}
+
+/** Every location an event type offers; older rows only have `location`. */
+export function eventLocations(
+  et: Pick<EventType, "location" | "locations">,
+): EventType["location"][] {
+  return et.locations.length ? et.locations : [et.location];
+}
+
+/** The location an attendee picked by type, or the event type's default when there is one choice. */
+export function pickLocation(
+  et: Pick<EventType, "location" | "locations">,
+  type: string | null | undefined,
+): EventType["location"] | null {
+  const all = eventLocations(et);
+  if (!type) return all.length === 1 ? all[0]! : null;
+  return all.find((l) => l.type === type) ?? null;
+}
+
+/** "Bookly video, Zoom or phone" for lists and cards. */
+export function locationsLabel(locs: EventType["location"][]): string {
+  const labels = locs.map((l) => locationLabel(l));
+  if (labels.length <= 1) return labels[0] ?? "";
+  return `${labels.slice(0, -1).join(", ")} or ${labels[labels.length - 1]}`;
+}
+
 export function locationLabel(loc: EventType["location"]): string {
   switch (loc.type) {
     case "daily":

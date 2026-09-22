@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import type { EventQuestion } from "@bookly/db/schema";
 import { book, type BookState } from "./actions";
 
@@ -15,8 +15,10 @@ type Props = {
   paid?: boolean;
   /** Occurrences this booking reserves (recurring event types). */
   sessions?: number;
-  /** Event types with auto-capture = ask: show the transcription consent checkbox. */
-  askCapture?: boolean;
+  /** Ways to meet; with more than one the attendee picks. `capture`: consent applies there. */
+  locations: { type: string; label: string; capture: boolean }[];
+  /** Preselected type (rescheduling keeps the previous choice). */
+  defaultLocation?: string;
 };
 
 export function BookingForm({
@@ -29,9 +31,15 @@ export function BookingForm({
   defaults,
   paid = false,
   sessions = 1,
-  askCapture = false,
+  locations,
+  defaultLocation,
 }: Props) {
   const [state, action, pending] = useActionState(book, {} as BookState);
+  const [location, setLocation] = useState(
+    locations.find((l) => l.type === defaultLocation)?.type ?? locations[0]?.type ?? "",
+  );
+  const chosen = locations.find((l) => l.type === location);
+  const askCapture = !!chosen?.capture;
   const field =
     "bg-background h-10 w-full rounded-lg border px-3 text-sm outline-none focus-visible:ring-2";
   return (
@@ -49,6 +57,30 @@ export function BookingForm({
         className="hidden"
         aria-hidden
       />
+      {locations.length > 1 ? (
+        <fieldset className="text-sm">
+          <legend className="mb-1 block font-medium">How do you want to meet?</legend>
+          <div className="space-y-1.5">
+            {locations.map((l) => (
+              <label
+                key={l.type}
+                className={`flex cursor-pointer items-center gap-2 rounded-lg border px-3 py-2 ${l.type === location ? "border-primary" : ""}`}
+              >
+                <input
+                  type="radio"
+                  name="location"
+                  value={l.type}
+                  checked={l.type === location}
+                  onChange={() => setLocation(l.type)}
+                />
+                <span>{l.label}</span>
+              </label>
+            ))}
+          </div>
+        </fieldset>
+      ) : (
+        <input type="hidden" name="location" value={location} />
+      )}
       <label className="block text-sm">
         <span className="mb-1 block font-medium">Name</span>
         <input

@@ -24,7 +24,15 @@ import { priorityForEmail, trackBooking } from "./contacts";
 import { refreshWorkspace } from "./cache";
 import { assertBookingQuota, LimitError } from "./limits";
 import { occurrences, recurrenceOf } from "./recurrence";
-import { baseUrl, getProfileByUser, locationLabel, newToken, pickHost } from "./scheduling";
+import {
+  baseUrl,
+  eventLocations,
+  getProfileByUser,
+  locationLabel,
+  newToken,
+  pickHost,
+  pickLocation,
+} from "./scheduling";
 
 export type BookingInput = {
   start: Date;
@@ -39,6 +47,8 @@ export type BookingInput = {
   priority?: boolean;
   /** Attendee's answer to the transcription question (event types with autoCapture = ask). */
   captureConsent?: boolean | null;
+  /** Where to meet, chosen from the event type's locations (type only). */
+  location?: string | null;
 };
 
 export class BookingError extends Error {}
@@ -272,6 +282,15 @@ export async function createBooking(
       })) ?? null;
     if (prev?.status === "cancelled") prev = null;
   }
+  // Where to meet: the attendee's pick, else the only option, else what the rescheduled
+  // booking had (when the event type still offers it).
+  const location =
+    pickLocation(eventType, input.location) ??
+    (prev && eventLocations(eventType).some((l) => l.type === prev!.location.type)
+      ? prev.location
+      : null) ??
+    (eventLocations(eventType).length === 1 ? eventType.location : null);
+  if (!location) throw new BookingError("Please choose how you want to meet.");
 
   const single = !!prev || !recurrenceOf(eventType.recurrence);
   const priority = input.priority ?? (await priorityForEmail(workspace.id, input.email));
@@ -321,7 +340,7 @@ export async function createBooking(
         seriesIndex: prev?.seriesIndex ?? (seriesId ? i + 1 : null),
         seriesCount: prev?.seriesCount ?? (seriesId ? bookable.length : null),
         captureConsent: input.captureConsent ?? prev?.captureConsent ?? null,
-        location: eventType.location,
+        location,
         amountCents: needsPayment ? eventType.priceCents : null,
         currency: needsPayment ? (eventType.currency ?? "usd") : null,
       })),

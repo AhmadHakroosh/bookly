@@ -15,6 +15,10 @@ const eventType = {
     minNoticeMin: { type: "integer" },
     maxDaysAhead: { type: "integer" },
     location: { type: "object", properties: { type: str, label: str } },
+    locations: {
+      type: "array",
+      items: { type: "object", properties: { type: str, label: str } },
+    },
     questions: {
       type: "array",
       items: {
@@ -254,6 +258,11 @@ export function GET() {
                     email: str,
                     phone: str,
                     notes: str,
+                    location: {
+                      type: "string",
+                      description:
+                        "One of the event type's location types (see its `locations`); required when it offers more than one.",
+                    },
                     answers: {
                       type: "object",
                       additionalProperties: str,

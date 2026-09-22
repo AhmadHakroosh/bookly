@@ -1,0 +1,1 @@
+ALTER TABLE "event_types" ADD COLUMN "locations" jsonb DEFAULT '[]'::jsonb NOT NULL;

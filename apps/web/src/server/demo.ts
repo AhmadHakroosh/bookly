@@ -141,6 +141,10 @@ export async function seedDemo() {
         questions: e.questions ?? [],
         requiresConfirmation: !!e.requiresConfirmation,
         location: { type: "custom", value: "Video call, link sent by email" },
+        locations: [
+          { type: "custom", value: "Video call, link sent by email" },
+          { type: "phone", value: "We call you" },
+        ],
       });
     created++;
   }

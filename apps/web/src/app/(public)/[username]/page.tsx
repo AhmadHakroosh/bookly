@@ -3,7 +3,12 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { formatPrice, paymentsReady } from "@/server/payments";
-import { getProfileByUsername, listEventTypes, locationLabel } from "@/server/scheduling";
+import {
+  eventLocations,
+  getProfileByUsername,
+  listEventTypes,
+  locationsLabel,
+} from "@/server/scheduling";
 import { getCurrentWorkspace } from "@/server/workspace";
 import { PageSkeleton } from "@/components/page-skeleton";
 
@@ -47,7 +52,7 @@ async function ProfilePage({ params }: PageProps<"/[username]">) {
             >
               <span className="block font-medium">{e.title}</span>
               <span className="block text-sm text-muted-foreground">
-                {e.durationMin} min · {locationLabel(e.location)}
+                {e.durationMin} min · {locationsLabel(eventLocations(e))}
                 {e.priceCents && paid ? ` · ${formatPrice(e.priceCents, e.currency)}` : ""}
               </span>
               {e.description && (

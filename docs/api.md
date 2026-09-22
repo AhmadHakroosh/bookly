@@ -7,22 +7,22 @@ Responses are `{ "data": …, "meta": … }` or `{ "error": { "code", "message" 
 
 **Public (no key, 60 requests/min per IP, CORS `*`):**
 
-| Endpoint                                                 | Notes                                                                                        |
-| -------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
-| `GET /workspace`                                         | Name, timezone and the public booking pages (hosts)                                          |
-| `GET /event-types?username=`                             | Bookable event types with duration, location and questions. Hidden ones only with a key      |
-| `GET /event-types/{username}/{slug}`                     | One event type                                                                               |
-| `GET /availability?username=&event=&timezone=&from=&to=` | Free start times grouped by day in `timezone`; `from`/`to` are `YYYY-MM-DD`, at most 62 days |
+| Endpoint                                                 | Notes                                                                                                         |
+| -------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| `GET /workspace`                                         | Name, timezone and the public booking pages (hosts)                                                           |
+| `GET /event-types?username=`                             | Bookable event types with duration, `locations` (the ways to meet) and questions. Hidden ones only with a key |
+| `GET /event-types/{username}/{slug}`                     | One event type                                                                                                |
+| `GET /availability?username=&event=&timezone=&from=&to=` | Free start times grouped by day in `timezone`; `from`/`to` are `YYYY-MM-DD`, at most 62 days                  |
 
 **Keyed (`Authorization: Bearer bk_…`, 600 requests/min):** create keys with scopes under **Admin → API & webhooks**.
 
-| Endpoint                                                                                       | Scope                                                                                                |
-| ---------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
-| `GET /bookings?username=&upcoming=1&status=&limit=`                                            | `bookings:read`                                                                                      |
-| `GET /bookings/{id}`                                                                           | `bookings:read`                                                                                      |
-| `POST /bookings` `{ username, event, start, timezone, name, email, phone?, notes?, answers? }` | `bookings:write` — same validation as the public page; 201 with the booking, 409 if the slot is gone |
-| `POST /bookings/{id}/cancel` `{ reason?, by? }`                                                | `bookings:write`                                                                                     |
-| `POST /bookings/{id}/reschedule` `{ start, timezone? }`                                        | `bookings:write` — returns the replacement booking (201)                                             |
+| Endpoint                                                                                                  | Scope                                                                                                                                                                                          |
+| --------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `GET /bookings?username=&upcoming=1&status=&limit=`                                                       | `bookings:read`                                                                                                                                                                                |
+| `GET /bookings/{id}`                                                                                      | `bookings:read`                                                                                                                                                                                |
+| `POST /bookings` `{ username, event, start, timezone, name, email, phone?, notes?, answers?, location? }` | `bookings:write` — same validation as the public page; `location` is one of the event type's location types and required when it offers several; 201 with the booking, 409 if the slot is gone |
+| `POST /bookings/{id}/cancel` `{ reason?, by? }`                                                           | `bookings:write`                                                                                                                                                                               |
+| `POST /bookings/{id}/reschedule` `{ start, timezone? }`                                                   | `bookings:write` — returns the replacement booking (201)                                                                                                                                       |
 
 `answers` is keyed by question id (from the event type) or by label. Required questions must be
 answered. Keys are hashed at rest and shown once; revoke from the admin.

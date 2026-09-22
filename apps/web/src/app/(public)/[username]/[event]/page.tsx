@@ -11,6 +11,8 @@ import { addDays, fmtDateTime, fmtTime, isValidTimezone, timezoneList, todayIn }
 import { planSeries } from "@/server/booking-flow";
 import { describeRecurrence, recurrenceOf } from "@/server/recurrence";
 import {
+  locationsLabel,
+  eventLocations,
   availableSlots,
   getBookingByToken,
   getEventType,
@@ -104,7 +106,7 @@ async function EventPage({ params, searchParams }: PageProps<"/[username]/[event
           <BackLink href={`/${profile.username}`}>{profile.displayName}</BackLink>
           <h1 className="mt-3 text-2xl font-semibold tracking-tight">{et.title}</h1>
           <p className="mt-2 text-sm text-muted-foreground">
-            {et.durationMin} min · {locationLabel(et.location)}
+            {et.durationMin} min · {locationsLabel(eventLocations(et))}
             {et.priceCents && paid ? ` · ${formatPrice(et.priceCents, et.currency)}` : ""}
             {et.seats > 1 ? ` · Group of up to ${et.seats}` : ""}
           </p>
@@ -174,7 +176,12 @@ async function EventPage({ params, searchParams }: PageProps<"/[username]/[event
                 reschedule={reschedule}
                 paid={!!et.priceCents && paid}
                 sessions={plan ? bookable : 1}
-                askCapture={et.autoCapture === "ask" && captureSupportsLocation(et.location.type)}
+                locations={eventLocations(et).map((l) => ({
+                  type: l.type,
+                  label: locationLabel(l),
+                  capture: et.autoCapture === "ask" && captureSupportsLocation(l.type),
+                }))}
+                defaultLocation={prev?.location.type}
                 defaults={
                   prev
                     ? { name: prev.attendeeName, email: prev.attendeeEmail }

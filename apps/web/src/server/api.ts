@@ -17,7 +17,7 @@ import { apiBudget } from "@bookly/cloud";
 import { hasFeature, workspaceLimits } from "./limits";
 import { bump } from "./ops";
 import { recurrenceOf } from "./recurrence";
-import { baseUrl, locationLabel } from "./scheduling";
+import { baseUrl, eventLocations, locationLabel } from "./scheduling";
 import { getCurrentWorkspace } from "./workspace";
 
 /* ---------------- Keys ---------------- */
@@ -130,6 +130,7 @@ export function serializeEventType(e: EventType, host: Pick<Profile, "username" 
     minNoticeMin: e.minNoticeMin,
     maxDaysAhead: e.maxDaysAhead,
     location: { type: e.location.type, label: locationLabel(e.location) },
+    locations: eventLocations(e).map((l) => ({ type: l.type, label: locationLabel(l) })),
     questions: e.questions.map((q) => ({
       id: q.id,
       label: q.label,
