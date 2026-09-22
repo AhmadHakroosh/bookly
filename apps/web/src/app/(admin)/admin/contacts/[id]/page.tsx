@@ -187,7 +187,10 @@ async function ContactPage({ params }: PageProps<"/admin/contacts/[id]">) {
             stripe={paymentsConfigured()}
           />
           <TaskList tasks={tasks} tz={tz} path={`/admin/contacts/${c.id}`} contactId={c.id} />
+          {/* Keyed by the stored values: a send or stage change refreshes the page with new
+              defaults, and uncontrolled inputs must remount to pick them up. */}
           <ContactDetailsForm
+            key={`${c.updatedAt?.toISOString() ?? ""}:${c.nextFollowUpAt?.toISOString() ?? ""}`}
             contact={{
               id: c.id,
               name: c.name,
