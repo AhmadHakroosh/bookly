@@ -71,3 +71,7 @@ Restore with `gunzip -c file.sql.gz | docker compose exec -T postgres psql -U bo
 ## 6. Environment reference
 
 See `.env.example`; every variable is documented inline and validated at startup by `packages/config`.
+
+## Accounts and passwords
+
+Sign-in works with a password or an emailed link. A forgotten password is reset from "Forgot your password?" on the sign-in page: Bookly emails a link (valid for one hour) to `/reset-password`, so email must be configured (`RESEND_API_KEY` or SMTP; in development links print to the console). Signed-in users change their password under `Admin → Booking page`; changing it signs out every other session.

@@ -54,6 +54,8 @@ export async function proxy(request: NextRequest) {
     if (
       pathname.startsWith("/api/") ||
       pathname.startsWith("/login") ||
+      pathname.startsWith("/forgot-password") ||
+      pathname.startsWith("/reset-password") ||
       pathname.startsWith("/docs") ||
       pathname.startsWith("/accept-invitation")
     )

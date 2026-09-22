@@ -3,6 +3,7 @@ import { timezoneList } from "@/lib/time";
 import { getProfileByUser } from "@/server/scheduling";
 import { requireStaff } from "@/server/session";
 import { getCurrentWorkspace } from "@/server/workspace";
+import { PasswordForm } from "./password-form";
 import { ProfileForm } from "./profile-form";
 
 export const metadata = { title: "Booking page" };
@@ -39,6 +40,7 @@ async function ProfilePage({ searchParams }: PageProps<"/admin/profile">) {
         }}
         zones={timezoneList()}
       />
+      <PasswordForm />
     </div>
   );
 }

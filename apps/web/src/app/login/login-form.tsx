@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -76,6 +77,14 @@ export function LoginForm({ next }: { next: string }) {
                 required
               />
             </Field>
+            <p className="-mt-2 text-right text-xs">
+              <Link
+                href={`/forgot-password?next=${encodeURIComponent(next)}`}
+                className="text-muted-foreground underline underline-offset-4 hover:text-foreground"
+              >
+                Forgot your password?
+              </Link>
+            </p>
             <Button type="submit" className="w-full" disabled={pending}>
               Sign in
             </Button>
