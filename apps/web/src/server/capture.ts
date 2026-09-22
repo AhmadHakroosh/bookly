@@ -26,12 +26,12 @@ export async function captureMeeting(
   eventType: EventType | null,
   notes: string,
 ): Promise<{ capture: Capture; tasks: Task[]; eventId: string | null }> {
-  const contact = await trackBooking(
-    workspace,
-    booking,
-    "note",
-    `Notes added for ${eventType?.title ?? "meeting"}`,
-  );
+  const existing = booking.contactId
+    ? await db().query.contacts.findFirst({ where: eq(schema.contacts.id, booking.contactId) })
+    : null;
+  const contact =
+    existing ??
+    (await trackBooking(workspace, booking, "booked", `Booked ${eventType?.title ?? "meeting"}`));
   let capture: Capture = manualCapture(notes);
   let model: string | null = null;
   if (assistantConfigured()) {

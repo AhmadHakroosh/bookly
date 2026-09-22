@@ -27,6 +27,7 @@ import { fmtDateTime } from "@/lib/time";
 import { TaskList } from "@/components/task-list";
 import { listOpenTasks } from "@/server/capture";
 import { contactBookings, contactTimeline, getContact } from "@/server/contacts";
+import { getProfileByUser } from "@/server/scheduling";
 import { requireStaff } from "@/server/session";
 import { getCurrentWorkspace } from "@/server/workspace";
 import { addNote, changeStage } from "../actions";
@@ -55,8 +56,13 @@ const ICON: Record<string, LucideIcon> = {
 };
 
 async function ContactPage({ params }: PageProps<"/admin/contacts/[id]">) {
-  const [{ id }, , ws] = await Promise.all([params, requireStaff(), getCurrentWorkspace()]);
+  const [{ id }, { session }, ws] = await Promise.all([
+    params,
+    requireStaff(),
+    getCurrentWorkspace(),
+  ]);
   if (!ws) return null;
+  const tz = (await getProfileByUser(ws.id, session.user.id))?.timezone ?? ws.timezone;
   const c = await getContact(ws.id, id);
   if (!c) notFound();
   const [events, bookings, tasks] = await Promise.all([
@@ -111,7 +117,7 @@ async function ContactPage({ params }: PageProps<"/admin/contacts/[id]">) {
                 {upcoming.map((b) => (
                   <li key={b.id} className="flex items-center justify-between gap-3 px-4 py-2">
                     <Link href={`/admin/bookings/${b.id}`} className="hover:underline">
-                      {b.eventTitle ?? "Meeting"} · {fmtDateTime(b.startAt, ws.timezone)}
+                      {b.eventTitle ?? "Meeting"} · {fmtDateTime(b.startAt, tz)}
                     </Link>
                     <Badge
                       variant={b.status === "confirmed" ? "default" : "secondary"}
@@ -166,9 +172,7 @@ async function ContactPage({ params }: PageProps<"/admin/contacts/[id]">) {
                           .join(" · ")}
                       </p>
                     ) : null}
-                    <p className="text-xs text-muted-foreground">
-                      {fmtDateTime(e.createdAt, ws.timezone)}
-                    </p>
+                    <p className="text-xs text-muted-foreground">{fmtDateTime(e.createdAt, tz)}</p>
                   </div>
                 </li>
               ))}
@@ -185,12 +189,7 @@ async function ContactPage({ params }: PageProps<"/admin/contacts/[id]">) {
             payment={templatesFor(ws).paymentRequest}
             stripe={paymentsConfigured()}
           />
-          <TaskList
-            tasks={tasks}
-            tz={ws.timezone}
-            path={`/admin/contacts/${c.id}`}
-            contactId={c.id}
-          />
+          <TaskList tasks={tasks} tz={tz} path={`/admin/contacts/${c.id}`} contactId={c.id} />
           <ContactDetailsForm
             contact={{
               id: c.id,

@@ -12,7 +12,12 @@ export function platformHost() {
 /** True when this request targets the platform host in cloud mode. */
 export async function onPlatformHost() {
   if (!isCloud()) return false;
-  const h = (await headers()).get("host")?.toLowerCase() ?? "";
+  const hs = await headers();
+  // X-Forwarded-Host carries the real host on internal renders (server-action redirects).
+  const h = (hs.get("x-forwarded-host") ?? hs.get("host") ?? "")
+    .split(",")[0]!
+    .trim()
+    .toLowerCase();
   return h === platformHost();
 }
 

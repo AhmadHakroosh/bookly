@@ -203,7 +203,13 @@ export async function removeOverride(id: string) {
 
 export async function createEventType() {
   const { session, ws } = await ctx();
-  await assertWithinLimit(ws, "eventTypes");
+  try {
+    await assertWithinLimit(ws, "eventTypes");
+  } catch (e) {
+    if (e instanceof LimitError)
+      redirect(`/admin/event-types?limit=${encodeURIComponent(e.message)}`);
+    throw e;
+  }
   const profile = await getProfileByUser(ws.id, session.user.id);
   if (!profile) redirect("/admin/profile?setup=1");
   const schedule = await ensureDefaultSchedule(ws.id, session.user.id, profile.timezone);

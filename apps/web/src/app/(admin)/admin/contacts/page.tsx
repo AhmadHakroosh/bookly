@@ -4,6 +4,7 @@ import { CONTACT_STAGES, type ContactStage } from "@bookly/db/schema";
 import { Badge } from "@/components/ui/badge";
 import { fmtDate } from "@/lib/time";
 import { listContacts } from "@/server/contacts";
+import { getProfileByUser } from "@/server/scheduling";
 import { requireStaff } from "@/server/session";
 import { getCurrentWorkspace } from "@/server/workspace";
 
@@ -17,8 +18,13 @@ const STAGE_LABEL: Record<ContactStage, string> = {
 };
 
 async function ContactsPage({ searchParams }: PageProps<"/admin/contacts">) {
-  const [, ws, sp] = await Promise.all([requireStaff(), getCurrentWorkspace(), searchParams]);
+  const [{ session }, ws, sp] = await Promise.all([
+    requireStaff(),
+    getCurrentWorkspace(),
+    searchParams,
+  ]);
   if (!ws) return null;
+  const tz = (await getProfileByUser(ws.id, session.user.id))?.timezone ?? ws.timezone;
   const q = typeof sp.q === "string" ? sp.q : "";
   const stage =
     typeof sp.stage === "string" && (CONTACT_STAGES as readonly string[]).includes(sp.stage)
@@ -83,7 +89,7 @@ async function ContactsPage({ searchParams }: PageProps<"/admin/contacts">) {
                 </p>
                 <p className="truncate text-muted-foreground">
                   {c.email} · {c.bookingsCount} booking{c.bookingsCount === 1 ? "" : "s"} · last
-                  activity {fmtDate(c.lastActivityAt, ws.timezone)}
+                  activity {fmtDate(c.lastActivityAt, tz)}
                 </p>
               </div>
               <div className="flex items-center gap-2">

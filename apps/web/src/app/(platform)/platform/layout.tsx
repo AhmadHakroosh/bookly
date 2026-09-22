@@ -3,8 +3,17 @@ import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { headers } from "next/headers";
+import { redirect } from "next/navigation";
+import { auth } from "@/lib/auth";
 import { isCloud, isPlatformAdmin } from "@/server/platform";
 import { getSession } from "@/server/session";
+
+async function signOut() {
+  "use server";
+  await auth.api.signOut({ headers: await headers() });
+  redirect("/");
+}
 
 export const metadata = { title: { default: "Bookly", template: "%s — Bookly" } };
 
@@ -46,6 +55,14 @@ async function Shell({ children }: { children: React.ReactNode }) {
                     Console
                   </Link>
                 )}
+                <form action={signOut}>
+                  <button
+                    type="submit"
+                    className="px-2 text-muted-foreground hover:text-foreground"
+                  >
+                    Sign out
+                  </button>
+                </form>
               </>
             ) : (
               <Link href="/login" className="px-2 text-muted-foreground hover:text-foreground">

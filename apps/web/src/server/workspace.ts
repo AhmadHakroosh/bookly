@@ -17,7 +17,10 @@ export const WORKSPACE_HEADER = "x-bookly-workspace";
 export const getCurrentWorkspace = cache(async (): Promise<Workspace | null> => {
   const h = await headers();
   let id = h.get(WORKSPACE_HEADER);
-  if (!id) id = (await resolveWorkspaceByHost(h.get("host")))?.workspaceId ?? null;
+  if (!id)
+    id =
+      (await resolveWorkspaceByHost(h.get("x-forwarded-host") ?? h.get("host")))?.workspaceId ??
+      null;
   if (!id) return null;
   return getWorkspaceById(id);
 });

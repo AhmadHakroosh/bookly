@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useActionState, useState } from "react";
 import { authClient } from "@/lib/auth-client";
 import { Button } from "@/components/ui/button";
@@ -14,6 +15,14 @@ export function SignupForm({ rootDomain, signedIn }: { rootDomain: string; signe
   const [pending, setPending] = useState(false);
   const [state, action, creating] = useActionState(createWorkspace, {} as CreateState);
   const [slug, setSlug] = useState("");
+  const router = useRouter();
+  const slugify = (s: string) =>
+    s
+      .toLowerCase()
+      .normalize("NFKD")
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "")
+      .slice(0, 40);
 
   async function createAccount(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -27,7 +36,9 @@ export function SignupForm({ rootDomain, signedIn }: { rootDomain: string; signe
     });
     setPending(false);
     if (res.error) return setError(res.error.message ?? "Sign-up failed");
+    setSlug((s) => s || slugify(String(fd.get("name"))));
     setStep(2);
+    router.refresh();
   }
 
   if (step === 1)

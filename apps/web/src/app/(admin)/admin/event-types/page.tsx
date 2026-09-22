@@ -9,7 +9,7 @@ import { createEventType } from "../scheduling-actions";
 
 export const metadata = { title: "Event types" };
 
-async function EventTypesPage() {
+async function EventTypesPage({ searchParams }: PageProps<"/admin/event-types">) {
   const [{ session }, ws] = await Promise.all([requireStaff(), getCurrentWorkspace()]);
   if (!ws) return null;
   const [profile, events] = await Promise.all([
@@ -17,8 +17,21 @@ async function EventTypesPage() {
     listAllEventTypes(ws.id),
   ]);
   const active = events.filter((e) => e.active);
+  const sp = await searchParams;
+  const limit = typeof sp.limit === "string" ? sp.limit : null;
   return (
     <div className="space-y-6">
+      {limit && (
+        <p
+          role="alert"
+          className="rounded-lg border border-destructive/40 bg-destructive/5 p-3 text-sm"
+        >
+          {limit}{" "}
+          <Link href="/admin/billing" className="underline underline-offset-4">
+            See plans
+          </Link>
+        </p>
+      )}
       <div className="flex items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">Event types</h1>
@@ -80,10 +93,10 @@ async function EventTypesPage() {
   );
 }
 
-export default function EventTypesPageBoundary() {
+export default function EventTypesPageBoundary(props: PageProps<"/admin/event-types">) {
   return (
     <Suspense fallback={null}>
-      <EventTypesPage />
+      <EventTypesPage {...props} />
     </Suspense>
   );
 }

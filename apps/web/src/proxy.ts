@@ -25,12 +25,24 @@ const PLATFORM_HOST = (() => {
   }
 })();
 const CLOUD = process.env.TENANCY === "multi";
+/**
+ * The host a request is really for. After a server-action `redirect()`, Next renders the
+ * target with an internal request whose Host is the server's own address and the original host
+ * in X-Forwarded-Host, so the forwarded header wins.
+ */
+function requestHost(request: NextRequest): string {
+  return (request.headers.get("x-forwarded-host") ?? request.headers.get("host") ?? "")
+    .split(",")[0]!
+    .trim()
+    .toLowerCase();
+}
+
 const notFound = (req: NextRequest) =>
   NextResponse.rewrite(new URL("/not-found", req.url), { status: 404 });
 
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  const host = (request.headers.get("host") ?? "").toLowerCase();
+  const host = requestHost(request);
 
   // Cloud mode: the platform host serves marketing, sign-up, pricing and the operator console.
   if (CLOUD && host === PLATFORM_HOST) {
@@ -54,12 +66,12 @@ export async function proxy(request: NextRequest) {
 
   // Built-in video on its own host (MEET_URL, e.g. meet.example.com): /<room> → /meet/<room>.
   const mh = meetHost();
-  if (mh && request.headers.get("host") === mh && !pathname.startsWith("/meet/")) {
+  if (mh && host === mh && !pathname.startsWith("/meet/")) {
     const url = request.nextUrl.clone();
     url.pathname = pathname === "/" ? "/meet" : `/meet${pathname}`;
     return NextResponse.rewrite(url);
   }
-  const workspace = await resolveWorkspaceByHost(request.headers.get("host"));
+  const workspace = await resolveWorkspaceByHost(host);
 
   if (!workspace) {
     if (pathname.startsWith("/api/")) return NextResponse.next();

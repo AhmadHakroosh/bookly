@@ -18,6 +18,11 @@ export function CaptureForm({
 }) {
   const [state, action, pending] = useActionState(captureNotes, {} as CaptureState);
   const [notes, setNotes] = useState("");
+  const [clearedFor, setClearedFor] = useState<CaptureState | null>(null);
+  if (state.ok && clearedFor !== state) {
+    setClearedFor(state);
+    setNotes("");
+  }
   const followUp = state.followUp ?? draft;
   const [subject, setSubject] = useState(followUp?.subject ?? "");
   const [body, setBody] = useState(followUp?.body ?? "");

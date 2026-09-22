@@ -32,6 +32,8 @@ async function BookingBriefPage({ params }: PageProps<"/admin/bookings/[id]">) {
     where: and(eq(schema.bookings.id, id), eq(schema.bookings.workspaceId, ws.id)),
   });
   if (!b) notFound();
+  const hostProfile = await getProfileByUser(ws.id, b.hostUserId);
+  const tz = hostProfile?.timezone ?? ws.timezone;
   const et = b.eventTypeId
     ? await db().query.eventTypes.findFirst({ where: eq(schema.eventTypes.id, b.eventTypeId) })
     : null;
@@ -51,7 +53,6 @@ async function BookingBriefPage({ params }: PageProps<"/admin/bookings/[id]">) {
         { capture?: { followUp?: { subject: string; body: string } | null } } | undefined
     )?.capture?.followUp ??
     null;
-  const hostProfile = await getProfileByUser(ws.id, b.hostUserId);
   const contact = b.contactId
     ? await db().query.contacts.findFirst({
         where: eq(schema.contacts.id, b.contactId),
@@ -74,7 +75,7 @@ async function BookingBriefPage({ params }: PageProps<"/admin/bookings/[id]">) {
           )}
         </h1>
         <p className="text-sm text-muted-foreground">
-          {fmtDateTime(b.startAt, ws.timezone)} ·{" "}
+          {fmtDateTime(b.startAt, tz)} ·{" "}
           {b.meetingUrl ? (
             <ExternalLink href={b.meetingUrl}>Join meeting</ExternalLink>
           ) : (
@@ -100,7 +101,7 @@ async function BookingBriefPage({ params }: PageProps<"/admin/bookings/[id]">) {
           {assistantConfigured()
             ? "Written by the assistant from this contact's timeline and answers."
             : "Plain summary. Set ANTHROPIC_API_KEY to get a written briefing."}
-          {b.briefAt ? ` Updated ${fmtDateTime(b.briefAt, ws.timezone)}.` : ""}
+          {b.briefAt ? ` Updated ${fmtDateTime(b.briefAt, tz)}.` : ""}
         </p>
       </section>
       {lastCapture && (
@@ -108,13 +109,13 @@ async function BookingBriefPage({ params }: PageProps<"/admin/bookings/[id]">) {
           <h2 className="text-base font-semibold tracking-tight">Captured</h2>
           <p className="mt-2 whitespace-pre-line">{lastCapture.summary}</p>
           <p className="mt-2 text-xs text-muted-foreground">
-            {fmtDateTime(lastCapture.createdAt, ws.timezone)}
+            {fmtDateTime(lastCapture.createdAt, tz)}
           </p>
         </section>
       )}
       <TaskList
         tasks={tasks}
-        tz={ws.timezone}
+        tz={tz}
         path={`/admin/bookings/${b.id}`}
         contactId={b.contactId}
         bookingId={b.id}
@@ -152,7 +153,7 @@ async function BookingBriefPage({ params }: PageProps<"/admin/bookings/[id]">) {
           mode={et?.autoCapture ?? "off"}
           transcript={transcript}
           names={{ host: "You", attendee: b.attendeeName }}
-          tz={ws.timezone}
+          tz={tz}
         />
       )}
       {(past || b.status === "confirmed") && (
