@@ -26,7 +26,6 @@ export function Outreach({
       <div className="mt-2 flex flex-wrap gap-2">
         <Button
           type="button"
-          size="sm"
           variant={open === "proposal" ? "default" : "outline"}
           onClick={() => setOpen(open === "proposal" ? null : "proposal")}
         >
@@ -34,7 +33,6 @@ export function Outreach({
         </Button>
         <Button
           type="button"
-          size="sm"
           variant={open === "payment" ? "default" : "outline"}
           onClick={() => setOpen(open === "payment" ? null : "payment")}
         >
@@ -62,9 +60,7 @@ export function Outreach({
             />
             days
           </label>
-          <Button type="submit" size="sm">
-            Send proposal
-          </Button>
+          <Button type="submit">Send proposal</Button>
         </form>
       )}
       {open === "payment" && (
@@ -107,9 +103,7 @@ export function Outreach({
             />
             days
           </label>
-          <Button type="submit" size="sm">
-            Send request
-          </Button>
+          <Button type="submit">Send request</Button>
         </form>
       )}
     </section>

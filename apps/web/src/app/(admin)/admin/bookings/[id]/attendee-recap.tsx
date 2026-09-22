@@ -48,7 +48,7 @@ export function AttendeeRecap({
             Sent {new Date(sentAt).toLocaleString()}
           </span>
         ) : (
-          <Button type="button" size="sm" variant="outline" onClick={() => setOpen((v) => !v)}>
+          <Button type="button" variant="outline" onClick={() => setOpen((v) => !v)}>
             {open ? "Close" : "Prepare"}
           </Button>
         )}
@@ -93,7 +93,7 @@ export function AttendeeRecap({
             rows={10}
             className={field}
           />
-          <Button type="submit" size="sm" disabled={!subject.trim()}>
+          <Button type="submit" disabled={!subject.trim()}>
             Send recap to {attendeeName}
           </Button>
         </form>

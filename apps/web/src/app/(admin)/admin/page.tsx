@@ -157,9 +157,7 @@ async function AdminInbox() {
                       Brief
                     </Link>
                     <form action={hostConfirm.bind(null, b.id)}>
-                      <Button type="submit" size="sm">
-                        Accept
-                      </Button>
+                      <Button type="submit">Accept</Button>
                     </form>
                   </div>
                 </div>
@@ -177,7 +175,7 @@ async function AdminInbox() {
                       placeholder="Thanks for reaching out — here is the short answer…"
                       className="flex-1 rounded-lg border bg-background px-3 py-2 text-sm"
                     />
-                    <Button type="submit" size="sm" variant="outline">
+                    <Button type="submit" variant="outline">
                       Send &amp; withdraw request
                     </Button>
                   </form>
@@ -320,7 +318,7 @@ async function AdminInbox() {
                         Email
                       </a>
                       <form action={snoozeContact.bind(null, c.id, 7)}>
-                        <Button type="submit" size="sm" variant="ghost">
+                        <Button type="submit" variant="ghost">
                           Snooze 7d
                         </Button>
                       </form>

@@ -103,7 +103,7 @@ async function AdminShell({ children }: { children: React.ReactNode }) {
             </span>
             <ThemeToggle />
             <form action={signOut}>
-              <Button variant="outline" size="sm" type="submit">
+              <Button variant="outline" type="submit">
                 Sign out
               </Button>
             </form>

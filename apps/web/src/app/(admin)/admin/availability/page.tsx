@@ -77,9 +77,7 @@ async function AvailabilityPage() {
           <label className="inline-flex items-center gap-1 pb-1.5">
             <input type="checkbox" name="blocked" /> Unavailable all day
           </label>
-          <Button type="submit" size="sm">
-            Add
-          </Button>
+          <Button type="submit">Add</Button>
         </form>
         <ul className="space-y-1 text-sm">
           {s.overrides.map((o) => (
@@ -94,7 +92,7 @@ async function AvailabilityPage() {
                   : `${minToHHMM(o.startMin)}–${minToHHMM(o.endMin!)}`}
               </span>
               <form action={removeOverride.bind(null, o.id)}>
-                <Button type="submit" variant="ghost" size="sm">
+                <Button type="submit" variant="ghost">
                   Remove
                 </Button>
               </form>

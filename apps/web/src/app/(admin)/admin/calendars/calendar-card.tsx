@@ -77,7 +77,7 @@ export function CalendarCard({
             variant="outline"
           />
           <form action={() => disconnect(integration.provider)}>
-            <Button variant="ghost" size="sm" type="submit">
+            <Button variant="ghost" type="submit">
               Disconnect
             </Button>
           </form>
@@ -126,7 +126,7 @@ export function CalendarCard({
           </select>
         </div>
         <div className="flex items-center gap-3">
-          <Button type="submit" size="sm" disabled={pending}>
+          <Button type="submit" disabled={pending}>
             {pending ? "Saving…" : "Save"}
           </Button>
           <button

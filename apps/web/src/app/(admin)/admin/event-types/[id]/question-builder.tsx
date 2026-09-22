@@ -111,7 +111,6 @@ export function QuestionBuilder({
         <Button
           type="button"
           variant="outline"
-          size="sm"
           onClick={() =>
             setQs((all) => [
               ...all,

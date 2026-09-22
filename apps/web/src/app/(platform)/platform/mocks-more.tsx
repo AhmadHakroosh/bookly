@@ -178,11 +178,11 @@ export function FollowUpMock() {
         <p>Let me know if I missed anything.</p>
       </div>
       <div className="mt-3 flex gap-2">
-        <Button size="sm" className="pointer-events-none">
+        <Button className="pointer-events-none">
           <SendIcon data-icon="inline-start" />
           Send
         </Button>
-        <Button size="sm" variant="outline" className="pointer-events-none">
+        <Button variant="outline" className="pointer-events-none">
           Edit
         </Button>
       </div>

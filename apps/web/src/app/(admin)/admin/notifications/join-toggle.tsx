@@ -11,7 +11,6 @@ export function JoinToggle({ enabled }: { enabled: boolean }) {
     <Button
       type="button"
       variant={enabled ? "outline" : "default"}
-      size="sm"
       disabled={pending}
       onClick={() =>
         start(async () => {

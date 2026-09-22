@@ -238,7 +238,6 @@ export function RoutingFormEditor({
                 <Button
                   type="button"
                   variant="outline"
-                  size="sm"
                   disabled={questionIds.length === 0}
                   onClick={() =>
                     setRule(i, {
@@ -264,7 +263,6 @@ export function RoutingFormEditor({
             <Button
               type="button"
               variant="outline"
-              size="sm"
               onClick={() =>
                 setRules((all) => [
                   ...all,
@@ -297,7 +295,6 @@ export function RoutingFormEditor({
           <Button
             type="button"
             variant="destructive"
-            size="sm"
             onClick={() => confirm("Delete this routing form?") && deleteRoutingForm(form.id)}
           >
             Delete

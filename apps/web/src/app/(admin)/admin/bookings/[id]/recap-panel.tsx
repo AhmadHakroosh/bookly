@@ -59,13 +59,13 @@ export function RecapPanel({
             <Badge variant="secondary">Reviewed</Badge>
           ) : (
             <form action={markRecapReviewedAction.bind(null, bookingId)}>
-              <Button type="submit" size="sm" variant="ghost">
+              <Button type="submit" variant="ghost">
                 Mark reviewed
               </Button>
             </form>
           )}
           <form action={regenerateRecapAction.bind(null, bookingId)}>
-            <Button type="submit" size="sm" variant="ghost">
+            <Button type="submit" variant="ghost">
               Regenerate
             </Button>
           </form>
@@ -162,7 +162,7 @@ export function RecapPanel({
             })}
           </ul>
           {pending.length > 0 && (
-            <Button type="submit" size="sm" className="mt-2">
+            <Button type="submit" className="mt-2">
               Create {pending.length === r.actions.length ? "all" : "selected"} tasks
             </Button>
           )}
@@ -219,7 +219,7 @@ export function RecapPanel({
           </p>
           {stageMove && !row.accepted.stage && contactId && (
             <form action={applyRecapStageAction.bind(null, bookingId)}>
-              <Button type="submit" size="sm" variant="outline">
+              <Button type="submit" variant="outline">
                 Move to {r.suggestedStage}
               </Button>
             </form>

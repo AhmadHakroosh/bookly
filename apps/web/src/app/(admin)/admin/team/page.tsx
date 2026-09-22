@@ -71,12 +71,12 @@ async function TeamPage() {
               {canManage && m.role !== "owner" && m.userId !== session.user.id && (
                 <>
                   <form action={setRole.bind(null, m.id, m.role === "admin" ? "member" : "admin")}>
-                    <Button type="submit" variant="ghost" size="sm">
+                    <Button type="submit" variant="ghost">
                       {m.role === "admin" ? "Make member" : "Make admin"}
                     </Button>
                   </form>
                   <form action={removeMember.bind(null, m.id)}>
-                    <Button type="submit" variant="ghost" size="sm">
+                    <Button type="submit" variant="ghost">
                       Remove
                     </Button>
                   </form>
@@ -97,7 +97,7 @@ async function TeamPage() {
                 </span>
                 {canManage && (
                   <form action={cancelInvite.bind(null, i.id)}>
-                    <Button type="submit" variant="ghost" size="sm">
+                    <Button type="submit" variant="ghost">
                       Cancel
                     </Button>
                   </form>

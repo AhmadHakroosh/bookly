@@ -311,16 +311,14 @@ export function RecapMock({ compact = false }: { compact?: boolean }) {
             </li>
           ))}
         </ul>
-        <Button size="sm" className="pointer-events-none mt-2">
-          Create all tasks
-        </Button>
+        <Button className="pointer-events-none mt-2">Create all tasks</Button>
       </div>
       <div className="flex items-center justify-between gap-3 rounded-lg bg-muted/50 p-3">
         <p>
           <span className="font-medium">Next step: </span>proposal by Wednesday
           <span className="block text-muted-foreground">Suggested stage: active</span>
         </p>
-        <Button size="sm" variant="outline" className="pointer-events-none">
+        <Button variant="outline" className="pointer-events-none">
           Move to active
         </Button>
       </div>

@@ -99,7 +99,6 @@ async function Shell({ children }: { children: React.ReactNode }) {
               <>
                 <Button
                   variant="ghost"
-                  size="sm"
                   nativeButton={false}
                   render={<Link href="/workspaces" />}
                   className="hidden sm:inline-flex"
@@ -109,7 +108,6 @@ async function Shell({ children }: { children: React.ReactNode }) {
                 {admin && (
                   <Button
                     variant="ghost"
-                    size="sm"
                     nativeButton={false}
                     render={<Link href="/console" />}
                     className="hidden sm:inline-flex"
@@ -118,7 +116,7 @@ async function Shell({ children }: { children: React.ReactNode }) {
                   </Button>
                 )}
                 <form action={signOut}>
-                  <Button variant="ghost" size="sm" type="submit" className="hidden sm:inline-flex">
+                  <Button variant="ghost" type="submit" className="hidden sm:inline-flex">
                     Sign out
                   </Button>
                 </form>
@@ -126,7 +124,6 @@ async function Shell({ children }: { children: React.ReactNode }) {
             ) : (
               <Button
                 variant="ghost"
-                size="sm"
                 nativeButton={false}
                 render={<Link href="/login" />}
                 className="hidden sm:inline-flex"
@@ -134,7 +131,7 @@ async function Shell({ children }: { children: React.ReactNode }) {
                 Sign in
               </Button>
             )}
-            <Button size="sm" nativeButton={false} render={<Link href="/signup" />}>
+            <Button nativeButton={false} render={<Link href="/signup" />}>
               Get started
             </Button>
             <Sheet>

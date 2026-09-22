@@ -76,7 +76,7 @@ export function TaskList({
           aria-label="Due date"
           className="h-8 rounded-lg border bg-background px-2 text-sm"
         />
-        <Button type="submit" size="sm" variant="outline">
+        <Button type="submit" variant="outline">
           Add
         </Button>
       </form>

@@ -93,21 +93,21 @@ async function DomainsPage() {
               <TableCell className="text-right whitespace-nowrap">
                 {!d.verifiedAt && (
                   <form action={checkDomain.bind(null, d.id)} className="inline">
-                    <Button type="submit" variant="outline" size="sm">
+                    <Button type="submit" variant="outline">
                       Verify
                     </Button>
                   </form>
                 )}
                 {d.verifiedAt && !d.isPrimary && (
                   <form action={makePrimary.bind(null, d.id)} className="inline">
-                    <Button type="submit" variant="ghost" size="sm">
+                    <Button type="submit" variant="ghost">
                       Make primary
                     </Button>
                   </form>
                 )}
                 {!d.isPrimary && (
                   <form action={removeDomain.bind(null, d.id)} className="inline">
-                    <Button type="submit" variant="ghost" size="sm">
+                    <Button type="submit" variant="ghost">
                       Remove
                     </Button>
                   </form>

@@ -45,7 +45,6 @@ export function CaptureForm({
         {transcript && (
           <Button
             type="button"
-            size="sm"
             variant="outline"
             className="mt-3"
             onClick={() => setNotes(transcript)}
@@ -73,7 +72,7 @@ export function CaptureForm({
             Captured. Tasks and the timeline are updated below.
           </p>
         )}
-        <Button type="submit" size="sm" className="mt-3" disabled={pending}>
+        <Button type="submit" className="mt-3" disabled={pending}>
           {pending ? "Working…" : "Capture"}
         </Button>
       </form>
@@ -99,7 +98,6 @@ export function CaptureForm({
         </p>
         <Button
           type="submit"
-          size="sm"
           variant="outline"
           className="mt-3"
           disabled={!subject.trim() || !body.trim()}

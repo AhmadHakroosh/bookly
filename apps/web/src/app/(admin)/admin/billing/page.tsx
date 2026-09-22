@@ -78,7 +78,7 @@ async function BillingPage({ searchParams }: PageProps<"/admin/billing">) {
               </ul>
               {canManage && p.id !== current && p.id !== "free" && billingConfigured() && (
                 <form action={upgrade.bind(null, p.id)} className="mt-4">
-                  <Button type="submit" size="sm" className="w-full">
+                  <Button type="submit" className="w-full">
                     {current === "free" ? `Upgrade to ${p.name}` : `Switch to ${p.name}`}
                   </Button>
                 </form>

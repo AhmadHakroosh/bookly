@@ -21,7 +21,7 @@ async function WorkspacesPage() {
           <h1 className="text-2xl font-semibold tracking-tight">Your workspaces</h1>
           <p className="text-sm text-muted-foreground">Signed in as {session.user.email}</p>
         </div>
-        <Button size="sm" nativeButton={false} render={<Link href="/signup" />}>
+        <Button nativeButton={false} render={<Link href="/signup" />}>
           New workspace
         </Button>
       </div>

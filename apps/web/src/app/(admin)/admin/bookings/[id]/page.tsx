@@ -91,7 +91,7 @@ async function BookingBriefPage({ params }: PageProps<"/admin/bookings/[id]">) {
         <div className="flex items-center justify-between gap-3">
           <h2 className="text-base font-semibold tracking-tight">Briefing</h2>
           <form action={regenerateBrief.bind(null, b.id)}>
-            <Button type="submit" size="sm" variant="outline">
+            <Button type="submit" variant="outline">
               Regenerate
             </Button>
           </form>

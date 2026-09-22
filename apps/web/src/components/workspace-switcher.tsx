@@ -55,7 +55,6 @@ export function WorkspaceSwitcher({
         render={
           <Button
             variant="ghost"
-            size="sm"
             className="-ml-2 gap-1.5 font-semibold tracking-tight"
             aria-label={`Workspace: ${current.name}. Switch workspace`}
           />

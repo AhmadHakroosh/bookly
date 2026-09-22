@@ -94,7 +94,7 @@ async function ApiPage() {
                     <Badge variant="secondary">Revoked</Badge>
                   ) : (
                     <form action={revokeApiKey.bind(null, k.id)}>
-                      <Button type="submit" variant="ghost" size="sm">
+                      <Button type="submit" variant="ghost">
                         Revoke
                       </Button>
                     </form>
@@ -149,17 +149,17 @@ async function ApiPage() {
                 </TableCell>
                 <TableCell className="text-right whitespace-nowrap">
                   <form action={pingWebhook.bind(null, h.id)} className="inline">
-                    <Button type="submit" variant="ghost" size="sm">
+                    <Button type="submit" variant="ghost">
                       Ping
                     </Button>
                   </form>
                   <form action={toggleWebhook.bind(null, h.id, !h.active)} className="inline">
-                    <Button type="submit" variant="ghost" size="sm">
+                    <Button type="submit" variant="ghost">
                       {h.active ? "Disable" : "Enable"}
                     </Button>
                   </form>
                   <form action={deleteWebhook.bind(null, h.id)} className="inline">
-                    <Button type="submit" variant="ghost" size="sm">
+                    <Button type="submit" variant="ghost">
                       Delete
                     </Button>
                   </form>
@@ -209,7 +209,7 @@ async function ApiPage() {
                     <TableCell className="text-right">
                       {d.status !== "delivered" && (
                         <form action={retryDelivery.bind(null, d.id)}>
-                          <Button type="submit" variant="ghost" size="sm">
+                          <Button type="submit" variant="ghost">
                             Retry
                           </Button>
                         </form>

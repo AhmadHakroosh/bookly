@@ -460,7 +460,6 @@ export function EventTypeForm({
           <Button
             type="button"
             variant="destructive"
-            size="sm"
             onClick={() => confirm("Delete this event type?") && deleteEventType(initial.id)}
           >
             Delete

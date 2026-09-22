@@ -102,7 +102,7 @@ async function ContactPage({ params }: PageProps<"/admin/contacts/[id]">) {
               </option>
             ))}
           </select>
-          <Button type="submit" size="sm" variant="outline">
+          <Button type="submit" variant="outline">
             Update
           </Button>
         </form>
@@ -138,9 +138,7 @@ async function ContactPage({ params }: PageProps<"/admin/contacts/[id]">) {
                 placeholder="Add a note…"
                 className="h-9 flex-1 rounded-lg border bg-background px-3 text-sm"
               />
-              <Button type="submit" size="sm">
-                Add
-              </Button>
+              <Button type="submit">Add</Button>
             </form>
             <ol className="mt-3 space-y-3">
               {events.map((e) => (

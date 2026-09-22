@@ -72,7 +72,7 @@ export function TranscriptPanel({
             </pre>
           </details>
           <form action={deleteTranscriptAction.bind(null, bookingId)} className="mt-3">
-            <Button type="submit" size="sm" variant="ghost">
+            <Button type="submit" variant="ghost">
               Delete transcript
             </Button>
           </form>

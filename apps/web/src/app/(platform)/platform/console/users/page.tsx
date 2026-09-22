@@ -49,7 +49,7 @@ async function UsersPage({ searchParams }: PageProps<"/platform/console/users">)
             </div>
             {u.banned ? (
               <form action={unbanUser.bind(null, u.id)}>
-                <Button type="submit" variant="outline" size="sm">
+                <Button type="submit" variant="outline">
                   Unban
                 </Button>
               </form>
@@ -60,7 +60,7 @@ async function UsersPage({ searchParams }: PageProps<"/platform/console/users">)
                   placeholder="Reason"
                   className="h-8 w-40 rounded-md border bg-background px-2 text-sm"
                 />
-                <Button type="submit" variant="ghost" size="sm">
+                <Button type="submit" variant="ghost">
                   Ban
                 </Button>
               </form>

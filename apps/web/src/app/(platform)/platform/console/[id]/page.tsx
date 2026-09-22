@@ -137,13 +137,13 @@ async function WorkspacePage({ params }: PageProps<"/platform/console/[id]">) {
           <h3 className="text-base font-semibold tracking-tight">Actions</h3>
           <div className="mt-3 flex flex-wrap items-center gap-2">
             <form action={impersonateOwner.bind(null, ws.id)}>
-              <Button type="submit" variant="outline" size="sm">
+              <Button type="submit" variant="outline">
                 Sign in as owner
               </Button>
             </form>
             {ws.suspendedAt ? (
               <form action={unsuspendWorkspace.bind(null, ws.id)}>
-                <Button type="submit" variant="outline" size="sm">
+                <Button type="submit" variant="outline">
                   Unsuspend
                 </Button>
               </form>
@@ -154,7 +154,7 @@ async function WorkspacePage({ params }: PageProps<"/platform/console/[id]">) {
                   placeholder="Reason"
                   className="h-8 w-40 rounded-md border bg-background px-2 text-sm"
                 />
-                <Button type="submit" variant="ghost" size="sm">
+                <Button type="submit" variant="ghost">
                   Suspend
                 </Button>
               </form>
@@ -193,13 +193,11 @@ async function WorkspacePage({ params }: PageProps<"/platform/console/[id]">) {
               defaultValue={ws.planNote ?? ""}
               className="h-8 w-52 rounded-lg border bg-background px-2 text-sm"
             />
-            <Button type="submit" size="sm">
-              Set plan
-            </Button>
+            <Button type="submit">Set plan</Button>
           </form>
           {ws.planManagedBy === "operator" && (
             <form action={releasePlan.bind(null, ws.id)} className="mt-2">
-              <Button type="submit" variant="ghost" size="sm">
+              <Button type="submit" variant="ghost">
                 Release to Stripe
               </Button>
             </form>

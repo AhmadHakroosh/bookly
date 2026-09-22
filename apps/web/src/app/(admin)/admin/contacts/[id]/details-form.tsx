@@ -59,7 +59,7 @@ export function ContactDetailsForm({ contact }: { contact: Values }) {
           <FieldLabel htmlFor="notes">Notes</FieldLabel>
           <Textarea id="notes" name="notes" rows={5} defaultValue={contact.notes} />
         </Field>
-        <Button type="submit" size="sm" disabled={pending}>
+        <Button type="submit" disabled={pending}>
           {pending ? "Saving…" : "Save"}
         </Button>
       </FieldGroup>

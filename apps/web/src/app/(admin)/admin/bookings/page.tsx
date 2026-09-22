@@ -118,21 +118,19 @@ async function BookingsPage({ searchParams }: PageProps<"/admin/bookings">) {
               )}
               {b.status === "pending" && (
                 <form action={hostConfirm.bind(null, b.id)}>
-                  <Button type="submit" size="sm">
-                    Confirm
-                  </Button>
+                  <Button type="submit">Confirm</Button>
                 </form>
               )}
               {past && (b.status === "confirmed" || b.status === "completed") && (
                 <form action={hostMark.bind(null, b.id, "no_show")}>
-                  <Button type="submit" variant="ghost" size="sm">
+                  <Button type="submit" variant="ghost">
                     No-show
                   </Button>
                 </form>
               )}
               {past && b.status === "no_show" && (
                 <form action={hostMark.bind(null, b.id, "completed")}>
-                  <Button type="submit" variant="ghost" size="sm">
+                  <Button type="submit" variant="ghost">
                     Undo no-show
                   </Button>
                 </form>
@@ -144,7 +142,7 @@ async function BookingsPage({ searchParams }: PageProps<"/admin/bookings">) {
                     placeholder="Reason"
                     className="h-7 w-32 rounded-md border bg-background px-2 text-xs"
                   />
-                  <Button type="submit" variant="ghost" size="sm">
+                  <Button type="submit" variant="ghost">
                     Cancel
                   </Button>
                 </form>
@@ -181,7 +179,7 @@ async function BookingsPage({ searchParams }: PageProps<"/admin/bookings">) {
                   </p>
                 </div>
                 <form action={hostRemoveWaitlist.bind(null, w.id)}>
-                  <Button type="submit" variant="ghost" size="sm">
+                  <Button type="submit" variant="ghost">
                     Remove
                   </Button>
                 </form>
