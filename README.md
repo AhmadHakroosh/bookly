@@ -12,7 +12,7 @@
   <a href="CHANGELOG.md"><img alt="Changelog" src="https://img.shields.io/badge/changelog-unreleased-lightgrey.svg" /></a>
 </p>
 
-Bookly is an open-source scheduling platform for consultants, coaches, advisors, agencies and small teams who live off their meetings. It takes bookings like Calendly or Cal.com, then does the part they leave to you: it remembers every person, briefs you before the call, transcribes and recaps the call with consent, turns the recap into tasks and follow-ups with one click, and nudges you when someone goes quiet. Self-host it with Docker or use the hosted version; every feature is in the open-source core.
+Bookly is an open-source scheduling platform for consultants, coaches, advisors, agencies and small teams who live off their meetings. It takes bookings like Calendly or Cal.com, then does the part they leave to you: it remembers every person, briefs you before the call, transcribes and recaps the call with consent, turns the recap into tasks and follow-ups with one click, and nudges you when someone goes quiet. Self-host it with Docker or use the hosted version at [bookly-app.io](https://bookly-app.io); every feature is in the open-source core.
 
 The name and the mark come from the Arabic بُكْلة, "buckle": the logo is a lowercase b whose stem is the strap and whose bowl is the buckle frame. A buckle fastens two sides together; so does a meeting.
 

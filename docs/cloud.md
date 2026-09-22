@@ -95,6 +95,30 @@ path on the platform host is a 404. Tenant hosts stay out of search engines.
   before you take paying customers, and update `legalUpdated` in
   `apps/web/src/app/(platform)/platform/site.ts` when you change them.
 
+## Deploying on Vercel (bookly-app.io)
+
+The production layout: platform `https://bookly-app.io`, tenants `<slug>.bookly-app.io`, built-in
+video `https://meet.bookly-app.io`, `www` redirected to the apex by the proxy.
+
+1. **DNS.** Point the domain's nameservers at Vercel (a wildcard domain on Vercel needs Vercel
+   DNS). In the Vercel project add `bookly-app.io`, `www.bookly-app.io`, `*.bookly-app.io` and
+   `meet.bookly-app.io`. Vercel issues the wildcard certificate.
+2. **Project.** Root Directory `apps/web`, Node 24, install with pnpm. `apps/web/vercel.json`
+   keeps a daily `/api/cron/tick` as the safety net behind QStash.
+3. **Environment.** Import `.env.cloud` from the repository root (it is git-ignored and carries
+   the fixed values: hosts, drivers, `JOBS_WORKER=false`, `TELEMETRY_URL`) and fill in each
+   `SET:` line: Neon, `AUTH_SECRET`, Resend (verify `bookly-app.io` there first), R2 or S3,
+   Upstash Redis and QStash, Anthropic, Daily, the OAuth apps and Stripe. `APP_URL` is read at
+   build time too, so set it before the first build.
+4. **Database.** From your machine: `DATABASE_URL='<neon pooled url>' pnpm db:migrate`.
+5. **Stripe.** Two webhook endpoints: `https://bookly-app.io/api/webhooks/stripe` on your
+   account (subscriptions and Checkout) and `https://bookly-app.io/api/webhooks/stripe/connect`
+   of type *Connected accounts* (`docs/payments.md`, "Cloud mode"). Enable Connect Express and
+   set the platform name and icon hosts see during onboarding. Set the fee in Console → Payments.
+6. **After the first deploy.** Sign in with an address in `PLATFORM_ADMIN_EMAILS`, open
+   `/console/health` and `/console/payments`, re-register the Daily webhook from Admin →
+   Notifications of your own workspace, and send yourself a booking end to end.
+
 ## Local development
 
 `TENANCY=multi APP_URL=http://localhost:3002 ROOT_DOMAIN=localhost:3002`. Subdomains of localhost

@@ -63,6 +63,12 @@ export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const host = requestHost(request);
 
+  // www is not a tenant: send it to the apex with the path intact.
+  if (CLOUD && host === `www.${PLATFORM_HOST}`) {
+    const url = request.nextUrl.clone();
+    url.host = PLATFORM_HOST;
+    return NextResponse.redirect(url, 308);
+  }
   // Cloud mode: the platform host serves marketing, sign-up, pricing and the operator console.
   if (CLOUD && host === PLATFORM_HOST) {
     if (pathname.startsWith("/platform")) return notFound(request);

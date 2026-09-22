@@ -96,7 +96,7 @@ export const envSchema = z.object({
   QSTASH_CURRENT_SIGNING_KEY: z.string().optional(),
   QSTASH_NEXT_SIGNING_KEY: z.string().optional(),
   UPSTASH_REDIS_REST_TOKEN: z.string().optional(),
-  TELEMETRY_URL: z.url().default("https://bookly.ahmadhakroosh.com/api/telemetry"),
+  TELEMETRY_URL: z.url().default("https://bookly-app.io/api/telemetry"),
 
   // ---- Text messages (Twilio) for SMS / WhatsApp reminders and host pings ----
   TWILIO_ACCOUNT_SID: z.string().optional(),
