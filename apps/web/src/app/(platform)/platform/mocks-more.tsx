@@ -210,3 +210,55 @@ export function StatCard({
     </div>
   );
 }
+
+/** The confirmation email as the guest sees it: the workspace's logo, name and accent. */
+export function EmailMock() {
+  return (
+    <div
+      aria-hidden
+      className="force-light rounded-xl border border-black/10 bg-[#f4f4f5] p-4 text-sm text-foreground shadow-xl shadow-black/15"
+    >
+      <div className="mb-3 flex items-center justify-between text-[11px] text-muted-foreground">
+        <span>
+          From{" "}
+          <span className="font-medium text-foreground">Dana Weiss via Dana Weiss Consulting</span>
+        </span>
+        <span>Reply-To dana@…</span>
+      </div>
+      <div className="mb-2 flex items-center gap-2 text-xs font-semibold">
+        <span className="flex size-5 items-center justify-center rounded-md bg-neutral-950 text-[10px] font-bold text-white">
+          D
+        </span>
+        Dana Weiss Consulting
+      </div>
+      <div className="rounded-xl border border-black/10 bg-white p-4">
+        <div className="mb-3 h-1 w-10 rounded bg-(--brand)" />
+        <p className="text-base font-semibold tracking-tight">You&apos;re booked</p>
+        <p className="mt-2 text-xs leading-relaxed">
+          Hi Omar, looking forward to Wednesday. I&apos;ve read your notes about the three clinics
+          and will bring a first sketch of the booking flow.
+        </p>
+        <div className="mt-3 space-y-1.5 rounded-lg bg-[#fafafa] p-2.5 text-xs">
+          {[
+            ["What", "Discovery call · 45 min"],
+            ["When", "Wed, Sep 30, 15:00 (Amsterdam)"],
+            ["Where", "Video call, link in this email"],
+          ].map(([k, v]) => (
+            <p key={k} className="flex gap-3">
+              <span className="w-12 text-[10px] tracking-wide text-muted-foreground uppercase">
+                {k}
+              </span>
+              <span>{v}</span>
+            </p>
+          ))}
+        </div>
+        <span className="mt-3 inline-block rounded-lg border-b-2 border-(--brand) bg-neutral-950 px-3 py-1.5 text-xs font-semibold text-white">
+          Reschedule or cancel
+        </span>
+      </div>
+      <p className="mt-2 text-[10px] text-muted-foreground">
+        Your words at the top, your logo and colour, and replies go straight to you.
+      </p>
+    </div>
+  );
+}

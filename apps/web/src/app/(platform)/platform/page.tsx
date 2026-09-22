@@ -8,6 +8,7 @@ import {
   CheckIcon,
   CodeIcon,
   CreditCardIcon,
+  DatabaseIcon,
   GlobeIcon,
   MinusIcon,
   RepeatIcon,
@@ -29,7 +30,7 @@ import {
   InboxMock,
   RecapMock,
 } from "./mocks";
-import { FollowUpMock, LiveTranscriptMock, RoutingMock, SeatsMock } from "./mocks-more";
+import { EmailMock, FollowUpMock, LiveTranscriptMock, RoutingMock, SeatsMock } from "./mocks-more";
 import { PlanCard } from "./plan-card";
 import { JsonLd, organizationLd, softwareLd, websiteLd } from "./json-ld";
 import { pageMetadata, SITE } from "./site";
@@ -93,9 +94,9 @@ const TABLE_STAKES: [LucideIcon, string, string][] = [
     "Blocklists, per-form throttles and booking quotas so a public page stays usable.",
   ],
   [
-    CodeIcon,
-    "Open source",
-    "AGPL-3.0, Docker Compose in four commands, every feature unlocked when you self-host.",
+    DatabaseIcon,
+    "Your data, your call",
+    "Export the whole workspace as JSON, delete it or your account in one click, transcripts expire on your schedule.",
   ],
 ];
 
@@ -127,6 +128,8 @@ const COMPARE: [string, Cmp, Cmp][] = [
   ["One click from recap to tasks, stage and follow-up email", false, true],
   ["Availability that treats customers and cold leads differently", false, true],
   ["Contact timeline built in, synced to HubSpot or Pipedrive", false, true],
+  ["Branded emails in your name, with wording you control", "some", true],
+  ["Export or delete everything yourself, no ticket needed", "some", true],
   ["Self-host with every feature, AGPL-licensed", false, true],
 ];
 
@@ -400,8 +403,27 @@ export default function LandingPage() {
           flip
         >
           Bookly drafts the follow-up from the recap: what you agreed, who does what, by when. Edit
-          a line, hit send. Proposals and payment requests use your templates and a Stripe link for
-          the amount, and every send lands on the contact&apos;s timeline.
+          a line, hit send. Proposals and payment requests start from your templates, show you the
+          exact email before it goes, carry a Stripe pay button for the amount, and land on the
+          contact&apos;s timeline.
+        </Feature>
+      </Section>
+
+      <Section className="border-t">
+        <Feature
+          eyebrow="Emails in your name"
+          title="Every email looks like you sent it. Because you did."
+          mock={<EmailMock />}
+          bullets={[
+            "Arrives as “you via your workspace”, replies go straight to your inbox",
+            "Your logo, name and colour on confirmations, reminders and recaps",
+            "Your own opening words, with a preview before you save them",
+            "A plain-text version travels with every email",
+          ]}
+        >
+          Confirmations, reminders, cancellations, follow-ups and proposals are designed emails, not
+          system notices. Guests see your brand and your wording; the details, buttons and calendar
+          invitation are added for you.
         </Feature>
       </Section>
 
@@ -540,8 +562,9 @@ open http://localhost:3002`}
         >
           Bookly is AGPL-licensed. Run it on your own server with Docker and keep every transcript
           and contact in your own database, or let us host it and get the same features with
-          backups, updates and support. Transcripts expire on the schedule you set, attendees can
-          delete theirs, and the AI parts are optional.
+          backups, updates and support. Self-hosted installs get a notice when a new release is out
+          and never share usage data unless you opt in. Transcripts expire on the schedule you set,
+          attendees can delete theirs, and the AI parts are optional.
         </Feature>
         <div className="mt-8 flex flex-wrap gap-3">
           <Button
