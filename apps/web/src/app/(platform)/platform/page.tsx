@@ -30,6 +30,7 @@ import {
   RecapMock,
 } from "./mocks";
 import { FollowUpMock, LiveTranscriptMock, RoutingMock, SeatsMock } from "./mocks-more";
+import { PlanCard } from "./plan-card";
 import { JsonLd, organizationLd, softwareLd, websiteLd } from "./json-ld";
 import { pageMetadata, SITE } from "./site";
 
@@ -571,31 +572,8 @@ open http://localhost:3002`}
         </div>
         <div className="mt-10 grid gap-4 md:grid-cols-3">
           {Object.values(PLANS).map((p, i) => (
-            <div
-              key={p.id}
-              className={`rounded-2xl border bg-background p-6 ${p.id === "pro" ? "border-(--brand) ring-1 ring-(--brand)" : ""}`}
-              data-reveal
-              style={{ "--reveal-delay": `${i * 100}ms` } as never}
-            >
-              <div className="flex items-center justify-between">
-                <h3 className="text-lg font-semibold tracking-tight">{p.name}</h3>
-                {p.id === "pro" && <Badge>Most popular</Badge>}
-              </div>
-              <p className="text-sm text-muted-foreground">{p.tagline}</p>
-              <p className="mt-4 text-3xl font-semibold">
-                ${p.priceMonthly}
-                <span className="text-sm font-normal text-muted-foreground">
-                  {p.priceMonthly === 0 ? "" : p.id === "team" ? " / member / month" : " / month"}
-                </span>
-              </p>
-              <ul className="mt-4 space-y-1.5 text-sm text-muted-foreground">
-                {p.highlights.slice(0, 4).map((h) => (
-                  <li key={h} className="flex gap-2">
-                    <CheckIcon className="mt-0.5 size-3.5 shrink-0" aria-hidden />
-                    {h}
-                  </li>
-                ))}
-              </ul>
+            <div key={p.id} data-reveal style={{ "--reveal-delay": `${i * 100}ms` } as never}>
+              <PlanCard plan={p} className="h-full" />
             </div>
           ))}
         </div>

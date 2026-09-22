@@ -34,7 +34,10 @@ export type Plan = {
   /** USD per month, for display; Stripe is the source of truth. */
   priceMonthly: number;
   limits: Limits;
+  /** Shown on plan cards, strongest first. */
   highlights: string[];
+  /** The highlights that set this plan apart; cards render them emphasised. */
+  featured: string[];
 };
 
 export const PLANS: Record<PlanId, Plan> = {
@@ -58,12 +61,13 @@ export const PLANS: Record<PlanId, Plan> = {
       removeBranding: false,
     },
     highlights: [
-      "1 booking page",
-      "2 event types",
-      "1 connected calendar",
+      "Contacts, briefings and the Meeting Inbox",
       "Built-in video, Meet, Zoom, Teams",
+      "1 booking page, 2 event types",
+      "1 connected calendar",
       "Email confirmations and reminders",
     ],
+    featured: ["Contacts, briefings and the Meeting Inbox"],
   },
   pro: {
     id: "pro",
@@ -85,13 +89,16 @@ export const PLANS: Record<PlanId, Plan> = {
       removeBranding: true,
     },
     highlights: [
-      "Unlimited event types",
+      "Auto-capture: transcripts, AI recaps, tasks (300 min / month)",
       "Paid bookings via Stripe",
       "Custom reminders, follow-ups, SMS and WhatsApp",
-      "Custom domain",
-      "API and webhooks",
-      "Auto-capture: 300 transcribed minutes a month",
-      "No Bookly branding",
+      "Unlimited event types",
+      "Custom domain, no Bookly branding",
+      "API, webhooks, HubSpot and Pipedrive sync",
+    ],
+    featured: [
+      "Auto-capture: transcripts, AI recaps, tasks (300 min / month)",
+      "Paid bookings via Stripe",
     ],
   },
   team: {
@@ -115,10 +122,14 @@ export const PLANS: Record<PlanId, Plan> = {
     },
     highlights: [
       "Everything in Pro",
-      "Up to 25 members, priced per member",
       "Round-robin and collective event types",
       "Auto-capture: 1000 transcribed minutes a month",
+      "Up to 25 members, priced per member",
       "3 custom domains",
+    ],
+    featured: [
+      "Round-robin and collective event types",
+      "Auto-capture: 1000 transcribed minutes a month",
     ],
   },
 };

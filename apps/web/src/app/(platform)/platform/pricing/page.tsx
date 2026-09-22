@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { CheckIcon, MinusIcon } from "lucide-react";
-import { PLANS, type Limits, type Plan } from "@bookly/cloud";
-import { Badge } from "@/components/ui/badge";
+import { PLANS, type Limits } from "@bookly/cloud";
 import { Button } from "@/components/ui/button";
 import { breadcrumbLd, faqLd, JsonLd } from "../json-ld";
+import { PlanCard } from "../plan-card";
 import { pageMetadata, SITE } from "../site";
 
 export const metadata: Metadata = pageMetadata({
@@ -79,17 +79,6 @@ function Cell({ v }: { v: string | boolean }) {
   return <span>{v}</span>;
 }
 
-function Price({ p }: { p: Plan }) {
-  return (
-    <p className="mt-4 text-3xl font-semibold">
-      ${p.priceMonthly}
-      <span className="text-sm font-normal text-muted-foreground">
-        {p.priceMonthly === 0 ? " forever" : p.id === "team" ? " / member / month" : " / month"}
-      </span>
-    </p>
-  );
-}
-
 export default function PricingPage() {
   return (
     <div className="mx-auto max-w-6xl px-4 py-14 md:py-20">
@@ -106,33 +95,7 @@ export default function PricingPage() {
 
       <div className="mt-12 grid gap-6 md:grid-cols-3">
         {plans.map((p) => (
-          <div
-            key={p.id}
-            className={`flex flex-col rounded-2xl border p-6 ${p.id === "pro" ? "border-(--brand) ring-1 ring-(--brand)" : ""}`}
-          >
-            <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold">{p.name}</h2>
-              {p.id === "pro" && <Badge>Most popular</Badge>}
-            </div>
-            <p className="text-sm text-muted-foreground">{p.tagline}</p>
-            <Price p={p} />
-            <ul className="mt-6 flex-1 space-y-2 text-sm">
-              {p.highlights.map((h) => (
-                <li key={h} className="flex gap-2">
-                  <CheckIcon className="mt-0.5 size-4 shrink-0 text-(--brand)" aria-hidden />
-                  {h}
-                </li>
-              ))}
-            </ul>
-            <Button
-              className="mt-6"
-              variant={p.id === "pro" ? "default" : "outline"}
-              nativeButton={false}
-              render={<Link href={`/signup?plan=${p.id}`} />}
-            >
-              {p.priceMonthly === 0 ? "Start free" : `Start with ${p.name}`}
-            </Button>
-          </div>
+          <PlanCard key={p.id} plan={p} />
         ))}
       </div>
 
