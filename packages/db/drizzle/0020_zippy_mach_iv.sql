@@ -1,0 +1,1 @@
+ALTER TABLE "workspaces" ADD COLUMN "stripe_account_id" text;

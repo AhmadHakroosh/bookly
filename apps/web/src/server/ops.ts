@@ -20,6 +20,7 @@ import { jobsHealth } from "./jobs";
 import { getLimiter } from "./ratelimit";
 import { dailyConfigured } from "./integrations";
 import { paymentsConfigured } from "./payments";
+import { isCloud } from "./platform";
 import { assistantConfigured } from "./brief";
 import { textConfigured } from "./notify";
 
@@ -167,11 +168,20 @@ export async function healthReport(now = new Date()): Promise<HealthCheck[]> {
     {
       name: "Payments (Stripe)",
       ok: paymentsConfigured(),
-      detail: paymentsConfigured()
-        ? env.STRIPE_WEBHOOK_SECRET
-          ? "key and webhook secret set"
-          : "key set, webhook secret missing"
-        : "not configured",
+      detail: !paymentsConfigured()
+        ? "not configured"
+        : [
+            env.STRIPE_WEBHOOK_SECRET
+              ? "key and webhook secret set"
+              : "key set, webhook secret missing",
+            ...(isCloud()
+              ? [
+                  env.STRIPE_CONNECT_WEBHOOK_SECRET
+                    ? "Connect webhook set"
+                    : "Connect webhook secret missing: hosts' payments will not confirm",
+                ]
+              : []),
+          ].join("; "),
     },
     {
       name: "Built-in video (Daily)",

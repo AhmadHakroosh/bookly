@@ -14,7 +14,7 @@ import { buildIcsCalendar, type IcsEvent } from "./ics";
 import { deprovisionBooking, provisionBooking, syncEventAttendees } from "./integrations";
 import { serializeBooking } from "./api";
 import { notifyHost } from "./notify";
-import { isPaid, paymentsConfigured, recordPayment, refundBooking } from "./payments";
+import { isPaid, paymentsReady, recordPayment, refundBooking } from "./payments";
 import { notifyWaitlist } from "./waitlist";
 import { emitEvent } from "./webhooks";
 import { brandFor } from "@/emails/brand";
@@ -257,7 +257,7 @@ export async function createBooking(
       throw e;
     }
   }
-  const needsPayment = isPaid(eventType) && paymentsConfigured();
+  const needsPayment = isPaid(eventType) && paymentsReady(workspace);
   const status: Booking["status"] = needsPayment
     ? "awaiting_payment"
     : eventType.requiresConfirmation

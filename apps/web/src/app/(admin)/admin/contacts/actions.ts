@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { CONTACT_STAGES, type ContactStage } from "@bookly/db/schema";
 import { brandForPreview } from "@/emails/brand";
-import { paymentsConfigured } from "@/server/payments";
+import { paymentsReady } from "@/server/payments";
 import { getContact, logContactEvent, setStage, updateContact } from "@/server/contacts";
 import { paymentLink, sendOutreach, renderOutreach } from "@/server/outreach";
 import { fillTemplate } from "@/server/outreach-text";
@@ -167,7 +167,7 @@ export async function previewOutreach(
       .toLowerCase()
       .slice(0, 3) || "usd";
   if (kind === "paymentRequest" && amountCents <= 0) return { error: "Enter an amount." };
-  const willLink = kind === "paymentRequest" && paymentsConfigured();
+  const willLink = kind === "paymentRequest" && paymentsReady(ws);
   const t = fillTemplate(
     { subject: String(formData.get("subject") ?? ""), body: String(formData.get("body") ?? "") },
     {

@@ -1,19 +1,28 @@
+import { refreshConnectStatus } from "@/server/connect";
 import { hasFeature } from "@/server/limits";
+import { paymentsConfigured } from "@/server/payments";
 import { isCloud } from "@/server/platform";
 import { timezoneList } from "@/lib/time";
 import { getCurrentWorkspace } from "@/server/workspace";
 import { Suspense } from "react";
 import { requireStaff } from "@/server/session";
 import { DangerZone } from "./danger-zone";
+import { PaymentsCard } from "./payments-card";
 import { SettingsForm } from "./settings-form";
 import { PageSkeleton } from "@/components/page-skeleton";
 
 export const metadata = { title: "Settings" };
 
-async function SettingsPage() {
-  const workspace = await getCurrentWorkspace();
+async function SettingsPage({ searchParams }: PageProps<"/admin/settings">) {
+  let workspace = await getCurrentWorkspace();
   if (!workspace) return null;
-  const { role } = await requireStaff();
+  const [{ role }, sp] = await Promise.all([requireStaff(), searchParams]);
+  // Back from Stripe onboarding: pull the account's flags before rendering the card.
+  if (sp.stripe === "return" && workspace.stripeAccountId) {
+    const payments = await refreshConnectStatus(workspace);
+    if (payments) workspace = { ...workspace, settings: { ...workspace.settings, payments } };
+  }
+  const payments = isCloud() && paymentsConfigured();
   return (
     <div className="max-w-xl space-y-6">
       <div>
@@ -51,6 +60,7 @@ async function SettingsPage() {
         brandingAllowed={hasFeature(workspace, "removeBranding")}
         zones={timezoneList()}
       />
+      {payments && <PaymentsCard ws={workspace} canManage={role === "owner" || role === "admin"} />}
       <div className="border-t pt-6">
         <h2 className="mb-1 text-xl font-semibold tracking-tight">Your data</h2>
         <p className="mb-4 text-sm text-muted-foreground">
@@ -63,10 +73,10 @@ async function SettingsPage() {
 }
 
 /** Suspense boundary for Cache Components: the page reads request data and streams in. */
-export default function SettingsPageBoundary() {
+export default function SettingsPageBoundary(props: PageProps<"/admin/settings">) {
   return (
     <Suspense fallback={<PageSkeleton />}>
-      <SettingsPage />
+      <SettingsPage {...props} />
     </Suspense>
   );
 }

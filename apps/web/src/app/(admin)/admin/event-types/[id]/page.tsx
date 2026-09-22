@@ -2,7 +2,7 @@ import { PageSkeleton } from "@/components/page-skeleton";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { conferencingAvailability } from "@/server/integrations";
-import { paymentsConfigured } from "@/server/payments";
+import { paymentsHint, paymentsReady } from "@/server/payments";
 import {
   getEventTypeById,
   getProfileByUser,
@@ -35,7 +35,8 @@ async function EditEventTypePage({ params }: PageProps<"/admin/event-types/[id]"
     .map((p) => ({ userId: p.userId, name: p.displayName }));
   return (
     <EventTypeForm
-      paymentsReady={paymentsConfigured()}
+      paymentsReady={paymentsReady(ws)}
+      paymentsHint={paymentsHint(ws)}
       teammates={teammates}
       ready={{
         daily: avail.daily,

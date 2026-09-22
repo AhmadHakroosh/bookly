@@ -33,7 +33,7 @@ import { requireStaff } from "@/server/session";
 import { getCurrentWorkspace } from "@/server/workspace";
 import { addNote, changeStage } from "../actions";
 import { templatesFor } from "@/server/outreach";
-import { paymentsConfigured } from "@/server/payments";
+import { paymentsReady } from "@/server/payments";
 import { ContactDetailsForm } from "./details-form";
 import { Outreach } from "./outreach";
 
@@ -184,7 +184,7 @@ async function ContactPage({ params }: PageProps<"/admin/contacts/[id]">) {
             contactId={c.id}
             proposal={templatesFor(ws).proposal}
             payment={templatesFor(ws).paymentRequest}
-            stripe={paymentsConfigured()}
+            stripe={paymentsReady(ws)}
           />
           <TaskList tasks={tasks} tz={tz} path={`/admin/contacts/${c.id}`} contactId={c.id} />
           {/* Keyed by the stored values: a send or stage change refreshes the page with new

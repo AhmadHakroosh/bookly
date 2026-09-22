@@ -65,6 +65,7 @@ export function EventTypeForm({
   publicUrl,
   ready,
   paymentsReady,
+  paymentsHint = "",
   teammates,
 }: {
   initial: Values;
@@ -72,6 +73,8 @@ export function EventTypeForm({
   publicUrl: string | null;
   ready: ConferencingReady;
   paymentsReady: boolean;
+  /** Why paid bookings are off, shown under the price field. */
+  paymentsHint?: string;
   teammates: { userId: string; name: string }[];
 }) {
   const [state, action, pending] = useActionState(
@@ -318,7 +321,7 @@ export function EventTypeForm({
             <FieldDescription>
               {paymentsReady
                 ? "0 = free. Paid bookings go through Stripe Checkout before they are confirmed."
-                : "Stripe is not set up on this server, so bookings stay free (docs/payments.md)."}
+                : paymentsHint}
             </FieldDescription>
           </Field>
           <Field>

@@ -28,6 +28,18 @@ export type WorkspaceSettings = {
   crm?: { provider: "hubspot" | "pipedrive"; apiKey: string; companyDomain?: string } | null;
   /** Opt-in: include coarse usage counts in the daily update check (self-hosted only). */
   telemetryStats?: boolean;
+  /**
+   * Stripe Connect (cloud mode): the state of the workspace's own Stripe account, refreshed from
+   * `account.updated` events and on return from onboarding. `feePercent` is an operator override
+   * of the platform fee on this workspace's bookings.
+   */
+  payments?: {
+    chargesEnabled?: boolean;
+    payoutsEnabled?: boolean;
+    detailsSubmitted?: boolean;
+    connectedAt?: string;
+    feePercent?: number | null;
+  } | null;
   /** Auto-capture: transcript retention (days, default 90) and Deepgram language (default auto). */
   capture?: { retentionDays?: number; language?: string };
   /**
@@ -76,6 +88,8 @@ export const workspaces = pgTable(
     planRenewsAt: timestamp("plan_renews_at", { withTimezone: true }),
     stripeCustomerId: text("stripe_customer_id"),
     stripeSubscriptionId: text("stripe_subscription_id"),
+    /** Stripe Connect account that receives this workspace's booking payments (cloud mode). */
+    stripeAccountId: text("stripe_account_id"),
     suspendedAt: timestamp("suspended_at", { withTimezone: true }),
     suspendReason: text("suspend_reason"),
     ...timestamps,

@@ -30,6 +30,7 @@ import {
   assertWithinLimit,
   LimitError,
 } from "@/server/limits";
+import { paymentsHint, paymentsReady } from "@/server/payments";
 import { requireStaff } from "@/server/session";
 import { removeWaitlistEntry } from "@/server/waitlist";
 import { getCurrentWorkspace } from "@/server/workspace";
@@ -329,7 +330,10 @@ export async function saveEventType(
   if (clash && clash.id !== d.id) slug = `${slug}-${d.id.slice(0, 4)}`;
   const location: EventLocation = { type: d.locationType, value: d.locationValue || undefined };
   try {
-    if (d.price > 0) assertFeature(ws, "payments");
+    if (d.price > 0) {
+      assertFeature(ws, "payments");
+      if (!paymentsReady(ws)) return { error: paymentsHint(ws) };
+    }
     if (d.assignment !== "single") assertFeature(ws, "teamScheduling");
     if (d.locationType === "daily" && d.autoCapture !== "off") assertCaptureFeature(ws);
     if (

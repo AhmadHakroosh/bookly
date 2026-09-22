@@ -66,6 +66,8 @@ export const envSchema = z.object({
   // ---- Payments (Stripe) ----
   STRIPE_SECRET_KEY: z.string().optional(),
   STRIPE_WEBHOOK_SECRET: z.string().optional(),
+  /** Cloud mode: signing secret of the Connect webhook endpoint (events from hosts' accounts). */
+  STRIPE_CONNECT_WEBHOOK_SECRET: z.string().optional(),
   // ---- Cloud mode (TENANCY=multi) ----
   /** Stripe recurring price ids for the Pro and Team plans. */
   STRIPE_PRICE_PRO: z.string().optional(),

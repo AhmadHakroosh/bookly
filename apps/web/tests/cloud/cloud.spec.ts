@@ -152,6 +152,8 @@ test.describe("sign-up and tenants", () => {
     await expect(page.getByText("Demo Workspace")).toBeVisible();
     await page.goto(`${platformUrl}/console`);
     await expect(page.getByRole("heading", { name: "Operator console" })).toBeVisible();
+    await page.goto(`${platformUrl}/console/payments`);
+    await expect(page.getByRole("heading", { name: "Platform fee" })).toBeVisible();
     await page.goto(`${platformUrl}/console/health`);
     await expect(page.getByText("Rate limiting")).toBeVisible();
     await expect(page.getByText("Background jobs")).toBeVisible();

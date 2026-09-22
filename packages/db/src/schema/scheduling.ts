@@ -370,6 +370,10 @@ export const bookings = pgTable(
       sessionId?: string;
       paymentIntentId?: string;
       refundId?: string;
+      /** Connected Stripe account the charge lives on (cloud mode); absent = platform account. */
+      stripeAccount?: string;
+      /** Platform fee kept from this payment, in the booking's currency. */
+      feeCents?: number;
     }>(),
     ...timestamps,
   },

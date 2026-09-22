@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { eq, schema } from "@bookly/db";
 import { db } from "@/lib/db";
 import { cancelBooking, cancelSeries } from "@/server/booking-flow";
-import { createCheckout, paymentsConfigured } from "@/server/payments";
+import { createCheckout, paymentsReady } from "@/server/payments";
 import { getBookingByToken } from "@/server/scheduling";
 import { deleteTranscript } from "@/server/transcripts";
 import { getCurrentWorkspace } from "@/server/workspace";
@@ -24,7 +24,7 @@ export async function payNow(token: string) {
   const ws = await getCurrentWorkspace();
   const b = await getBookingByToken(token);
   if (!ws || !b || b.workspaceId !== ws.id || b.status !== "awaiting_payment") return;
-  if (!paymentsConfigured()) return;
+  if (!paymentsReady(ws)) return;
   const et = b.eventTypeId
     ? await db().query.eventTypes.findFirst({ where: eq(schema.eventTypes.id, b.eventTypeId) })
     : null;

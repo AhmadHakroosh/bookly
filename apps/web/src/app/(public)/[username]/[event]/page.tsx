@@ -18,7 +18,7 @@ import {
   locationLabel,
   slotSeats,
 } from "@/server/scheduling";
-import { formatPrice, paymentsConfigured } from "@/server/payments";
+import { formatPrice, paymentsReady } from "@/server/payments";
 import { getCurrentWorkspace } from "@/server/workspace";
 import { priorityForEmail } from "@/server/contacts";
 import { fullSessions } from "@/server/waitlist";
@@ -44,6 +44,7 @@ async function EventPage({ params, searchParams }: PageProps<"/[username]/[event
   const et = ws && profile ? await getEventType(ws.id, profile.userId, event) : null;
   if (!ws || !profile || !et) notFound();
 
+  const paid = paymentsReady(ws);
   const tzParam = typeof sp.tz === "string" && isValidTimezone(sp.tz) ? sp.tz : null;
   const tz = tzParam ?? profile.timezone;
   const today = todayIn(tz);
@@ -103,15 +104,13 @@ async function EventPage({ params, searchParams }: PageProps<"/[username]/[event
           <h1 className="mt-3 text-2xl font-semibold tracking-tight">{et.title}</h1>
           <p className="mt-2 text-sm text-muted-foreground">
             {et.durationMin} min · {locationLabel(et.location)}
-            {et.priceCents && paymentsConfigured()
-              ? ` · ${formatPrice(et.priceCents, et.currency)}`
-              : ""}
+            {et.priceCents && paid ? ` · ${formatPrice(et.priceCents, et.currency)}` : ""}
             {et.seats > 1 ? ` · Group of up to ${et.seats}` : ""}
           </p>
           {rule && (
             <p className="mt-1 text-sm text-muted-foreground">
               {describeRecurrence(rule)}. One booking reserves the whole series
-              {et.priceCents && paymentsConfigured()
+              {et.priceCents && paid
                 ? ` (${formatPrice(et.priceCents * rule.count, et.currency)} for ${rule.count} sessions)`
                 : ""}
               .
@@ -172,7 +171,7 @@ async function EventPage({ params, searchParams }: PageProps<"/[username]/[event
                 tz={tz}
                 questions={et.questions}
                 reschedule={reschedule}
-                paid={!!et.priceCents && paymentsConfigured()}
+                paid={!!et.priceCents && paid}
                 sessions={plan ? bookable : 1}
                 askCapture={et.autoCapture === "ask" && et.location.type === "daily"}
                 defaults={

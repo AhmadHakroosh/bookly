@@ -27,6 +27,10 @@ and the customer portal. The webhook needs `customer.subscription.created|update
 `checkout.session.completed`; `syncSubscription` mirrors the subscription onto the workspace.
 A lapsed subscription drops the workspace to Free limits without deleting anything.
 
+Paid bookings are a separate money flow: guests pay the **host's** connected Stripe account, never
+the platform's (`docs/payments.md`, "Cloud mode"). The platform keeps the fee set in Console →
+Payments; `STRIPE_CONNECT_WEBHOOK_SECRET` verifies the events from hosts' accounts.
+
 ## Operator console
 
 `PLATFORM_ADMIN_EMAILS` lists who may open `/console` on the platform host: workspace list with

@@ -8,6 +8,7 @@ Everything below is on `main` ahead of the first release, which will be tagged `
 
 ### Added
 
+- Stripe Connect for cloud mode: guests pay the host's own Stripe account, never the platform's. Owners connect through Stripe's hosted onboarding (Settings → Payments, Pro and Team); prices apply once Stripe enables charges, refunds run on the host's account, and payment requests follow the same route. A second webhook endpoint (`/api/webhooks/stripe/connect`, `STRIPE_CONNECT_WEBHOOK_SECRET`) confirms those payments and tracks onboarding. Console → Payments shows the Stripe setup, the connected hosts and sets the platform fee, with a per-workspace override on the workspace page; migration 0020 adds `stripe_account_id`
 - Booking pages carry the workspace name with the Bookly mark and a “Powered by Bookly” footer; on plans that remove branding (Pro, Team, self-hosted) the logo and accent colour from Settings → Branding replace them, and the colour recolours buttons, selected days and focus rings. Emails say “Powered by Bookly” too
 - Operator console reads on a phone: the tab strip wraps, health checks stack their detail under the name, search rows stay on one line, long emails and JSON wrap inside their cards, and the installs table scrolls sideways with dates on one line
 - Branding in Settings: a logo URL and accent colour used in every guest email, on the plans that remove Bookly branding (Pro, Team, and every self-hosted install); Free keeps the Bookly mark and footer

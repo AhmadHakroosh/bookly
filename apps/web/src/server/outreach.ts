@@ -8,7 +8,8 @@ import type { EmailBrand } from "@/emails/layout";
 import { letterMail } from "@/emails/booking";
 import { logContactEvent, updateContact, noteToCrm } from "./contacts";
 import { DEFAULT_TEMPLATES, type Template } from "./outreach-text";
-import { formatPrice, paymentsConfigured, stripe } from "./payments";
+import { platformFeeCents, platformFeePercent } from "./connect";
+import { formatPrice, paymentsFor, stripe } from "./payments";
 import { baseUrl, getProfileByUser } from "./scheduling";
 
 export function templatesFor(ws: Workspace) {
@@ -48,24 +49,30 @@ export async function paymentLink(
   currency: string,
   description: string,
 ) {
-  if (!paymentsConfigured() || amountCents <= 0) return null;
-  const session = await stripe().checkout.sessions.create({
-    mode: "payment",
-    customer_email: c.email,
-    line_items: [
-      {
-        quantity: 1,
-        price_data: {
-          currency: currency.toLowerCase(),
-          unit_amount: amountCents,
-          product_data: { name: description || `Payment to ${ws.name}` },
+  const route = paymentsFor(ws);
+  if (!route.ok || amountCents <= 0) return null;
+  const fee = route.account ? platformFeeCents(amountCents, await platformFeePercent(ws)) : 0;
+  const session = await stripe().checkout.sessions.create(
+    {
+      mode: "payment",
+      customer_email: c.email,
+      line_items: [
+        {
+          quantity: 1,
+          price_data: {
+            currency: currency.toLowerCase(),
+            unit_amount: amountCents,
+            product_data: { name: description || `Payment to ${ws.name}` },
+          },
         },
-      },
-    ],
-    metadata: { contactId: c.id, workspaceId: ws.id, kind: "payment_request" },
-    success_url: `${baseUrl()}/?paid=1`,
-    cancel_url: baseUrl(),
-  });
+      ],
+      metadata: { contactId: c.id, workspaceId: ws.id, kind: "payment_request" },
+      ...(fee > 0 ? { payment_intent_data: { application_fee_amount: fee } } : {}),
+      success_url: `${baseUrl()}/?paid=1`,
+      cancel_url: baseUrl(),
+    },
+    route.account ? { stripeAccount: route.account } : undefined,
+  );
   return session.url ?? null;
 }
 

@@ -8,6 +8,7 @@ import { eq, schema } from "@bookly/db";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { refreshWorkspace } from "@/server/cache";
+import { disconnectStripe, setPlatformFeePercent, setWorkspaceFeePercent } from "@/server/connect";
 import { audit } from "@/server/ops";
 import { isPlatformAdmin, tenantUrl } from "@/server/platform";
 import { getSession } from "@/server/session";
@@ -21,6 +22,7 @@ async function operator() {
 const back = (id?: string) => {
   revalidatePath("/console");
   revalidatePath("/console/audit");
+  revalidatePath("/console/payments");
   if (id) revalidatePath(`/console/${id}`);
 };
 
@@ -96,6 +98,7 @@ export async function setPlan(id: string, formData: FormData) {
     })
     .where(eq(schema.workspaces.id, id));
   refreshWorkspace(id);
+  invalidateHostCache();
   await audit(
     s.user.email,
     "workspace.plan.set",
@@ -120,6 +123,7 @@ export async function releasePlan(id: string) {
     })
     .where(eq(schema.workspaces.id, id));
   refreshWorkspace(id);
+  invalidateHostCache();
   await audit(s.user.email, "workspace.plan.release", { type: "workspace", id });
   back(id);
 }
@@ -142,4 +146,49 @@ export async function unbanUser(userId: string) {
   await audit(s.user.email, "user.unban", { type: "user", id: userId });
   revalidatePath("/console/users");
   revalidatePath("/console/audit");
+}
+
+/* ---------------- Payments (Stripe Connect) ---------------- */
+
+const percentField = (formData: FormData, name: string) => {
+  const raw = String(formData.get(name) ?? "").trim();
+  if (raw === "") return null;
+  const n = Number(raw);
+  return Number.isFinite(n) ? n : null;
+};
+
+/** The platform's cut of every booking payment on a connected account. */
+export async function setPlatformFee(formData: FormData) {
+  const s = await operator();
+  const percent = percentField(formData, "feePercent");
+  if (percent === null) return;
+  await setPlatformFeePercent(percent);
+  await audit(s.user.email, "platform.fee.set", { type: "platform" }, { percent });
+  back();
+}
+
+/** Per-workspace fee override (blank clears it back to the platform default). */
+export async function setWorkspaceFee(id: string, formData: FormData) {
+  const s = await operator();
+  const ws = await db().query.workspaces.findFirst({ where: eq(schema.workspaces.id, id) });
+  if (!ws) return;
+  const percent = percentField(formData, "feePercent");
+  await setWorkspaceFeePercent(ws, percent);
+  await audit(s.user.email, "workspace.fee.set", { type: "workspace", id }, { percent });
+  back(id);
+}
+
+/** Forgets a host's connected account; their prices stop applying until they reconnect. */
+export async function disconnectWorkspaceStripe(id: string) {
+  const s = await operator();
+  const ws = await db().query.workspaces.findFirst({ where: eq(schema.workspaces.id, id) });
+  if (!ws?.stripeAccountId) return;
+  await disconnectStripe(ws);
+  await audit(
+    s.user.email,
+    "workspace.stripe.disconnect",
+    { type: "workspace", id },
+    { account: ws.stripeAccountId },
+  );
+  back(id);
 }

@@ -15,6 +15,7 @@ import {
   impersonateOwner,
   releasePlan,
   setPlan,
+  setWorkspaceFee,
   suspendWorkspace,
   unsuspendWorkspace,
 } from "../actions";
@@ -82,6 +83,23 @@ async function WorkspacePage({ params }: PageProps<"/platform/console/[id]">) {
                   </span>
                 ) : (
                   "no customer"
+                )
+              }
+            />
+            <Row
+              k="Payments"
+              v={
+                ws.stripeAccountId ? (
+                  <span className="flex flex-wrap items-center gap-2">
+                    <ExternalLink href={`${stripeBase}/connect/accounts/${ws.stripeAccountId}`}>
+                      {ws.stripeAccountId}
+                    </ExternalLink>
+                    <Badge variant={ws.settings.payments?.chargesEnabled ? "default" : "secondary"}>
+                      {ws.settings.payments?.chargesEnabled ? "ready" : "onboarding"}
+                    </Badge>
+                  </span>
+                ) : (
+                  "no connected Stripe account"
                 )
               }
             />
@@ -195,6 +213,28 @@ async function WorkspacePage({ params }: PageProps<"/platform/console/[id]">) {
               <SubmitButton variant="ghost">Release to Stripe</SubmitButton>
             </form>
           )}
+          <h4 className="mt-5 text-sm font-semibold">Platform fee override</h4>
+          <p className="text-xs text-muted-foreground">
+            Percentage kept from this workspace&apos;s booking payments. Blank uses the platform fee
+            from Console → Payments.
+          </p>
+          <form
+            action={setWorkspaceFee.bind(null, ws.id)}
+            className="mt-2 flex flex-wrap items-center gap-2"
+          >
+            <input
+              name="feePercent"
+              type="number"
+              min={0}
+              max={50}
+              step="0.1"
+              defaultValue={ws.settings.payments?.feePercent ?? ""}
+              aria-label="Fee percent"
+              className="h-8 w-24 rounded-lg border bg-background px-2 text-sm"
+            />
+            <span className="text-sm text-muted-foreground">%</span>
+            <SubmitButton variant="outline">Set fee</SubmitButton>
+          </form>
         </section>
 
         <section className="rounded-xl border p-4">
