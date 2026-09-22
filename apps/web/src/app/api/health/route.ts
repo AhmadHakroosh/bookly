@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { connection } from "next/server";
-import { sql } from "drizzle-orm";
+import { sql } from "@bookly/db";
 import { db } from "@/lib/db";
 
 /** Uptime check: 200 when the app can reach Postgres, 503 otherwise. No auth, no details. */
