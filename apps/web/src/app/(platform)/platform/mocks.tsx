@@ -409,44 +409,57 @@ export function ContactMock() {
 
 export function BookingPageMock() {
   const days = Array.from({ length: 30 }, (_, i) => i + 1);
+  const open = [22, 23, 24, 29, 30];
   return (
-    <div className="force-light grid gap-4 rounded-xl border border-black/10 bg-background p-4 text-sm text-foreground shadow-xl shadow-black/15 sm:grid-cols-[1fr_1fr_120px]">
-      <div>
-        <p className="text-xs text-muted-foreground">Dana Weiss</p>
-        <h4 className="text-base font-semibold tracking-tight">Working session</h4>
-        <p className="mt-1 text-xs text-muted-foreground">
-          60 min · Video call · Group of up to 3
-          <br />
-          Every week, 6 times. One booking reserves the whole series.
-        </p>
-      </div>
-      <div>
-        <p className="mb-1 text-xs font-medium">September 2026</p>
-        <div className="grid grid-cols-7 gap-1 text-center text-[10px]">
-          {days.map((d) => (
-            <span
-              key={d}
-              className={`rounded py-1 ${[22, 23, 24, 29, 30].includes(d) ? "bg-muted font-medium" : "text-muted-foreground/60"} ${d === 22 ? "ring-1 ring-foreground" : ""}`}
-            >
-              {d}
-            </span>
-          ))}
+    <div className="force-light rounded-xl border border-black/10 bg-background p-4 text-sm text-foreground shadow-xl shadow-black/15">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="text-xs text-muted-foreground">Dana Weiss</p>
+          <h4 className="text-base font-semibold tracking-tight">Working session</h4>
+          <p className="mt-1 text-xs text-muted-foreground">
+            60 min · Video call · Group of up to 3
+          </p>
         </div>
+        <Badge variant="outline" className="shrink-0">
+          6 sessions
+        </Badge>
       </div>
-      <ul className="space-y-1.5 text-center text-xs">
+      <p className="mt-2 rounded-md bg-muted/60 px-2 py-1 text-[11px] text-muted-foreground">
+        Every week, 6 times. One booking reserves the whole series.
+      </p>
+      <div className="mt-3 flex items-center justify-between text-xs">
+        <span className="font-medium">September 2026</span>
+        <span className="text-muted-foreground">Tue 22</span>
+      </div>
+      <div className="mt-1.5 grid grid-cols-7 gap-1 text-center text-[10px] tabular-nums">
+        {["M", "T", "W", "T", "F", "S", "S"].map((d, i) => (
+          <span key={i} className="text-muted-foreground/70">
+            {d}
+          </span>
+        ))}
+        {days.map((d) => (
+          <span
+            key={d}
+            className={`flex h-6 items-center justify-center rounded ${open.includes(d) ? "bg-muted font-medium" : "text-muted-foreground/60"} ${d === 22 ? "ring-1 ring-foreground" : ""}`}
+          >
+            {d}
+          </span>
+        ))}
+      </div>
+      <ul className="mt-3 grid grid-cols-3 gap-1.5 text-center text-xs">
         {(
           [
             ["12:00", "2 seats left"],
-            ["13:00", ""],
+            ["13:00", "3 seats left"],
             ["14:00", "Full · waitlist"],
           ] as [string, string][]
         ).map(([t, n]) => (
           <li
             key={t}
-            className={`rounded-lg border px-2 py-1.5 ${n.startsWith("Full") ? "border-dashed text-muted-foreground" : ""}`}
+            className={`rounded-lg border px-1 py-1.5 ${n.startsWith("Full") ? "border-dashed text-muted-foreground" : ""}`}
           >
-            {t}
-            {n && <span className="block text-[10px] font-normal text-muted-foreground">{n}</span>}
+            <span className="block font-medium">{t}</span>
+            <span className="block text-[10px] font-normal text-muted-foreground">{n}</span>
           </li>
         ))}
       </ul>

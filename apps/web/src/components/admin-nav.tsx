@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { GitHubIcon } from "@/components/brand/logo";
 import {
   BookOpenIcon,
   CalendarClockIcon,
@@ -12,6 +13,7 @@ import {
   CreditCardIcon,
   ExternalLinkIcon,
   GlobeIcon,
+  LifeBuoyIcon,
   InboxIcon,
   KeyRoundIcon,
   LayoutGridIcon,
@@ -57,12 +59,30 @@ const GROUPS: Group[] = [
       { href: "/admin/api", label: "API & webhooks", icon: KeyRoundIcon },
       { href: "/admin/domains", label: "Domains", icon: GlobeIcon },
       { href: "/admin/settings", label: "Settings", icon: SettingsIcon },
-      { href: "/docs", label: "Documentation", icon: BookOpenIcon, external: true },
     ],
   },
 ];
 
-export function AdminNav({ cloud = false }: { cloud?: boolean }) {
+/** Pinned to the bottom of the sidebar: help links that never move. */
+const HELP = (supportHref: string): Item[] => [
+  { href: "/docs", label: "Documentation", icon: BookOpenIcon, external: true },
+  { href: supportHref, label: "Support", icon: LifeBuoyIcon, external: true },
+  {
+    href: "https://github.com/AhmadHakroosh/bookly",
+    label: "GitHub",
+    icon: GitHubIcon as unknown as LucideIcon,
+    external: true,
+  },
+];
+
+export function AdminNav({
+  cloud = false,
+  supportHref = "https://github.com/AhmadHakroosh/bookly/issues",
+}: {
+  cloud?: boolean;
+  /** Where "Support" goes: a mailto in cloud mode, the issue tracker when self-hosted. */
+  supportHref?: string;
+}) {
   const pathname = usePathname();
   const active = (href: string) =>
     href === "/admin" ? pathname === href : pathname.startsWith(href);
@@ -81,8 +101,16 @@ export function AdminNav({ cloud = false }: { cloud?: boolean }) {
     : GROUPS;
   const itemClass = (on: boolean) =>
     `flex items-center gap-2 rounded-md px-2 py-1.5 ${on ? "bg-muted font-medium text-foreground" : "text-muted-foreground hover:bg-muted/60 hover:text-foreground"}`;
+  const External = ({ it }: { it: Item }) => (
+    <a href={it.href} target="_blank" rel="noreferrer" className={itemClass(false)}>
+      <it.icon className="size-4 shrink-0" aria-hidden />
+      <span className="flex-1">{it.label}</span>
+      <ExternalLinkIcon className="size-3 opacity-60" aria-hidden />
+      <span className="sr-only">(opens in a new tab)</span>
+    </a>
+  );
   return (
-    <nav className="space-y-6 text-sm" aria-label="Admin">
+    <nav className="flex min-h-full flex-col gap-6 text-sm" aria-label="Admin">
       <Link href="/admin" className={itemClass(active("/admin"))}>
         <InboxIcon className="size-4 shrink-0" aria-hidden />
         Inbox
@@ -97,12 +125,7 @@ export function AdminNav({ cloud = false }: { cloud?: boolean }) {
             {g.items.map((it) => (
               <li key={it.href}>
                 {it.external ? (
-                  <a href={it.href} target="_blank" rel="noreferrer" className={itemClass(false)}>
-                    <it.icon className="size-4 shrink-0" aria-hidden />
-                    <span className="flex-1">{it.label}</span>
-                    <ExternalLinkIcon className="size-3 opacity-60" aria-hidden />
-                    <span className="sr-only">(opens in a new tab)</span>
-                  </a>
+                  <External it={it} />
                 ) : (
                   <Link href={it.href} className={itemClass(active(it.href))}>
                     <it.icon className="size-4 shrink-0" aria-hidden />
@@ -114,6 +137,18 @@ export function AdminNav({ cloud = false }: { cloud?: boolean }) {
           </ul>
         </div>
       ))}
+      <div className="mt-auto border-t pt-4">
+        <p className="mb-1 px-2 text-[11px] font-medium tracking-wide text-muted-foreground uppercase">
+          Help
+        </p>
+        <ul className="space-y-0.5">
+          {HELP(supportHref).map((it) => (
+            <li key={it.href}>
+              <External it={it} />
+            </li>
+          ))}
+        </ul>
+      </div>
     </nav>
   );
 }

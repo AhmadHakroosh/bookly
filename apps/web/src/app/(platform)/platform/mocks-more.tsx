@@ -138,12 +138,14 @@ export function SeatsMock() {
           </li>
         ))}
       </ul>
-      <div className="mt-3 flex items-center justify-between rounded-lg border border-dashed p-2 text-xs">
-        <span className="inline-flex items-center gap-1.5">
+      <div className="mt-3 rounded-lg border border-dashed p-2 text-xs">
+        <p className="inline-flex items-center gap-1.5 font-medium">
           <ClockIcon className="size-3 text-muted-foreground" aria-hidden />
           Waitlist: 2 people
-        </span>
-        <span className="text-muted-foreground">first in line is offered the seat on cancel</span>
+        </p>
+        <p className="mt-0.5 text-muted-foreground">
+          First in line is offered the seat if someone cancels.
+        </p>
       </div>
     </div>
   );
@@ -160,15 +162,12 @@ export function FollowUpMock() {
         </h4>
         <Badge variant="outline">draft</Badge>
       </div>
-      <div className="mt-3 space-y-1 text-xs text-muted-foreground">
-        <p>
-          <span className="inline-block w-10">To</span> omar@haddad-dental.example
-        </p>
-        <p>
-          <span className="inline-block w-10">Subject</span>
-          <span className="text-foreground">Booking flow for Haddad Dental: next steps</span>
-        </p>
-      </div>
+      <dl className="mt-3 grid grid-cols-[3.5rem_minmax(0,1fr)] gap-x-2 gap-y-1 text-xs">
+        <dt className="text-muted-foreground">To</dt>
+        <dd className="truncate text-muted-foreground">omar@haddad-dental.example</dd>
+        <dt className="text-muted-foreground">Subject</dt>
+        <dd className="truncate">Booking flow for Haddad Dental: next steps</dd>
+      </dl>
       <div className="mt-3 space-y-2 rounded-lg bg-muted/50 p-3 leading-relaxed">
         <p>Hi Omar, thanks for today. Here is what we agreed:</p>
         <ul className="list-disc space-y-0.5 pl-4">

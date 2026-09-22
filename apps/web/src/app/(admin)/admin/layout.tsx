@@ -51,9 +51,14 @@ async function AdminShell({ children }: { children: React.ReactNode }) {
         newUrl: platformUrl("/signup"),
       }
     : undefined;
+  // Cloud: email the operator. Self-hosted: the project's issue tracker.
+  const supportHref =
+    isCloud() && process.env.SUPPORT_EMAIL
+      ? `mailto:${process.env.SUPPORT_EMAIL}?subject=Bookly%20support`
+      : "https://github.com/AhmadHakroosh/bookly/issues";
   return (
     <div className="flex min-h-full flex-1 flex-col">
-      <header className="border-b">
+      <header className="sticky top-0 z-30 border-b bg-background">
         <div className="flex h-14 items-center justify-between gap-3 px-4">
           <div className="flex items-center gap-2">
             <Sheet>
@@ -73,7 +78,9 @@ async function AdminShell({ children }: { children: React.ReactNode }) {
                 <SheetTitle className="mb-4 font-semibold">
                   {workspace?.name ?? "Bookly"}
                 </SheetTitle>
-                <AdminNav cloud={isCloud()} />
+                <div className="flex min-h-[calc(100vh-6rem)] flex-col">
+                  <AdminNav cloud={isCloud()} supportHref={supportHref} />
+                </div>
               </SheetContent>
             </Sheet>
             <WorkspaceSwitcher
@@ -103,8 +110,8 @@ async function AdminShell({ children }: { children: React.ReactNode }) {
         </div>
       </header>
       <div className="flex flex-1">
-        <aside className="hidden w-56 shrink-0 border-r p-4 lg:block">
-          <AdminNav cloud={isCloud()} />
+        <aside className="sticky top-14 hidden h-[calc(100vh-3.5rem)] w-56 shrink-0 overflow-y-auto border-r p-4 lg:block">
+          <AdminNav cloud={isCloud()} supportHref={supportHref} />
         </aside>
         <main className="min-w-0 flex-1 px-4 py-8 lg:px-8">
           <div className="admin-page mx-auto max-w-6xl">

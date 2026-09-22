@@ -9,6 +9,7 @@ Everything below is on `main` ahead of the first release, which will be tagged `
 ### Added
 
 - Marketing site (cloud mode): rebuilt landing page with the meeting lifecycle, live-transcript, routing, seats and follow-up mocks, a comparison table, scroll animations, a full header and footer; pricing page with plan comparison and FAQ; about, contact, security, privacy, terms and changelog pages; `robots.txt`, `sitemap.xml`, Open Graph and Twitter cards with a generated social image at `/og`; real 404s for unknown paths on the platform host
+- Admin: a Help group pinned to the bottom of the sidebar (Documentation, Support, GitHub); Support goes to `SUPPORT_EMAIL` in cloud mode and to the issue tracker when self-hosted; sticky header and sidebar
 - Brand: the buckle logo mark (بُكلة), SVG favicon, ICO and Apple touch icon
 - Booking pages per host with weekly hours, date overrides, buffers, notice and horizon rules, timezone-aware for visitors
 - Google Calendar and Outlook sync for conflicts and events; meeting links on Google Meet, Zoom, Microsoft Teams or built-in video (Daily.co)
