@@ -1,6 +1,6 @@
 "use client";
 
-import { XIcon } from "lucide-react";
+import { PlusIcon, Trash2Icon } from "lucide-react";
 import { useActionState, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -40,25 +40,33 @@ export function ScheduleForm({
   return (
     <form action={action} className="space-y-4">
       <input type="hidden" name="scheduleId" value={scheduleId} />
-      <div className="flex flex-wrap gap-3">
+      <div className="grid gap-3 sm:grid-cols-[1fr_1.4fr_9rem]">
         <label className="text-sm">
           <span className="mb-1 block text-xs font-medium">Schedule name</span>
-          <Input name="name" defaultValue={name} className="w-48" />
+          <Input name="name" defaultValue={name} />
         </label>
         <label className="text-sm" htmlFor="timezone">
           <span className="mb-1 block text-xs font-medium">Hours below are in</span>
-          <TimezoneField name="timezone" defaultValue={timezone} zones={zones} className="w-72" />
+          <TimezoneField name="timezone" defaultValue={timezone} zones={zones} className="w-full" />
         </label>
         <label className="text-sm">
-          <span className="mb-1 block text-xs font-medium">Meetings per week (budget)</span>
-          <Input
-            name="weeklyBudget"
-            type="number"
-            min={0}
-            max={200}
-            defaultValue={weeklyBudget ?? 0}
-            className="w-32"
-          />
+          <span className="mb-1 block text-xs font-medium">Meetings per week</span>
+          <div className="flex">
+            <Input
+              name="weeklyBudget"
+              type="number"
+              min={0}
+              max={200}
+              defaultValue={weeklyBudget ?? 0}
+              className="min-w-0 rounded-r-none"
+            />
+            <span
+              aria-hidden
+              className="flex shrink-0 items-center rounded-r-lg border border-l-0 border-input bg-muted px-3 text-xs whitespace-nowrap text-muted-foreground"
+            >
+              budget
+            </span>
+          </div>
         </label>
       </div>
       <p className="text-xs text-muted-foreground">
@@ -67,9 +75,10 @@ export function ScheduleForm({
         existing customers still get in, new leads see your open hours.
       </p>
       <ul className="divide-y rounded-xl border">
+        {/* Small screens: the day on its own line, each range on the line beneath. */}
         {rows.map((d) => (
-          <li key={d.weekday} className="flex flex-wrap items-start gap-3 p-3 text-sm">
-            <label className="inline-flex w-32 items-center gap-2 pt-1.5">
+          <li key={d.weekday} className="flex flex-wrap items-start gap-2 p-3 text-sm sm:gap-3">
+            <label className="inline-flex basis-full items-center gap-2 sm:h-8 sm:w-32 sm:basis-auto">
               <input
                 type="checkbox"
                 name={`on_${d.weekday}`}
@@ -83,7 +92,7 @@ export function ScheduleForm({
               />
               {d.label}
             </label>
-            <div className="flex-1 space-y-1">
+            <div className="min-w-0 flex-1 space-y-2">
               {d.ranges.map((r, i) => (
                 <div key={i} className="flex items-center gap-2">
                   <input
@@ -98,9 +107,10 @@ export function ScheduleForm({
                         ),
                       }))
                     }
-                    className="h-8 rounded-md border bg-background px-2"
+                    aria-label="From"
+                    className="h-8 min-w-0 flex-1 rounded-lg border bg-background px-2 text-sm sm:w-28 sm:flex-none"
                   />
-                  <span>–</span>
+                  <span className="text-muted-foreground">–</span>
                   <input
                     type="time"
                     name={`end_${d.weekday}`}
@@ -113,14 +123,15 @@ export function ScheduleForm({
                         ),
                       }))
                     }
-                    className="h-8 rounded-md border bg-background px-2"
+                    aria-label="To"
+                    className="h-8 min-w-0 flex-1 rounded-lg border bg-background px-2 text-sm sm:w-28 sm:flex-none"
                   />
                   <input
                     type="hidden"
                     name={`kind_${d.weekday}`}
                     value={r.focus ? "focus" : "open"}
                   />
-                  <label className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+                  <label className="inline-flex shrink-0 items-center gap-1.5 text-xs text-muted-foreground">
                     <input
                       type="checkbox"
                       checked={!!r.focus}
@@ -135,37 +146,40 @@ export function ScheduleForm({
                     />
                     focus
                   </label>
-                  <button
+                  <Button
                     type="button"
+                    variant="ghost"
+                    size="icon-sm"
                     onClick={() =>
                       update(d.weekday, (x) => ({
                         ...x,
                         ranges: x.ranges.filter((_, j) => j !== i),
                       }))
                     }
-                    className="text-xs text-muted-foreground"
+                    className="shrink-0 text-muted-foreground hover:text-destructive"
                     aria-label="Remove range"
                   >
-                    <XIcon className="size-4" aria-hidden />
-                  </button>
+                    <Trash2Icon />
+                  </Button>
                 </div>
               ))}
               {d.ranges.length > 0 && (
-                <button
+                <Button
                   type="button"
+                  variant="outline"
+                  size="sm"
                   onClick={() =>
                     update(d.weekday, (x) => ({
                       ...x,
                       ranges: [...x.ranges, { start: "18:00", end: "20:00" }],
                     }))
                   }
-                  className="text-xs text-muted-foreground underline underline-offset-4"
                 >
-                  + add range
-                </button>
+                  <PlusIcon /> Add range
+                </Button>
               )}
               {d.ranges.length === 0 && (
-                <span className="text-xs text-muted-foreground">Unavailable</span>
+                <span className="block text-xs text-muted-foreground sm:pt-2">Unavailable</span>
               )}
             </div>
           </li>
