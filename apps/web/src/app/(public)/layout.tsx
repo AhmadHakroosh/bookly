@@ -46,7 +46,7 @@ async function Shell({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex flex-1 flex-col" style={style}>
       {ws && (
-        <header className="mx-auto w-full max-w-3xl px-4 pt-6">
+        <header className="mx-auto w-full max-w-4xl px-4 pt-6">
           <Link
             href="/"
             className="inline-flex items-center gap-2.5 text-sm font-semibold tracking-tight"
@@ -63,7 +63,7 @@ async function Shell({ children }: { children: React.ReactNode }) {
         </header>
       )}
       <main className="flex-1">{children}</main>
-      <footer className="mx-auto flex w-full max-w-3xl flex-wrap items-center justify-between gap-2 px-4 py-6 text-xs text-muted-foreground">
+      <footer className="mx-auto flex w-full max-w-4xl flex-wrap items-center justify-between gap-2 px-4 py-6 text-xs text-muted-foreground">
         <span>{footer}</span>
         {brand.poweredBy && (
           <a
