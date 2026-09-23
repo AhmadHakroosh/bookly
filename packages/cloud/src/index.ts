@@ -36,7 +36,10 @@ export type Plan = {
   id: PlanId;
   name: string;
   tagline: string;
-  /** USD per month, for display; Stripe is the source of truth. */
+  /**
+   * USD per month, for display; Stripe is the source of truth. Kept a multiple of 6 so the
+   * yearly price (ten months) also divides into a whole number of dollars a month.
+   */
   priceMonthly: number;
   /** USD per year when billed annually (two months free); 0 on Free. */
   priceYearly: number;
@@ -89,8 +92,8 @@ export const PLANS: Record<PlanId, Plan> = {
     id: "pro",
     name: "Pro",
     tagline: "For professionals who take bookings seriously.",
-    priceMonthly: 19,
-    priceYearly: 190,
+    priceMonthly: 24,
+    priceYearly: 240,
     minSeats: 1,
     feePercent: 0,
     limits: {
@@ -126,8 +129,8 @@ export const PLANS: Record<PlanId, Plan> = {
     id: "team",
     name: "Team",
     tagline: "For teams that share the calendar.",
-    priceMonthly: 25,
-    priceYearly: 250,
+    priceMonthly: 30,
+    priceYearly: 300,
     minSeats: 2,
     feePercent: 0,
     limits: {

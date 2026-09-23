@@ -20,9 +20,9 @@ const { eventLocations, pickLocation } = await import("@/server/scheduling");
 
 describe("plans", () => {
   it("prices, seats and fees", () => {
-    expect([PLANS.pro.priceMonthly, PLANS.pro.priceYearly]).toEqual([19, 190]);
+    expect([PLANS.pro.priceMonthly, PLANS.pro.priceYearly]).toEqual([24, 240]);
     expect([PLANS.team.priceMonthly, PLANS.team.priceYearly, PLANS.team.minSeats]).toEqual([
-      25, 250, 2,
+      30, 300, 2,
     ]);
     expect(monthsFreeYearly(PLANS.pro)).toBe(2);
     expect(monthsFreeYearly(PLANS.team)).toBe(2);

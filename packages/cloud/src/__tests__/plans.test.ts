@@ -39,10 +39,15 @@ describe("plans", () => {
     expect(billedSeats(PLANS.pro, 1)).toBe(1);
   });
   it("prices yearly at two months free", () => {
-    expect(planPrice(PLANS.pro, "month")).toBe(19);
-    expect(planPrice(PLANS.pro, "year")).toBe(190);
-    expect(monthlyEquivalent(PLANS.pro, "year")).toBe(15.83);
-    expect(monthlyEquivalent(PLANS.team, "year")).toBe(20.83);
+    expect(planPrice(PLANS.pro, "month")).toBe(24);
+    expect(planPrice(PLANS.pro, "year")).toBe(240);
+    expect(monthlyEquivalent(PLANS.pro, "year")).toBe(20);
+    expect(monthlyEquivalent(PLANS.team, "year")).toBe(25);
+    // No decimals anywhere on the cards: yearly is ten months and divides evenly by twelve.
+    for (const p of Object.values(PLANS)) {
+      expect(Number.isInteger(monthlyEquivalent(p, "year"))).toBe(true);
+      expect(p.priceYearly).toBe(p.priceMonthly * 10);
+    }
     expect(monthsFreeYearly(PLANS.pro)).toBe(2);
     expect(monthsFreeYearly(PLANS.team)).toBe(2);
     expect(monthsFreeYearly(PLANS.free)).toBe(0);

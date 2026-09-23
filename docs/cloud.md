@@ -12,8 +12,9 @@ Set `TENANCY=multi`. Then:
 
 ## Plans and limits
 
-`packages/cloud` defines Free, Pro ($19 / $190 a year) and Team ($25 a member / $250, two seats
-minimum): limits, feature gates, display prices and each plan's platform fee on paid bookings
+`packages/cloud` defines Free, Pro ($24 / $240 a year) and Team ($30 a member / $300, two seats
+minimum; monthly prices are multiples of 6 so the yearly ten-month price also shows a whole
+number of dollars a month): limits, feature gates, display prices and each plan's platform fee on paid bookings
 (Free 5%, Pro and Team 0%; Console → Payments sets a rate per plan, stored in `platform_state`
 key `payments` as `fees`, and the workspace page overrides one workspace). A workspace's `plan` + `plan_status` decide what applies; `self-hosted` (the default
 outside cloud mode) means no limits. Enforcement points: creating event types, inviting members,

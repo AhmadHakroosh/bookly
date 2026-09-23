@@ -10,7 +10,7 @@ import { pageMetadata, SITE } from "../site";
 export const metadata: Metadata = pageMetadata({
   title: "Pricing",
   description:
-    "Bookly plans: Free with contacts, briefings, the Meeting Inbox and paid bookings at a 5% fee; Pro at $19/month or $190/year adds Bookly video, auto-capture, paid bookings with no platform fee, a custom domain; Team at $25 a member shares the customer memory, two months free yearly.",
+    "Bookly plans: Free with contacts, briefings, the Meeting Inbox and paid bookings at a 5% fee; Pro at $24/month or $240/year adds Bookly video, auto-capture, paid bookings with no platform fee, a custom domain; Team at $30 a member shares the customer memory, two months free yearly.",
   path: "/pricing",
 });
 
@@ -76,7 +76,7 @@ const FAQ: [string, string][] = [
   ],
   [
     "Monthly or yearly?",
-    "Both. Yearly is charged up front and works out to two months free ($190 a year for Pro, $250 a member for Team). Yearly plans renew each year; cancelling stops the renewal and the plan stays active until the year ends. Partial years are not refunded unless the law requires it.",
+    "Both. Yearly is charged up front and works out to two months free ($240 a year for Pro, $300 a member for Team, so $20 and $25 a month). Yearly plans renew each year; cancelling stops the renewal and the plan stays active until the year ends. Partial years are not refunded unless the law requires it.",
   ],
   [
     "What does a paid booking cost me?",
