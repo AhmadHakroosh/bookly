@@ -42,18 +42,19 @@ export function QuestionBuilder({
       <input type="hidden" name="questionsJson" value={JSON.stringify(qs)} />
       {qs.map((q, i) => (
         <div key={q.id} className="space-y-2 rounded-lg border p-2">
-          <div className="flex items-center gap-2">
+          {/* Small screens: the question text on its own line, the controls on the next. */}
+          <div className="flex flex-wrap items-center gap-2">
             <Input
               value={q.label}
               onChange={(e) => update(i, { label: e.target.value })}
               placeholder="Question"
               aria-label="Question label"
-              className="min-w-0 flex-1"
+              className="min-w-0 basis-full sm:flex-1 sm:basis-0"
             />
             <select
               value={q.type}
               onChange={(e) => update(i, { type: e.target.value as EventQuestion["type"] })}
-              className="h-8 w-28 shrink-0 rounded-lg border bg-background px-2 text-sm"
+              className="h-8 min-w-0 flex-1 rounded-lg border bg-background px-2 text-sm sm:w-28 sm:flex-none"
               aria-label="Answer type"
             >
               {TYPES.map(([v, l]) => (
