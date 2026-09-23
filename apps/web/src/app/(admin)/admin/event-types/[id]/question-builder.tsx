@@ -3,6 +3,7 @@
 import { ChevronDownIcon, ChevronUpIcon, Trash2Icon } from "lucide-react";
 import { useEffect, useState } from "react";
 import type { EventQuestion } from "@bookly/db/schema";
+import { shortId } from "@/lib/id";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
@@ -128,7 +129,7 @@ export function QuestionBuilder({
           onClick={() =>
             setQs((all) => [
               ...all,
-              { id: `q${Date.now().toString(36)}`, label: "", type: "text", required: false },
+              { id: `q${shortId(6)}`, label: "", type: "text", required: false },
             ])
           }
         >

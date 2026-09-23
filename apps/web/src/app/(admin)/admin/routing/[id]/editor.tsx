@@ -1,5 +1,6 @@
 "use client";
 
+import { shortId } from "@/lib/id";
 import { useActionState, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { XIcon } from "lucide-react";
@@ -267,7 +268,7 @@ export function RoutingFormEditor({
                 setRules((all) => [
                   ...all,
                   {
-                    id: crypto.randomUUID().slice(0, 8),
+                    id: shortId(),
                     match: "all",
                     conditions: [],
                     destination: { type: "event_type", eventTypeId: eventTypes[0]?.id ?? "" },
