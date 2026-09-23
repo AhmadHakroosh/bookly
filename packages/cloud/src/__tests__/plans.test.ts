@@ -29,8 +29,8 @@ describe("plans", () => {
   });
   it("pools Team's capture minutes per member; Pro's are flat", () => {
     expect(captureBudget(PLANS.pro, 5)).toBe(300);
-    expect(captureBudget(PLANS.team, 1)).toBe(600); // two seats minimum, two seats of minutes
-    expect(captureBudget(PLANS.team, 4)).toBe(1200);
+    expect(captureBudget(PLANS.team, 1)).toBe(400); // two seats minimum, two seats of minutes
+    expect(captureBudget(PLANS.team, 4)).toBe(800);
     expect(captureBudget(PLANS.free, 3)).toBe(0);
   });
   it("bills Team for at least two seats", () => {
@@ -39,10 +39,10 @@ describe("plans", () => {
     expect(billedSeats(PLANS.pro, 1)).toBe(1);
   });
   it("prices yearly at two months free", () => {
-    expect(planPrice(PLANS.pro, "month")).toBe(12);
-    expect(planPrice(PLANS.pro, "year")).toBe(120);
-    expect(monthlyEquivalent(PLANS.pro, "year")).toBe(10);
-    expect(monthlyEquivalent(PLANS.team, "year")).toBe(8.33);
+    expect(planPrice(PLANS.pro, "month")).toBe(19);
+    expect(planPrice(PLANS.pro, "year")).toBe(190);
+    expect(monthlyEquivalent(PLANS.pro, "year")).toBe(15.83);
+    expect(monthlyEquivalent(PLANS.team, "year")).toBe(13.33);
     expect(monthsFreeYearly(PLANS.pro)).toBe(2);
     expect(monthsFreeYearly(PLANS.team)).toBe(2);
     expect(monthsFreeYearly(PLANS.free)).toBe(0);
