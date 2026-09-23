@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { PlusIcon, XIcon } from "lucide-react";
+import { PlusIcon, Trash2Icon } from "lucide-react";
 import type { EventLocation, LocationType } from "@bookly/db/schema";
 import { Button } from "@/components/ui/button";
 import { FieldDescription } from "@/components/ui/field";
@@ -26,11 +26,9 @@ export type ConferencingReady = {
 
 const needsValue = (t: LocationType) => t === "phone" || t === "in_person" || t === "custom";
 const valueLabel = (t: LocationType) =>
-  t === "phone"
-    ? "Note for attendees, e.g. We call you (optional)"
-    : t === "in_person"
-      ? "Address (leave blank to ask the attendee for theirs)"
-      : "Text or link";
+  t === "phone" ? "Note for attendees" : t === "in_person" ? "Address" : "Text or link";
+const placeholder = (t: LocationType) =>
+  t === "phone" ? "Note, e.g. We call you" : t === "in_person" ? "Address" : "Text or link";
 
 /**
  * One or more ways to meet. The first row is the default; with more than one, the attendee
@@ -57,56 +55,59 @@ export function LocationsEditor({
       <input type="hidden" name="locationsJson" value={JSON.stringify(rows)} />
       {rows.map((r, i) => {
         const conf = r.type in ready ? ready[r.type as keyof ConferencingReady] : null;
+        const hints = [
+          i === 0 && rows.length > 1 ? "Default" : null,
+          conf === false ? "Not connected: bookings fall back to Bookly video or the email" : null,
+          r.type === "in_person" ? "Leave the address blank to ask the attendee for theirs" : null,
+          r.type === "phone" ? "Attendees enter their number; the note shows beside it" : null,
+        ].filter(Boolean);
         return (
-          <div key={r.type} className="flex flex-wrap items-center gap-2">
-            <select
-              aria-label={`Location ${i + 1}`}
-              value={r.type}
-              onChange={(e) => {
-                const type = e.target.value as LocationType;
-                update(rows.map((x, j) => (j === i ? { type, value: undefined } : x)));
-              }}
-              className="h-8 rounded-lg border bg-background px-2 text-sm"
-            >
-              {LOCATION_OPTIONS.filter(([t]) => t === r.type || !used.has(t)).map(([t, l]) => {
-                const c = t in ready ? ready[t as keyof ConferencingReady] : null;
-                return (
-                  <option key={t} value={t}>
-                    {l}
-                    {c === false ? (t === "daily" ? " — not set up" : " — not connected") : ""}
-                  </option>
-                );
-              })}
-            </select>
-            {needsValue(r.type) && (
-              <Input
-                aria-label={valueLabel(r.type)}
-                placeholder={valueLabel(r.type)}
-                value={r.value ?? ""}
-                onChange={(e) =>
-                  update(rows.map((x, j) => (j === i ? { ...x, value: e.target.value } : x)))
-                }
-                className="h-8 min-w-48 flex-1"
-              />
-            )}
-            {i === 0 && rows.length > 1 && (
-              <span className="text-xs text-muted-foreground">default</span>
-            )}
-            {conf === false && (
-              <span className="text-xs text-muted-foreground">
-                not connected: bookings fall back to Bookly video or the email
-              </span>
-            )}
-            {rows.length > 1 && (
+          <div key={r.type} className="space-y-1">
+            <div className="flex items-center gap-2">
+              <select
+                aria-label={`Location ${i + 1}`}
+                value={r.type}
+                onChange={(e) => {
+                  const type = e.target.value as LocationType;
+                  update(rows.map((x, j) => (j === i ? { type, value: undefined } : x)));
+                }}
+                className={`h-8 rounded-lg border bg-background px-2 text-sm ${needsValue(r.type) ? "w-40 shrink-0" : "min-w-0 flex-1"}`}
+              >
+                {LOCATION_OPTIONS.filter(([t]) => t === r.type || !used.has(t)).map(([t, l]) => {
+                  const c = t in ready ? ready[t as keyof ConferencingReady] : null;
+                  return (
+                    <option key={t} value={t}>
+                      {l}
+                      {c === false ? (t === "daily" ? " — not set up" : " — not connected") : ""}
+                    </option>
+                  );
+                })}
+              </select>
+              {needsValue(r.type) && (
+                <Input
+                  aria-label={valueLabel(r.type)}
+                  placeholder={placeholder(r.type)}
+                  value={r.value ?? ""}
+                  onChange={(e) =>
+                    update(rows.map((x, j) => (j === i ? { ...x, value: e.target.value } : x)))
+                  }
+                  className="h-8 min-w-0 flex-1"
+                />
+              )}
               <Button
                 type="button"
                 variant="ghost"
                 size="icon-sm"
                 aria-label={`Remove location ${i + 1}`}
+                disabled={rows.length === 1}
+                className="shrink-0 text-muted-foreground hover:text-destructive"
                 onClick={() => update(rows.filter((_, j) => j !== i))}
               >
-                <XIcon />
+                <Trash2Icon />
               </Button>
+            </div>
+            {hints.length > 0 && (
+              <p className="text-xs text-muted-foreground">{hints.join(" · ")}</p>
             )}
           </div>
         );
