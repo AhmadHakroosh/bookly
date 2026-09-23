@@ -24,6 +24,7 @@ import {
 import { ScheduleForm } from "./schedule-form";
 import { PageSkeleton } from "@/components/page-skeleton";
 import { DatePicker } from "@/components/date-picker";
+import { TimePicker } from "@/components/time-picker";
 
 export const metadata = { title: "Availability" };
 
@@ -146,11 +147,11 @@ async function AvailabilityPage({ searchParams }: PageProps<"/admin/availability
           </label>
           <label className="block">
             <span className="mb-1 block text-xs font-medium">From</span>
-            <input type="time" name="start" className="h-8 rounded-md border bg-background px-2" />
+            <TimePicker name="start" ariaLabel="From" className="w-28" />
           </label>
           <label className="block">
             <span className="mb-1 block text-xs font-medium">To</span>
-            <input type="time" name="end" className="h-8 rounded-md border bg-background px-2" />
+            <TimePicker name="end" ariaLabel="To" className="w-28" />
           </label>
           <label className="inline-flex items-center gap-1.5 pb-1.5">
             <input type="checkbox" name="blocked" /> Unavailable all day

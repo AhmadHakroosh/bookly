@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { TimezoneField } from "@/components/timezone-field";
 import { saveSchedule } from "../scheduling-actions";
+import { TimePicker } from "@/components/time-picker";
 
 type Range = { start: string; end: string; focus?: boolean };
 type Day = { weekday: number; label: string; ranges: Range[] };
@@ -95,36 +96,32 @@ export function ScheduleForm({
             <div className="min-w-0 flex-1 space-y-2">
               {d.ranges.map((r, i) => (
                 <div key={i} className="flex items-center gap-2">
-                  <input
-                    type="time"
+                  <TimePicker
                     name={`start_${d.weekday}`}
                     value={r.start}
-                    onChange={(e) =>
+                    required
+                    ariaLabel="From"
+                    className="min-w-0 flex-1 sm:w-28 sm:flex-none"
+                    onValueChange={(v) =>
                       update(d.weekday, (x) => ({
                         ...x,
-                        ranges: x.ranges.map((y, j) =>
-                          j === i ? { ...y, start: e.target.value } : y,
-                        ),
+                        ranges: x.ranges.map((y, j) => (j === i ? { ...y, start: v } : y)),
                       }))
                     }
-                    aria-label="From"
-                    className="h-8 min-w-0 flex-1 rounded-lg border bg-background px-2 text-sm sm:w-28 sm:flex-none"
                   />
                   <span className="text-muted-foreground">–</span>
-                  <input
-                    type="time"
+                  <TimePicker
                     name={`end_${d.weekday}`}
                     value={r.end}
-                    onChange={(e) =>
+                    required
+                    ariaLabel="To"
+                    className="min-w-0 flex-1 sm:w-28 sm:flex-none"
+                    onValueChange={(v) =>
                       update(d.weekday, (x) => ({
                         ...x,
-                        ranges: x.ranges.map((y, j) =>
-                          j === i ? { ...y, end: e.target.value } : y,
-                        ),
+                        ranges: x.ranges.map((y, j) => (j === i ? { ...y, end: v } : y)),
                       }))
                     }
-                    aria-label="To"
-                    className="h-8 min-w-0 flex-1 rounded-lg border bg-background px-2 text-sm sm:w-28 sm:flex-none"
                   />
                   <input
                     type="hidden"
