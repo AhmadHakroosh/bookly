@@ -23,6 +23,7 @@ import {
 } from "../scheduling-actions";
 import { ScheduleForm } from "./schedule-form";
 import { PageSkeleton } from "@/components/page-skeleton";
+import { DatePicker } from "@/components/date-picker";
 
 export const metadata = { title: "Availability" };
 
@@ -141,12 +142,7 @@ async function AvailabilityPage({ searchParams }: PageProps<"/admin/availability
           <input type="hidden" name="scheduleId" value={s.id} />
           <label className="block">
             <span className="mb-1 block text-xs font-medium">Date</span>
-            <input
-              type="date"
-              name="date"
-              required
-              className="h-8 rounded-md border bg-background px-2"
-            />
+            <DatePicker name="date" required ariaLabel="Date" className="w-40" />
           </label>
           <label className="block">
             <span className="mb-1 block text-xs font-medium">From</span>

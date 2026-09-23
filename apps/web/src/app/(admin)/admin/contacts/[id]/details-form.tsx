@@ -7,6 +7,7 @@ import { Field, FieldDescription, FieldGroup, FieldLabel } from "@/components/ui
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { saveContact, type ContactState } from "../actions";
+import { DatePicker } from "@/components/date-picker";
 
 type Values = {
   id: string;
@@ -47,11 +48,11 @@ export function ContactDetailsForm({ contact }: { contact: Values }) {
         </Field>
         <Field>
           <FieldLabel htmlFor="nextFollowUpAt">Follow up on</FieldLabel>
-          <Input
+          <DatePicker
             id="nextFollowUpAt"
             name="nextFollowUpAt"
-            type="date"
             defaultValue={contact.nextFollowUpAt}
+            placeholder="No date"
           />
           <FieldDescription>Shows up in your inbox when the day comes.</FieldDescription>
         </Field>

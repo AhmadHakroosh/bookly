@@ -154,6 +154,7 @@ test.describe("sign-up and tenants", () => {
     for (const q of await page.locator('[name^="q_"]').all()) {
       const tag = await q.evaluate((el) => el.tagName.toLowerCase());
       if (tag === "select") await q.selectOption({ index: 1 });
+      else if ((await q.getAttribute("type")) === "hidden") continue;
       else await q.fill("E2E answer");
     }
     await page.getByRole("button", { name: "Confirm booking" }).click();

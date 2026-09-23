@@ -3,6 +3,7 @@ import { SubmitButton } from "@/components/submit-button";
 import { TaskDoneButton, TaskRemoveButton } from "@/components/task-buttons";
 import { fmtDate } from "@/lib/time";
 import { addTaskAction, removeTask, toggleTask } from "@/app/(admin)/admin/scheduling-actions";
+import { DatePicker } from "@/components/date-picker";
 
 /** Open tasks with complete / remove, plus a quick-add row. Server component. */
 export function TaskList({
@@ -58,12 +59,7 @@ export function TaskList({
           placeholder="Add a task…"
           className="h-8 min-w-48 flex-1 rounded-lg border bg-background px-2 text-sm"
         />
-        <input
-          name="dueAt"
-          type="date"
-          aria-label="Due date"
-          className="h-8 rounded-lg border bg-background px-2 text-sm"
-        />
+        <DatePicker name="dueAt" ariaLabel="Due date" placeholder="Due date" className="w-36" />
         <SubmitButton variant="outline">Add</SubmitButton>
       </form>
     </section>

@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { inviteMember, type TeamState } from "./actions";
+import { Dropdown } from "@/components/dropdown";
 
 export function InviteForm() {
   const [state, action, pending] = useActionState(inviteMember, {} as TeamState);
@@ -21,14 +22,16 @@ export function InviteForm() {
         required
         className="flex-1"
       />
-      <select
+      <Dropdown
         name="role"
         defaultValue="member"
-        className="h-8 rounded-lg border bg-background px-2 text-sm"
-      >
-        <option value="member">Member (own booking page)</option>
-        <option value="admin">Admin (manages everything)</option>
-      </select>
+        ariaLabel="Role"
+        className="w-64"
+        options={[
+          { value: "member", label: "Member (own booking page)" },
+          { value: "admin", label: "Admin (manages everything)" },
+        ]}
+      />
       <Button type="submit" disabled={pending}>
         {pending ? "Sending…" : "Invite"}
       </Button>

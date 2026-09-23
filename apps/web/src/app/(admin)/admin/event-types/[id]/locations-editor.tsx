@@ -6,6 +6,7 @@ import type { EventLocation, LocationType } from "@bookly/db/schema";
 import { Button } from "@/components/ui/button";
 import { FieldDescription } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { Dropdown } from "@/components/dropdown";
 
 export const LOCATION_OPTIONS: [LocationType, string][] = [
   ["daily", "Bookly video"],
@@ -64,25 +65,24 @@ export function LocationsEditor({
         return (
           <div key={r.type} className="space-y-1">
             <div className="flex items-center gap-2">
-              <select
-                aria-label={`Location ${i + 1}`}
+              <Dropdown
+                ariaLabel={`Location ${i + 1}`}
                 value={r.type}
-                onChange={(e) => {
-                  const type = e.target.value as LocationType;
+                className={needsValue(r.type) ? "w-40 shrink-0" : "min-w-0 flex-1"}
+                options={LOCATION_OPTIONS.filter(([t]) => t === r.type || !used.has(t)).map(
+                  ([t, l]) => {
+                    const c = t in ready ? ready[t as keyof ConferencingReady] : null;
+                    return {
+                      value: t,
+                      label: `${l}${c === false ? (t === "daily" ? " — not set up" : " — not connected") : ""}`,
+                    };
+                  },
+                )}
+                onValueChange={(v) => {
+                  const type = v as LocationType;
                   update(rows.map((x, j) => (j === i ? { type, value: undefined } : x)));
                 }}
-                className={`h-8 rounded-lg border bg-background px-2 text-sm ${needsValue(r.type) ? "w-40 shrink-0" : "min-w-0 flex-1"}`}
-              >
-                {LOCATION_OPTIONS.filter(([t]) => t === r.type || !used.has(t)).map(([t, l]) => {
-                  const c = t in ready ? ready[t as keyof ConferencingReady] : null;
-                  return (
-                    <option key={t} value={t}>
-                      {l}
-                      {c === false ? (t === "daily" ? " — not set up" : " — not connected") : ""}
-                    </option>
-                  );
-                })}
-              </select>
+              />
               {needsValue(r.type) && (
                 <Input
                   aria-label={valueLabel(r.type)}

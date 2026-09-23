@@ -11,6 +11,7 @@ import type { EventLocation, EventQuestion, FollowUp, Recurrence } from "@bookly
 import { deleteEventType, saveEventType } from "../../scheduling-actions";
 import { QuestionBuilder } from "./question-builder";
 import { LocationsEditor, type ConferencingReady } from "./locations-editor";
+import { Dropdown } from "@/components/dropdown";
 
 type Values = {
   id: string;
@@ -172,16 +173,16 @@ export function EventTypeForm({
         {captureable && (
           <Field>
             <FieldLabel htmlFor="autoCapture">Auto-capture</FieldLabel>
-            <select
+            <Dropdown
               id="autoCapture"
               name="autoCapture"
               defaultValue={initial.autoCapture}
-              className="h-8 rounded-lg border bg-background px-2 text-sm"
-            >
-              <option value="off">Off</option>
-              <option value="ask">Ask the attendee when booking</option>
-              <option value="always">Always (stated in the confirmation email)</option>
-            </select>
+              options={[
+                { value: "off", label: "Off" },
+                { value: "ask", label: "Ask the attendee when booking" },
+                { value: "always", label: "Always (stated in the confirmation email)" },
+              ]}
+            />
             <FieldDescription>
               {types.every((t) => t === "daily" || !["zoom", "google_meet", "teams"].includes(t))
                 ? "Transcribes the call and prepares notes, action items and a follow-up for you to review. Both sides see a notice in the call."
@@ -206,16 +207,16 @@ export function EventTypeForm({
             <div className="grid gap-4 sm:grid-cols-3">
               <Field>
                 <FieldLabel htmlFor="recurFreq">Repeats</FieldLabel>
-                <select
+                <Dropdown
                   id="recurFreq"
                   name="recurFreq"
                   defaultValue={initial.recurrence.freq ?? "weekly"}
-                  className="h-8 rounded-lg border bg-background px-2 text-sm"
-                >
-                  <option value="daily">Daily</option>
-                  <option value="weekly">Weekly</option>
-                  <option value="monthly">Monthly</option>
-                </select>
+                  options={[
+                    { value: "daily", label: "Daily" },
+                    { value: "weekly", label: "Weekly" },
+                    { value: "monthly", label: "Monthly" },
+                  ]}
+                />
               </Field>
               <Field>
                 <FieldLabel htmlFor="recurInterval">Every</FieldLabel>
@@ -266,19 +267,15 @@ export function EventTypeForm({
         <div className="grid gap-6 sm:grid-cols-2">
           <Field>
             <FieldLabel htmlFor="scheduleId">Availability schedule</FieldLabel>
-            <select
+            <Dropdown
               id="scheduleId"
               name="scheduleId"
               defaultValue={initial.scheduleId}
-              className="h-8 rounded-lg border bg-background px-2 text-sm"
-            >
-              {schedules.map((s) => (
-                <option key={s.id} value={s.id}>
-                  {s.name}
-                  {s.isDefault ? " (default)" : ""}
-                </option>
-              ))}
-            </select>
+              options={schedules.map((s) => ({
+                value: s.id,
+                label: `${s.name}${s.isDefault ? " (default)" : ""}`,
+              }))}
+            />
           </Field>
           <Field>
             <FieldLabel htmlFor="color">Color</FieldLabel>
@@ -336,17 +333,17 @@ export function EventTypeForm({
           </Field>
           <Field>
             <FieldLabel htmlFor="assignment">Who hosts</FieldLabel>
-            <select
+            <Dropdown
               id="assignment"
               name="assignment"
               value={assignment}
-              onChange={(e) => setAssignment(e.target.value as Values["assignment"])}
-              className="h-8 rounded-lg border bg-background px-2 text-sm"
-            >
-              <option value="single">Just me</option>
-              <option value="round_robin">Round robin (one of the hosts, evenly)</option>
-              <option value="collective">Collective (all hosts together)</option>
-            </select>
+              onValueChange={(v) => setAssignment(v as Values["assignment"])}
+              options={[
+                { value: "single", label: "Just me" },
+                { value: "round_robin", label: "Round robin (one of the hosts, evenly)" },
+                { value: "collective", label: "Collective (all hosts together)" },
+              ]}
+            />
             {assignment !== "single" && (
               <div className="mt-2 space-y-1 text-sm">
                 {teammates.length === 0 && (

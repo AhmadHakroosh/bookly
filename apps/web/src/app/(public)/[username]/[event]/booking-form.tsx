@@ -4,6 +4,7 @@ import { useActionState, useState } from "react";
 import type { EventQuestion } from "@bookly/db/schema";
 import { countryOptions } from "@/lib/phone";
 import { book, type BookState } from "./actions";
+import { Dropdown } from "@/components/dropdown";
 
 type Props = {
   username: string;
@@ -109,19 +110,18 @@ export function BookingForm({
             )}
           </span>
           <div className="flex gap-2">
-            <select
+            <Dropdown
               name="phoneCountry"
-              aria-label="Country"
+              ariaLabel="Country"
               value={country}
-              onChange={(e) => setCountry(e.target.value)}
-              className={`${field} w-auto max-w-52 shrink-0`}
-            >
-              {countries.map((c) => (
-                <option key={c.code} value={c.code}>
-                  {c.flag} {c.name} {c.calling}
-                </option>
-              ))}
-            </select>
+              onValueChange={setCountry}
+              className="h-10 w-auto max-w-52 shrink-0"
+              contentClassName="max-h-80"
+              options={countries.map((c) => ({
+                value: c.code,
+                label: `${c.flag} ${c.name} ${c.calling}`,
+              }))}
+            />
             <div className="relative flex-1">
               <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-muted-foreground">
                 {calling}
@@ -193,16 +193,13 @@ export function BookingForm({
               className="w-full rounded-lg border bg-background px-3 py-2 text-sm"
             />
           ) : q.type === "select" ? (
-            <select name={`q_${q.id}`} required={q.required} className={field} defaultValue="">
-              <option value="" disabled>
-                Choose…
-              </option>
-              {(q.options ?? []).map((o) => (
-                <option key={o} value={o}>
-                  {o}
-                </option>
-              ))}
-            </select>
+            <Dropdown
+              name={`q_${q.id}`}
+              required={q.required}
+              className="h-10"
+              ariaLabel={q.label}
+              options={(q.options ?? []).map((o) => ({ value: o, label: o }))}
+            />
           ) : (
             <input
               name={`q_${q.id}`}

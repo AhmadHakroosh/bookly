@@ -36,6 +36,7 @@ import { templatesFor } from "@/server/outreach";
 import { paymentsReady } from "@/server/payments";
 import { ContactDetailsForm } from "./details-form";
 import { Outreach } from "./outreach";
+import { Dropdown } from "@/components/dropdown";
 
 export const metadata = { title: "Contact" };
 
@@ -91,18 +92,14 @@ async function ContactPage({ params }: PageProps<"/admin/contacts/[id]">) {
           <label htmlFor="stage" className="text-muted-foreground">
             Stage
           </label>
-          <select
+          <Dropdown
             id="stage"
             name="stage"
             defaultValue={c.stage}
-            className="h-8 rounded-lg border bg-background px-2 text-sm capitalize"
-          >
-            {CONTACT_STAGES.map((s) => (
-              <option key={s} value={s}>
-                {s}
-              </option>
-            ))}
-          </select>
+            className="w-36 capitalize"
+            contentClassName="capitalize"
+            options={CONTACT_STAGES.map((s) => ({ value: s, label: s }))}
+          />
           <SubmitButton variant="outline">Update</SubmitButton>
         </form>
       </div>

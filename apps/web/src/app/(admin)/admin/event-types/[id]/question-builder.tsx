@@ -6,6 +6,7 @@ import type { EventQuestion } from "@bookly/db/schema";
 import { shortId } from "@/lib/id";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Dropdown } from "@/components/dropdown";
 
 const TYPES: [EventQuestion["type"], string][] = [
   ["text", "Short text"],
@@ -52,18 +53,13 @@ export function QuestionBuilder({
               aria-label="Question label"
               className="min-w-0 basis-full sm:flex-1 sm:basis-0"
             />
-            <select
+            <Dropdown
               value={q.type}
-              onChange={(e) => update(i, { type: e.target.value as EventQuestion["type"] })}
-              className="h-8 min-w-0 flex-1 rounded-lg border bg-background px-2 text-sm sm:w-28 sm:flex-none"
-              aria-label="Answer type"
-            >
-              {TYPES.map(([v, l]) => (
-                <option key={v} value={v}>
-                  {l}
-                </option>
-              ))}
-            </select>
+              onValueChange={(v) => update(i, { type: v as EventQuestion["type"] })}
+              className="min-w-0 flex-1 sm:w-28 sm:flex-none"
+              ariaLabel="Answer type"
+              options={TYPES.map(([v, l]) => ({ value: v, label: l }))}
+            />
             <label className="inline-flex shrink-0 items-center gap-1.5 text-xs">
               <input
                 type="checkbox"

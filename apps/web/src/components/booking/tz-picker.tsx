@@ -1,28 +1,27 @@
 "use client";
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { Dropdown } from "@/components/dropdown";
 
 export function TzPicker({ value, zones }: { value: string; zones: string[] }) {
   const router = useRouter();
   const pathname = usePathname();
   const sp = useSearchParams();
+  const list = zones.includes(value) ? zones : [value, ...zones];
   return (
-    <select
-      aria-label="Timezone"
+    <Dropdown
+      ariaLabel="Timezone"
       value={value}
-      onChange={(e) => {
+      size="sm"
+      className="max-w-full"
+      contentClassName="max-h-80"
+      options={list.map((z) => ({ value: z, label: z.replace(/_/g, " ") }))}
+      onValueChange={(tz) => {
         const next = new URLSearchParams(sp.toString());
-        next.set("tz", e.target.value);
+        next.set("tz", tz);
         next.delete("slot");
         router.replace(`${pathname}?${next.toString()}`);
       }}
-      className="max-w-full rounded-md border bg-background px-2 py-1 text-xs"
-    >
-      {(zones.includes(value) ? zones : [value, ...zones]).map((z) => (
-        <option key={z} value={z}>
-          {z.replace(/_/g, " ")}
-        </option>
-      ))}
-    </select>
+    />
   );
 }

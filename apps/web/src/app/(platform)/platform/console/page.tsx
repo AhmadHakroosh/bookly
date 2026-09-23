@@ -8,6 +8,7 @@ import { listWorkspacesForConsole, platformStats } from "@/server/ops";
 import { ExternalLink } from "@/components/links";
 import { tenantUrl } from "@/server/platform";
 import { PageSkeleton } from "@/components/page-skeleton";
+import { Dropdown } from "@/components/dropdown";
 
 export const metadata = { title: "Console", robots: { index: false } };
 
@@ -77,30 +78,28 @@ async function ConsoleHome({ searchParams }: PageProps<"/platform/console">) {
           placeholder="Search name, slug or owner email"
           className="h-8 w-full min-w-0 rounded-lg border bg-background px-2 text-sm sm:w-72"
         />
-        <select
+        <Dropdown
           name="plan"
           defaultValue={plan}
-          className="h-8 rounded-lg border bg-background px-2 text-sm"
-          aria-label="Plan"
-        >
-          <option value="">Any plan</option>
-          {Object.values(PLANS).map((p) => (
-            <option key={p.id} value={p.id}>
-              {p.name}
-            </option>
-          ))}
-          <option value="self-hosted">Self-hosted</option>
-        </select>
-        <select
+          ariaLabel="Plan"
+          className="w-40"
+          options={[
+            { value: "", label: "Any plan" },
+            ...Object.values(PLANS).map((p) => ({ value: p.id, label: p.name })),
+            { value: "self-hosted", label: "Self-hosted" },
+          ]}
+        />
+        <Dropdown
           name="status"
           defaultValue={status ?? ""}
-          className="h-8 rounded-lg border bg-background px-2 text-sm"
-          aria-label="Status"
-        >
-          <option value="">Any status</option>
-          <option value="active">Active</option>
-          <option value="suspended">Suspended</option>
-        </select>
+          ariaLabel="Status"
+          className="w-36"
+          options={[
+            { value: "", label: "Any status" },
+            { value: "active", label: "Active" },
+            { value: "suspended", label: "Suspended" },
+          ]}
+        />
         <button type="submit" className="h-8 rounded-lg border px-3 text-sm">
           Filter
         </button>

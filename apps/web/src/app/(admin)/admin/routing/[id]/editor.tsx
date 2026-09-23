@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { QuestionBuilder } from "../../event-types/[id]/question-builder";
 import { deleteRoutingForm, saveRoutingForm, type RoutingSaveState } from "../actions";
+import { Dropdown } from "@/components/dropdown";
 
 type EventTypeOption = { id: string; label: string };
 const OPS: [RoutingRule["conditions"][number]["op"], string][] = [
@@ -31,41 +32,35 @@ function DestinationPicker({
   eventTypes: EventTypeOption[];
 }) {
   const type = value?.type ?? "event_type";
-  const select = "h-8 rounded-lg border bg-background px-2 text-sm";
   return (
     <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
-      <select
+      <Dropdown
         value={type}
-        aria-label="Destination type"
-        className={`${select} min-w-0 basis-full sm:w-44 sm:basis-auto`}
-        onChange={(e) => {
-          const t = e.target.value;
+        ariaLabel="Destination type"
+        className="min-w-0 basis-full sm:w-44 sm:basis-auto"
+        options={[
+          { value: "event_type", label: "Book an event type" },
+          { value: "url", label: "Open a link" },
+          { value: "message", label: "Show a message" },
+        ]}
+        onValueChange={(t) =>
           onChange(
             t === "url"
               ? { type: "url", url: "" }
               : t === "message"
                 ? { type: "message", text: "" }
                 : { type: "event_type", eventTypeId: eventTypes[0]?.id ?? "" },
-          );
-        }}
-      >
-        <option value="event_type">Book an event type</option>
-        <option value="url">Open a link</option>
-        <option value="message">Show a message</option>
-      </select>
+          )
+        }
+      />
       {(!value || value.type === "event_type") && (
-        <select
+        <Dropdown
           value={value?.type === "event_type" ? value.eventTypeId : ""}
-          aria-label="Event type"
-          className={`${select} min-w-0 flex-1`}
-          onChange={(e) => onChange({ type: "event_type", eventTypeId: e.target.value })}
-        >
-          {eventTypes.map((et) => (
-            <option key={et.id} value={et.id}>
-              {et.label}
-            </option>
-          ))}
-        </select>
+          ariaLabel="Event type"
+          className="min-w-0 flex-1"
+          options={eventTypes.map((et) => ({ value: et.id, label: et.label }))}
+          onValueChange={(id) => onChange({ type: "event_type", eventTypeId: id })}
+        />
       )}
       {value?.type === "url" && (
         <Input
@@ -106,7 +101,6 @@ export function RoutingFormEditor({
   }, [state]);
   const setRule = (i: number, patch: Partial<RoutingRule>) =>
     setRules((all) => all.map((r, j) => (j === i ? { ...r, ...patch } : r)));
-  const select = "h-8 rounded-lg border bg-background px-2 text-sm";
   return (
     <form action={action} className="max-w-3xl space-y-8">
       <input type="hidden" name="id" value={form.id} />
@@ -154,15 +148,16 @@ export function RoutingFormEditor({
               <div key={r.id} className="space-y-2 rounded-lg border p-3">
                 <div className="flex flex-wrap items-center gap-2 text-sm">
                   <span>When</span>
-                  <select
+                  <Dropdown
                     value={r.match}
-                    aria-label="Match"
-                    className={select}
-                    onChange={(e) => setRule(i, { match: e.target.value as RoutingRule["match"] })}
-                  >
-                    <option value="all">all</option>
-                    <option value="any">any</option>
-                  </select>
+                    ariaLabel="Match"
+                    className="w-20"
+                    options={[
+                      { value: "all", label: "all" },
+                      { value: "any", label: "any" },
+                    ]}
+                    onValueChange={(v) => setRule(i, { match: v as RoutingRule["match"] })}
+                  />
                   <span>of these hold:</span>
                   <Button
                     type="button"
@@ -177,42 +172,32 @@ export function RoutingFormEditor({
                 </div>
                 {r.conditions.map((c, k) => (
                   <div key={k} className="flex flex-wrap items-center gap-2">
-                    <select
+                    <Dropdown
                       value={c.questionId}
-                      aria-label="Question"
-                      className={`${select} min-w-0 basis-full sm:flex-1 sm:basis-0`}
-                      onChange={(e) =>
+                      ariaLabel="Question"
+                      className="min-w-0 basis-full sm:flex-1 sm:basis-0"
+                      options={questionIds.map((q) => ({ value: q.id, label: q.label || q.id }))}
+                      onValueChange={(v) =>
                         setRule(i, {
                           conditions: r.conditions.map((x, m) =>
-                            m === k ? { ...x, questionId: e.target.value } : x,
+                            m === k ? { ...x, questionId: v } : x,
                           ),
                         })
                       }
-                    >
-                      {questionIds.map((q) => (
-                        <option key={q.id} value={q.id}>
-                          {q.label || q.id}
-                        </option>
-                      ))}
-                    </select>
-                    <select
+                    />
+                    <Dropdown
                       value={c.op}
-                      aria-label="Operator"
-                      className={`${select} shrink-0 ${c.op === "not_empty" ? "min-w-0 flex-1 sm:w-36 sm:flex-none" : "w-36"}`}
-                      onChange={(e) =>
+                      ariaLabel="Operator"
+                      className={`shrink-0 ${c.op === "not_empty" ? "min-w-0 flex-1 sm:w-36 sm:flex-none" : "w-36"}`}
+                      options={OPS.map(([v, l]) => ({ value: v, label: l }))}
+                      onValueChange={(v) =>
                         setRule(i, {
                           conditions: r.conditions.map((x, m) =>
-                            m === k ? { ...x, op: e.target.value as typeof c.op } : x,
+                            m === k ? { ...x, op: v as typeof c.op } : x,
                           ),
                         })
                       }
-                    >
-                      {OPS.map(([v, l]) => (
-                        <option key={v} value={v}>
-                          {l}
-                        </option>
-                      ))}
-                    </select>
+                    />
                     {c.op !== "not_empty" && (
                       <Input
                         value={c.value}

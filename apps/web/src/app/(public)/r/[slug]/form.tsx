@@ -3,6 +3,7 @@
 import { useActionState } from "react";
 import type { EventQuestion } from "@bookly/db/schema";
 import { submitRouting, type RoutingState } from "./actions";
+import { Dropdown } from "@/components/dropdown";
 
 export function RoutingFormView({ slug, questions }: { slug: string; questions: EventQuestion[] }) {
   const [state, action, pending] = useActionState(submitRouting, {} as RoutingState);
@@ -45,16 +46,13 @@ export function RoutingFormView({ slug, questions }: { slug: string; questions: 
               className="w-full rounded-lg border bg-background px-3 py-2 text-sm"
             />
           ) : q.type === "select" ? (
-            <select name={`q_${q.id}`} required={q.required} className={field} defaultValue="">
-              <option value="" disabled>
-                Choose…
-              </option>
-              {(q.options ?? []).map((o) => (
-                <option key={o} value={o}>
-                  {o}
-                </option>
-              ))}
-            </select>
+            <Dropdown
+              name={`q_${q.id}`}
+              required={q.required}
+              className="h-10"
+              ariaLabel={q.label}
+              options={(q.options ?? []).map((o) => ({ value: o, label: o }))}
+            />
           ) : (
             <input
               name={`q_${q.id}`}

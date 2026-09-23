@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Field, FieldDescription, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { saveNotificationPrefs, type PrefsState } from "./actions";
+import { Dropdown } from "@/components/dropdown";
 
 export function PrefsForm({
   phone,
@@ -36,20 +37,25 @@ export function PrefsForm({
           </Field>
           <Field>
             <FieldLabel htmlFor="channel">Text me via</FieldLabel>
-            <select
+            <Dropdown
               id="channel"
               name="channel"
               defaultValue={prefs.channel ?? "none"}
-              className="h-8 rounded-lg border bg-background px-2 text-sm"
-            >
-              <option value="none">Email only</option>
-              <option value="whatsapp" disabled={!channels.whatsapp}>
-                WhatsApp{channels.whatsapp ? "" : " (not set up on this server)"}
-              </option>
-              <option value="sms" disabled={!channels.sms}>
-                SMS{channels.sms ? "" : " (not set up on this server)"}
-              </option>
-            </select>
+              className="w-72"
+              options={[
+                { value: "none", label: "Email only" },
+                {
+                  value: "whatsapp",
+                  label: `WhatsApp${channels.whatsapp ? "" : " (not set up on this server)"}`,
+                  disabled: !channels.whatsapp,
+                },
+                {
+                  value: "sms",
+                  label: `SMS${channels.sms ? "" : " (not set up on this server)"}`,
+                  disabled: !channels.sms,
+                },
+              ]}
+            />
             {!textAvailable && (
               <FieldDescription>
                 Text messages need Twilio keys on the server (docs/notifications.md).

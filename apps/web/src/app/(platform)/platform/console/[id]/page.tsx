@@ -19,6 +19,8 @@ import {
   suspendWorkspace,
   unsuspendWorkspace,
 } from "../actions";
+import { Dropdown } from "@/components/dropdown";
+import { DatePicker } from "@/components/date-picker";
 
 export const metadata = { title: "Workspace", robots: { index: false } };
 
@@ -182,24 +184,14 @@ async function WorkspacePage({ params }: PageProps<"/platform/console/[id]">) {
             action={setPlan.bind(null, ws.id)}
             className="mt-2 flex flex-wrap items-center gap-2"
           >
-            <select
+            <Dropdown
               name="plan"
               defaultValue={ws.plan in PLANS ? ws.plan : "pro"}
-              className="h-8 rounded-lg border bg-background px-2 text-sm"
-              aria-label="Plan"
-            >
-              {Object.values(PLANS).map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.name}
-                </option>
-              ))}
-            </select>
-            <input
-              name="until"
-              type="date"
-              className="h-8 rounded-lg border bg-background px-2 text-sm"
-              aria-label="Until"
+              ariaLabel="Plan"
+              className="w-28"
+              options={Object.values(PLANS).map((p) => ({ value: p.id, label: p.name }))}
             />
+            <DatePicker name="until" ariaLabel="Until" placeholder="No expiry" className="w-40" />
             <input
               name="note"
               placeholder="Note (e.g. 3-month trial)"

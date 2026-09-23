@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { SubmitButton } from "@/components/submit-button";
 import { ConnectButton } from "@/components/connect-button";
 import { disconnect, reloadCalendars, saveCalendarSettings } from "../integrations-actions";
+import { Dropdown } from "@/components/dropdown";
 
 export function CalendarCard({
   name,
@@ -111,18 +112,13 @@ export function CalendarCard({
           <label className="mb-1 block font-medium" htmlFor={`dest-${integration.provider}`}>
             Add new bookings to
           </label>
-          <select
+          <Dropdown
             id={`dest-${integration.provider}`}
             name="destinationCalendarId"
             defaultValue={s.destinationCalendarId ?? ""}
-            className="h-8 rounded-lg border bg-background px-2"
-          >
-            {integration.calendars.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.name}
-              </option>
-            ))}
-          </select>
+            className="w-64"
+            options={integration.calendars.map((c) => ({ value: c.id, label: c.name }))}
+          />
         </div>
         <div className="flex items-center gap-3">
           <Button type="submit" disabled={pending}>
