@@ -65,6 +65,8 @@ export const envSchema = z.object({
   /** Anthropic API key; without it briefs are plain summaries and capture is manual. */
   ANTHROPIC_API_KEY: z.string().optional(),
   ASSISTANT_MODEL: z.string().default("claude-sonnet-5"),
+  /** Pre-meeting briefings are short and frequent: a small model keeps them cheap. */
+  ASSISTANT_BRIEF_MODEL: z.string().default("claude-haiku-4-5-20251001"),
 
   // ---- Payments (Stripe) ----
   STRIPE_SECRET_KEY: z.string().optional(),
@@ -80,6 +82,13 @@ export const envSchema = z.object({
   /** Optional yearly prices; without them the plans are monthly only. */
   STRIPE_PRICE_PRO_YEARLY: z.string().optional(),
   STRIPE_PRICE_TEAM_YEARLY: z.string().optional(),
+  /**
+   * Metered price for transcription minutes beyond the plan's included minutes (attached to a
+   * Stripe Billing meter whose event name is STRIPE_METER_CAPTURE_EVENT). Unset = transcription
+   * stops at the budget.
+   */
+  STRIPE_PRICE_CAPTURE_OVERAGE: z.string().optional(),
+  STRIPE_METER_CAPTURE_EVENT: z.string().default("capture_minutes"),
   /** Comma-separated emails allowed into the operator console at /console on the platform host. */
   PLATFORM_ADMIN_EMAILS: z.string().default(""),
   /** Shown on the marketing site's contact, legal and footer (cloud mode). */

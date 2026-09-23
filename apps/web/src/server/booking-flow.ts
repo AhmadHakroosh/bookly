@@ -24,7 +24,7 @@ import { isBlocked } from "./abuse";
 import { toE164 } from "@/lib/phone";
 import { priorityForEmail, trackBooking } from "./contacts";
 import { refreshWorkspace } from "./cache";
-import { assertBookingQuota, LimitError } from "./limits";
+import { hasFeature, assertBookingQuota, LimitError } from "./limits";
 import { occurrences, recurrenceOf } from "./recurrence";
 import {
   baseUrl,
@@ -297,12 +297,13 @@ export async function createBooking(
   }
   // Where to meet: the attendee's pick, else the only option, else what the rescheduled
   // booking had (when the event type still offers it).
+  const video = { video: hasFeature(workspace, "booklyVideo") };
   let location =
-    pickLocation(eventType, input.location) ??
-    (prev && eventLocations(eventType).some((l) => l.type === prev!.location.type)
+    pickLocation(eventType, input.location, video) ??
+    (prev && eventLocations(eventType, video).some((l) => l.type === prev!.location.type)
       ? prev.location
       : null) ??
-    (eventLocations(eventType).length === 1 ? eventType.location : null);
+    (eventLocations(eventType, video).length === 1 ? eventLocations(eventType, video)[0]! : null);
   if (!location) throw new BookingError("Please choose how you want to meet.");
   // A phone call needs the attendee's number; an in-person meeting with no host address needs
   // theirs. The value travels with the booking so every invitation and page shows it.

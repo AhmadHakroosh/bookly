@@ -444,6 +444,7 @@ export async function saveEventType(
   if (clash && clash.id !== d.id) slug = `${slug}-${d.id.slice(0, 4)}`;
   const locations = parseLocations(d.locationsJson, d.locationType, d.locationValue);
   if (!locations.length) return { error: "Choose at least one way to meet." };
+  if (locations.some((l) => l.type === "daily")) assertFeature(ws, "booklyVideo");
   const location: EventLocation = locations[0]!;
   const captureable = locations.some((l) => captureSupportsLocation(l.type));
   try {

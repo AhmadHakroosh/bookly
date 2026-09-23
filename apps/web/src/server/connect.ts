@@ -1,4 +1,5 @@
 import "server-only";
+import { effectivePlan } from "@bookly/cloud";
 import type Stripe from "stripe";
 import { desc, eq, isNotNull, schema } from "@bookly/db";
 import type { Workspace } from "@bookly/db/schema";
@@ -15,23 +16,42 @@ import { invalidateHostCache } from "./tenancy";
  */
 
 const STATE_KEY = "payments";
-/** The published rate (terms §6, pricing FAQ); the console can override it. */
+/** The rate outside a cloud plan (self-hosted with Connect); cloud plans carry their own. */
 export const DEFAULT_FEE_PERCENT = 5;
 
 export type ConnectStatus = NonNullable<Workspace["settings"]["payments"]>;
 
-/** Platform fee, as a percentage of each booking payment, set in the console. */
-export async function platformFeePercent(ws?: Pick<Workspace, "settings">): Promise<number> {
-  const override = ws?.settings.payments?.feePercent;
-  if (typeof override === "number") return clampFee(override);
+/** The console-wide override, or null when plans use their own rates. */
+export async function platformFeeOverride(): Promise<number | null> {
   const s = await db().query.platformState.findFirst({
     where: eq(schema.platformState.key, STATE_KEY),
   });
   const v = s?.value.feePercent;
-  return typeof v === "number" ? clampFee(v) : DEFAULT_FEE_PERCENT;
+  return typeof v === "number" ? clampFee(v) : null;
 }
 
-export async function setPlatformFeePercent(percent: number) {
+/**
+ * Platform fee, as a percentage of each booking payment: the workspace's own override, else the
+ * console-wide override, else the rate of the workspace's plan (Free 5%, Pro 3%, Team 1%; a
+ * lapsed plan pays Free's), else the default outside cloud plans.
+ */
+export async function platformFeePercent(
+  ws?: Pick<Workspace, "settings" | "plan" | "planStatus">,
+): Promise<number> {
+  const override = ws?.settings.payments?.feePercent;
+  if (typeof override === "number") return clampFee(override);
+  const global = await platformFeeOverride();
+  if (global !== null) return global;
+  const plan = ws ? effectivePlan(ws.plan, ws.planStatus) : null;
+  return plan ? plan.feePercent : DEFAULT_FEE_PERCENT;
+}
+
+/** Sets the console-wide override; null returns every workspace to its plan's rate. */
+export async function setPlatformFeePercent(percent: number | null) {
+  if (percent === null) {
+    await db().delete(schema.platformState).where(eq(schema.platformState.key, STATE_KEY));
+    return;
+  }
   const value = { feePercent: clampFee(percent) };
   await db()
     .insert(schema.platformState)

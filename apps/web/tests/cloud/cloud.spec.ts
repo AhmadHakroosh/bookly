@@ -41,9 +41,9 @@ test.describe("marketing site", () => {
   test("pricing switches between yearly and monthly", async ({ page }) => {
     await page.goto("/pricing");
     // Yearly is the default: Pro shows the monthly equivalent and the yearly charge.
-    await expect(page.getByText("billed $120 a year")).toBeVisible();
+    await expect(page.getByText("billed $190 a year")).toBeVisible();
     await page.getByRole("radio", { name: "Monthly" }).click();
-    await expect(page.getByText("billed $120 a year")).toHaveCount(0);
+    await expect(page.getByText("billed $190 a year")).toHaveCount(0);
     await expect(page.getByText("billed monthly").first()).toBeVisible();
     await expect(page.getByRole("button", { name: "Start with Pro" })).toHaveAttribute(
       "href",

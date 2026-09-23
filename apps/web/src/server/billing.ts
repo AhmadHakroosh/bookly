@@ -1,6 +1,15 @@
 import "server-only";
 import type Stripe from "stripe";
-import { billedSeats, isPlanId, PLANS, type BillingInterval, type PlanId } from "@bookly/cloud";
+import {
+  billedSeats,
+  captureOverageDelta,
+  isPlanId,
+  PLANS,
+  type BillingInterval,
+  type PlanId,
+} from "@bookly/cloud";
+import type { MeetingTranscript } from "@bookly/db/schema";
+import { captureBudgetFor, captureMinutesThisMonth, overageAllowed } from "./limits";
 import { loadEnv } from "@bookly/config";
 import { and, eq, isNotNull, schema } from "@bookly/db";
 import type { Workspace } from "@bookly/db/schema";
@@ -12,6 +21,13 @@ import { tenantUrl } from "./platform";
 
 export const billingConfigured = () =>
   paymentsConfigured() && !!(loadEnv().STRIPE_PRICE_PRO && loadEnv().STRIPE_PRICE_TEAM);
+
+/** Transcription past the included minutes is billed only when the metered price exists. */
+export const overageConfigured = () => !!loadEnv().STRIPE_PRICE_CAPTURE_OVERAGE;
+
+/** The subscription item that carries the plan (not the metered overage item). */
+const planItem = (sub: Stripe.Subscription) =>
+  sub.items.data.find((i) => planFromPrice(i.price.id)) ?? sub.items.data[0];
 
 /** Yearly billing is offered only when both yearly prices exist. */
 export const yearlyConfigured = () =>
@@ -65,6 +81,8 @@ export async function startUpgrade(
     customer,
     line_items: [
       { price, quantity: plan === "team" ? billedSeats(PLANS.team, await memberCount(ws)) : 1 },
+      // Metered overage rides on the same subscription; usage is reported per transcript.
+      ...(overageConfigured() ? [{ price: loadEnv().STRIPE_PRICE_CAPTURE_OVERAGE! }] : []),
     ],
     subscription_data: { metadata: { workspaceId: ws.id, plan, interval } },
     metadata: { workspaceId: ws.id, plan, interval },
@@ -114,7 +132,7 @@ export async function syncSubscription(sub: Stripe.Subscription) {
   if (!ws) return;
   // An operator-managed plan (comp, trial) is not touched by Stripe events.
   if (ws.planManagedBy === "operator") return;
-  const item = sub.items.data[0];
+  const item = planItem(sub);
   const known = planFromPrice(item?.price.id);
   const plan =
     known?.plan ?? (isPlanId(sub.metadata?.plan ?? "") ? (sub.metadata!.plan as PlanId) : null);
@@ -125,7 +143,7 @@ export async function syncSubscription(sub: Stripe.Subscription) {
       ? "year"
       : "month");
   const ended = ["canceled", "incomplete_expired", "unpaid"].includes(sub.status);
-  const periodEnd = sub.items.data[0]?.current_period_end;
+  const periodEnd = item?.current_period_end;
   await db()
     .update(schema.workspaces)
     .set({
@@ -149,7 +167,7 @@ export async function syncSeats(ws: Workspace): Promise<boolean> {
   if (ws.plan !== "team" || !ws.stripeSubscriptionId || !paymentsConfigured()) return false;
   try {
     const sub = await stripe().subscriptions.retrieve(ws.stripeSubscriptionId);
-    const item = sub.items.data[0];
+    const item = planItem(sub);
     const n = billedSeats(PLANS.team, await memberCount(ws));
     if (!item || item.quantity === n) return false;
     await stripe().subscriptionItems.update(item.id, {
@@ -190,3 +208,57 @@ export async function reconcileSeats(now = new Date(), force = false) {
 }
 
 export const planName = (plan: string) => (isPlanId(plan) ? PLANS[plan].name : "Self-hosted");
+
+/** Adds the metered overage price to a subscription that predates it (idempotent). */
+async function ensureOverageItem(ws: Workspace): Promise<boolean> {
+  const price = loadEnv().STRIPE_PRICE_CAPTURE_OVERAGE;
+  if (!price || !ws.stripeSubscriptionId) return false;
+  const sub = await stripe().subscriptions.retrieve(ws.stripeSubscriptionId);
+  if (sub.items.data.some((i) => i.price.id === price)) return true;
+  await stripe().subscriptionItems.create({ subscription: sub.id, price });
+  return true;
+}
+
+/**
+ * Bills the part of a finished transcript that fell past the month's included minutes: a meter
+ * event on the workspace's Stripe customer, keyed by the transcript so a retry cannot double
+ * count. Returns the minutes reported (0 when nothing was over or overage is off).
+ */
+export async function reportCaptureOverage(
+  ws: Workspace,
+  transcript: Pick<MeetingTranscript, "id" | "startedAt" | "endedAt">,
+): Promise<number> {
+  if (!overageAllowed(ws) || !ws.stripeCustomerId || !transcript.endedAt || !transcript.startedAt)
+    return 0;
+  const max = await captureBudgetFor(ws);
+  if (max === null || max === 0) return 0;
+  const minutes = Math.ceil(
+    (transcript.endedAt.getTime() - transcript.startedAt.getTime()) / 60_000,
+  );
+  // The month's total already includes this transcript (its end time is set).
+  const after = await captureMinutesThisMonth(ws);
+  const over = captureOverageDelta(after - minutes, after, max);
+  if (over <= 0) return 0;
+  try {
+    await ensureOverageItem(ws);
+    await stripe().billing.meterEvents.create({
+      event_name: loadEnv().STRIPE_METER_CAPTURE_EVENT,
+      identifier: `capture:${transcript.id}`,
+      payload: { stripe_customer_id: ws.stripeCustomerId, value: String(over) },
+    });
+    console.log(`[billing] capture overage: ${over} min for ${ws.slug} (${transcript.id})`);
+    return over;
+  } catch (e) {
+    console.error("[billing] capture overage report failed", e);
+    return 0;
+  }
+}
+
+/** Host preference: keep transcribing past the included minutes (billed) or stop there. */
+export async function setCaptureOverage(ws: Workspace, on: boolean) {
+  await db()
+    .update(schema.workspaces)
+    .set({ settings: { ...ws.settings, capture: { ...(ws.settings.capture ?? {}), overage: on } } })
+    .where(eq(schema.workspaces.id, ws.id));
+  refreshWorkspace(ws.id);
+}

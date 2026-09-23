@@ -7,7 +7,8 @@ import { ExternalLink } from "@/components/links";
 import { SubmitButton } from "@/components/submit-button";
 import { PageSkeleton } from "@/components/page-skeleton";
 import { billingConfigured, planName } from "@/server/billing";
-import { listConnectedWorkspaces, platformFeePercent } from "@/server/connect";
+import { PLANS } from "@bookly/cloud";
+import { listConnectedWorkspaces, platformFeeOverride } from "@/server/connect";
 import { paymentsConfigured } from "@/server/payments";
 import { disconnectWorkspaceStripe, setPlatformFee } from "../actions";
 import { NumberField } from "@/components/number-field";
@@ -34,7 +35,7 @@ function Check({ ok, label, detail }: { ok: boolean; label: string; detail: stri
 async function PaymentsPage() {
   await connection();
   const env = loadEnv();
-  const [fee, rows] = await Promise.all([platformFeePercent(), listConnectedWorkspaces()]);
+  const [fee, rows] = await Promise.all([platformFeeOverride(), listConnectedWorkspaces()]);
   const ready = rows.filter((w) => w.settings.payments?.chargesEnabled).length;
   return (
     <div className="space-y-8">
@@ -87,8 +88,12 @@ async function PaymentsPage() {
         <h3 className="text-base font-semibold tracking-tight">Platform fee</h3>
         <p className="mt-1 text-sm text-muted-foreground">
           Kept from every booking payment and payment request on a connected account, on top of
-          Stripe&apos;s processing fee. Refunds return it. Override it per workspace on the
-          workspace page.
+          Stripe&apos;s processing fee. Refunds return it. Each plan has its own rate (
+          {Object.values(PLANS)
+            .map((p) => `${p.name} ${p.feePercent}%`)
+            .join(", ")}
+          ); a value here replaces all of them, blank restores them. Override it per workspace on
+          the workspace page.
         </p>
         <form action={setPlatformFee} className="mt-3 flex flex-wrap items-center gap-2">
           <label htmlFor="feePercent" className="text-sm">
@@ -101,7 +106,8 @@ async function PaymentsPage() {
             max={50}
             step={0.5}
             decimals={1}
-            defaultValue={fee}
+            defaultValue={fee ?? undefined}
+            placeholder="Plan rates"
             unit="%"
             className="w-44"
           />

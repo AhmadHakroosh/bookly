@@ -4,13 +4,13 @@ Bookly hosts connect their own accounts from **Admin → Calendars** and **Admin
 The server admin registers the OAuth apps once and puts the keys in the environment; a provider
 without keys shows as "Not set up on this server".
 
-| Provider  | Gives you                                                              | Env                                                                                    |
-| --------- | ---------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
-| Google    | Calendar conflicts, bookings in Google Calendar, **Google Meet** links | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`                                             |
-| Microsoft | Outlook conflicts, bookings in Outlook, **Teams** links                | `MICROSOFT_CLIENT_ID`, `MICROSOFT_CLIENT_SECRET`, `MICROSOFT_TENANT`                   |
-| Zoom      | Zoom meetings                                                          | `ZOOM_CLIENT_ID`, `ZOOM_CLIENT_SECRET`                                                 |
-| Daily.co  | **Bookly video** rooms, no account needed by hosts or attendees        | `DAILY_API_KEY`, `DAILY_DOMAIN`, optional `MEET_URL`                                   |
-| Recall.ai | **Notetaker**: auto-capture on Google Meet, Teams and Zoom calls       | `RECALL_API_KEY`, `RECALL_REGION`, `RECALL_WEBHOOK_SECRET`, optional `RECALL_BOT_NAME` |
+| Provider  | Gives you                                                                           | Env                                                                                    |
+| --------- | ----------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
+| Google    | Calendar conflicts, bookings in Google Calendar, **Google Meet** links              | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`                                             |
+| Microsoft | Outlook conflicts, bookings in Outlook, **Teams** links                             | `MICROSOFT_CLIENT_ID`, `MICROSOFT_CLIENT_SECRET`, `MICROSOFT_TENANT`                   |
+| Zoom      | Zoom meetings                                                                       | `ZOOM_CLIENT_ID`, `ZOOM_CLIENT_SECRET`                                                 |
+| Daily.co  | **Bookly video** rooms, no account needed by hosts or attendees (cloud: Pro and up) | `DAILY_API_KEY`, `DAILY_DOMAIN`, optional `MEET_URL`                                   |
+| Recall.ai | **Notetaker**: auto-capture on Google Meet, Teams and Zoom calls                    | `RECALL_API_KEY`, `RECALL_REGION`, `RECALL_WEBHOOK_SECRET`, optional `RECALL_BOT_NAME` |
 
 Redirect URI for every OAuth provider: `<APP_URL>/api/integrations/<provider>/callback`.
 

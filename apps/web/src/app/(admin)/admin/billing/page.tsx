@@ -1,13 +1,13 @@
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
-import { PLANS, isPlanId } from "@bookly/cloud";
+import { CAPTURE_OVERAGE_PER_MINUTE, PLANS, isPlanId } from "@bookly/cloud";
 import { SubmitButton } from "@/components/submit-button";
-import { billingConfigured, planName, yearlyConfigured } from "@/server/billing";
-import { usageSummary } from "@/server/limits";
+import { billingConfigured, overageConfigured, planName, yearlyConfigured } from "@/server/billing";
+import { overageAllowed, usageSummary, workspaceLimits } from "@/server/limits";
 import { isCloud } from "@/server/platform";
 import { requireStaff } from "@/server/session";
 import { getCurrentWorkspace } from "@/server/workspace";
-import { manageBilling } from "./actions";
+import { manageBilling, toggleCaptureOverage } from "./actions";
 import { UpgradeCards } from "./upgrade-cards";
 import { PageSkeleton } from "@/components/page-skeleton";
 
@@ -24,6 +24,13 @@ async function BillingPage({ searchParams }: PageProps<"/admin/billing">) {
   const usage = await usageSummary(ws);
   const canManage = role === "owner" || role === "admin";
   const current = isPlanId(ws.plan) ? ws.plan : "free";
+  const capture = usage.find((u) => u.key === "captureMinutesPerMonth");
+  const overMinutes = capture && capture.max !== null ? Math.max(0, capture.used - capture.max) : 0;
+  const overageOffer =
+    overageConfigured() &&
+    !!workspaceLimits(ws).captureMinutesPerMonth &&
+    !!ws.stripeSubscriptionId;
+  const overageOn = overageAllowed(ws);
   return (
     <div className="max-w-3xl space-y-8">
       <div>
@@ -59,6 +66,37 @@ async function BillingPage({ searchParams }: PageProps<"/admin/billing">) {
             </li>
           ))}
         </ul>
+        {overageOffer && (
+          <div className="rounded-xl border p-3 text-sm">
+            <form action={toggleCaptureOverage.bind(null, !overageOn)}>
+              <label className="flex items-start gap-2">
+                <input
+                  type="checkbox"
+                  name="overage"
+                  checked={overageOn}
+                  readOnly
+                  className="mt-1"
+                />
+                <span>
+                  Keep transcribing past the included minutes at $
+                  {CAPTURE_OVERAGE_PER_MINUTE.toFixed(2)} a minute, on your next invoice.
+                  <span className="block text-xs text-muted-foreground">
+                    {overageOn
+                      ? overMinutes > 0
+                        ? `${overMinutes} extra minutes so far this month, about $${(overMinutes * CAPTURE_OVERAGE_PER_MINUTE).toFixed(2)}.`
+                        : "Nothing extra so far this month."
+                      : "Off: transcription stops for the month once the included minutes are used up."}
+                  </span>
+                </span>
+              </label>
+              {canManage && (
+                <SubmitButton variant="outline" size="sm" className="mt-2">
+                  {overageOn ? "Stop at the included minutes" : "Turn on"}
+                </SubmitButton>
+              )}
+            </form>
+          </div>
+        )}
       </section>
 
       <section className="space-y-3">

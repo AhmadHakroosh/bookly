@@ -12,11 +12,25 @@ Set `TENANCY=multi`. Then:
 
 ## Plans and limits
 
-`packages/cloud` defines Free, Pro and Team (limits, feature gates, display prices). A workspace's
-`plan` + `plan_status` decide what applies; `self-hosted` (the default outside cloud mode) means no
-limits. Enforcement points: creating event types, inviting members, connecting integrations, adding
-custom domains, enabling paid bookings / workflows / team scheduling, the keyed API, and the
-"Powered by Bookly" line on booking pages and emails (and the workspace's own logo and colour in its place).
+`packages/cloud` defines Free, Pro ($19 / $190 a year) and Team ($16 a member / $160, two seats
+minimum): limits, feature gates, display prices and each plan's platform fee on paid bookings
+(Free 5%, Pro 3%, Team 1%; Console → Payments can override all of them, the workspace page one of
+them). A workspace's `plan` + `plan_status` decide what applies; `self-hosted` (the default
+outside cloud mode) means no limits. Enforcement points: creating event types, inviting members,
+connecting integrations, adding custom domains, enabling paid bookings / workflows / team
+scheduling, Bookly video (a Pro feature: the location cannot be saved on Free, a Free workspace's
+existing Bookly video rows are hidden from the booking page and provisioning skips the room), the
+keyed API, and the "Powered by Bookly" line on booking pages and emails (and the workspace's own
+logo and colour in its place).
+
+Auto-capture minutes: Pro 300 a month, Team 200 per member pooled. Past the budget transcription
+continues and the excess is billed at `CAPTURE_OVERAGE_PER_MINUTE` ($0.05) when
+`STRIPE_PRICE_CAPTURE_OVERAGE` is set: a metered price on a Stripe Billing meter whose event name
+is `STRIPE_METER_CAPTURE_EVENT` (`capture_minutes`). The price is added as a line at checkout and
+to older subscriptions on first use; `reportCaptureOverage` sends one meter event per finished
+transcript for the minutes above the budget (idempotent on the transcript id). Hosts can switch
+overage off on Admin → Billing (`settings.capture.overage`), after which transcription stops at
+the budget as before; without the price configured it always stops.
 
 ## Billing
 

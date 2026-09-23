@@ -207,6 +207,11 @@ export async function completeTranscript(
     .update(schema.bookings)
     .set({ transcriptStatus: status })
     .where(eq(schema.bookings.id, booking.id));
+  // Minutes past the plan's budget are billed now that the length is known (cloud mode only).
+  const { reportCaptureOverage } = await import("./billing");
+  await reportCaptureOverage(ws, { ...t, endedAt: new Date() }).catch((e) =>
+    console.error("[billing] overage", e),
+  );
   if (status !== "ready") return false;
   await trackBooking(ws, booking, "note", `Transcript captured (${segments.length} lines)`);
   const et = booking.eventTypeId

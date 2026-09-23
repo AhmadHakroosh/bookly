@@ -1,3 +1,4 @@
+import { hasFeature } from "@/server/limits";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -53,7 +54,8 @@ async function ProfilePage({ params }: PageProps<"/[username]">) {
               >
                 <span className="block font-medium">{e.title}</span>
                 <span className="block text-sm text-muted-foreground">
-                  {e.durationMin} min · {locationsLabel(eventLocations(e))}
+                  {e.durationMin} min ·{" "}
+                  {locationsLabel(eventLocations(e, { video: hasFeature(ws, "booklyVideo") }))}
                   {e.priceCents && paid ? ` · ${formatPrice(e.priceCents, e.currency)}` : ""}
                 </span>
                 {e.description && (

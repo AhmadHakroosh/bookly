@@ -22,6 +22,8 @@ export type Limits = {
   /** The minutes are per member and pooled across the workspace (Team), not a flat budget. */
   captureMinutesPerMember?: boolean;
   /** Feature gates. */
+  /** Bookly video rooms (Daily); the other conferencing providers are always available. */
+  booklyVideo: boolean;
   payments: boolean;
   workflows: boolean;
   teamScheduling: boolean;
@@ -39,6 +41,8 @@ export type Plan = {
   priceYearly: number;
   /** Seats always billed, whatever the member count (Team starts at two). */
   minSeats: number;
+  /** Platform fee on paid bookings, percent of each payment; the console can override it. */
+  feePercent: number;
   limits: Limits;
   /** Shown on plan cards, strongest first. */
   highlights: string[];
@@ -54,6 +58,7 @@ export const PLANS: Record<PlanId, Plan> = {
     priceMonthly: 0,
     priceYearly: 0,
     minSeats: 1,
+    feePercent: 5,
     limits: {
       eventTypes: 2,
       members: 1,
@@ -62,6 +67,7 @@ export const PLANS: Record<PlanId, Plan> = {
       bookingsPerMonth: 100,
       apiRequestsPerMinute: 60,
       captureMinutesPerMonth: 0,
+      booklyVideo: false,
       payments: false,
       workflows: false,
       teamScheduling: false,
@@ -70,7 +76,7 @@ export const PLANS: Record<PlanId, Plan> = {
     },
     highlights: [
       "Contacts, briefings and the Meeting Inbox",
-      "Bookly video, Meet, Zoom, Teams",
+      "Google Meet, Zoom, Teams, phone, in person",
       "1 booking page, 2 event types",
       "1 connected calendar",
       "Email confirmations and reminders",
@@ -81,9 +87,10 @@ export const PLANS: Record<PlanId, Plan> = {
     id: "pro",
     name: "Pro",
     tagline: "For professionals who take bookings seriously.",
-    priceMonthly: 12,
-    priceYearly: 120,
+    priceMonthly: 19,
+    priceYearly: 190,
     minSeats: 1,
+    feePercent: 3,
     limits: {
       eventTypes: null,
       members: 1,
@@ -92,6 +99,7 @@ export const PLANS: Record<PlanId, Plan> = {
       bookingsPerMonth: null,
       apiRequestsPerMinute: 600,
       captureMinutesPerMonth: 300,
+      booklyVideo: true,
       payments: true,
       workflows: true,
       teamScheduling: false,
@@ -99,25 +107,27 @@ export const PLANS: Record<PlanId, Plan> = {
       removeBranding: true,
     },
     highlights: [
-      "Auto-capture: transcripts, AI recaps, tasks (300 min / month)",
-      "Paid bookings via Stripe",
+      "Auto-capture: transcripts, AI recaps, tasks (300 min / month, then 5¢ a minute)",
+      "Bookly video, no account needed by anyone",
+      "Paid bookings via Stripe, 3% platform fee",
       "Custom reminders, follow-ups, SMS and WhatsApp",
       "Unlimited event types",
       "Custom domain, your logo and colour, no Bookly branding",
       "API, webhooks, HubSpot and Pipedrive sync",
     ],
     featured: [
-      "Auto-capture: transcripts, AI recaps, tasks (300 min / month)",
-      "Paid bookings via Stripe",
+      "Auto-capture: transcripts, AI recaps, tasks (300 min / month, then 5¢ a minute)",
+      "Bookly video, no account needed by anyone",
     ],
   },
   team: {
     id: "team",
     name: "Team",
     tagline: "For teams that share the calendar.",
-    priceMonthly: 10,
-    priceYearly: 100,
+    priceMonthly: 16,
+    priceYearly: 160,
     minSeats: 2,
+    feePercent: 1,
     limits: {
       eventTypes: null,
       members: 25,
@@ -125,8 +135,9 @@ export const PLANS: Record<PlanId, Plan> = {
       domains: 3,
       bookingsPerMonth: null,
       apiRequestsPerMinute: 1200,
-      captureMinutesPerMonth: 300,
+      captureMinutesPerMonth: 200,
       captureMinutesPerMember: true,
+      booklyVideo: true,
       payments: true,
       workflows: true,
       teamScheduling: true,
@@ -136,13 +147,14 @@ export const PLANS: Record<PlanId, Plan> = {
     highlights: [
       "Everything in Pro",
       "Round-robin and collective event types",
-      "Auto-capture: 300 transcribed minutes a month per member, pooled",
+      "Auto-capture: 200 transcribed minutes a month per member, pooled, then 5¢ a minute",
+      "Paid bookings at a 1% platform fee",
       "2 to 25 members, priced per member",
       "3 custom domains",
     ],
     featured: [
       "Round-robin and collective event types",
-      "Auto-capture: 300 transcribed minutes a month per member, pooled",
+      "Auto-capture: 200 transcribed minutes a month per member, pooled, then 5¢ a minute",
     ],
   },
 };
@@ -156,12 +168,26 @@ export const UNLIMITED: Limits = {
   bookingsPerMonth: null,
   apiRequestsPerMinute: null,
   captureMinutesPerMonth: null,
+  booklyVideo: true,
   payments: true,
   workflows: true,
   teamScheduling: true,
   api: true,
   removeBranding: true,
 };
+
+/** USD per transcribed minute beyond the plan's included minutes (Stripe metered price). */
+export const CAPTURE_OVERAGE_PER_MINUTE = 0.05;
+
+/**
+ * Minutes to bill for a transcript that took the month from `usedBefore` to `usedAfter`
+ * minutes against a budget of `max`: only the part above the budget, so a transcript that
+ * straddles the line is charged for the excess alone.
+ */
+export function captureOverageDelta(usedBefore: number, usedAfter: number, max: number | null) {
+  if (max === null) return 0;
+  return Math.max(0, usedAfter - max) - Math.max(0, usedBefore - max);
+}
 
 export const isPlanId = (p: string): p is PlanId => p in PLANS;
 
@@ -194,18 +220,23 @@ export const monthlyEquivalent = (plan: Plan, interval: BillingInterval) =>
 export const monthsFreeYearly = (plan: Plan) =>
   plan.priceMonthly ? Math.round(12 - plan.priceYearly / plan.priceMonthly) : 0;
 
+/** The plan that applies: a lapsed paid plan counts as Free until Stripe reports it active again. */
+export function effectivePlan(plan: string, status?: string | null): Plan | null {
+  if (!isPlanId(plan)) return null;
+  if (plan !== "free" && status && !["active", "trialing", "past_due"].includes(status))
+    return PLANS.free;
+  return PLANS[plan];
+}
+
 /** Limits for a workspace: cloud plan → that plan, anything else (self-hosted) → unlimited. */
 export function limitsFor(plan: string, status?: string | null): Limits {
-  if (!isPlanId(plan)) return UNLIMITED;
-  // A lapsed paid plan falls back to Free until Stripe reports it active again.
-  if (plan !== "free" && status && !["active", "trialing", "past_due"].includes(status))
-    return PLANS.free.limits;
-  return PLANS[plan].limits;
+  return effectivePlan(plan, status)?.limits ?? UNLIMITED;
 }
 
 export type CountableLimit = "eventTypes" | "members" | "integrations" | "domains";
 export type RateLimitKey = "bookingsPerMonth" | "apiRequestsPerMinute";
-export type FeatureLimit = "payments" | "workflows" | "teamScheduling" | "api" | "removeBranding";
+export type FeatureLimit =
+  "booklyVideo" | "payments" | "workflows" | "teamScheduling" | "api" | "removeBranding";
 
 /** True when adding one more of `what` stays within the limit. */
 export function withinLimit(limits: Limits, what: CountableLimit, current: number): boolean {
@@ -221,6 +252,7 @@ export const LIMIT_LABELS: Record<CountableLimit, string> = {
 };
 
 export const FEATURE_LABELS: Record<FeatureLimit, string> = {
+  booklyVideo: "Bookly video",
   payments: "Paid bookings",
   workflows: "Custom reminders and follow-ups",
   teamScheduling: "Round-robin and collective event types",

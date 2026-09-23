@@ -108,6 +108,12 @@ export default function TermsPage() {
           invoice rather than refunded.
         </li>
         <li>
+          Auto-capture includes a number of transcribed minutes a month, shown on the pricing page.
+          Minutes beyond that are billed at the per-minute rate on the pricing page on your next
+          invoice, unless you turn this off on the billing page, in which case transcription stops
+          for the month once the included minutes are used up.
+        </li>
+        <li>
           We may change prices with at least 30 days&apos; notice by email. Continued use after that
           date means you accept the new price.
         </li>
@@ -124,11 +130,13 @@ export default function TermsPage() {
         you and your guests.
       </p>
       <p>
-        Bookly charges a platform fee of <strong>5%</strong> of each payment your guests make
-        through Bookly, deducted automatically from the payment before Stripe pays you out.
-        Stripe&apos;s own processing fees apply on top. When you refund a payment, the platform fee
-        is returned with it. The fee applies to the hosted service only; self-hosted installs pay
-        nothing to Bookly. We may change the fee with at least 30 days&apos; notice by email.
+        Bookly charges a platform fee on each payment your guests make through Bookly, deducted
+        automatically from the payment before Stripe pays you out: <strong>5%</strong> on the Free
+        plan, <strong>3%</strong> on Pro and <strong>1%</strong> on Team, as shown on the pricing
+        page. Stripe&apos;s own processing fees apply on top. When you refund a payment, the
+        platform fee is returned with it. The fee applies to the hosted service only; self-hosted
+        installs pay nothing to Bookly. We may change the fee with at least 30 days&apos; notice by
+        email.
       </p>
       <h2>8. AI features</h2>
       <p>

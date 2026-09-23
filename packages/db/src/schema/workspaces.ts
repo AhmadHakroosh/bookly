@@ -47,8 +47,11 @@ export type WorkspaceSettings = {
    * follow-ups), which commercial-email law requires alongside the unsubscribe link.
    */
   postalAddress?: string;
-  /** Auto-capture: transcript retention (days, default 90) and Deepgram language (default auto). */
-  capture?: { retentionDays?: number; language?: string };
+  /**
+   * Auto-capture: transcript retention (days, default 90), Deepgram language (default auto),
+   * and whether to keep transcribing past the plan's minutes at the metered rate (default on).
+   */
+  capture?: { retentionDays?: number; language?: string; overage?: boolean };
   /**
    * Email wording. Contact page: proposal / paymentRequest / checkIn ({name} {company} {host}
    * {amount} {payLink} {bookingUrl}). Guest emails: confirmation / reminder / cancellation ({name} {host} {event}

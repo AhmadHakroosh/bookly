@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { CheckIcon, MinusIcon } from "lucide-react";
-import { PLANS, type Limits } from "@bookly/cloud";
+import { CAPTURE_OVERAGE_PER_MINUTE, PLANS, type Plan } from "@bookly/cloud";
 import { Button } from "@/components/ui/button";
 import { breadcrumbLd, faqLd, JsonLd } from "../json-ld";
 import { PlanGrid } from "../plan-card";
@@ -10,45 +10,55 @@ import { pageMetadata, SITE } from "../site";
 export const metadata: Metadata = pageMetadata({
   title: "Pricing",
   description:
-    "Bookly plans: Free with contacts, briefings and the Meeting Inbox; Pro at $12/month or $120/year adds auto-capture, paid bookings, a custom domain; Team at $10 a member, two months free yearly.",
+    "Bookly plans: Free with contacts, briefings and the Meeting Inbox; Pro at $19/month or $190/year adds Bookly video, auto-capture, paid bookings, a custom domain; Team at $16 a member, two months free yearly.",
   path: "/pricing",
 });
 
 const plans = Object.values(PLANS);
 const fmt = (n: number | null) => (n === null ? "Unlimited" : String(n));
 
-const ROWS: [string, (l: Limits) => string | boolean][] = [
-  ["Event types", (l) => fmt(l.eventTypes)],
-  ["Members", (l) => fmt(l.members)],
-  ["Connected calendars / conferencing per member", (l) => fmt(l.integrations)],
-  ["Bookings per month", (l) => fmt(l.bookingsPerMonth)],
-  ["Custom domains", (l) => (l.domains ? String(l.domains) : false)],
-  ["Google Meet, Zoom, Teams, Bookly video", () => true],
+const ROWS: [string, (p: Plan) => string | boolean][] = [
+  ["Event types", ({ limits: l }) => fmt(l.eventTypes)],
+  ["Members", ({ limits: l }) => fmt(l.members)],
+  ["Connected calendars / conferencing per member", ({ limits: l }) => fmt(l.integrations)],
+  ["Bookings per month", ({ limits: l }) => fmt(l.bookingsPerMonth)],
+  ["Custom domains", ({ limits: l }) => (l.domains ? String(l.domains) : false)],
+  ["Google Meet, Zoom, Teams, phone, in person", () => true],
+  ["Bookly video (no account needed)", ({ limits: l }) => l.booklyVideo],
   ["Email confirmations and reminders", () => true],
   ["Contacts, timeline and Meeting Inbox", () => true],
   ["Pre-meeting briefings", () => true],
   ["Group sessions, series, waitlists, routing", () => true],
-  ["Paid bookings via Stripe (5% platform fee)", (l) => l.payments],
-  ["Custom reminders, SMS and WhatsApp", (l) => l.workflows],
-  ["Round-robin and collective events", (l) => l.teamScheduling],
+  ["Paid bookings via Stripe", ({ limits: l }) => l.payments],
+  ["Platform fee on paid bookings", (p) => (p.limits.payments ? `${p.feePercent}%` : false)],
+  ["Custom reminders, SMS and WhatsApp", ({ limits: l }) => l.workflows],
+  ["Round-robin and collective events", ({ limits: l }) => l.teamScheduling],
   [
     "Auto-capture transcription minutes / month",
-    (l) =>
+    ({ limits: l }) =>
       l.captureMinutesPerMonth
         ? `${fmt(l.captureMinutesPerMonth)}${l.captureMinutesPerMember ? " per member, pooled" : ""}`
         : false,
   ],
-  ["AI recap, tasks and follow-up drafts", (l) => (l.captureMinutesPerMonth ? true : false)],
-  ["HubSpot / Pipedrive sync", (l) => l.api],
-  ["API and webhooks", (l) => l.api],
-  ["API requests per minute", (l) => fmt(l.apiRequestsPerMinute)],
-  ["Your logo and colour, no Bookly branding", (l) => l.removeBranding],
+  [
+    "Extra transcription minutes",
+    ({ limits: l }) =>
+      l.captureMinutesPerMonth ? `${CAPTURE_OVERAGE_PER_MINUTE * 100}¢ a minute` : false,
+  ],
+  [
+    "AI recap, tasks and follow-up drafts",
+    ({ limits: l }) => (l.captureMinutesPerMonth ? true : false),
+  ],
+  ["HubSpot / Pipedrive sync", ({ limits: l }) => l.api],
+  ["API and webhooks", ({ limits: l }) => l.api],
+  ["API requests per minute", ({ limits: l }) => fmt(l.apiRequestsPerMinute)],
+  ["Your logo and colour, no Bookly branding", ({ limits: l }) => l.removeBranding],
 ];
 
 const FAQ: [string, string][] = [
   [
     "Is there a free plan?",
-    "Yes. Free gives you a booking page, two event types, one connected calendar, Bookly video and email reminders, for as long as you like. No card needed.",
+    "Yes. Free gives you a booking page, two event types, one connected calendar, Google Meet, Zoom or Teams links and email reminders, for as long as you like. No card needed. Bookly video, the built-in room nobody needs an account for, starts on Pro.",
   ],
   [
     "What counts as a member?",
@@ -56,15 +66,15 @@ const FAQ: [string, string][] = [
   ],
   [
     "What are transcription minutes?",
-    "Auto-capture transcribes calls on Bookly video, Google Meet, Zoom and Teams; on the external providers a Bookly notetaker joins the call. Pro includes 300 transcribed minutes a month; Team includes 300 per member, pooled, so a team of four shares 1,200. When the budget runs out, calls still happen; they just are not transcribed until the next month or an upgrade. Paid overage is coming after launch.",
+    "Auto-capture transcribes calls on Bookly video, Google Meet, Zoom and Teams; on the external providers a Bookly notetaker joins the call. Pro includes 300 transcribed minutes a month; Team includes 200 per member, pooled, so a team of four shares 800. Past that, transcription continues at 5 cents a minute on your next invoice, or you can tell Bookly to stop at the included minutes from the billing page.",
   ],
   [
     "Monthly or yearly?",
-    "Both. Yearly is charged up front and works out to two months free ($120 a year for Pro, $100 a member for Team). Yearly plans renew each year; cancelling stops the renewal and the plan stays active until the year ends. Partial years are not refunded unless the law requires it.",
+    "Both. Yearly is charged up front and works out to two months free ($190 a year for Pro, $160 a member for Team). Yearly plans renew each year; cancelling stops the renewal and the plan stays active until the year ends. Partial years are not refunded unless the law requires it.",
   ],
   [
     "What does a paid booking cost me?",
-    "Guests pay into your own Stripe account, which you connect from Settings. Bookly keeps 5% of each payment as a platform fee, taken automatically before Stripe pays you out; Stripe's processing fee applies on top. Refund a booking and the fee comes back with it. Self-hosted installs pay no fee.",
+    "Guests pay into your own Stripe account, which you connect from Settings. Bookly keeps a platform fee of each payment, 5% on Free, 3% on Pro and 1% on Team, taken automatically before Stripe pays you out; Stripe's processing fee applies on top. Refund a booking and the fee comes back with it. Self-hosted installs pay no fee.",
   ],
   [
     "Can I self-host instead?",
@@ -128,7 +138,7 @@ export default function PricingPage() {
                   <td className="p-4">{label}</td>
                   {plans.map((p) => (
                     <td key={p.id} className="p-4 text-center">
-                      <Cell v={get(p.limits)} />
+                      <Cell v={get(p)} />
                     </td>
                   ))}
                 </tr>

@@ -2,7 +2,14 @@
 
 import { redirect } from "next/navigation";
 import { isInterval, isPlanId } from "@bookly/cloud";
-import { billingConfigured, billingPortal, startUpgrade, yearlyConfigured } from "@/server/billing";
+import {
+  billingConfigured,
+  billingPortal,
+  setCaptureOverage,
+  startUpgrade,
+  yearlyConfigured,
+} from "@/server/billing";
+import { revalidatePath } from "next/cache";
 import { requireStaff } from "@/server/session";
 import { getCurrentWorkspace } from "@/server/workspace";
 
@@ -24,4 +31,11 @@ export async function manageBilling() {
   const { ws } = await owner();
   if (!ws.stripeCustomerId) return;
   redirect(await billingPortal(ws));
+}
+
+/** The "keep transcribing past the included minutes" switch on the billing page. */
+export async function toggleCaptureOverage(on: boolean) {
+  const { ws } = await owner();
+  await setCaptureOverage(ws, on);
+  revalidatePath("/admin/billing");
 }

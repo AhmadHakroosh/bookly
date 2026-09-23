@@ -1,4 +1,5 @@
 import "server-only";
+import { loadEnv } from "@bookly/config";
 import {
   captureBudget,
   isPlanId,
@@ -151,29 +152,68 @@ export async function captureMinutesThisMonth(ws: Workspace): Promise<number> {
   return rows[0]?.m ?? 0;
 }
 
-/** Can this workspace start another transcription now? (feature off / budget used up → false) */
-export async function captureAllowed(ws: Workspace): Promise<{ ok: boolean; reason?: string }> {
+/** The workspace's monthly minute budget (null = unlimited, 0 = feature off). */
+export async function captureBudgetFor(ws: Workspace): Promise<number | null> {
   const limits = workspaceLimits(ws);
-  if (limits.captureMinutesPerMonth === 0)
-    return { ok: false, reason: `Auto-capture needs the ${PLANS.pro.name} plan.` };
-  const max = isPlanId(ws.plan)
+  if (limits.captureMinutesPerMonth === 0) return 0;
+  return isPlanId(ws.plan)
     ? captureBudget(PLANS[ws.plan], await count(ws, "members"))
     : limits.captureMinutesPerMonth;
-  if (max === null) return { ok: true };
+}
+
+/**
+ * Whether minutes past the budget are billed instead of refused: a paid plan with a Stripe
+ * subscription, the metered price configured, and the workspace not having opted out.
+ */
+export function overageAllowed(ws: Workspace): boolean {
+  const limits = workspaceLimits(ws);
+  if (!limits.captureMinutesPerMonth) return false;
+  if (!loadEnv().STRIPE_PRICE_CAPTURE_OVERAGE || !ws.stripeSubscriptionId) return false;
+  return ws.settings.capture?.overage !== false;
+}
+
+export type CaptureDecision = {
+  ok: boolean;
+  reason?: string;
+  /** Minutes left in the included budget (null = unlimited). */
+  left: number | null;
+  /** The budget is spent and further minutes are billed at the metered rate. */
+  overage: boolean;
+};
+
+/**
+ * Can this workspace start (or keep) a transcription now? Feature off or budget spent without
+ * overage → no; budget spent with overage → yes, flagged, so callers do not cap the recording.
+ */
+export async function captureAllowed(ws: Workspace): Promise<CaptureDecision> {
+  const max = await captureBudgetFor(ws);
+  if (max === 0)
+    return {
+      ok: false,
+      reason: `Auto-capture needs the ${PLANS.pro.name} plan.`,
+      left: 0,
+      overage: false,
+    };
+  if (max === null) return { ok: true, left: null, overage: false };
   const used = await captureMinutesThisMonth(ws);
-  return used < max
-    ? { ok: true }
-    : { ok: false, reason: `This month's ${max} transcribed minutes are used up.` };
+  const left = Math.max(0, max - used);
+  const overage = overageAllowed(ws);
+  if (used < max) return { ok: true, left, overage };
+  return overage
+    ? { ok: true, left: 0, overage: true }
+    : {
+        ok: false,
+        reason: `This month's ${max} transcribed minutes are used up.`,
+        left: 0,
+        overage: false,
+      };
 }
 
 /** Minutes left this month, or null when unlimited (0 when the feature is off or used up). */
 export async function captureBudgetLeft(ws: Workspace): Promise<number | null> {
-  const limits = workspaceLimits(ws);
-  if (limits.captureMinutesPerMonth === 0) return 0;
-  const max = isPlanId(ws.plan)
-    ? captureBudget(PLANS[ws.plan], await count(ws, "members"))
-    : limits.captureMinutesPerMonth;
+  const max = await captureBudgetFor(ws);
   if (max === null) return null;
+  if (max === 0) return 0;
   return Math.max(0, max - (await captureMinutesThisMonth(ws)));
 }
 

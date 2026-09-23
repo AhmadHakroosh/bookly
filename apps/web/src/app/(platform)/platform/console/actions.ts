@@ -161,7 +161,6 @@ const percentField = (formData: FormData, name: string) => {
 export async function setPlatformFee(formData: FormData) {
   const s = await operator();
   const percent = percentField(formData, "feePercent");
-  if (percent === null) return;
   await setPlatformFeePercent(percent);
   await audit(s.user.email, "platform.fee.set", { type: "platform" }, { percent });
   back();

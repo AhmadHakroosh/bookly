@@ -76,14 +76,16 @@ export async function briefForBooking(
   if (assistantConfigured()) {
     try {
       const env = loadEnv();
+      // Briefs are short and run before every meeting: the small model is plenty and cheap.
+      const briefModel = env.ASSISTANT_BRIEF_MODEL || env.ASSISTANT_MODEL || "claude-sonnet-5";
       const r = await generateText({
-        model: anthropic(env.ASSISTANT_MODEL || "claude-sonnet-5"),
+        model: anthropic(briefModel),
         system: BRIEF_SYSTEM,
         prompt: factsForModel(facts),
       });
       if (r.text.trim()) {
         text = r.text.trim();
-        model = env.ASSISTANT_MODEL || "claude-sonnet-5";
+        model = briefModel;
       }
     } catch (e) {
       console.error("[brief] model failed, using plain brief", e);

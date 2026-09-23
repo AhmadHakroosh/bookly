@@ -32,6 +32,7 @@ import { detectCountry } from "@/server/geo";
 import { captureSupportsLocation } from "@/server/integrations/notetaker";
 import { formatPrice, paymentsReady } from "@/server/payments";
 import { getCurrentWorkspace } from "@/server/workspace";
+import { hasFeature } from "@/server/limits";
 import { priorityForEmail } from "@/server/contacts";
 import { fullSessions } from "@/server/waitlist";
 import { BookingForm } from "./booking-form";
@@ -57,6 +58,7 @@ async function EventPage({ params, searchParams }: PageProps<"/[username]/[event
   if (!ws || !profile || !et) notFound();
 
   const paid = paymentsReady(ws);
+  const video = { video: hasFeature(ws, "booklyVideo") };
   const country = await detectCountry();
   const tzParam = typeof sp.tz === "string" ? canonicalTimezone(sp.tz) : null;
   const tz = tzParam ?? profile.timezone;
@@ -116,7 +118,7 @@ async function EventPage({ params, searchParams }: PageProps<"/[username]/[event
           <BackLink href={`/${profile.username}`}>{profile.displayName}</BackLink>
           <h1 className="mt-3 text-2xl font-semibold tracking-tight">{et.title}</h1>
           <p className="mt-2 text-sm text-muted-foreground">
-            {et.durationMin} min · {locationsLabel(eventLocations(et))}
+            {et.durationMin} min · {locationsLabel(eventLocations(et, video))}
             {et.priceCents && paid ? ` · ${formatPrice(et.priceCents, et.currency)}` : ""}
             {et.seats > 1 ? ` · Group of up to ${et.seats}` : ""}
           </p>
@@ -186,7 +188,7 @@ async function EventPage({ params, searchParams }: PageProps<"/[username]/[event
                 reschedule={reschedule}
                 paid={!!et.priceCents && paid}
                 sessions={plan ? bookable : 1}
-                locations={eventLocations(et).map((l) => ({
+                locations={eventLocations(et, video).map((l) => ({
                   type: l.type,
                   label: locationLabel(l),
                   capture: et.autoCapture === "ask" && captureSupportsLocation(l.type),

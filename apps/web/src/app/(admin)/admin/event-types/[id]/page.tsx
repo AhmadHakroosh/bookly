@@ -2,6 +2,7 @@ import { PageSkeleton } from "@/components/page-skeleton";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { conferencingAvailability } from "@/server/integrations";
+import { hasFeature } from "@/server/limits";
 import { notetakerConfigured } from "@/server/integrations/notetaker";
 import { paymentsHint, paymentsReady } from "@/server/payments";
 import {
@@ -46,6 +47,7 @@ async function EditEventTypePage({ params }: PageProps<"/admin/event-types/[id]"
         google_meet: avail.google_meet,
         teams: avail.teams,
         zoom: avail.zoom,
+        videoPlan: hasFeature(ws, "booklyVideo"),
       }}
       initial={{
         id: et.id,

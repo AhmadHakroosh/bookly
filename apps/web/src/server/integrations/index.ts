@@ -20,7 +20,7 @@ import {
   scheduleNotetaker,
   type NotetakerRef,
 } from "./notetaker";
-import { captureBudgetLeft } from "@/server/limits";
+import { captureAllowed, hasFeature } from "@/server/limits";
 import { google, googleAccount } from "./google";
 import { microsoft, microsoftAccount } from "./microsoft";
 import { exchangeCode, providerConfigured, refreshTokens } from "./oauth";
@@ -305,9 +305,9 @@ async function bookNotetaker(booking: Booking, meetingUrl: string): Promise<Note
     where: eq(schema.workspaces.id, booking.workspaceId),
   });
   if (!ws) return null;
-  const budget = await captureBudgetLeft(ws);
-  if (budget !== null && budget <= 0) {
-    console.warn(`[notetaker] not booked for ${booking.id}: minute budget used up`);
+  const allowed = await captureAllowed(ws);
+  if (!allowed.ok) {
+    console.warn(`[notetaker] not booked for ${booking.id}: ${allowed.reason}`);
     return null;
   }
   try {
@@ -315,7 +315,9 @@ async function bookNotetaker(booking: Booking, meetingUrl: string): Promise<Note
       booking,
       meetingUrl,
       language: ws.settings.capture?.language,
-      maxSeconds: budget === null ? 8 * 3600 : Math.max(60, budget * 60),
+      // Cut the bot at the remaining budget unless minutes past it are billed as overage.
+      maxSeconds:
+        allowed.left === null || allowed.overage ? 8 * 3600 : Math.max(60, allowed.left * 60),
     });
   } catch (e) {
     console.error("[notetaker] booking failed", e);
@@ -331,6 +333,12 @@ export async function provisionBooking(
   const conns = await listIntegrations(booking.hostUserId);
   const byProvider = (p: IntegrationProvider) =>
     conns.find((c) => c.provider === p && c.status !== "error") ?? null;
+  // Bookly video is a paid feature in cloud mode; a Free workspace's booking keeps its chosen
+  // location without a room, or falls through to the event type's text.
+  const owner = await db().query.workspaces.findFirst({
+    where: eq(schema.workspaces.id, booking.workspaceId),
+  });
+  const videoAllowed = !owner || hasFeature(owner, "booklyVideo");
   const spec: MeetingSpec = {
     bookingId: booking.id,
     title: `${eventType?.title ?? "Meeting"}: ${host.name} and ${booking.attendeeName}`,
@@ -373,7 +381,7 @@ export async function provisionBooking(
       return true;
     }
     if (type === "daily") {
-      if (!dailyConfigured()) return false;
+      if (!dailyConfigured() || !videoAllowed) return false;
       const m = await daily.createMeeting(null, spec);
       meetingUrl = m.url;
       meetingProvider = "daily";

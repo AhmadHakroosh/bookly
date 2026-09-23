@@ -543,18 +543,30 @@ export function parseLocations(
 }
 
 /** Every location an event type offers; older rows only have `location`. */
+/**
+ * The ways to meet an event type offers. `video: false` (a plan without Bookly video) drops the
+ * Bookly video rows; an event type that offered nothing else falls back to a plain video-link
+ * note so it stays bookable.
+ */
 export function eventLocations(
   et: Pick<EventType, "location" | "locations">,
+  opts: { video?: boolean } = {},
 ): EventType["location"][] {
-  return et.locations.length ? et.locations : [et.location];
+  const all = et.locations.length ? et.locations : [et.location];
+  if (opts.video === false) {
+    const rest = all.filter((l) => l.type !== "daily");
+    return rest.length ? rest : [{ type: "custom", value: "Video link sent by email" }];
+  }
+  return all;
 }
 
 /** The location an attendee picked by type, or the event type's default when there is one choice. */
 export function pickLocation(
   et: Pick<EventType, "location" | "locations">,
   type: string | null | undefined,
+  opts: { video?: boolean } = {},
 ): EventType["location"] | null {
-  const all = eventLocations(et);
+  const all = eventLocations(et, opts);
   if (!type) return all.length === 1 ? all[0]! : null;
   return all.find((l) => l.type === type) ?? null;
 }

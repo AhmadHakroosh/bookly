@@ -23,6 +23,8 @@ export type ConferencingReady = {
   google_meet: boolean;
   teams: boolean;
   zoom: boolean;
+  /** false when the plan has no Bookly video: the option is shown but cannot be picked. */
+  videoPlan?: boolean;
 };
 
 const needsValue = (t: LocationType) => t === "phone" || t === "in_person" || t === "custom";
@@ -58,7 +60,11 @@ export function LocationsEditor({
         const conf = r.type in ready ? ready[r.type as keyof ConferencingReady] : null;
         const hints = [
           i === 0 && rows.length > 1 ? "Default" : null,
-          conf === false ? "Not connected: bookings fall back to Bookly video or the email" : null,
+          r.type === "daily" && ready.videoPlan === false
+            ? "Bookly video needs the Pro plan: until then bookings show a video-link note instead"
+            : conf === false
+              ? "Not connected: bookings fall back to Bookly video or the email"
+              : null,
           r.type === "in_person" ? "Leave the address blank to ask the attendee for theirs" : null,
           r.type === "phone" ? "Attendees enter their number; the note shows beside it" : null,
         ].filter(Boolean);
@@ -71,7 +77,12 @@ export function LocationsEditor({
                 className={needsValue(r.type) ? "w-40 shrink-0" : "min-w-0 flex-1"}
                 options={LOCATION_OPTIONS.filter(([t]) => t === r.type || !used.has(t)).map(
                   ([t, l]) => {
-                    const c = t in ready ? ready[t as keyof ConferencingReady] : null;
+                    const c =
+                      t in ready
+                        ? (ready[t as keyof ConferencingReady] as boolean | undefined)
+                        : null;
+                    if (t === "daily" && ready.videoPlan === false)
+                      return { value: t, label: `${l} (Pro)`, disabled: r.type !== t };
                     return {
                       value: t,
                       label: `${l}${c === false ? (t === "daily" ? " — not set up" : " — not connected") : ""}`,
