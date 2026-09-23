@@ -42,6 +42,10 @@ type Values = {
   autoCapture: "off" | "ask" | "always";
 };
 
+/** The unit addon on numeric fields: joined to the input, its own background and border. */
+const UNIT =
+  "flex shrink-0 items-center rounded-r-lg border border-l-0 border-input bg-muted px-3 text-xs whitespace-nowrap text-muted-foreground";
+
 export function EventTypeForm({
   initial,
   schedules,
@@ -78,26 +82,23 @@ export function EventTypeForm({
     if (state.ok) toast.success("Saved");
     else if (state.error) toast.error(state.error);
   }, [state]);
-  // Numeric fields in a row: single-line labels so the inputs line up, and the unit inside the
-  // field instead of in the label.
+  // Numeric fields in a row: single-line labels so the inputs line up, and the unit as an
+  // addon joined to the field, outside the input so it never sits over the spinner arrows.
   const num = (name: keyof Values, label: string, unit: string, hint?: string) => (
     <Field>
       <FieldLabel htmlFor={name} className="whitespace-nowrap">
         {label}
       </FieldLabel>
-      <div className="relative">
+      <div className="flex">
         <Input
           id={name}
           name={name}
           type="number"
           min={0}
           defaultValue={String(initial[name])}
-          className="pr-14"
+          className="min-w-0 rounded-r-none"
         />
-        <span
-          aria-hidden
-          className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-sm text-muted-foreground"
-        >
+        <span aria-hidden className={UNIT}>
           {unit}
         </span>
       </div>
@@ -148,7 +149,7 @@ export function EventTypeForm({
             <FieldLabel htmlFor="seats" className="whitespace-nowrap">
               Seats per slot
             </FieldLabel>
-            <div className="relative">
+            <div className="flex">
               <Input
                 id="seats"
                 name="seats"
@@ -156,12 +157,9 @@ export function EventTypeForm({
                 min={1}
                 max={500}
                 defaultValue={String(initial.seats)}
-                className="pr-14"
+                className="min-w-0 rounded-r-none"
               />
-              <span
-                aria-hidden
-                className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-sm text-muted-foreground"
-              >
+              <span aria-hidden className={UNIT}>
                 seats
               </span>
             </div>
