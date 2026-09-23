@@ -31,6 +31,7 @@ export function TimePicker({
   placeholder = "--:--",
   stepMin = 15,
   className,
+  disabled,
 }: {
   name?: string;
   id?: string;
@@ -42,6 +43,7 @@ export function TimePicker({
   placeholder?: string;
   stepMin?: number;
   className?: string;
+  disabled?: boolean;
 }) {
   const options = timeOptions(stepMin, value ?? defaultValue).map((t) => ({ value: t, label: t }));
   return (
@@ -55,6 +57,7 @@ export function TimePicker({
       required={required}
       placeholder={placeholder}
       className={className}
+      disabled={disabled}
       contentClassName="max-h-72"
       options={required ? options : [{ value: "", label: placeholder }, ...options]}
     />

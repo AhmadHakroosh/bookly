@@ -15,16 +15,14 @@ import {
 import { requireStaff } from "@/server/session";
 import { getCurrentWorkspace } from "@/server/workspace";
 import {
-  addOverride,
   createSchedule,
   deleteSchedule,
   removeOverride,
   setDefaultSchedule,
 } from "../scheduling-actions";
+import { OverrideForm } from "./override-form";
 import { ScheduleForm } from "./schedule-form";
 import { PageSkeleton } from "@/components/page-skeleton";
-import { DatePicker } from "@/components/date-picker";
-import { TimePicker } from "@/components/time-picker";
 
 export const metadata = { title: "Availability" };
 
@@ -136,33 +134,7 @@ async function AvailabilityPage({ searchParams }: PageProps<"/admin/availability
         <p className="text-sm text-muted-foreground">
           Block a day off, or open different hours on a specific date.
         </p>
-        <form
-          action={addOverride}
-          className="flex flex-wrap items-end gap-2 rounded-xl border p-4 text-sm"
-        >
-          <input type="hidden" name="scheduleId" value={s.id} />
-          <label className="block">
-            <span className="mb-1 block text-xs font-medium">Date</span>
-            <DatePicker name="date" required ariaLabel="Date" className="w-40" />
-          </label>
-          <label className="block">
-            <span className="mb-1 block text-xs font-medium">From</span>
-            <TimePicker name="start" ariaLabel="From" className="w-28" />
-          </label>
-          <label className="block">
-            <span className="mb-1 block text-xs font-medium">To</span>
-            <TimePicker name="end" ariaLabel="To" className="w-28" />
-          </label>
-          <label className="inline-flex items-center gap-1.5 pb-1.5">
-            <input type="checkbox" name="blocked" /> Unavailable all day
-          </label>
-          {all.length > 1 && (
-            <label className="inline-flex items-center gap-1.5 pb-1.5">
-              <input type="checkbox" name="all" defaultChecked /> Apply to all my schedules
-            </label>
-          )}
-          <SubmitButton>Add</SubmitButton>
-        </form>
+        <OverrideForm scheduleId={s.id} multi={all.length > 1} />
         <ul className="space-y-1 text-sm">
           {s.overrides.map((o) => (
             <li
