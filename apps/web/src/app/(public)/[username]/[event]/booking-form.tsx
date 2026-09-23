@@ -60,7 +60,6 @@ export function BookingForm({
   const askCapture = !!chosen?.capture;
   const [country, setCountry] = useState(defaultCountry);
   const countries = countryOptions();
-  const calling = countries.find((c) => c.code === country)?.calling ?? "";
   const field =
     "bg-background h-10 w-full rounded-lg border px-3 text-sm outline-none focus-visible:ring-2";
   return (
@@ -111,36 +110,36 @@ export function BookingForm({
               <span className="font-normal text-muted-foreground"> · {chosen.note}</span>
             )}
           </span>
-          <div className="flex gap-2">
+          {/* One control: the country (flag and calling code) as an addon joined to the number,
+              the way unit addons sit on number fields; the list shows the full country names. */}
+          <div className="flex">
             <Dropdown
               name="phoneCountry"
               ariaLabel="Country"
               value={country}
               onValueChange={setCountry}
-              className="h-10 w-auto max-w-52 shrink-0"
+              className="h-10 w-auto shrink-0 rounded-r-none border-r-0 bg-muted px-2.5 text-muted-foreground"
               contentClassName="max-h-80"
+              renderValue={(code) => {
+                const c = countries.find((x) => x.code === code);
+                return c ? `${c.flag} ${c.calling}` : code;
+              }}
               options={countries.map((c) => ({
                 value: c.code,
                 label: `${c.flag} ${c.name} ${c.calling}`,
               }))}
             />
-            <div className="relative flex-1">
-              <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-muted-foreground">
-                {calling}
-              </span>
-              <input
-                name="phone"
-                type="tel"
-                required
-                autoComplete="tel-national"
-                inputMode="tel"
-                aria-label="Phone number"
-                defaultValue={defaultPhone ?? undefined}
-                placeholder="201 555 0123"
-                className={field}
-                style={{ paddingLeft: `${calling.length * 0.62 + 1.4}rem` }}
-              />
-            </div>
+            <input
+              name="phone"
+              type="tel"
+              required
+              autoComplete="tel-national"
+              inputMode="tel"
+              aria-label="Phone number"
+              defaultValue={defaultPhone ?? undefined}
+              placeholder="201 555 0123"
+              className={`${field} min-w-0 flex-1 rounded-l-none`}
+            />
           </div>
         </div>
       )}
