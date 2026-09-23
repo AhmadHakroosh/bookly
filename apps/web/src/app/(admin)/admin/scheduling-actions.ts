@@ -2,7 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { z } from "zod";
-import { and, eq, schema } from "@bookly/db";
+import { and, eq, inArray, isNull, schema } from "@bookly/db";
 import type { EventLocation } from "@bookly/db/schema";
 import { db } from "@/lib/db";
 import { fmtDateTime, hhmmToMin, isValidTimezone } from "@/lib/time";
@@ -23,7 +23,12 @@ import { trackBooking } from "@/server/contacts";
 import { refreshWorkspace } from "@/server/cache";
 import { parseQuestions, parseQuestionsJson, parseReminders } from "@/server/questions";
 import { MAX_OCCURRENCES } from "@/server/recurrence";
-import { parseLocations, ensureDefaultSchedule, getProfileByUser } from "@/server/scheduling";
+import {
+  listSchedules,
+  parseLocations,
+  ensureDefaultSchedule,
+  getProfileByUser,
+} from "@/server/scheduling";
 import {
   assertCaptureFeature,
   assertFeature,
@@ -242,25 +247,38 @@ export async function addOverride(formData: FormData) {
   const blocked = formData.get("blocked") === "on";
   const start = String(formData.get("start") ?? "");
   const end = String(formData.get("end") ?? "");
-  await db()
-    .delete(schema.scheduleOverrides)
-    .where(
-      and(eq(schema.scheduleOverrides.scheduleId, s.id), eq(schema.scheduleOverrides.date, date)),
-    );
-  await db()
-    .insert(schema.scheduleOverrides)
-    .values(
-      blocked || !start || !end
-        ? { scheduleId: s.id, date, startMin: null, endMin: null }
-        : { scheduleId: s.id, date, startMin: hhmmToMin(start), endMin: hhmmToMin(end) },
-    );
+  // A day off usually means every schedule; "all" writes the same override to each of them.
+  const targets = formData.get("all") === "on" ? await listSchedules(ws.id, session.user.id) : [s];
+  const times =
+    blocked || !start || !end
+      ? { startMin: null, endMin: null }
+      : { startMin: hhmmToMin(start), endMin: hhmmToMin(end) };
+  await db().transaction(async (tx) => {
+    for (const t of targets) {
+      await tx
+        .delete(schema.scheduleOverrides)
+        .where(
+          and(
+            eq(schema.scheduleOverrides.scheduleId, t.id),
+            eq(schema.scheduleOverrides.date, date),
+          ),
+        );
+      await tx.insert(schema.scheduleOverrides).values({ scheduleId: t.id, date, ...times });
+    }
+  });
   refreshWorkspace(ws.id);
 }
 
-export async function removeOverride(id: string) {
+/** Removes one override; with `everywhere`, the same date and hours on all the member's schedules. */
+export async function removeOverride(id: string, everywhere = false) {
   const { session, ws } = await ctx();
   const row = await db()
-    .select({ id: schema.scheduleOverrides.id })
+    .select({
+      id: schema.scheduleOverrides.id,
+      date: schema.scheduleOverrides.date,
+      startMin: schema.scheduleOverrides.startMin,
+      endMin: schema.scheduleOverrides.endMin,
+    })
     .from(schema.scheduleOverrides)
     .innerJoin(schema.schedules, eq(schema.schedules.id, schema.scheduleOverrides.scheduleId))
     .where(
@@ -270,8 +288,27 @@ export async function removeOverride(id: string) {
         eq(schema.schedules.userId, session.user.id),
       ),
     );
-  if (row[0])
-    await db().delete(schema.scheduleOverrides).where(eq(schema.scheduleOverrides.id, row[0].id));
+  const o = row[0];
+  if (!o) return;
+  if (!everywhere) {
+    await db().delete(schema.scheduleOverrides).where(eq(schema.scheduleOverrides.id, o.id));
+  } else {
+    const mine = (await listSchedules(ws.id, session.user.id)).map((x) => x.id);
+    await db()
+      .delete(schema.scheduleOverrides)
+      .where(
+        and(
+          inArray(schema.scheduleOverrides.scheduleId, mine),
+          eq(schema.scheduleOverrides.date, o.date),
+          o.startMin === null
+            ? isNull(schema.scheduleOverrides.startMin)
+            : and(
+                eq(schema.scheduleOverrides.startMin, o.startMin),
+                eq(schema.scheduleOverrides.endMin, o.endMin!),
+              ),
+        ),
+      );
+  }
   refreshWorkspace(ws.id);
 }
 

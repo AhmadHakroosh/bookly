@@ -100,6 +100,15 @@ export async function listSchedules(workspaceId: string, userId: string): Promis
     .orderBy(desc(schema.schedules.isDefault), asc(schema.schedules.name));
 }
 
+/** Overrides on several schedules at once (the availability page marks shared days off). */
+export async function listOverrides(scheduleIds: string[]) {
+  if (!scheduleIds.length) return [];
+  return db()
+    .select()
+    .from(schema.scheduleOverrides)
+    .where(inArray(schema.scheduleOverrides.scheduleId, scheduleIds));
+}
+
 /** Creates a Mon–Fri 9–17 default schedule for a user if they have none. */
 export async function ensureDefaultSchedule(
   workspaceId: string,

@@ -9,6 +9,7 @@ import {
   ensureDefaultSchedule,
   getProfileByUser,
   getSchedule,
+  listOverrides,
   listSchedules,
 } from "@/server/scheduling";
 import { requireStaff } from "@/server/session";
@@ -40,6 +41,21 @@ async function AvailabilityPage({ searchParams }: PageProps<"/admin/availability
   const current = all.find((x) => x.id === wanted) ?? all.find((x) => x.isDefault) ?? fallback;
   const s = await getSchedule(current.id);
   if (!s) return null;
+  // An override present with the same hours on every schedule is shown once as "all schedules".
+  const others = await listOverrides(all.filter((x) => x.id !== s.id).map((x) => x.id));
+  const everywhere = (o: (typeof s.overrides)[number]) =>
+    all.length > 1 &&
+    all
+      .filter((x) => x.id !== s.id)
+      .every((x) =>
+        others.some(
+          (p) =>
+            p.scheduleId === x.id &&
+            p.date === o.date &&
+            p.startMin === o.startMin &&
+            p.endMin === o.endMin,
+        ),
+      );
   const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
   return (
     <div className="max-w-2xl space-y-10">
@@ -140,9 +156,14 @@ async function AvailabilityPage({ searchParams }: PageProps<"/admin/availability
             <span className="mb-1 block text-xs font-medium">To</span>
             <input type="time" name="end" className="h-8 rounded-md border bg-background px-2" />
           </label>
-          <label className="inline-flex items-center gap-1 pb-1.5">
+          <label className="inline-flex items-center gap-1.5 pb-1.5">
             <input type="checkbox" name="blocked" /> Unavailable all day
           </label>
+          {all.length > 1 && (
+            <label className="inline-flex items-center gap-1.5 pb-1.5">
+              <input type="checkbox" name="all" defaultChecked /> Apply to all my schedules
+            </label>
+          )}
           <SubmitButton>Add</SubmitButton>
         </form>
         <ul className="space-y-1 text-sm">
@@ -156,9 +177,14 @@ async function AvailabilityPage({ searchParams }: PageProps<"/admin/availability
                 {o.startMin === null
                   ? "unavailable"
                   : `${minToHHMM(o.startMin)}–${minToHHMM(o.endMin!)}`}
+                {everywhere(o) && (
+                  <span className="text-xs text-muted-foreground"> · all schedules</span>
+                )}
               </span>
-              <form action={removeOverride.bind(null, o.id)}>
-                <SubmitButton variant="ghost">Remove</SubmitButton>
+              <form action={removeOverride.bind(null, o.id, everywhere(o))}>
+                <SubmitButton variant="ghost">
+                  {everywhere(o) ? "Remove everywhere" : "Remove"}
+                </SubmitButton>
               </form>
             </li>
           ))}
