@@ -3,7 +3,7 @@
 import { shortId } from "@/lib/id";
 import { useActionState, useEffect, useState } from "react";
 import { toast } from "sonner";
-import { XIcon } from "lucide-react";
+import { Trash2Icon } from "lucide-react";
 import { BackLink, ExternalLink } from "@/components/links";
 import type { RoutingDestination, RoutingForm, RoutingRule } from "@bookly/db/schema";
 import { Button } from "@/components/ui/button";
@@ -33,11 +33,11 @@ function DestinationPicker({
   const type = value?.type ?? "event_type";
   const select = "h-8 rounded-lg border bg-background px-2 text-sm";
   return (
-    <div className="flex flex-wrap items-center gap-2">
+    <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
       <select
         value={type}
         aria-label="Destination type"
-        className={select}
+        className={`${select} min-w-0 basis-full sm:w-44 sm:basis-auto`}
         onChange={(e) => {
           const t = e.target.value;
           onChange(
@@ -57,7 +57,7 @@ function DestinationPicker({
         <select
           value={value?.type === "event_type" ? value.eventTypeId : ""}
           aria-label="Event type"
-          className={select}
+          className={`${select} min-w-0 flex-1`}
           onChange={(e) => onChange({ type: "event_type", eventTypeId: e.target.value })}
         >
           {eventTypes.map((et) => (
@@ -72,7 +72,7 @@ function DestinationPicker({
           value={value.url}
           placeholder="https://"
           aria-label="Link"
-          className="min-w-64"
+          className="min-w-0 flex-1"
           onChange={(e) => onChange({ type: "url", url: e.target.value })}
         />
       )}
@@ -81,7 +81,7 @@ function DestinationPicker({
           value={value.text}
           placeholder="Text shown to the visitor"
           aria-label="Message"
-          className="min-w-64"
+          className="min-w-0 flex-1"
           onChange={(e) => onChange({ type: "message", text: e.target.value })}
         />
       )}
@@ -164,20 +164,23 @@ export function RoutingFormEditor({
                     <option value="any">any</option>
                   </select>
                   <span>of these hold:</span>
-                  <button
+                  <Button
                     type="button"
+                    variant="ghost"
+                    size="icon-sm"
+                    aria-label="Remove rule"
                     onClick={() => setRules((all) => all.filter((_, j) => j !== i))}
-                    className="ml-auto text-xs text-destructive"
+                    className="ml-auto shrink-0 text-muted-foreground hover:text-destructive"
                   >
-                    Remove rule
-                  </button>
+                    <Trash2Icon />
+                  </Button>
                 </div>
                 {r.conditions.map((c, k) => (
                   <div key={k} className="flex flex-wrap items-center gap-2">
                     <select
                       value={c.questionId}
                       aria-label="Question"
-                      className={select}
+                      className={`${select} min-w-0 basis-full sm:flex-1 sm:basis-0`}
                       onChange={(e) =>
                         setRule(i, {
                           conditions: r.conditions.map((x, m) =>
@@ -195,7 +198,7 @@ export function RoutingFormEditor({
                     <select
                       value={c.op}
                       aria-label="Operator"
-                      className={select}
+                      className={`${select} shrink-0 ${c.op === "not_empty" ? "min-w-0 flex-1 sm:w-36 sm:flex-none" : "w-36"}`}
                       onChange={(e) =>
                         setRule(i, {
                           conditions: r.conditions.map((x, m) =>
@@ -214,7 +217,7 @@ export function RoutingFormEditor({
                       <Input
                         value={c.value}
                         aria-label="Value"
-                        className="w-48"
+                        className="min-w-0 flex-1"
                         onChange={(e) =>
                           setRule(i, {
                             conditions: r.conditions.map((x, m) =>
@@ -224,16 +227,18 @@ export function RoutingFormEditor({
                         }
                       />
                     )}
-                    <button
+                    <Button
                       type="button"
+                      variant="ghost"
+                      size="icon-sm"
                       aria-label="Remove condition"
-                      className="px-1 text-destructive"
+                      className="shrink-0 text-muted-foreground hover:text-destructive"
                       onClick={() =>
                         setRule(i, { conditions: r.conditions.filter((_, m) => m !== k) })
                       }
                     >
-                      <XIcon className="size-4" aria-hidden />
-                    </button>
+                      <Trash2Icon />
+                    </Button>
                   </div>
                 ))}
                 <Button
@@ -252,7 +257,7 @@ export function RoutingFormEditor({
                   Add condition
                 </Button>
                 <div className="flex flex-wrap items-center gap-2 text-sm">
-                  <span>then</span>
+                  <span className="basis-full sm:basis-auto">then</span>
                   <DestinationPicker
                     value={r.destination}
                     eventTypes={eventTypes}
