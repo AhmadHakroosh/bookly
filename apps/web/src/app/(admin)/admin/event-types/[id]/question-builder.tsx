@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronDownIcon, ChevronUpIcon, XIcon } from "lucide-react";
+import { ChevronDownIcon, ChevronUpIcon, Trash2Icon } from "lucide-react";
 import { useEffect, useState } from "react";
 import type { EventQuestion } from "@bookly/db/schema";
 import { Button } from "@/components/ui/button";
@@ -41,27 +41,28 @@ export function QuestionBuilder({
     <div className="space-y-2">
       <input type="hidden" name="questionsJson" value={JSON.stringify(qs)} />
       {qs.map((q, i) => (
-        <div key={q.id} className="grid gap-2 rounded-lg border p-3 sm:grid-cols-[1fr_140px_auto]">
-          <Input
-            value={q.label}
-            onChange={(e) => update(i, { label: e.target.value })}
-            placeholder="Question"
-            aria-label="Question label"
-          />
-          <select
-            value={q.type}
-            onChange={(e) => update(i, { type: e.target.value as EventQuestion["type"] })}
-            className="h-8 rounded-lg border bg-background px-2 text-sm"
-            aria-label="Answer type"
-          >
-            {TYPES.map(([v, l]) => (
-              <option key={v} value={v}>
-                {l}
-              </option>
-            ))}
-          </select>
-          <div className="flex items-center gap-2 text-xs">
-            <label className="inline-flex items-center gap-1">
+        <div key={q.id} className="space-y-2 rounded-lg border p-2">
+          <div className="flex items-center gap-2">
+            <Input
+              value={q.label}
+              onChange={(e) => update(i, { label: e.target.value })}
+              placeholder="Question"
+              aria-label="Question label"
+              className="min-w-0 flex-1"
+            />
+            <select
+              value={q.type}
+              onChange={(e) => update(i, { type: e.target.value as EventQuestion["type"] })}
+              className="h-8 w-28 shrink-0 rounded-lg border bg-background px-2 text-sm"
+              aria-label="Answer type"
+            >
+              {TYPES.map(([v, l]) => (
+                <option key={v} value={v}>
+                  {l}
+                </option>
+              ))}
+            </select>
+            <label className="inline-flex shrink-0 items-center gap-1.5 text-xs">
               <input
                 type="checkbox"
                 checked={q.required}
@@ -69,29 +70,41 @@ export function QuestionBuilder({
               />
               Required
             </label>
-            <button type="button" onClick={() => move(i, -1)} aria-label="Move up" className="px-1">
-              <ChevronUpIcon className="size-4" aria-hidden />
-            </button>
-            <button
+            <Button
               type="button"
+              variant="ghost"
+              size="icon-sm"
+              onClick={() => move(i, -1)}
+              disabled={i === 0}
+              aria-label="Move up"
+              className="shrink-0"
+            >
+              <ChevronUpIcon />
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon-sm"
               onClick={() => move(i, 1)}
+              disabled={i === qs.length - 1}
               aria-label="Move down"
-              className="px-1"
+              className="shrink-0"
             >
-              <ChevronDownIcon className="size-4" aria-hidden />
-            </button>
-            <button
+              <ChevronDownIcon />
+            </Button>
+            <Button
               type="button"
+              variant="ghost"
+              size="icon-sm"
               onClick={() => setQs((all) => all.filter((_, j) => j !== i))}
-              className="px-1 text-destructive"
               aria-label="Remove question"
+              className="shrink-0 text-muted-foreground hover:text-destructive"
             >
-              <XIcon className="size-4" aria-hidden />
-            </button>
+              <Trash2Icon />
+            </Button>
           </div>
           {q.type === "select" && (
             <Input
-              className="sm:col-span-3"
               value={(q.options ?? []).join(", ")}
               onChange={(e) =>
                 update(i, {
