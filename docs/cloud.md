@@ -17,8 +17,8 @@ minimum): limits, feature gates, display prices and each plan's platform fee on 
 (Free 5%, Pro and Team 0%; Console → Payments sets a rate per plan, stored in `platform_state`
 key `payments` as `fees`, and the workspace page overrides one workspace). A workspace's `plan` + `plan_status` decide what applies; `self-hosted` (the default
 outside cloud mode) means no limits. Enforcement points: creating event types, inviting members,
-connecting integrations, adding custom domains, enabling paid bookings / workflows / team
-scheduling, Bookly video (a Pro feature: the location cannot be saved on Free, a Free workspace's
+connecting integrations, adding custom domains, enabling workflows / team scheduling (paid
+bookings are open to every plan; only the fee differs), Bookly video (a Pro feature: the location cannot be saved on Free, a Free workspace's
 existing Bookly video rows are hidden from the booking page and provisioning skips the room), the
 keyed API, and the "Powered by Bookly" line on booking pages and emails (and the workspace's own
 logo and colour in its place).

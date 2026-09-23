@@ -49,7 +49,8 @@ describe("plans", () => {
     expect(planPrice(PLANS.free, "year")).toBe(0);
   });
   it("finds the cheapest plan for a need", () => {
-    expect(planFor("payments")).toBe("pro");
+    expect(planFor("payments")).toBe("free");
+    expect(planFor("booklyVideo")).toBe("pro");
     expect(planFor("teamScheduling")).toBe("team");
     expect(planFor("members", 3)).toBe("team");
     expect(planFor("eventTypes", 2)).toBe("free");

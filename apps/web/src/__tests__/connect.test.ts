@@ -27,10 +27,11 @@ describe("paymentsFor", () => {
     process.env.TENANCY = "single";
     expect(paymentsFor(ws("self-hosted"))).toEqual({ ok: true, account: null });
   });
-  it("in cloud mode needs the plan, a connected account and Stripe's go-ahead, in that order", () => {
+  it("in cloud mode needs a connected account and Stripe's go-ahead, in that order", () => {
     process.env.STRIPE_SECRET_KEY = "sk_test_x";
     process.env.TENANCY = "multi";
-    expect(paymentsFor(ws("free"))).toEqual({ ok: false, reason: "plan" });
+    // Every plan can take payments (Free pays the platform fee); a connected account comes first.
+    expect(paymentsFor(ws("free"))).toEqual({ ok: false, reason: "not_connected" });
     expect(paymentsFor(ws("pro"))).toEqual({ ok: false, reason: "not_connected" });
     expect(paymentsFor(ws("pro", { stripeAccountId: "acct_1" }))).toEqual({
       ok: false,

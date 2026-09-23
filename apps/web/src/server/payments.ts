@@ -49,7 +49,7 @@ export function paymentsHint(ws: Workspace): string {
         ? "Payments are not enabled on this platform yet."
         : "Stripe is not set up on this server, so bookings stay free (docs/payments.md).";
     case "plan":
-      return "Paid bookings come with Pro and Team (Billing).";
+      return "Paid bookings are not included in your plan (Billing).";
     case "not_connected":
       return "Connect your Stripe account under Settings → Payments to charge for bookings.";
     case "pending":

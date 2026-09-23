@@ -10,7 +10,7 @@ import { pageMetadata, SITE } from "../site";
 export const metadata: Metadata = pageMetadata({
   title: "Pricing",
   description:
-    "Bookly plans: Free with contacts, briefings and the Meeting Inbox; Pro at $19/month or $190/year adds Bookly video, auto-capture, paid bookings with no platform fee, a custom domain; Team at $25 a member shares the customer memory, two months free yearly.",
+    "Bookly plans: Free with contacts, briefings, the Meeting Inbox and paid bookings at a 5% fee; Pro at $19/month or $190/year adds Bookly video, auto-capture, paid bookings with no platform fee, a custom domain; Team at $25 a member shares the customer memory, two months free yearly.",
   path: "/pricing",
 });
 
@@ -64,7 +64,7 @@ const ROWS: [string, (p: Plan) => string | boolean][] = [
 const FAQ: [string, string][] = [
   [
     "Is there a free plan?",
-    "Yes. Free gives you a booking page, two event types, one connected calendar, Google Meet, Zoom or Teams links and email reminders, for as long as you like. No card needed. Bookly video, the built-in room nobody needs an account for, starts on Pro.",
+    "Yes. Free gives you a booking page, two event types, one connected calendar, Google Meet, Zoom or Teams links, email reminders and paid bookings through your own Stripe account (with a 5% platform fee), for as long as you like. No card needed. Bookly video, the built-in room nobody needs an account for, starts on Pro.",
   ],
   [
     "What counts as a member?",

@@ -27,7 +27,7 @@ With `TENANCY=multi` the platform's key is used only for plan subscriptions. Mon
 paid bookings and payment requests must reach the host, so each workspace connects its **own**
 Stripe account through Stripe Connect (Express onboarding, hosted by Stripe):
 
-1. Admin → Settings → Payments → **Connect Stripe** (Pro and Team; owners and admins). Stripe
+1. Admin → Settings → Payments → **Connect Stripe** (every plan, Free pays the platform fee; owners and admins). Stripe
    collects the business and payout details; Bookly stores only the account id and the flags
    Stripe reports (`charges_enabled`, `payouts_enabled`, `details_submitted`).
 2. Once Stripe enables charges, prices on event types apply. Until then, and on Free, prices are

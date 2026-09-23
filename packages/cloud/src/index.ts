@@ -24,6 +24,7 @@ export type Limits = {
   /** Feature gates. */
   /** Bookly video rooms (Daily); the other conferencing providers are always available. */
   booklyVideo: boolean;
+  /** Paid bookings through the host's Stripe account (every cloud plan; the fee differs). */
   payments: boolean;
   workflows: boolean;
   teamScheduling: boolean;
@@ -68,7 +69,7 @@ export const PLANS: Record<PlanId, Plan> = {
       apiRequestsPerMinute: 60,
       captureMinutesPerMonth: 0,
       booklyVideo: false,
-      payments: false,
+      payments: true,
       workflows: false,
       teamScheduling: false,
       api: false,
@@ -80,6 +81,7 @@ export const PLANS: Record<PlanId, Plan> = {
       "1 booking page, 2 event types",
       "1 connected calendar",
       "Email confirmations and reminders",
+      "Paid bookings via Stripe, 5% platform fee",
     ],
     featured: ["Contacts, briefings and the Meeting Inbox"],
   },
