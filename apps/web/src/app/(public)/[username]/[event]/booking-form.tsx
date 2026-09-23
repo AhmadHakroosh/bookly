@@ -118,7 +118,7 @@ export function BookingForm({
               ariaLabel="Country"
               value={country}
               onValueChange={setCountry}
-              className="h-10 w-auto shrink-0 rounded-r-none border-r-0 bg-muted px-2.5 text-muted-foreground"
+              className="w-auto shrink-0 rounded-r-none border-r-0 bg-muted px-2.5 text-muted-foreground data-[size=default]:h-10"
               contentClassName="max-h-80"
               renderValue={(code) => {
                 const c = countries.find((x) => x.code === code);
