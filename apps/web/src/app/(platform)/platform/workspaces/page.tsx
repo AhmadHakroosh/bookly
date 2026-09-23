@@ -58,7 +58,13 @@ async function WorkspacesPage() {
 
 export default function WorkspacesPageBoundary() {
   return (
-    <Suspense fallback={<PageSkeleton />}>
+    <Suspense
+      fallback={
+        <div className="mx-auto max-w-2xl px-4 py-14 md:py-20">
+          <PageSkeleton />
+        </div>
+      }
+    >
       <WorkspacesPage />
     </Suspense>
   );

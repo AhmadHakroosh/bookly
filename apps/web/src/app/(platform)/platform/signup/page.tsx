@@ -4,7 +4,7 @@ import { loadEnv } from "@bookly/config";
 import { getSession } from "@/server/session";
 import { pageMetadata, SITE } from "../site";
 import { SignupForm } from "./signup-form";
-import { PageSkeleton } from "@/components/page-skeleton";
+import { FormSkeleton } from "@/components/form-skeleton";
 
 export const metadata: Metadata = pageMetadata({
   title: "Get started",
@@ -32,7 +32,13 @@ async function SignupPage() {
 
 export default function SignupPageBoundary() {
   return (
-    <Suspense fallback={<PageSkeleton />}>
+    <Suspense
+      fallback={
+        <div className="mx-auto max-w-md px-4 py-14 md:py-20">
+          <FormSkeleton fields={4} />
+        </div>
+      }
+    >
       <SignupPage />
     </Suspense>
   );
