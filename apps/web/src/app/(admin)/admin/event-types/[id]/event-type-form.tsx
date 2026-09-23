@@ -78,10 +78,29 @@ export function EventTypeForm({
     if (state.ok) toast.success("Saved");
     else if (state.error) toast.error(state.error);
   }, [state]);
-  const num = (name: keyof Values, label: string, hint?: string) => (
+  // Numeric fields in a row: single-line labels so the inputs line up, and the unit inside the
+  // field instead of in the label.
+  const num = (name: keyof Values, label: string, unit: string, hint?: string) => (
     <Field>
-      <FieldLabel htmlFor={name}>{label}</FieldLabel>
-      <Input id={name} name={name} type="number" min={0} defaultValue={String(initial[name])} />
+      <FieldLabel htmlFor={name} className="whitespace-nowrap">
+        {label}
+      </FieldLabel>
+      <div className="relative">
+        <Input
+          id={name}
+          name={name}
+          type="number"
+          min={0}
+          defaultValue={String(initial[name])}
+          className="pr-14"
+        />
+        <span
+          aria-hidden
+          className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-sm text-muted-foreground"
+        >
+          {unit}
+        </span>
+      </div>
       {hint && <FieldDescription>{hint}</FieldDescription>}
     </Field>
   );
@@ -117,23 +136,35 @@ export function EventTypeForm({
           />
         </Field>
         <div className="grid gap-6 sm:grid-cols-4">
-          {num("durationMin", "Duration (minutes)")}
+          {num("durationMin", "Duration", "min")}
           {num(
             "slotIntervalMin",
-            "Start times every (minutes)",
+            "Start times every",
+            "min",
             "0 = every duration, e.g. 9:00, 9:30 for a 30-minute call",
           )}
-          {num("maxPerDay", "Max bookings per day", "0 = unlimited")}
+          {num("maxPerDay", "Max per day", "bookings", "0 = unlimited")}
           <Field>
-            <FieldLabel htmlFor="seats">Seats per slot</FieldLabel>
-            <Input
-              id="seats"
-              name="seats"
-              type="number"
-              min={1}
-              max={500}
-              defaultValue={String(initial.seats)}
-            />
+            <FieldLabel htmlFor="seats" className="whitespace-nowrap">
+              Seats per slot
+            </FieldLabel>
+            <div className="relative">
+              <Input
+                id="seats"
+                name="seats"
+                type="number"
+                min={1}
+                max={500}
+                defaultValue={String(initial.seats)}
+                className="pr-14"
+              />
+              <span
+                aria-hidden
+                className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-sm text-muted-foreground"
+              >
+                seats
+              </span>
+            </div>
             <FieldDescription>
               More than 1 makes this a group session: the same time can be booked until it is full
               and everyone gets the same meeting link.
@@ -220,12 +251,13 @@ export function EventTypeForm({
           </FieldDescription>
         </fieldset>
         <div className="grid gap-6 sm:grid-cols-4">
-          {num("bufferBeforeMin", "Gap before (minutes)", "Kept free before each booking")}
-          {num("bufferAfterMin", "Gap after (minutes)", "Kept free after each booking")}
-          {num("minNoticeMin", "Minimum notice (minutes)", "e.g. 720 = 12 hours, 1440 = 1 day")}
+          {num("bufferBeforeMin", "Gap before", "min", "Kept free before each booking")}
+          {num("bufferAfterMin", "Gap after", "min", "Kept free after each booking")}
+          {num("minNoticeMin", "Minimum notice", "min", "e.g. 720 = 12 hours, 1440 = 1 day")}
           {num(
             "maxDaysAhead",
-            "Book up to (days ahead)",
+            "Book up to",
+            "days ahead",
             "How far into the future people can book",
           )}
         </div>
