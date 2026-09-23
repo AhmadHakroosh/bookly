@@ -6,7 +6,7 @@ The latest minor release receives security fixes. Older releases should upgrade.
 
 ## Reporting a vulnerability
 
-Email **hello@ahmadhakroosh.com** with a description, steps to reproduce and the impact. Please do not open a public issue for security problems.
+Email **support@bookly-app.io** with a description, steps to reproduce and the impact. Please do not open a public issue for security problems.
 
 You will get an acknowledgement within 3 business days and a fix or mitigation plan within 14 days for confirmed issues. Credit is given in the release notes unless you prefer otherwise.
 

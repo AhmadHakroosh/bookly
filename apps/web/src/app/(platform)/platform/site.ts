@@ -14,7 +14,7 @@ export const SITE = {
   operatorAddress: process.env.OPERATOR_ADDRESS ?? "",
   /** Who builds it (about page, footer credit). */
   maker: "Ahmad Hakroosh",
-  supportEmail: process.env.SUPPORT_EMAIL ?? "hello@ahmadhakroosh.com",
+  supportEmail: process.env.SUPPORT_EMAIL ?? "support@bookly-app.io",
   /** Date the legal pages were last revised. */
   legalUpdated: "September 23, 2026",
   /** Last meaningful change to the marketing pages (sitemap lastmod). */

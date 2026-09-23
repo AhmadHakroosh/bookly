@@ -8,6 +8,6 @@ We are committed to a welcoming, harassment-free experience for everyone.
 
 Maintainers may edit, remove or reject contributions and comments that do not follow this code, and may temporarily or permanently ban contributors for behaviour they deem inappropriate.
 
-Report problems to hello@ahmadhakroosh.com. Reports are handled confidentially.
+Report problems to support@bookly-app.io. Reports are handled confidentially.
 
 This code is adapted from the Contributor Covenant, version 2.1.
