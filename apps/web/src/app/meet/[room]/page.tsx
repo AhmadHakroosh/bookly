@@ -8,11 +8,15 @@ import { dailyConfigured, dailyRoomUrl } from "@/server/integrations";
 import { getProfileByUser } from "@/server/scheduling";
 import { captureEnabled } from "@/server/transcripts";
 import { Call } from "./call";
-import { PageSkeleton } from "@/components/page-skeleton";
 
 export const metadata: Metadata = { title: "Meeting", robots: { index: false, follow: false } };
 
-/** Bookly video: wraps Daily Prebuilt for the room created for a booking. */
+/**
+ * Bookly video: wraps Daily Prebuilt for the room created for a booking. Lives outside the
+ * public shell (no workspace header or footer) and fills the viewport: the frame's height is a
+ * percentage, which only resolves against a definite height, hence `h-dvh` rather than a
+ * minimum.
+ */
 async function MeetPage({ params }: PageProps<"/meet/[room]">) {
   const { room } = await params;
   if (!dailyConfigured() || !/^b-[a-z0-9]+$/.test(room)) notFound();
@@ -45,7 +49,7 @@ async function MeetPage({ params }: PageProps<"/meet/[room]">) {
     : null;
   const capture = captureEnabled(b, et ?? null);
   return (
-    <div className="flex min-h-screen flex-col bg-black text-white">
+    <div className="flex h-dvh flex-col bg-black text-white">
       <header className="flex items-center justify-between px-4 py-3 text-sm">
         <span className="font-medium">
           {et?.title ?? "Meeting"} with {host?.displayName ?? "your host"}
@@ -70,7 +74,7 @@ async function MeetPage({ params }: PageProps<"/meet/[room]">) {
 
 export default function MeetPageBoundary(props: PageProps<"/meet/[room]">) {
   return (
-    <Suspense fallback={<PageSkeleton />}>
+    <Suspense fallback={<div className="h-dvh bg-black" aria-busy aria-label="Loading" />}>
       <MeetPage {...props} />
     </Suspense>
   );

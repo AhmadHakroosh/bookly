@@ -30,7 +30,15 @@ export function Call({
     const call: DailyCall = DailyIframe.createFrame(container.current, {
       url,
       showLeaveButton: true,
-      iframeStyle: { width: "100%", height: "100%", border: "0" },
+      // Absolute inside the relative container: fills it whatever the flex layout decides,
+      // instead of the iframe's default 150px when a percentage height cannot resolve.
+      iframeStyle: {
+        position: "absolute",
+        inset: "0",
+        width: "100%",
+        height: "100%",
+        border: "0",
+      },
     });
     let queue: Line[] = [];
     let startedAt: number | null = null;
@@ -83,8 +91,8 @@ export function Call({
     };
   }, [url, room, capture, hostName, attendeeName]);
   return (
-    <div className="flex w-full flex-1 flex-col">
-      <div ref={container} className="w-full flex-1" />
+    <div className="flex min-h-0 w-full flex-1 flex-col">
+      <div ref={container} className="relative min-h-0 w-full flex-1" />
       {capture && (
         <div
           className="border-t border-white/10 bg-neutral-950 px-4 py-2 font-mono text-xs text-white/85"
