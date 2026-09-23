@@ -1,11 +1,13 @@
 "use client";
 
-import { useId, useState } from "react";
-import { Input } from "@/components/ui/input";
+import { useState } from "react";
+import { Dropdown } from "@/components/dropdown";
+import { canonicalTimezone } from "@/lib/time";
 
 /**
- * Timezone picker: a text input backed by a `<datalist>` so users can type to
- * filter the IANA list, plus a one-click "use my timezone" shortcut.
+ * Timezone picker: the app's dropdown over the full IANA list, plus a one-click "Use mine"
+ * that picks the browser's zone. A stored value the runtime spells differently is kept in the
+ * list so it never shows blank.
  */
 export function TimezoneField({
   name,
@@ -18,42 +20,37 @@ export function TimezoneField({
   zones: string[];
   className?: string;
 }) {
-  const listId = useId();
   const [value, setValue] = useState(defaultValue);
+  const list = zones.includes(value) ? zones : [value, ...zones];
   const detect = () => {
     try {
-      setValue(Intl.DateTimeFormat().resolvedOptions().timeZone);
+      const mine = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      const tz = canonicalTimezone(mine) ?? mine;
+      if (tz) setValue(zones.includes(tz) ? tz : mine);
     } catch {
       /* keep the current value */
     }
   };
   return (
-    <div className={className}>
-      <div className="flex items-center gap-2">
-        <Input
-          id={name}
-          name={name}
-          list={listId}
-          value={value}
-          onChange={(e) => setValue(e.target.value)}
-          placeholder="Type to search, e.g. Europe/Berlin"
-          autoComplete="off"
-          spellCheck={false}
-          required
-        />
-        <button
-          type="button"
-          onClick={detect}
-          className="shrink-0 text-xs text-muted-foreground underline underline-offset-4 hover:text-foreground"
-        >
-          Use mine
-        </button>
-      </div>
-      <datalist id={listId}>
-        {zones.map((z) => (
-          <option key={z} value={z} />
-        ))}
-      </datalist>
+    <div className={`flex items-center gap-2 ${className ?? ""}`}>
+      <Dropdown
+        id={name}
+        name={name}
+        value={value}
+        onValueChange={setValue}
+        ariaLabel="Timezone"
+        required
+        className="min-w-0 flex-1"
+        contentClassName="max-h-80"
+        options={list.map((z) => ({ value: z, label: z.replace(/_/g, " ") }))}
+      />
+      <button
+        type="button"
+        onClick={detect}
+        className="shrink-0 text-xs text-muted-foreground underline underline-offset-4 hover:text-foreground"
+      >
+        Use mine
+      </button>
     </div>
   );
 }

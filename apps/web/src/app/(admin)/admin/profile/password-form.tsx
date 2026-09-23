@@ -31,7 +31,7 @@ export function PasswordForm() {
   }
 
   return (
-    <form onSubmit={onSubmit} className="max-w-md rounded-xl border p-4">
+    <form onSubmit={onSubmit} className="rounded-xl border p-4">
       <h2 className="text-base font-semibold tracking-tight">Password</h2>
       <p className="mb-4 text-sm text-muted-foreground">
         Changing it signs you out everywhere else. Forgot it? Sign out and use &ldquo;Forgot your
