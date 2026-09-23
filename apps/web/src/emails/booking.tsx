@@ -1,5 +1,6 @@
 import type { Booking, EventType, Profile } from "@bookly/db/schema";
 import { Text } from "@react-email/components";
+import { formatPhone } from "@/lib/phone";
 import { fmtDateTime } from "@/lib/time";
 import { captureSupportsLocation } from "@/server/integrations/notetaker";
 import { locationLabel } from "@/server/scheduling";
@@ -156,7 +157,10 @@ export async function hostNotification(ctx: BookingMailCtx): Promise<Mail> {
       preview={subject}
       intro={`${b.attendeeName} (${b.attendeeEmail}) ${b.status === "pending" ? "asked for" : "booked"} ${d.title}.`}
       rows={[
-        ["Who", `${b.attendeeName} · ${b.attendeeEmail}`],
+        [
+          "Who",
+          `${b.attendeeName} · ${b.attendeeEmail}${b.attendeePhone ? ` · ${formatPhone(b.attendeePhone)}` : ""}`,
+        ],
         ["What", `${d.title} · ${d.duration} min`],
         whenRow(ctx, tz),
         ["Where", d.where],

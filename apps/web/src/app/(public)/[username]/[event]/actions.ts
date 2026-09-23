@@ -2,6 +2,7 @@
 
 import { redirect, unstable_rethrow } from "next/navigation";
 import { z } from "zod";
+import { toE164 } from "@/lib/phone";
 import { isValidTimezone } from "@/lib/time";
 import { BookingError, createBooking } from "@/server/booking-flow";
 import { createCheckout } from "@/server/payments";
@@ -23,6 +24,8 @@ const schema = z.object({
   website: z.string().max(0).optional(),
   captureConsent: z.string().optional(),
   location: z.string().max(20).optional(),
+  phoneCountry: z.string().max(2).optional(),
+  address: z.string().trim().max(300).optional(),
 });
 
 export type BookState = { error?: string };
@@ -52,12 +55,13 @@ export async function book(_prev: BookState, formData: FormData): Promise<BookSt
       timezone: d.tz,
       name: d.name,
       email: d.email,
-      phone: d.phone,
+      phone: d.phone ? (toE164(d.phone, d.phoneCountry) ?? d.phone) : null,
       notes: d.notes,
       answers,
       rescheduleToken: d.reschedule || null,
       captureConsent: et.autoCapture === "ask" ? !!d.captureConsent : null,
       location: d.location || null,
+      locationValue: d.address || null,
     });
     token = b.manageToken;
     skipped = b.skipped?.length ?? 0;

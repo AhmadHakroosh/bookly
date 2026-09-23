@@ -35,6 +35,7 @@
     "class-variance-authority": "^0.7.1",
     "cn": "^0.3.0",
     "date-fns": "^4.4.0",
+    "libphonenumber-js": "^1.13.13",
     "lucide-react": "^1.47.0",
     "marked": "^18.0.13",
     "next": "catalog:",

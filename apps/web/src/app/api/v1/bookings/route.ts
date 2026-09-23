@@ -47,6 +47,8 @@ const createSchema = z.object({
   answers: z.record(z.string(), z.string().max(2000)).optional(),
   /** One of the event type's location types; required when it offers more than one. */
   location: z.string().max(20).optional(),
+  /** Attendee's address for an in-person meeting when the event type leaves it to them. */
+  address: z.string().trim().max(300).optional(),
 });
 
 /** POST /api/v1/bookings (scope bookings:write) — books a slot exactly like the public page. */
@@ -77,6 +79,7 @@ export async function POST(req: Request) {
       notes: d.notes,
       answers,
       location: d.location ?? null,
+      locationValue: d.address ?? null,
     });
     return json(serializeBooking(b, { eventType: et }), {
       status: 201,

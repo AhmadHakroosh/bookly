@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { eq, schema } from "@bookly/db";
 import { db } from "@/lib/db";
+import { formatPhone } from "@/lib/phone";
 import { fmtDateTime } from "@/lib/time";
 import { bookingSeries } from "@/server/booking-flow";
 import { getBookingByToken, getProfileByUser, locationLabel } from "@/server/scheduling";
@@ -122,6 +123,7 @@ async function BookingPage({ params, searchParams }: PageProps<"/booking/[token]
           <dt className="w-16 shrink-0 text-muted-foreground">Who</dt>
           <dd>
             {b.attendeeName} · {b.attendeeEmail}
+            {b.attendeePhone ? ` · ${formatPhone(b.attendeePhone)}` : ""}
           </dd>
         </div>
       </dl>

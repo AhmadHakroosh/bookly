@@ -26,7 +26,11 @@ export type ConferencingReady = {
 
 const needsValue = (t: LocationType) => t === "phone" || t === "in_person" || t === "custom";
 const valueLabel = (t: LocationType) =>
-  t === "phone" ? "Phone number" : t === "in_person" ? "Address" : "Text or link";
+  t === "phone"
+    ? "Note for attendees, e.g. We call you (optional)"
+    : t === "in_person"
+      ? "Address (leave blank to ask the attendee for theirs)"
+      : "Text or link";
 
 /**
  * One or more ways to meet. The first row is the default; with more than one, the attendee
@@ -120,7 +124,7 @@ export function LocationsEditor({
       <FieldDescription>
         {rows.length > 1
           ? "Attendees choose one of these when they book. The first is the default and the one used by the API when no choice is made."
-          : "Add more options and attendees choose one when they book. Meeting links are created automatically for video providers."}
+          : "Add more options and attendees choose one when they book. Meeting links are created automatically for video providers; a phone call asks the attendee for their number, an in-person meeting without an address asks for theirs."}
       </FieldDescription>
     </div>
   );

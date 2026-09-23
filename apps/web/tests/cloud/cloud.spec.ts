@@ -148,6 +148,7 @@ test.describe("sign-up and tenants", () => {
     await slot.click();
     // The demo event offers two ways to meet: pick the phone call.
     await page.getByRole("radio", { name: /We call you/ }).check();
+    await page.getByLabel("Phone number", { exact: true }).fill("201 555 0123");
     await page.getByLabel("Name", { exact: true }).fill("Cloud Guest");
     await page.getByLabel("Email", { exact: true }).fill(`cloud-guest-${Date.now()}@example.com`);
     for (const q of await page.locator('[name^="q_"]').all()) {
@@ -157,6 +158,8 @@ test.describe("sign-up and tenants", () => {
     }
     await page.getByRole("button", { name: "Confirm booking" }).click();
     await expect(page.getByRole("heading", { name: "You're booked" })).toBeVisible();
+    // The number travels with the booking, formatted, in the details.
+    await expect(page.getByText("Phone call to +1 201 555 0123")).toBeVisible();
   });
 
   test("host signs in on the tenant, sees the switcher, chooser and console", async ({ page }) => {

@@ -1,4 +1,5 @@
 import "server-only";
+import { formatPhone, looksLikePhone } from "@/lib/phone";
 import { createHash } from "node:crypto";
 import { cacheLife, cacheTag } from "next/cache";
 import { and, asc, desc, eq, gte, inArray, lte, ne, schema, sql } from "@bookly/db";
@@ -567,7 +568,11 @@ export function locationLabel(loc: EventType["location"]): string {
     case "teams":
       return "Microsoft Teams";
     case "phone":
-      return loc.value ? `Phone: ${loc.value}` : "Phone call";
+      return loc.value
+        ? looksLikePhone(loc.value)
+          ? `Phone call to ${formatPhone(loc.value)}`
+          : `Phone call (${loc.value})`
+        : "Phone call";
     case "in_person":
       return loc.value ? `In person: ${loc.value}` : "In person";
     default:

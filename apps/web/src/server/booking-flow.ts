@@ -20,6 +20,7 @@ import { emitEvent } from "./webhooks";
 import { brandFor } from "@/emails/brand";
 import { scheduleBookingJobs } from "./jobs";
 import { isBlocked } from "./abuse";
+import { toE164 } from "@/lib/phone";
 import { priorityForEmail, trackBooking } from "./contacts";
 import { refreshWorkspace } from "./cache";
 import { assertBookingQuota, LimitError } from "./limits";
@@ -49,6 +50,8 @@ export type BookingInput = {
   captureConsent?: boolean | null;
   /** Where to meet, chosen from the event type's locations (type only). */
   location?: string | null;
+  /** What the attendee supplied for that location: their phone number (E.164) or address. */
+  locationValue?: string | null;
 };
 
 export class BookingError extends Error {}
@@ -284,13 +287,25 @@ export async function createBooking(
   }
   // Where to meet: the attendee's pick, else the only option, else what the rescheduled
   // booking had (when the event type still offers it).
-  const location =
+  let location =
     pickLocation(eventType, input.location) ??
     (prev && eventLocations(eventType).some((l) => l.type === prev!.location.type)
       ? prev.location
       : null) ??
     (eventLocations(eventType).length === 1 ? eventType.location : null);
   if (!location) throw new BookingError("Please choose how you want to meet.");
+  // A phone call needs the attendee's number; an in-person meeting with no host address needs
+  // theirs. The value travels with the booking so every invitation and page shows it.
+  if (location.type === "phone") {
+    const phone = input.phone ? toE164(input.phone) : null;
+    if (!phone) throw new BookingError("Please enter a phone number we can call.");
+    input = { ...input, phone };
+    location = { ...location, value: phone };
+  } else if (location.type === "in_person" && !location.value) {
+    const address = input.locationValue?.trim().slice(0, 300);
+    if (!address) throw new BookingError("Please enter the address to meet at.");
+    location = { ...location, value: address };
+  }
 
   const single = !!prev || !recurrenceOf(eventType.recurrence);
   const priority = input.priority ?? (await priorityForEmail(workspace.id, input.email));

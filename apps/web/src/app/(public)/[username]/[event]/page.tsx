@@ -20,6 +20,7 @@ import {
   locationLabel,
   slotSeats,
 } from "@/server/scheduling";
+import { detectCountry } from "@/server/geo";
 import { captureSupportsLocation } from "@/server/integrations/notetaker";
 import { formatPrice, paymentsReady } from "@/server/payments";
 import { getCurrentWorkspace } from "@/server/workspace";
@@ -48,6 +49,7 @@ async function EventPage({ params, searchParams }: PageProps<"/[username]/[event
   if (!ws || !profile || !et) notFound();
 
   const paid = paymentsReady(ws);
+  const country = await detectCountry();
   const tzParam = typeof sp.tz === "string" && isValidTimezone(sp.tz) ? sp.tz : null;
   const tz = tzParam ?? profile.timezone;
   const today = todayIn(tz);
@@ -180,8 +182,17 @@ async function EventPage({ params, searchParams }: PageProps<"/[username]/[event
                   type: l.type,
                   label: locationLabel(l),
                   capture: et.autoCapture === "ask" && captureSupportsLocation(l.type),
+                  ask:
+                    l.type === "phone"
+                      ? "phone"
+                      : l.type === "in_person" && !l.value
+                        ? "address"
+                        : null,
+                  note: l.type === "phone" ? l.value : undefined,
                 }))}
                 defaultLocation={prev?.location.type}
+                defaultCountry={country}
+                defaultPhone={prev?.attendeePhone}
                 defaults={
                   prev
                     ? { name: prev.attendeeName, email: prev.attendeeEmail }
