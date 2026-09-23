@@ -7,7 +7,7 @@ import { brandFor } from "@/emails/brand";
 import type { EmailBrand } from "@/emails/layout";
 import { letterMail } from "@/emails/booking";
 import { logContactEvent, updateContact, noteToCrm } from "./contacts";
-import { DEFAULT_TEMPLATES, type Template } from "./outreach-text";
+import { DEFAULT_TEMPLATES, type OutreachKind, type Template } from "./outreach-text";
 import { platformFeeCents, platformFeePercent } from "./connect";
 import { formatPrice, paymentsFor, stripe } from "./payments";
 import { baseUrl, getProfileByUser } from "./scheduling";
@@ -20,6 +20,7 @@ export function templatesFor(ws: Workspace) {
       ...DEFAULT_TEMPLATES.paymentRequest,
       ...(t.paymentRequest ?? {}),
     } as Template,
+    checkIn: { ...DEFAULT_TEMPLATES.checkIn, ...(t.checkIn ?? {}) } as Template,
   };
 }
 
@@ -77,14 +78,14 @@ export async function paymentLink(
 }
 
 /**
- * Sends a templated email (proposal, payment request) from the host to the contact, logs it,
+ * Sends a templated email (proposal, payment request, follow-up) from the host to the contact, logs it,
  * mirrors it to the CRM and sets a follow-up date so the inbox escalates if nobody answers.
  */
 export async function sendOutreach(
   ws: Workspace,
   c: Contact,
   hostUserId: string,
-  kind: "proposal" | "paymentRequest",
+  kind: OutreachKind,
   input: {
     subject: string;
     body: string;
@@ -116,7 +117,9 @@ export async function sendOutreach(
   const label =
     kind === "proposal"
       ? "Proposal sent"
-      : `Payment requested${input.amountCents ? ` (${formatPrice(input.amountCents, input.currency ?? "usd")})` : ""}`;
+      : kind === "checkIn"
+        ? "Follow-up sent"
+        : `Payment requested${input.amountCents ? ` (${formatPrice(input.amountCents, input.currency ?? "usd")})` : ""}`;
   await logContactEvent(ws.id, c.id, "email_sent", `${label}: ${subject}`, {
     data: { kind, body, amountCents: input.amountCents ?? null },
   });

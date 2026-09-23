@@ -7,9 +7,9 @@ import { brandForPreview } from "@/emails/brand";
 import { paymentsReady } from "@/server/payments";
 import { getContact, logContactEvent, setStage, updateContact } from "@/server/contacts";
 import { paymentLink, sendOutreach, renderOutreach } from "@/server/outreach";
-import { fillTemplate } from "@/server/outreach-text";
+import { fillTemplate, type OutreachKind } from "@/server/outreach-text";
 import { formatPrice } from "@/server/payments";
-import { getProfileByUser } from "@/server/scheduling";
+import { baseUrl, getProfileByUser } from "@/server/scheduling";
 import { requireStaff } from "@/server/session";
 import { getCurrentWorkspace } from "@/server/workspace";
 
@@ -79,6 +79,32 @@ export async function sendProposal(id: string, formData: FormData) {
     followUpDays: Number(formData.get("followUpDays")) || 0,
   });
   revalidatePath(`/admin/contacts/${id}`);
+}
+
+/** The follow-up nudge: same flow as a proposal, defaulting to a week until the next check-in. */
+export async function sendFollowUp(id: string, formData: FormData) {
+  const { ws, session } = await ctx();
+  const c = await getContact(ws.id, id);
+  if (!c) return;
+  const host = await getProfileByUser(ws.id, session.user.id);
+  const t = fillTemplate(
+    { subject: String(formData.get("subject") ?? ""), body: String(formData.get("body") ?? "") },
+    {
+      name: c.name || "there",
+      company: c.company || c.name || "you",
+      host: host?.displayName ?? ws.name,
+      amount: "",
+      payLink: "",
+      bookingUrl: host ? `${baseUrl()}/${host.username}` : baseUrl(),
+    },
+  );
+  if (!t.subject || !t.body) return;
+  await sendOutreach(ws, c, session.user.id, "checkIn", {
+    ...t,
+    followUpDays: Number(formData.get("followUpDays")) || 0,
+  });
+  revalidatePath(`/admin/contacts/${id}`);
+  revalidatePath("/admin");
 }
 
 export async function sendPaymentRequest(id: string, formData: FormData) {
@@ -153,7 +179,7 @@ export type OutreachPreview = {
  */
 export async function previewOutreach(
   id: string,
-  kind: "proposal" | "paymentRequest",
+  kind: OutreachKind,
   formData: FormData,
 ): Promise<OutreachPreview | { error: string }> {
   const { ws, session } = await ctx();
@@ -176,6 +202,7 @@ export async function previewOutreach(
       host: host?.displayName ?? ws.name,
       amount: kind === "paymentRequest" ? formatPrice(amountCents, currency) : "",
       payLink: willLink ? "https://checkout.stripe.com/…" : "",
+      bookingUrl: host ? `${baseUrl()}/${host.username}` : baseUrl(),
     },
   );
   if (!t.subject || !t.body) return { error: "Subject and message are required." };

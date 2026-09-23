@@ -310,12 +310,12 @@ async function AdminInbox() {
                       </p>
                     </div>
                     <div className="flex items-center gap-2">
-                      <a
-                        href={`mailto:${c.email}`}
+                      <Link
+                        href={`/admin/contacts/${c.id}?compose=followup`}
                         className="text-sm underline underline-offset-4"
                       >
-                        Email
-                      </a>
+                        Follow up
+                      </Link>
                       <form action={snoozeContact.bind(null, c.id, 7)}>
                         <SubmitButton variant="ghost">Snooze 7d</SubmitButton>
                       </form>

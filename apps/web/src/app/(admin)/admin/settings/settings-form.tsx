@@ -28,6 +28,8 @@ type Values = {
   proposalBody: string;
   paymentSubject: string;
   paymentBody: string;
+  checkInSubject: string;
+  checkInBody: string;
   confirmationSubject: string;
   confirmationBody: string;
   reminderSubject: string;
@@ -319,11 +321,12 @@ export function SettingsForm({
         </fieldset>
         <fieldset className="space-y-3 rounded-lg border p-4">
           <legend className="px-1 text-base font-semibold tracking-tight">
-            Proposal and payment emails
+            Proposal, payment and follow-up emails
           </legend>
           <FieldDescription>
-            Used by the Proposal and Payment request buttons on contact pages. Placeholders:{" "}
-            {"{name} {company} {host} {amount} {payLink}"}. Leave blank for the defaults.
+            Used by the Proposal, Payment request and Follow-up buttons on contact pages.
+            Placeholders: {"{name} {company} {host} {amount} {payLink} {bookingUrl}"}. Leave blank
+            for the defaults.
           </FieldDescription>
           <div className="grid gap-4 sm:grid-cols-2">
             <Field>
@@ -352,6 +355,20 @@ export function SettingsForm({
                 rows={6}
                 defaultValue={workspace.paymentBody}
                 aria-label="Payment request body"
+              />
+            </Field>
+            <Field>
+              <FieldLabel htmlFor="checkInSubject">Follow-up subject</FieldLabel>
+              <Input
+                id="checkInSubject"
+                name="checkInSubject"
+                defaultValue={workspace.checkInSubject}
+              />
+              <Textarea
+                name="checkInBody"
+                rows={6}
+                defaultValue={workspace.checkInBody}
+                aria-label="Follow-up body"
               />
             </Field>
           </div>

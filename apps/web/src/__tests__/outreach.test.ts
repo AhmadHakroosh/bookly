@@ -20,6 +20,17 @@ describe("templates", () => {
     expect(t.body).toContain("https://pay");
     expect(fillTemplate({ subject: "{missing}!", body: "" }, {}).subject).toBe("!");
   });
+
+  it("has a follow-up template that links to the booking page", () => {
+    const t = fillTemplate(DEFAULT_TEMPLATES.checkIn, {
+      name: "Ahmad",
+      host: "Demo",
+      bookingUrl: "https://demo.test/demo",
+    });
+    expect(t.subject).toBe("Checking in, Ahmad");
+    expect(t.body).toContain("https://demo.test/demo");
+    expect(t.body).not.toContain("{");
+  });
 });
 
 describe("crm request bodies", () => {

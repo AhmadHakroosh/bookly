@@ -15,6 +15,7 @@ import {
 import { Spinner } from "@/components/ui/spinner";
 import {
   previewOutreach,
+  sendFollowUp,
   sendPaymentRequest,
   sendProposal,
   type OutreachPreview,
@@ -22,24 +23,38 @@ import {
 import { NumberField } from "@/components/number-field";
 
 type T = { subject: string; body: string };
-type Kind = "proposal" | "payment";
+type Kind = "proposal" | "payment" | "followUp";
+const SERVER_KIND = {
+  proposal: "proposal",
+  payment: "paymentRequest",
+  followUp: "checkIn",
+} as const;
 
 /**
- * Proposal and payment-request emails in two steps: edit the prefilled template, preview the
- * exact email the contact will receive, then send.
+ * Proposal, payment-request and follow-up emails in two steps: edit the prefilled template,
+ * preview the exact email the contact will receive, then send. `initial` opens a composer at
+ * once (the inbox links here with the follow-up ready to go).
  */
 export function Outreach({
   contactId,
   proposal,
   payment,
+  followUp,
   stripe,
+  initial = null,
 }: {
   contactId: string;
   proposal: T;
   payment: T;
+  followUp: T;
   stripe: boolean;
+  initial?: Kind | null;
 }) {
-  const [open, setOpen] = useState<Kind | null>(null);
+  const [open, setOpen] = useState<Kind | null>(initial);
+  // The kind the dialog was opened for: `open` clears on send, and the dialog's labels must not
+  // flip to another kind while it fades out.
+  const [dialogKind, setDialogKind] = useState<Kind>(initial ?? "proposal");
+  const templates: Record<Kind, T> = { proposal, payment, followUp };
   const [preview, setPreview] = useState<OutreachPreview | null>(null);
   const [pending, start] = useTransition();
   const [sending, startSend] = useTransition();
@@ -57,13 +72,12 @@ export function Outreach({
     if (!form.reportValidity()) return;
     const fd = new FormData(form);
     start(async () => {
-      const res = await previewOutreach(
-        contactId,
-        open === "proposal" ? "proposal" : "paymentRequest",
-        fd,
-      );
+      const res = await previewOutreach(contactId, SERVER_KIND[open], fd);
       if ("error" in res) toast.error(res.error);
-      else setPreview(res);
+      else {
+        setDialogKind(open);
+        setPreview(res);
+      }
     });
   }
 
@@ -73,8 +87,15 @@ export function Outreach({
     const fd = new FormData(form);
     startSend(async () => {
       if (open === "proposal") await sendProposal(contactId, fd);
+      else if (open === "followUp") await sendFollowUp(contactId, fd);
       else await sendPaymentRequest(contactId, fd);
-      toast.success(open === "proposal" ? "Proposal sent" : "Payment request sent");
+      toast.success(
+        open === "proposal"
+          ? "Proposal sent"
+          : open === "followUp"
+            ? "Follow-up sent"
+            : "Payment request sent",
+      );
       setPreview(null);
       setOpen(null);
     });
@@ -97,6 +118,13 @@ export function Outreach({
           onClick={() => switchTo("payment")}
         >
           Payment request
+        </Button>
+        <Button
+          type="button"
+          variant={open === "followUp" ? "default" : "outline"}
+          onClick={() => switchTo("followUp")}
+        >
+          Follow-up
         </Button>
       </div>
 
@@ -129,14 +157,14 @@ export function Outreach({
           )}
           <input
             name="subject"
-            defaultValue={open === "proposal" ? proposal.subject : payment.subject}
+            defaultValue={templates[open].subject}
             className={`${field} h-9`}
             placeholder="Subject"
             required
           />
           <textarea
             name="body"
-            defaultValue={open === "proposal" ? proposal.body : payment.body}
+            defaultValue={templates[open].body}
             rows={8}
             className={field}
             required
@@ -149,8 +177,17 @@ export function Outreach({
               {"{amount}"} is filled in.
             </p>
           )}
+          {open === "followUp" && (
+            <p className="text-xs text-muted-foreground">
+              {"{bookingUrl}"} becomes a link to your booking page.
+            </p>
+          )}
           <label className="flex items-center gap-2 text-xs text-muted-foreground">
-            {open === "proposal" ? "Follow up if no reply in" : "Follow up if unpaid in"}
+            {open === "proposal"
+              ? "Follow up if no reply in"
+              : open === "followUp"
+                ? "Remind me again in"
+                : "Follow up if unpaid in"}
             <NumberField
               name="followUpDays"
               min={0}
@@ -172,7 +209,11 @@ export function Outreach({
         <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
           <DialogHeader>
             <DialogTitle>
-              {open === "proposal" ? "Review the proposal" : "Review the payment request"}
+              {dialogKind === "proposal"
+                ? "Review the proposal"
+                : dialogKind === "followUp"
+                  ? "Review the follow-up"
+                  : "Review the payment request"}
             </DialogTitle>
             <DialogDescription>
               This is exactly what {preview?.to} will receive. Nothing is sent until you confirm.
@@ -215,7 +256,11 @@ export function Outreach({
               ) : (
                 <SendIcon data-icon="inline-start" />
               )}
-              {open === "proposal" ? "Send proposal" : "Send payment request"}
+              {dialogKind === "proposal"
+                ? "Send proposal"
+                : dialogKind === "followUp"
+                  ? "Send follow-up"
+                  : "Send payment request"}
             </Button>
           </DialogFooter>
         </DialogContent>

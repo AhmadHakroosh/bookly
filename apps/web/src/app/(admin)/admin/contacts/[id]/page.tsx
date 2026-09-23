@@ -57,7 +57,7 @@ const ICON: Record<string, LucideIcon> = {
   task: SquareCheckIcon,
 };
 
-async function ContactPage({ params }: PageProps<"/admin/contacts/[id]">) {
+async function ContactPage({ params, searchParams }: PageProps<"/admin/contacts/[id]">) {
   const [{ id }, { session }, ws] = await Promise.all([
     params,
     requireStaff(),
@@ -181,6 +181,8 @@ async function ContactPage({ params }: PageProps<"/admin/contacts/[id]">) {
             contactId={c.id}
             proposal={templatesFor(ws).proposal}
             payment={templatesFor(ws).paymentRequest}
+            followUp={templatesFor(ws).checkIn}
+            initial={(await searchParams).compose === "followup" ? "followUp" : null}
             stripe={paymentsReady(ws)}
           />
           <TaskList tasks={tasks} tz={tz} path={`/admin/contacts/${c.id}`} contactId={c.id} />

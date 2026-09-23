@@ -25,6 +25,8 @@ const settingsSchema = z.object({
   proposalSubject: z.string().max(200).default(""),
   proposalBody: z.string().max(8000).default(""),
   paymentSubject: z.string().max(200).default(""),
+  checkInSubject: z.string().max(200).default(""),
+  checkInBody: z.string().max(8000).default(""),
   paymentBody: z.string().max(8000).default(""),
   confirmationSubject: z.string().max(200).default(""),
   confirmationBody: z.string().max(4000).default(""),
@@ -63,6 +65,8 @@ export async function updateWorkspaceSettings(
     proposalBody,
     paymentSubject,
     paymentBody,
+    checkInSubject,
+    checkInBody,
     confirmationSubject,
     confirmationBody,
     reminderSubject,
@@ -113,6 +117,7 @@ export async function updateWorkspaceSettings(
         templates: {
           proposal: { subject: proposalSubject || undefined, body: proposalBody || undefined },
           paymentRequest: { subject: paymentSubject || undefined, body: paymentBody || undefined },
+          checkIn: { subject: checkInSubject || undefined, body: checkInBody || undefined },
           confirmation: {
             subject: confirmationSubject || undefined,
             body: confirmationBody || undefined,

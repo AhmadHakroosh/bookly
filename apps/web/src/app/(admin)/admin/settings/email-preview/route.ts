@@ -23,7 +23,7 @@ export async function GET(req: Request) {
   const ws = await getCurrentWorkspace();
   if (!ws) return NextResponse.json({ error: "No workspace" }, { status: 404 });
   const kind = new URL(req.url).searchParams.get("kind") ?? "confirmation";
-  if (kind === "proposal" || kind === "paymentRequest") {
+  if (kind === "proposal" || kind === "paymentRequest" || kind === "checkIn") {
     const host = await getProfileByUser(ws.id, session.user.id);
     const t = fillTemplate(templatesFor(ws)[kind], {
       name: "Sam",
@@ -31,6 +31,7 @@ export async function GET(req: Request) {
       host: host?.displayName ?? session.user.name,
       amount: kind === "paymentRequest" ? "$1,200.00" : "",
       payLink: kind === "paymentRequest" ? "https://checkout.stripe.com/…" : "",
+      bookingUrl: `${baseUrl()}/you`,
     });
     const mail = await renderOutreach(
       ws,

@@ -10,7 +10,7 @@ Bookly keeps a **contact** for every person who books, joins a waitlist or fills
 
 ## Executing the outcome
 
-- **Proposal / Payment request** buttons on a contact page send a templated email (edit the templates under `Admin → Settings`; placeholders `{name} {company} {host} {amount} {payLink}`). A payment request with Stripe configured includes a Checkout link for the amount. Both set a follow-up date so the inbox nudges you if there is no answer.
+- **Proposal / Payment request / Follow-up** buttons on a contact page send a templated email (edit the templates under `Admin → Settings`; placeholders `{name} {company} {host} {amount} {payLink} {bookingUrl}`). A payment request with Stripe configured includes a Checkout link for the amount. All three set the next follow-up date so the inbox nudges you again; the inbox's "Follow up" link opens the contact with the follow-up composer ready.
 - **CRM sync** (`Admin → Settings → CRM sync`): with a HubSpot private-app token or a Pipedrive API token, contacts and stage changes are mirrored to the CRM and meeting summaries and sent proposals become notes on the CRM contact. Sync is best-effort and never blocks a booking.
 - **Webhooks and API**: `contact.created`, `contact.stage_changed`, `meeting.captured` and `task.created` events, plus `GET/POST /api/v1/contacts` and `GET /api/v1/tasks`, let any other tool react to what happens in Bookly.
 
@@ -30,10 +30,11 @@ In cloud mode auto-capture is a Pro feature with a monthly budget of transcribed
 
 On a booking's page (`Admin → Bookings → Notes`), paste your notes or a transcript and press **Capture**. With the assistant configured it extracts a summary, decisions, action items with due dates (yours and theirs), a next step, a stage suggestion and a follow-up email draft; without it, your notes become the summary and every line starting with `- ` becomes a task. Tasks live on the booking and the contact, can be completed or removed, and an overdue task is nudged once by email (and text, if enabled). A clear outcome moves the contact's stage (won / lost / active). The follow-up draft can be edited and sent from Bookly with your address as reply-to; it lands on the timeline like every other email.
 
-## Proposals and payment requests
+## Proposals, payment requests and follow-ups
 
-From a contact's page, **Proposal** and **Payment request** open a form prefilled from the
-workspace templates (Settings → Proposal and payment emails) with the placeholders filled in.
+From a contact's page, **Proposal**, **Payment request** and **Follow-up** open a form prefilled
+from the workspace templates (Settings → Proposal, payment and follow-up emails) with the
+placeholders filled in; `{bookingUrl}` in a follow-up becomes a link to your booking page.
 Edit freely, then **Preview email** shows the exact branded message the contact will receive,
 with the recipient and subject; nothing is sent until you confirm. A payment request creates a
 Stripe Checkout link for the amount when you send, and the email carries a Pay button. Every

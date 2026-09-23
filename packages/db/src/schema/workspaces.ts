@@ -45,13 +45,14 @@ export type WorkspaceSettings = {
   /** Auto-capture: transcript retention (days, default 90) and Deepgram language (default auto). */
   capture?: { retentionDays?: number; language?: string };
   /**
-   * Email wording. Contact page: proposal / paymentRequest ({name} {company} {host} {amount}
-   * {payLink}). Guest emails: confirmation / reminder / cancellation ({name} {host} {event}
+   * Email wording. Contact page: proposal / paymentRequest / checkIn ({name} {company} {host}
+   * {amount} {payLink} {bookingUrl}). Guest emails: confirmation / reminder / cancellation ({name} {host} {event}
    * {when} {where} {duration} {bookingUrl} {workspace}; reminder also {relative}). Blank = default.
    */
   templates?: {
     proposal?: { subject?: string; body?: string };
     paymentRequest?: { subject?: string; body?: string };
+    checkIn?: { subject?: string; body?: string };
     confirmation?: { subject?: string; body?: string };
     reminder?: { subject?: string; body?: string };
     cancellation?: { subject?: string; body?: string };
