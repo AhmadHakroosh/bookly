@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { eq, schema } from "@bookly/db";
 import { loadEnv } from "@bookly/config";
 import { db } from "@/lib/db";
-import { bookingForBot, verifySvix } from "@/server/integrations/notetaker";
+import { bookingForBot, signatureHeaders, verifySvix } from "@/server/integrations/notetaker";
 import { enqueue } from "@/server/jobs";
 import { markTranscriptFailed, startNotetakerRecording } from "@/server/transcripts";
 
@@ -16,7 +16,8 @@ type StatusEvent = {
 
 /**
  * Recall.ai → Bookly: the notetaker's lifecycle. One endpoint for the whole platform (bot ids
- * are global), verified with the Svix signature of the endpoint configured in Recall's dashboard.
+ * are global), verified with the workspace secret from Recall's dashboard (or the endpoint's
+ * Svix secret on older accounts).
  * Recording starts the transcript; the bot finishing hands the download and recap to the queue.
  */
 export async function POST(req: Request) {
@@ -24,15 +25,7 @@ export async function POST(req: Request) {
   if (!secret)
     return NextResponse.json({ error: "RECALL_WEBHOOK_SECRET not set" }, { status: 500 });
   const body = await req.text();
-  const ok = verifySvix(
-    secret,
-    {
-      id: req.headers.get("svix-id"),
-      timestamp: req.headers.get("svix-timestamp"),
-      signature: req.headers.get("svix-signature"),
-    },
-    body,
-  );
+  const ok = verifySvix(secret, signatureHeaders(req.headers), body);
   if (!ok) return NextResponse.json({ error: "Bad signature" }, { status: 401 });
   let ev: StatusEvent;
   try {

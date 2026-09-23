@@ -97,10 +97,13 @@ or Teams lobby when their meeting has one (Zoom without a waiting room lets it s
 1. Create a Recall.ai account in the region you want data to stay in (`RECALL_REGION`:
    `us-west-2`, `us-east-1`, `eu-central-1` or `ap-northeast-1`) and copy the API key into
    `RECALL_API_KEY`.
-2. Dashboard → Webhooks → add `https://<your-host>/api/webhooks/recall`, and put its signing
-   secret (`whsec_…`) in `RECALL_WEBHOOK_SECRET`. Bot status events drive the capture: recording
-   opens the transcript, `done` triggers the download and recap, `fatal` or a denied recording
-   marks the capture failed.
+2. Dashboard → Developers → API Keys & Secrets → **Create Workspace Secret**, and put it
+   (`whsec_…`) in `RECALL_WEBHOOK_SECRET`; it signs every request Recall sends (status webhooks
+   and the real-time transcript stream). Then Dashboard → Webhooks → Add Endpoint →
+   `https://<your-host>/api/webhooks/recall`. Accounts created before December 2025 have no
+   workspace secret: use the endpoint's own signing secret from the Webhooks page instead. Bot
+   status events drive the capture: recording opens the transcript, `done` triggers the download
+   and recap, `fatal` or a denied recording marks the capture failed.
 3. Nothing to do in Zoom, Google or Microsoft: the bot joins like any guest.
 
 Budget and plan rules are the same as Bookly video: the bot is not booked when the workspace's

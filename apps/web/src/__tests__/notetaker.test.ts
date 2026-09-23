@@ -5,8 +5,14 @@ process.env.AUTH_SECRET ??= "test-secret-test-secret-test";
 process.env.DATABASE_URL ??= "postgres://x:y@localhost:5432/z";
 process.env.APP_URL ??= "http://localhost:3002";
 
-const { parseRecallTranscript, segmentFromUtterance, speakerLabel, verifySvix, tokenMatches } =
-  await import("@/server/integrations/notetaker");
+const {
+  parseRecallTranscript,
+  segmentFromUtterance,
+  speakerLabel,
+  signatureHeaders,
+  verifySvix,
+  tokenMatches,
+} = await import("@/server/integrations/notetaker");
 
 describe("notetaker transcript parsing", () => {
   it("labels the host, the attendee by name, and anyone else by their name", () => {
@@ -63,6 +69,17 @@ describe("webhook verification", () => {
     const headers = { id: "msg_1", timestamp: ts, signature: `v1,${sign("msg_1", ts, body)}` };
     expect(verifySvix(secret, headers, body)).toBe(true);
     expect(verifySvix(secret, headers, body + " ")).toBe(false);
+    // Workspace-secret requests carry webhook-* headers; Svix deliveries carry svix-* (or both).
+    const ws = signatureHeaders(
+      new Headers({
+        "webhook-id": headers.id!,
+        "webhook-timestamp": headers.timestamp!,
+        "webhook-signature": headers.signature!,
+      }),
+    );
+    expect(verifySvix(secret, ws, body)).toBe(true);
+    expect(signatureHeaders(new Headers({ "svix-id": "x" })).id).toBe("x");
+    expect(signatureHeaders(new Headers()).signature).toBeNull();
     const old = String(Math.floor(Date.now() / 1000) - 3600);
     expect(
       verifySvix(

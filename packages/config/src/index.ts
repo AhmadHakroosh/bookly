@@ -49,7 +49,7 @@ export const envSchema = z.object({
   RECALL_REGION: z
     .enum(["us-west-2", "us-east-1", "eu-central-1", "ap-northeast-1"])
     .default("us-west-2"),
-  /** Signing secret of the status-change webhook endpoint (Recall dashboard → Webhooks). */
+  /** Recall workspace secret (dashboard → Developers → API Keys & Secrets → Create Workspace Secret), `whsec_…`; signs every request Recall sends. Older accounts: the endpoint's Svix secret. */
   RECALL_WEBHOOK_SECRET: z.string().optional(),
   /** What participants see the bot called. */
   RECALL_BOT_NAME: z.string().max(100).default("Bookly Notetaker"),

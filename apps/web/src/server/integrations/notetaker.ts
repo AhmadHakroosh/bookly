@@ -12,9 +12,10 @@ import { api } from "./types";
  * Bookly while the call runs and delivers the full transcript when it ends. From there the
  * pipeline is the same as Bookly video: the transcript store, the recap, tasks and follow-ups.
  *
- * Bookly stores the bot id and a per-booking secret on `bookings.meetingRef.notetaker`; the
- * secret authenticates the real-time transcript webhook, the platform-wide signing secret
- * (`RECALL_WEBHOOK_SECRET`, Svix) authenticates status changes.
+ * Bookly stores the bot id and a per-booking token on `bookings.meetingRef.notetaker`; the token
+ * authenticates the real-time transcript webhook. Recall's workspace secret
+ * (`RECALL_WEBHOOK_SECRET`) signs every request Recall makes, status changes and real-time
+ * events alike, and is checked wherever its headers are present.
  */
 
 export const NOTETAKER_PROVIDERS = new Set(["zoom", "google_meet", "teams"]);
@@ -202,8 +203,10 @@ export async function fetchNotetakerTranscript(
 /* ---------------- webhook verification ---------------- */
 
 /**
- * Status-change webhooks are signed by Svix: HMAC-SHA256 over `id.timestamp.body` with the
- * base64 secret after `whsec_`, compared against any of the space-separated `v1,<sig>` values.
+ * Recall signs its requests the Svix way: HMAC-SHA256 over `id.timestamp.body` with the base64
+ * secret after `whsec_`, compared against any of the space-separated `v1,<sig>` values. The
+ * secret is the dashboard's workspace secret (Developers → API Keys & Secrets); accounts from
+ * before December 2025 have a per-endpoint Svix secret for status webhooks instead, same format.
  */
 export function verifySvix(
   secret: string,
@@ -224,6 +227,16 @@ export function verifySvix(
     const given = Buffer.from(sig, "base64");
     return given.length === expected.length && timingSafeEqual(given, expected);
   });
+}
+
+/**
+ * The signature headers of a Recall request. Newer accounts send `webhook-id` / `-timestamp` /
+ * `-signature` (signed with the workspace secret); Svix status webhooks send `svix-*`, and both
+ * sets on some deliveries. Null values when the request carries no signature at all.
+ */
+export function signatureHeaders(h: Headers) {
+  const pick = (name: string) => h.get(`webhook-${name}`) ?? h.get(`svix-${name}`);
+  return { id: pick("id"), timestamp: pick("timestamp"), signature: pick("signature") };
 }
 
 /** Constant-time check of the per-booking token on real-time transcript webhooks. */

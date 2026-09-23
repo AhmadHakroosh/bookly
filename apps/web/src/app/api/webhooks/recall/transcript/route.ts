@@ -1,11 +1,14 @@
 import { NextResponse } from "next/server";
 import { eq, schema } from "@bookly/db";
 import { db } from "@/lib/db";
+import { loadEnv } from "@bookly/config";
 import {
   bookingForBot,
   notetakerRef,
   segmentFromUtterance,
+  signatureHeaders,
   tokenMatches,
+  verifySvix,
 } from "@/server/integrations/notetaker";
 import { rateLimit } from "@/server/ratelimit";
 import { appendLiveSegments, captureEnabled } from "@/server/transcripts";
@@ -24,13 +27,19 @@ type RealtimeEvent = {
 /**
  * Recall.ai → Bookly, while the call runs: one `transcript.data` event per finished utterance.
  * The URL carries the per-booking token the bot was created with; the bot id in the payload
- * must belong to the same booking.
+ * must belong to the same booking. When Recall signs the request with the workspace secret, the
+ * signature is checked as well.
  */
 export async function POST(req: Request) {
   const token = new URL(req.url).searchParams.get("token");
+  const body = await req.text();
+  const secret = loadEnv().RECALL_WEBHOOK_SECRET;
+  const sig = signatureHeaders(req.headers);
+  if (secret && sig.signature && !verifySvix(secret, sig, body))
+    return NextResponse.json({ error: "Bad signature" }, { status: 401 });
   let ev: RealtimeEvent;
   try {
-    ev = (await req.json()) as RealtimeEvent;
+    ev = JSON.parse(body) as RealtimeEvent;
   } catch {
     return NextResponse.json({ error: "Bad body" }, { status: 400 });
   }
