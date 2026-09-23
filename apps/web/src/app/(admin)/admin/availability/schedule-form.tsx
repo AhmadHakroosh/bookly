@@ -42,7 +42,7 @@ export function ScheduleForm({
   return (
     <form action={action} className="space-y-4">
       <input type="hidden" name="scheduleId" value={scheduleId} />
-      <div className="grid gap-3 sm:grid-cols-[1fr_1.4fr_9rem]">
+      <div className="grid gap-3 sm:grid-cols-[1fr_1.4fr_auto]">
         <label className="text-sm">
           <span className="mb-1 block text-xs font-medium">Schedule name</span>
           <Input name="name" defaultValue={name} />
@@ -60,6 +60,7 @@ export function ScheduleForm({
             defaultValue={weeklyBudget ?? 0}
             unit="budget"
             ariaLabel="Meetings per week"
+            className="sm:w-44"
           />
         </label>
       </div>

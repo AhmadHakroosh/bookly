@@ -12,6 +12,8 @@ import { TimezoneField } from "@/components/timezone-field";
 import { DEFAULT_EMAIL_TEMPLATES as DEFAULTS } from "@/emails/defaults";
 import { updateWorkspaceSettings, type SettingsState } from "./actions";
 import { ColorPicker } from "@/components/color-picker";
+import { Dropdown } from "@/components/dropdown";
+import { localeOptions } from "@/lib/locales";
 
 type Values = {
   name: string;
@@ -77,7 +79,16 @@ export function SettingsForm({
         <div className="grid gap-6 sm:grid-cols-2">
           <Field>
             <FieldLabel htmlFor="locale">Locale</FieldLabel>
-            <Input id="locale" name="locale" defaultValue={workspace.locale} />
+            <Dropdown
+              id="locale"
+              name="locale"
+              defaultValue={workspace.locale}
+              options={localeOptions(workspace.locale)}
+              contentClassName="max-h-80"
+            />
+            <FieldDescription>
+              Language and region kept with the workspace for date and number formatting.
+            </FieldDescription>
           </Field>
           <Field>
             <FieldLabel htmlFor="timezone">Default timezone</FieldLabel>
