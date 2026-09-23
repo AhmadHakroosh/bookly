@@ -87,7 +87,7 @@ export function NumberField({
           aria-label={ariaLabel}
           placeholder={placeholder}
           className={cn(
-            "h-8 w-full min-w-0 border border-input bg-background px-2 text-center text-sm tabular-nums outline-none focus-visible:z-10 focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:opacity-50 dark:bg-input/30",
+            "h-8 w-full min-w-10 border border-input bg-background px-1 text-center text-sm tabular-nums outline-none focus-visible:z-10 focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:opacity-50 dark:bg-input/30",
             !unit && "rounded-r-none",
             inputClassName,
           )}

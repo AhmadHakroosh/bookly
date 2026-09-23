@@ -137,7 +137,7 @@ export function EventTypeForm({
             "min",
             "0 = every duration, e.g. 9:00, 9:30 for a 30-minute call",
           )}
-          {num("maxPerDay", "Max per day", "bookings", "0 = unlimited")}
+          {num("maxPerDay", "Max bookings", "per day", "0 = unlimited")}
           <Field>
             <FieldLabel htmlFor="seats" className="whitespace-nowrap">
               Seats per slot
@@ -237,12 +237,7 @@ export function EventTypeForm({
           {num("bufferBeforeMin", "Gap before", "min", "Kept free before each booking")}
           {num("bufferAfterMin", "Gap after", "min", "Kept free after each booking")}
           {num("minNoticeMin", "Minimum notice", "min", "e.g. 720 = 12 hours, 1440 = 1 day")}
-          {num(
-            "maxDaysAhead",
-            "Book up to",
-            "days ahead",
-            "How far into the future people can book",
-          )}
+          {num("maxDaysAhead", "Book up to", "days", "How far into the future people can book")}
         </div>
         <Field>
           <FieldLabel>Where to meet</FieldLabel>
