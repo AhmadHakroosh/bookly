@@ -47,7 +47,7 @@ async function BookingPage({ params, searchParams }: PageProps<"/booking/[token]
               : "Your booking";
   return (
     <PublicContainer className="py-12">
-      <div className="max-w-lg">
+      <div className="mx-auto max-w-lg">
         <h1 className="text-2xl font-semibold tracking-tight">{title}</h1>
         {b.status === "pending" && (
           <p className="mt-1 text-sm text-muted-foreground">
@@ -241,7 +241,7 @@ async function BookingPage({ params, searchParams }: PageProps<"/booking/[token]
 
 export default function BookingPageBoundary(props: PageProps<"/booking/[token]">) {
   return (
-    <Suspense fallback={<PublicSkeleton />}>
+    <Suspense fallback={<PublicSkeleton width="max-w-lg" />}>
       <BookingPage {...props} />
     </Suspense>
   );

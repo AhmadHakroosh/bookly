@@ -15,11 +15,16 @@ export function PublicContainer({
   return <div className={`mx-auto w-full max-w-4xl px-4 ${className}`}>{children}</div>;
 }
 
-/** The page-level fallback: the skeleton inside the same container as the page it replaces. */
-export function PublicSkeleton() {
+/**
+ * The page-level fallback: the skeleton inside the same container as the page it replaces.
+ * `width`: the page's own content width, so the placeholder sits where the content will.
+ */
+export function PublicSkeleton({ width = "" }: { width?: string }) {
   return (
-    <PublicContainer>
-      <PageSkeleton />
+    <PublicContainer className="py-12">
+      <div className={`mx-auto ${width}`}>
+        <PageSkeleton />
+      </div>
     </PublicContainer>
   );
 }

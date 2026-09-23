@@ -21,7 +21,7 @@ async function RoutingPage({ params, searchParams }: PageProps<"/r/[slug]">) {
   const message = typeof sp.message === "string" ? sp.message : null;
   return (
     <PublicContainer className="py-12">
-      <div className="max-w-lg">
+      <div className="mx-auto max-w-lg">
         <h1 className="text-2xl font-semibold tracking-tight">{form.name}</h1>
         {form.description && (
           <p className="mt-2 text-sm whitespace-pre-line text-muted-foreground">
@@ -42,7 +42,7 @@ async function RoutingPage({ params, searchParams }: PageProps<"/r/[slug]">) {
 
 export default function RoutingPageBoundary(props: PageProps<"/r/[slug]">) {
   return (
-    <Suspense fallback={<PublicSkeleton />}>
+    <Suspense fallback={<PublicSkeleton width="max-w-lg" />}>
       <RoutingPage {...props} />
     </Suspense>
   );

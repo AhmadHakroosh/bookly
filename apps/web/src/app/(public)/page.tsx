@@ -11,7 +11,7 @@ async function HomePage() {
   const profiles = await listProfiles(workspace.id);
   return (
     <PublicContainer className="py-12">
-      <div className="max-w-2xl">
+      <div className="mx-auto max-w-2xl">
         <h1 className="text-3xl font-semibold tracking-tight">{workspace.name}</h1>
         {workspace.description && (
           <p className="mt-2 text-muted-foreground">{workspace.description}</p>
@@ -49,7 +49,7 @@ async function HomePage() {
 
 export default function HomePageBoundary() {
   return (
-    <Suspense fallback={<PublicSkeleton />}>
+    <Suspense fallback={<PublicSkeleton width="max-w-2xl" />}>
       <HomePage />
     </Suspense>
   );

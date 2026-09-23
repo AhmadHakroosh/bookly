@@ -29,7 +29,7 @@ async function ProfilePage({ params }: PageProps<"/[username]">) {
   const paid = paymentsReady(ws);
   return (
     <PublicContainer className="py-12">
-      <div className="max-w-2xl">
+      <div className="mx-auto max-w-2xl">
         <header className="flex items-center gap-4">
           {profile.avatarUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
@@ -77,7 +77,7 @@ async function ProfilePage({ params }: PageProps<"/[username]">) {
 
 export default function ProfilePageBoundary(props: PageProps<"/[username]">) {
   return (
-    <Suspense fallback={<PublicSkeleton />}>
+    <Suspense fallback={<PublicSkeleton width="max-w-2xl" />}>
       <ProfilePage {...props} />
     </Suspense>
   );

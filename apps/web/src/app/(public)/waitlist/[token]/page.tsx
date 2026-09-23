@@ -10,7 +10,7 @@ async function LeavePage({ params }: PageProps<"/waitlist/[token]">) {
   const entry = await leaveWaitlist(token);
   return (
     <PublicContainer className="py-12">
-      <div className="max-w-lg">
+      <div className="mx-auto max-w-lg">
         <h1 className="text-2xl font-semibold tracking-tight">
           {entry ? "You left the waitlist" : "Link not found"}
         </h1>
@@ -26,7 +26,7 @@ async function LeavePage({ params }: PageProps<"/waitlist/[token]">) {
 
 export default function LeavePageBoundary(props: PageProps<"/waitlist/[token]">) {
   return (
-    <Suspense fallback={<PublicSkeleton />}>
+    <Suspense fallback={<PublicSkeleton width="max-w-lg" />}>
       <LeavePage {...props} />
     </Suspense>
   );
