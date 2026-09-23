@@ -21,6 +21,7 @@ import {
 } from "../actions";
 import { Dropdown } from "@/components/dropdown";
 import { DatePicker } from "@/components/date-picker";
+import { NumberField } from "@/components/number-field";
 
 export const metadata = { title: "Workspace", robots: { index: false } };
 
@@ -214,17 +215,18 @@ async function WorkspacePage({ params }: PageProps<"/platform/console/[id]">) {
             action={setWorkspaceFee.bind(null, ws.id)}
             className="mt-2 flex flex-wrap items-center gap-2"
           >
-            <input
+            <NumberField
               name="feePercent"
-              type="number"
               min={0}
               max={50}
-              step="0.1"
-              defaultValue={ws.settings.payments?.feePercent ?? ""}
-              aria-label="Fee percent"
-              className="h-8 w-24 rounded-lg border bg-background px-2 text-sm"
+              step={0.5}
+              decimals={1}
+              defaultValue={ws.settings.payments?.feePercent ?? null}
+              placeholder="platform"
+              unit="%"
+              ariaLabel="Fee percent"
+              className="w-44"
             />
-            <span className="text-sm text-muted-foreground">%</span>
             <SubmitButton variant="outline">Set fee</SubmitButton>
           </form>
         </section>

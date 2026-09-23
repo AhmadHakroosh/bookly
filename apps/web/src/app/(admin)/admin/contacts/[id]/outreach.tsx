@@ -19,6 +19,7 @@ import {
   sendProposal,
   type OutreachPreview,
 } from "../actions";
+import { NumberField } from "@/components/number-field";
 
 type T = { subject: string; body: string };
 type Kind = "proposal" | "payment";
@@ -110,14 +111,16 @@ export function Outreach({
           {open === "payment" && (
             <>
               <div className="flex gap-2">
-                <input
+                <NumberField
                   name="amount"
-                  type="number"
                   min={1}
-                  step="0.01"
+                  step={1}
+                  decimals={2}
                   placeholder="Amount"
-                  className={`${field} h-9`}
+                  ariaLabel="Amount"
                   required
+                  className="flex-1"
+                  inputClassName="h-9 text-left"
                 />
                 <input name="currency" defaultValue="usd" className={`${field} h-9 w-24`} />
               </div>
@@ -148,15 +151,15 @@ export function Outreach({
           )}
           <label className="flex items-center gap-2 text-xs text-muted-foreground">
             {open === "proposal" ? "Follow up if no reply in" : "Follow up if unpaid in"}
-            <input
+            <NumberField
               name="followUpDays"
-              type="number"
               min={0}
               max={60}
               defaultValue={open === "proposal" ? 5 : 7}
-              className="h-7 w-16 rounded-md border bg-background px-2"
+              unit="days"
+              ariaLabel="Follow up in days"
+              className="w-40"
             />
-            days
           </label>
           <Button type="button" onClick={showPreview} disabled={pending}>
             {pending && <Spinner data-icon="inline-start" />}

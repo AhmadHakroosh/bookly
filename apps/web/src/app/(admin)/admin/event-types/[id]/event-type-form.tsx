@@ -13,6 +13,7 @@ import { QuestionBuilder } from "./question-builder";
 import { LocationsEditor, type ConferencingReady } from "./locations-editor";
 import { Dropdown } from "@/components/dropdown";
 import { ColorPicker } from "@/components/color-picker";
+import { NumberField } from "@/components/number-field";
 
 type Values = {
   id: string;
@@ -43,10 +44,6 @@ type Values = {
   recurrence: Recurrence;
   autoCapture: "off" | "ask" | "always";
 };
-
-/** The unit addon on numeric fields: joined to the input, its own background and border. */
-const UNIT =
-  "flex shrink-0 items-center rounded-r-lg border border-l-0 border-input bg-muted px-3 text-xs whitespace-nowrap text-muted-foreground";
 
 export function EventTypeForm({
   initial,
@@ -91,19 +88,13 @@ export function EventTypeForm({
       <FieldLabel htmlFor={name} className="whitespace-nowrap">
         {label}
       </FieldLabel>
-      <div className="flex">
-        <Input
-          id={name}
-          name={name}
-          type="number"
-          min={0}
-          defaultValue={String(initial[name])}
-          className="min-w-0 rounded-r-none"
-        />
-        <span aria-hidden className={UNIT}>
-          {unit}
-        </span>
-      </div>
+      <NumberField
+        id={name}
+        name={name}
+        min={0}
+        defaultValue={initial[name] as number}
+        unit={unit}
+      />
       {hint && <FieldDescription>{hint}</FieldDescription>}
     </Field>
   );
@@ -151,20 +142,14 @@ export function EventTypeForm({
             <FieldLabel htmlFor="seats" className="whitespace-nowrap">
               Seats per slot
             </FieldLabel>
-            <div className="flex">
-              <Input
-                id="seats"
-                name="seats"
-                type="number"
-                min={1}
-                max={500}
-                defaultValue={String(initial.seats)}
-                className="min-w-0 rounded-r-none"
-              />
-              <span aria-hidden className={UNIT}>
-                seats
-              </span>
-            </div>
+            <NumberField
+              id="seats"
+              name="seats"
+              min={1}
+              max={500}
+              defaultValue={initial.seats}
+              unit="seats"
+            />
             <FieldDescription>
               More than 1 makes this a group session: the same time can be booked until it is full
               and everyone gets the same meeting link.
@@ -221,25 +206,23 @@ export function EventTypeForm({
               </Field>
               <Field>
                 <FieldLabel htmlFor="recurInterval">Every</FieldLabel>
-                <Input
+                <NumberField
                   id="recurInterval"
                   name="recurInterval"
-                  type="number"
                   min={1}
                   max={12}
-                  defaultValue={String(initial.recurrence.interval ?? 1)}
+                  defaultValue={initial.recurrence.interval ?? 1}
                 />
                 <FieldDescription>2 = every second week/day/month</FieldDescription>
               </Field>
               <Field>
                 <FieldLabel htmlFor="recurCount">Sessions</FieldLabel>
-                <Input
+                <NumberField
                   id="recurCount"
                   name="recurCount"
-                  type="number"
                   min={2}
                   max={52}
-                  defaultValue={String(initial.recurrence.count ?? 4)}
+                  defaultValue={initial.recurrence.count ?? 4}
                 />
                 <FieldDescription>Total, including the first. Max 52.</FieldDescription>
               </Field>
@@ -289,13 +272,13 @@ export function EventTypeForm({
         <div className="grid gap-6 sm:grid-cols-3">
           <Field>
             <FieldLabel htmlFor="price">Price</FieldLabel>
-            <Input
+            <NumberField
               id="price"
               name="price"
-              type="number"
               min={0}
-              step="0.01"
-              defaultValue={(initial.priceCents / 100).toFixed(2)}
+              step={1}
+              decimals={2}
+              defaultValue={initial.priceCents / 100}
             />
             <FieldDescription>
               {paymentsReady
@@ -383,13 +366,13 @@ export function EventTypeForm({
           <div className="grid gap-4 sm:grid-cols-[160px_1fr]">
             <Field>
               <FieldLabel htmlFor="followUpDelay">Hours after the end</FieldLabel>
-              <Input
+              <NumberField
                 id="followUpDelay"
                 name="followUpDelay"
-                type="number"
                 min={0}
-                step="0.5"
-                defaultValue={String((initial.followUp.delayMin ?? 60) / 60)}
+                step={0.5}
+                defaultValue={(initial.followUp.delayMin ?? 60) / 60}
+                unit="h"
               />
             </Field>
             <Field>

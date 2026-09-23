@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { TimezoneField } from "@/components/timezone-field";
 import { saveSchedule } from "../scheduling-actions";
 import { TimePicker } from "@/components/time-picker";
+import { NumberField } from "@/components/number-field";
 
 type Range = { start: string; end: string; focus?: boolean };
 type Day = { weekday: number; label: string; ranges: Range[] };
@@ -52,22 +53,14 @@ export function ScheduleForm({
         </label>
         <label className="text-sm">
           <span className="mb-1 block text-xs font-medium">Meetings per week</span>
-          <div className="flex">
-            <Input
-              name="weeklyBudget"
-              type="number"
-              min={0}
-              max={200}
-              defaultValue={weeklyBudget ?? 0}
-              className="min-w-0 rounded-r-none"
-            />
-            <span
-              aria-hidden
-              className="flex shrink-0 items-center rounded-r-lg border border-l-0 border-input bg-muted px-3 text-xs whitespace-nowrap text-muted-foreground"
-            >
-              budget
-            </span>
-          </div>
+          <NumberField
+            name="weeklyBudget"
+            min={0}
+            max={200}
+            defaultValue={weeklyBudget ?? 0}
+            unit="budget"
+            ariaLabel="Meetings per week"
+          />
         </label>
       </div>
       <p className="text-xs text-muted-foreground">

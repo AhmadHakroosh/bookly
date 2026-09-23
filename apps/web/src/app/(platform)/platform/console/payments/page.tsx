@@ -10,6 +10,7 @@ import { billingConfigured, planName } from "@/server/billing";
 import { listConnectedWorkspaces, platformFeePercent } from "@/server/connect";
 import { paymentsConfigured } from "@/server/payments";
 import { disconnectWorkspaceStripe, setPlatformFee } from "../actions";
+import { NumberField } from "@/components/number-field";
 
 export const metadata = { title: "Payments", robots: { index: false } };
 
@@ -93,17 +94,17 @@ async function PaymentsPage() {
           <label htmlFor="feePercent" className="text-sm">
             Fee
           </label>
-          <input
+          <NumberField
             id="feePercent"
             name="feePercent"
-            type="number"
             min={0}
             max={50}
-            step="0.1"
+            step={0.5}
+            decimals={1}
             defaultValue={fee}
-            className="h-8 w-24 rounded-lg border bg-background px-2 text-sm"
+            unit="%"
+            className="w-44"
           />
-          <span className="text-sm text-muted-foreground">%</span>
           <SubmitButton variant="outline">Save</SubmitButton>
         </form>
       </section>
