@@ -66,7 +66,8 @@ export function Dropdown({
       >
         <SelectValue placeholder={placeholder} />
       </SelectTrigger>
-      <SelectContent className={contentClassName}>
+      {/* Drop below the field like a menu, instead of overlaying the selected item on it. */}
+      <SelectContent alignItemWithTrigger={false} align="start" className={contentClassName}>
         {options.map((o) => (
           <SelectItem key={o.value} value={o.value} disabled={o.disabled}>
             {o.label}
