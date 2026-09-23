@@ -16,7 +16,7 @@ const {
 
 describe("notetaker transcript parsing", () => {
   it("labels the host, the attendee by name, and anyone else by their name", () => {
-    expect(speakerLabel({ name: "Dana", is_host: true }, "Sam Lee")).toBe("host");
+    expect(speakerLabel({ name: "Ahmad", is_host: true }, "Sam Lee")).toBe("host");
     expect(speakerLabel({ name: "sam lee", is_host: false }, "Sam Lee")).toBe("attendee");
     expect(speakerLabel({ name: "Guest 2", is_host: false }, "Sam Lee")).toBe("Guest 2");
     expect(speakerLabel(null, "Sam Lee")).toBe("attendee");
@@ -39,7 +39,7 @@ describe("notetaker transcript parsing", () => {
     const segs = parseRecallTranscript(
       [
         {
-          participant: { name: "Dana", is_host: true },
+          participant: { name: "Ahmad", is_host: true },
           words: [{ text: "hi", start_timestamp: { relative: 5 } }],
         },
         {

@@ -28,7 +28,13 @@ async function EditRoutingPage({ params }: PageProps<"/admin/routing/[id]">) {
 
 export default function EditRoutingPageBoundary(props: PageProps<"/admin/routing/[id]">) {
   return (
-    <Suspense fallback={<PageSkeleton />}>
+    <Suspense
+      fallback={
+        <div className="max-w-3xl">
+          <PageSkeleton />
+        </div>
+      }
+    >
       <EditRoutingPage {...props} />
     </Suspense>
   );

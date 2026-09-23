@@ -90,7 +90,13 @@ async function BillingPage({ searchParams }: PageProps<"/admin/billing">) {
 
 export default function BillingPageBoundary(props: PageProps<"/admin/billing">) {
   return (
-    <Suspense fallback={<PageSkeleton />}>
+    <Suspense
+      fallback={
+        <div className="max-w-3xl">
+          <PageSkeleton />
+        </div>
+      }
+    >
       <BillingPage {...props} />
     </Suspense>
   );

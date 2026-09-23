@@ -78,7 +78,13 @@ async function SettingsPage({ searchParams }: PageProps<"/admin/settings">) {
 /** Suspense boundary for Cache Components: the page reads request data and streams in. */
 export default function SettingsPageBoundary(props: PageProps<"/admin/settings">) {
   return (
-    <Suspense fallback={<PageSkeleton />}>
+    <Suspense
+      fallback={
+        <div className="max-w-xl">
+          <PageSkeleton />
+        </div>
+      }
+    >
       <SettingsPage {...props} />
     </Suspense>
   );

@@ -117,7 +117,13 @@ async function ConferencingPage({ searchParams }: PageProps<"/admin/conferencing
 
 export default function ConferencingPageBoundary(props: PageProps<"/admin/conferencing">) {
   return (
-    <Suspense fallback={<PageSkeleton />}>
+    <Suspense
+      fallback={
+        <div className="max-w-2xl">
+          <PageSkeleton />
+        </div>
+      }
+    >
       <ConferencingPage {...props} />
     </Suspense>
   );

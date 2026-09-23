@@ -17,7 +17,7 @@ export type EmailMessage = {
 };
 
 /**
- * "Dana Weiss via Bookly" <noreply@example.com>: a personal sender line on the verified platform
+ * "Ahmad Hakroosh via Bookly" <noreply@example.com>: a personal sender line on the verified platform
  * address, so SPF/DKIM stay intact while the inbox shows who wrote it.
  */
 export function senderFor(name: string, base: string): string {

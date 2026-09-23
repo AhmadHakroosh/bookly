@@ -193,7 +193,13 @@ async function BookingBriefPage({ params }: PageProps<"/admin/bookings/[id]">) {
 
 export default function BookingBriefPageBoundary(props: PageProps<"/admin/bookings/[id]">) {
   return (
-    <Suspense fallback={<PageSkeleton />}>
+    <Suspense
+      fallback={
+        <div className="max-w-2xl">
+          <PageSkeleton />
+        </div>
+      }
+    >
       <BookingBriefPage {...props} />
     </Suspense>
   );

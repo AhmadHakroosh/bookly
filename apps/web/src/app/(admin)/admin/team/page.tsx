@@ -110,7 +110,13 @@ async function TeamPage() {
 
 export default function TeamPageBoundary() {
   return (
-    <Suspense fallback={<PageSkeleton />}>
+    <Suspense
+      fallback={
+        <div className="max-w-3xl">
+          <PageSkeleton />
+        </div>
+      }
+    >
       <TeamPage />
     </Suspense>
   );

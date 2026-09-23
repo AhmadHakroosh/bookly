@@ -63,7 +63,13 @@ async function NotificationsPage() {
 
 export default function NotificationsPageBoundary() {
   return (
-    <Suspense fallback={<PageSkeleton />}>
+    <Suspense
+      fallback={
+        <div className="max-w-2xl">
+          <PageSkeleton />
+        </div>
+      }
+    >
       <NotificationsPage />
     </Suspense>
   );

@@ -18,8 +18,8 @@ const card =
 export function LiveTranscriptMock() {
   const lines: [string, string, string][] = [
     ["12:04", "Omar", "We need this live before the December rush."],
-    ["12:19", "Dana", "Understood. Three clinics, one booking flow, reminders on each."],
-    ["12:31", "Dana", "I'll send two options by Wednesday."],
+    ["12:19", "Ahmad", "Understood. Three clinics, one booking flow, reminders on each."],
+    ["12:31", "Ahmad", "I'll send two options by Wednesday."],
     ["12:47", "Omar", "Insurance integration is a later phase, not now."],
     ["13:02", "Omar", "Our front desk will send the patient list."],
   ];
@@ -41,7 +41,7 @@ export function LiveTranscriptMock() {
         </span>
       </div>
       <div className="grid grid-cols-2 gap-2 px-3">
-        {["Dana Weiss", "Omar Haddad"].map((n) => (
+        {["Ahmad Hakroosh", "Omar Haddad"].map((n) => (
           <div
             key={n}
             className="flex aspect-video items-end rounded-lg bg-linear-to-br from-white/15 to-white/5 p-2 text-[11px]"
@@ -58,7 +58,7 @@ export function LiveTranscriptMock() {
             style={{ "--line-delay": `${i * 900}ms` } as never}
           >
             <span className="text-white/60">[{t}]</span>{" "}
-            <span className={who === "Dana" ? "text-sky-300" : "text-amber-300"}>{who}:</span>{" "}
+            <span className={who === "Ahmad" ? "text-sky-300" : "text-amber-300"}>{who}:</span>{" "}
             {text}
           </li>
         ))}
@@ -221,15 +221,17 @@ export function EmailMock() {
       <div className="mb-3 flex items-center justify-between text-[11px] text-muted-foreground">
         <span>
           From{" "}
-          <span className="font-medium text-foreground">Dana Weiss via Dana Weiss Consulting</span>
+          <span className="font-medium text-foreground">
+            Ahmad Hakroosh via Hakroosh Consulting
+          </span>
         </span>
-        <span>Reply-To dana@…</span>
+        <span>Reply-To ahmad@…</span>
       </div>
       <div className="mb-2 flex items-center gap-2 text-xs font-semibold">
         <span className="flex size-5 items-center justify-center rounded-md bg-neutral-950 text-[10px] font-bold text-white">
-          D
+          A
         </span>
-        Dana Weiss Consulting
+        Hakroosh Consulting
       </div>
       <div className="rounded-xl border border-black/10 bg-white p-4">
         <div className="mb-3 h-1 w-10 rounded bg-(--brand)" />

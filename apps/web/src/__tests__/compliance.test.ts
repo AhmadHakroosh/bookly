@@ -72,7 +72,7 @@ describe("outreach email footer", () => {
       },
       subject: "Hello",
       body: "Hi there",
-      signedBy: "Dana",
+      signedBy: "Ahmad",
       address: "Acme Ltd, 1 Example Street, London",
       unsubscribeUrl: "https://b.example/unsubscribe/abc",
     });

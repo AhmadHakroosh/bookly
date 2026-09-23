@@ -166,7 +166,13 @@ async function AvailabilityPage({ searchParams }: PageProps<"/admin/availability
 
 export default function AvailabilityPageBoundary(props: PageProps<"/admin/availability">) {
   return (
-    <Suspense fallback={<PageSkeleton />}>
+    <Suspense
+      fallback={
+        <div className="max-w-2xl">
+          <PageSkeleton />
+        </div>
+      }
+    >
       <AvailabilityPage {...props} />
     </Suspense>
   );

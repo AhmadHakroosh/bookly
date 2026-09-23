@@ -19,7 +19,7 @@ describe("transcripts", () => {
   });
   it("renders with names and clocks", () => {
     expect(
-      renderTranscript([{ t: 65, speaker: "attendee", text: "ok" }], { attendee: "Dana" }),
-    ).toBe("[01:05] Dana: ok");
+      renderTranscript([{ t: 65, speaker: "attendee", text: "ok" }], { attendee: "Ahmad" }),
+    ).toBe("[01:05] Ahmad: ok");
   });
 });

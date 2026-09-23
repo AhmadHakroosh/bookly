@@ -57,7 +57,13 @@ async function CalendarsPage({ searchParams }: PageProps<"/admin/calendars">) {
 
 export default function CalendarsPageBoundary(props: PageProps<"/admin/calendars">) {
   return (
-    <Suspense fallback={<PageSkeleton />}>
+    <Suspense
+      fallback={
+        <div className="max-w-2xl">
+          <PageSkeleton />
+        </div>
+      }
+    >
       <CalendarsPage {...props} />
     </Suspense>
   );

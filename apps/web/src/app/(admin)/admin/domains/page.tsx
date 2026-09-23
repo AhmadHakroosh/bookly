@@ -114,7 +114,13 @@ async function DomainsPage() {
 /** Suspense boundary for Cache Components: the page reads request data and streams in. */
 export default function DomainsPageBoundary() {
   return (
-    <Suspense fallback={<PageSkeleton />}>
+    <Suspense
+      fallback={
+        <div className="max-w-3xl">
+          <PageSkeleton />
+        </div>
+      }
+    >
       <DomainsPage />
     </Suspense>
   );

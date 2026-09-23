@@ -54,7 +54,13 @@ async function ProfilePage({ searchParams }: PageProps<"/admin/profile">) {
 
 export default function ProfilePageBoundary(props: PageProps<"/admin/profile">) {
   return (
-    <Suspense fallback={<PageSkeleton />}>
+    <Suspense
+      fallback={
+        <div className="max-w-xl">
+          <PageSkeleton />
+        </div>
+      }
+    >
       <ProfilePage {...props} />
     </Suspense>
   );

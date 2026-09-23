@@ -71,7 +71,7 @@ const NAV = [
 function Sidebar() {
   return (
     <aside className="hidden w-44 shrink-0 border-r p-3 text-xs md:block">
-      <p className="mb-2 px-2 font-semibold">Dana Weiss Consulting</p>
+      <p className="mb-2 px-2 font-semibold">Hakroosh Consulting</p>
       <ul className="space-y-0.5">
         {NAV.map(([label, Icon, on]) => (
           <li
@@ -236,7 +236,7 @@ export function CallMock() {
         This call is transcribed so both sides get notes and action items afterwards.
       </p>
       <div className="grid grid-cols-2 gap-2 p-3">
-        {["Dana", "Omar"].map((n) => (
+        {["Ahmad", "Omar"].map((n) => (
           <div
             key={n}
             className="flex aspect-video items-end rounded-lg bg-white/10 p-2 text-[11px]"
@@ -247,7 +247,7 @@ export function CallMock() {
       </div>
       <ul className="space-y-1 border-t border-white/10 px-4 py-3 font-mono text-[11px] text-white/80">
         <li>[12:04] Omar: we need this live before the December rush</li>
-        <li>[12:31] Dana: I&apos;ll send two options by Wednesday</li>
+        <li>[12:31] Ahmad: I&apos;ll send two options by Wednesday</li>
         <li>[13:02] Omar: our front desk will send the patient list</li>
       </ul>
     </div>
@@ -438,7 +438,7 @@ export function BookingPageMock() {
     >
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <p className="text-xs text-muted-foreground">Dana Weiss</p>
+          <p className="text-xs text-muted-foreground">Ahmad Hakroosh</p>
           <h4 className="text-base font-semibold tracking-tight">Working session</h4>
           <p className="mt-1 text-xs text-muted-foreground">
             60 min · Video call · Group of up to 3

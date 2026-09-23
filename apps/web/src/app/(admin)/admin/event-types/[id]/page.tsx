@@ -88,7 +88,13 @@ async function EditEventTypePage({ params }: PageProps<"/admin/event-types/[id]"
 
 export default function EditEventTypePageBoundary(props: PageProps<"/admin/event-types/[id]">) {
   return (
-    <Suspense fallback={<PageSkeleton />}>
+    <Suspense
+      fallback={
+        <div className="max-w-3xl">
+          <PageSkeleton />
+        </div>
+      }
+    >
       <EditEventTypePage {...props} />
     </Suspense>
   );
