@@ -12,6 +12,7 @@ import { deleteEventType, saveEventType } from "../../scheduling-actions";
 import { QuestionBuilder } from "./question-builder";
 import { LocationsEditor, type ConferencingReady } from "./locations-editor";
 import { Dropdown } from "@/components/dropdown";
+import { ColorPicker } from "@/components/color-picker";
 
 type Values = {
   id: string;
@@ -279,14 +280,10 @@ export function EventTypeForm({
           </Field>
           <Field>
             <FieldLabel htmlFor="color">Color</FieldLabel>
-            <div className="flex items-center gap-2">
-              <input
-                type="color"
-                name="color"
-                defaultValue={initial.color}
-                className="size-8 cursor-pointer rounded border"
-              />
-            </div>
+            <ColorPicker id="color" name="color" defaultValue={initial.color} required />
+            <FieldDescription>
+              Marks this event type on your booking page and in lists.
+            </FieldDescription>
           </Field>
         </div>
         <div className="grid gap-6 sm:grid-cols-3">

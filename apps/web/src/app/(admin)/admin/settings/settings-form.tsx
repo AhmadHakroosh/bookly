@@ -11,6 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { TimezoneField } from "@/components/timezone-field";
 import { DEFAULT_EMAIL_TEMPLATES as DEFAULTS } from "@/emails/defaults";
 import { updateWorkspaceSettings, type SettingsState } from "./actions";
+import { ColorPicker } from "@/components/color-picker";
 
 type Values = {
   name: string;
@@ -250,21 +251,12 @@ export function SettingsForm({
               <Field>
                 <FieldLabel htmlFor="accent">Accent colour</FieldLabel>
                 <div className="flex items-center gap-2">
-                  <input
-                    type="color"
-                    aria-label="Pick accent colour"
-                    defaultValue={workspace.accent || "#e8965a"}
-                    onChange={(e) => {
-                      const t = document.getElementById("accent") as HTMLInputElement | null;
-                      if (t) t.value = e.target.value;
-                    }}
-                    className="size-8 cursor-pointer rounded border bg-transparent p-0.5"
-                  />
-                  <Input
+                  <ColorPicker
                     id="accent"
                     name="accent"
                     defaultValue={workspace.accent}
-                    placeholder="#e8965a"
+                    ariaLabel="Accent colour"
+                    placeholder="Bookly accent"
                   />
                 </div>
               </Field>
