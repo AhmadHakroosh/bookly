@@ -139,7 +139,9 @@
     background-repeat: no-repeat;
     background-position: right 0.6rem center;
     background-size: 1rem;
-    padding-right: 2.1rem;
+    /* Wins over px-* utilities, so the value never runs under the chevron. */
+    padding-right: 2.1rem !important;
+    text-overflow: ellipsis;
   }
 }
 

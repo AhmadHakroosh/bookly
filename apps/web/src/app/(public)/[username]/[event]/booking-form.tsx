@@ -114,7 +114,7 @@ export function BookingForm({
               aria-label="Country"
               value={country}
               onChange={(e) => setCountry(e.target.value)}
-              className={`${field} w-auto max-w-40 shrink-0`}
+              className={`${field} w-auto max-w-52 shrink-0`}
             >
               {countries.map((c) => (
                 <option key={c.code} value={c.code}>
