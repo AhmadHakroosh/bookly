@@ -2,23 +2,43 @@ import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import { SubmitButton } from "@/components/submit-button";
 import { minToHHMM, timezoneList } from "@/lib/time";
-import { ensureDefaultSchedule, getProfileByUser, getSchedule } from "@/server/scheduling";
+import Link from "next/link";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import {
+  ensureDefaultSchedule,
+  getProfileByUser,
+  getSchedule,
+  listSchedules,
+} from "@/server/scheduling";
 import { requireStaff } from "@/server/session";
 import { getCurrentWorkspace } from "@/server/workspace";
-import { addOverride, removeOverride } from "../scheduling-actions";
+import {
+  addOverride,
+  createSchedule,
+  deleteSchedule,
+  removeOverride,
+  setDefaultSchedule,
+} from "../scheduling-actions";
 import { ScheduleForm } from "./schedule-form";
 import { PageSkeleton } from "@/components/page-skeleton";
 
 export const metadata = { title: "Availability" };
 
-async function AvailabilityPage() {
-  const [{ session }, ws] = await Promise.all([requireStaff(), getCurrentWorkspace()]);
+async function AvailabilityPage({ searchParams }: PageProps<"/admin/availability">) {
+  const [{ session }, ws, sp] = await Promise.all([
+    requireStaff(),
+    getCurrentWorkspace(),
+    searchParams,
+  ]);
   if (!ws) return null;
   const profile = await getProfileByUser(ws.id, session.user.id);
   if (!profile) redirect("/admin/profile?setup=1");
-  const s = await getSchedule(
-    (await ensureDefaultSchedule(ws.id, session.user.id, profile.timezone)).id,
-  );
+  const fallback = await ensureDefaultSchedule(ws.id, session.user.id, profile.timezone);
+  const all = await listSchedules(ws.id, session.user.id);
+  const wanted = typeof sp.schedule === "string" ? sp.schedule : null;
+  const current = all.find((x) => x.id === wanted) ?? all.find((x) => x.isDefault) ?? fallback;
+  const s = await getSchedule(current.id);
   if (!s) return null;
   const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
   return (
@@ -30,7 +50,52 @@ async function AvailabilityPage() {
           notice are removed from these hours automatically.
         </p>
       </div>
+      <section className="space-y-3">
+        <div className="flex flex-wrap items-center gap-2">
+          {all.map((x) => (
+            <Link
+              key={x.id}
+              href={x.isDefault ? "/admin/availability" : `/admin/availability?schedule=${x.id}`}
+              aria-current={x.id === s.id ? "page" : undefined}
+              className={`inline-flex h-8 items-center gap-2 rounded-lg border px-3 text-sm ${x.id === s.id ? "border-primary bg-primary/5 font-medium" : "text-muted-foreground hover:text-foreground"}`}
+            >
+              {x.name}
+              {x.isDefault && (
+                <Badge variant="secondary" className="text-[10px]">
+                  Default
+                </Badge>
+              )}
+            </Link>
+          ))}
+          <form action={createSchedule} className="flex items-center gap-2">
+            <Input
+              name="name"
+              placeholder="New schedule, e.g. Evenings"
+              aria-label="New schedule name"
+              className="h-8 w-56"
+            />
+            <SubmitButton variant="outline">Add schedule</SubmitButton>
+          </form>
+        </div>
+        <p className="text-xs text-muted-foreground">
+          Event types use the default schedule unless they pick another one (Event types →
+          Availability schedule). A new schedule starts as a copy of the default.
+        </p>
+        {!s.isDefault && (
+          <div className="flex flex-wrap gap-2">
+            <form action={setDefaultSchedule.bind(null, s.id)}>
+              <SubmitButton variant="outline">Make default</SubmitButton>
+            </form>
+            <form action={deleteSchedule.bind(null, s.id)}>
+              <SubmitButton variant="ghost" className="text-destructive">
+                Delete this schedule
+              </SubmitButton>
+            </form>
+          </div>
+        )}
+      </section>
       <ScheduleForm
+        key={s.id}
         scheduleId={s.id}
         name={s.name}
         timezone={s.timezone}
@@ -104,10 +169,10 @@ async function AvailabilityPage() {
   );
 }
 
-export default function AvailabilityPageBoundary() {
+export default function AvailabilityPageBoundary(props: PageProps<"/admin/availability">) {
   return (
     <Suspense fallback={<PageSkeleton />}>
-      <AvailabilityPage />
+      <AvailabilityPage {...props} />
     </Suspense>
   );
 }

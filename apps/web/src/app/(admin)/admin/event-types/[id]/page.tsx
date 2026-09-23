@@ -76,7 +76,11 @@ async function EditEventTypePage({ params }: PageProps<"/admin/event-types/[id]"
         autoCapture: et.autoCapture,
         hidden: et.hidden,
       }}
-      schedules={schedules.map((s) => ({ id: s.id, name: `${s.name} (${s.timezone})` }))}
+      schedules={schedules.map((s) => ({
+        id: s.id,
+        name: `${s.name} (${s.timezone})`,
+        isDefault: s.isDefault,
+      }))}
       publicUrl={profile ? `/${profile.username}/${et.slug}` : null}
     />
   );

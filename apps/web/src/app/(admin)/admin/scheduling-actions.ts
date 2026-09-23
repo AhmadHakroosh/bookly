@@ -103,6 +103,80 @@ export async function saveProfile(_prev: { ok?: boolean; error?: string }, formD
 
 /* ---------------- Availability ---------------- */
 
+/** A schedule the signed-in member owns, or null. */
+async function ownSchedule(id: string) {
+  const { session, ws } = await ctx();
+  return db().query.schedules.findFirst({
+    where: and(
+      eq(schema.schedules.id, id),
+      eq(schema.schedules.workspaceId, ws.id),
+      eq(schema.schedules.userId, session.user.id),
+    ),
+  });
+}
+
+/**
+ * Another schedule for the member (e.g. "Evenings" or "Workshops") so different event types can
+ * offer different hours. Starts as a copy of the default's hours and timezone.
+ */
+export async function createSchedule(formData: FormData) {
+  const { session, ws } = await ctx();
+  const profile = await getProfileByUser(ws.id, session.user.id);
+  const base = await ensureDefaultSchedule(ws.id, session.user.id, profile?.timezone ?? "UTC");
+  const name =
+    String(formData.get("name") ?? "")
+      .trim()
+      .slice(0, 80) || "New schedule";
+  const rules = await db()
+    .select()
+    .from(schema.scheduleRules)
+    .where(eq(schema.scheduleRules.scheduleId, base.id));
+  const [s] = await db()
+    .insert(schema.schedules)
+    .values({ workspaceId: ws.id, userId: session.user.id, name, timezone: base.timezone })
+    .returning();
+  if (rules.length)
+    await db()
+      .insert(schema.scheduleRules)
+      .values(
+        rules.map((r) => ({
+          scheduleId: s!.id,
+          weekday: r.weekday,
+          startMin: r.startMin,
+          endMin: r.endMin,
+          kind: r.kind,
+        })),
+      );
+  refreshWorkspace(ws.id);
+  redirect(`/admin/availability?schedule=${s!.id}`);
+}
+
+/** The default is what event types use unless they pick another schedule. */
+export async function setDefaultSchedule(id: string) {
+  const s = await ownSchedule(id);
+  if (!s || s.isDefault) return;
+  await db().transaction(async (tx) => {
+    await tx
+      .update(schema.schedules)
+      .set({ isDefault: false })
+      .where(
+        and(eq(schema.schedules.workspaceId, s.workspaceId), eq(schema.schedules.userId, s.userId)),
+      );
+    await tx.update(schema.schedules).set({ isDefault: true }).where(eq(schema.schedules.id, id));
+  });
+  refreshWorkspace(s.workspaceId);
+  revalidatePath("/admin/availability");
+}
+
+/** Removes a non-default schedule; event types that used it fall back to the default. */
+export async function deleteSchedule(id: string) {
+  const s = await ownSchedule(id);
+  if (!s || s.isDefault) return;
+  await db().delete(schema.schedules).where(eq(schema.schedules.id, id));
+  refreshWorkspace(s.workspaceId);
+  redirect("/admin/availability");
+}
+
 export async function saveSchedule(_prev: { ok?: boolean; error?: string }, formData: FormData) {
   const { session, ws } = await ctx();
   const scheduleId = String(formData.get("scheduleId") ?? "");

@@ -57,7 +57,7 @@ export function EventTypeForm({
   teammates,
 }: {
   initial: Values;
-  schedules: { id: string; name: string }[];
+  schedules: { id: string; name: string; isDefault?: boolean }[];
   publicUrl: string | null;
   ready: ConferencingReady;
   paymentsReady: boolean;
@@ -275,6 +275,7 @@ export function EventTypeForm({
               {schedules.map((s) => (
                 <option key={s.id} value={s.id}>
                   {s.name}
+                  {s.isDefault ? " (default)" : ""}
                 </option>
               ))}
             </select>
