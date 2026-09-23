@@ -8,7 +8,12 @@ export const SITE = {
   description:
     "Open-source scheduling that briefs you before each call, transcribes it with consent, and turns every meeting into tasks, follow-ups and relationships.",
   github: "https://github.com/AhmadHakroosh/bookly",
-  operator: "Ahmad Hakroosh",
+  /** The legal entity behind the hosted service (contracts, invoices, legal pages). */
+  operator: "Cloudeo Solutions, LLC",
+  /** Its postal address, from the environment so the repo carries no address. */
+  operatorAddress: process.env.OPERATOR_ADDRESS ?? "",
+  /** Who builds it (about page, footer credit). */
+  maker: "Ahmad Hakroosh",
   supportEmail: process.env.SUPPORT_EMAIL ?? "hello@ahmadhakroosh.com",
   /** Date the legal pages were last revised. */
   legalUpdated: "September 23, 2026",
@@ -47,6 +52,7 @@ export const FOOTER = {
   Legal: [
     { href: "/privacy", label: "Privacy policy" },
     { href: "/terms", label: "Terms of service" },
+    { href: "/dpa", label: "Data processing agreement" },
   ],
 } as const;
 

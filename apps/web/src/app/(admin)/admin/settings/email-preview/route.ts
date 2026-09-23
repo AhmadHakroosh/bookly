@@ -35,6 +35,7 @@ export async function GET(req: Request) {
     });
     const mail = await renderOutreach(
       ws,
+      { id: "preview" },
       host?.displayName ?? session.user.name,
       t.subject,
       t.body,

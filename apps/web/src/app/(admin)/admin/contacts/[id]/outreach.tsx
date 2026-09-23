@@ -42,6 +42,7 @@ export function Outreach({
   followUp,
   stripe,
   initial = null,
+  optedOut = false,
 }: {
   contactId: string;
   proposal: T;
@@ -49,6 +50,8 @@ export function Outreach({
   followUp: T;
   stripe: boolean;
   initial?: Kind | null;
+  /** The contact unsubscribed: the composer stays readable but nothing can be sent. */
+  optedOut?: boolean;
 }) {
   const [open, setOpen] = useState<Kind | null>(initial);
   // The kind the dialog was opened for: `open` clears on send, and the dialog's labels must not
@@ -86,9 +89,16 @@ export function Outreach({
     if (!form || !open) return;
     const fd = new FormData(form);
     startSend(async () => {
-      if (open === "proposal") await sendProposal(contactId, fd);
-      else if (open === "followUp") await sendFollowUp(contactId, fd);
-      else await sendPaymentRequest(contactId, fd);
+      const res =
+        open === "proposal"
+          ? await sendProposal(contactId, fd)
+          : open === "followUp"
+            ? await sendFollowUp(contactId, fd)
+            : await sendPaymentRequest(contactId, fd);
+      if (res?.error) {
+        toast.error(res.error);
+        return;
+      }
       toast.success(
         open === "proposal"
           ? "Proposal sent"
@@ -104,6 +114,12 @@ export function Outreach({
   return (
     <section className="rounded-xl border p-4 text-sm">
       <h2 className="text-base font-semibold tracking-tight">Send</h2>
+      {optedOut && (
+        <p className="mt-1 text-xs text-muted-foreground">
+          This contact unsubscribed from your emails. You can still call or write to them another
+          way; booking emails are unaffected.
+        </p>
+      )}
       <div className="mt-2 flex flex-wrap gap-2">
         <Button
           type="button"
@@ -250,7 +266,7 @@ export function Outreach({
               <ArrowLeftIcon data-icon="inline-start" />
               Back to edit
             </Button>
-            <Button type="button" onClick={send} disabled={sending}>
+            <Button type="button" onClick={send} disabled={sending || optedOut}>
               {sending ? (
                 <Spinner data-icon="inline-start" />
               ) : (

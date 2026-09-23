@@ -26,6 +26,7 @@ const settingsSchema = z.object({
   proposalBody: z.string().max(8000).default(""),
   paymentSubject: z.string().max(200).default(""),
   checkInSubject: z.string().max(200).default(""),
+  postalAddress: z.string().trim().max(300).default(""),
   checkInBody: z.string().max(8000).default(""),
   paymentBody: z.string().max(8000).default(""),
   confirmationSubject: z.string().max(200).default(""),
@@ -67,6 +68,7 @@ export async function updateWorkspaceSettings(
     paymentBody,
     checkInSubject,
     checkInBody,
+    postalAddress,
     confirmationSubject,
     confirmationBody,
     reminderSubject,
@@ -105,6 +107,7 @@ export async function updateWorkspaceSettings(
       settings: {
         ...workspace.settings,
         blockedEmails: parseBlocklist(blocklist),
+        postalAddress: postalAddress || undefined,
         telemetryStats: telemetryStats === "on",
         branding: hasFeature(workspace, "removeBranding")
           ? {

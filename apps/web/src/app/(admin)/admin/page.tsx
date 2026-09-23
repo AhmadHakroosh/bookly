@@ -1,7 +1,7 @@
 import { PageSkeleton } from "@/components/page-skeleton";
 import Link from "next/link";
 import { ExternalLink } from "@/components/links";
-import { CheckIcon } from "lucide-react";
+import { CheckIcon, SparklesIcon } from "lucide-react";
 import { Suspense } from "react";
 import { Badge } from "@/components/ui/badge";
 import { SubmitButton } from "@/components/submit-button";
@@ -238,7 +238,13 @@ async function AdminInbox() {
                     {b.meetingUrl ?? locationLabel(b.location)}
                   </p>
                   {b.brief && (
-                    <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">{b.brief}</p>
+                    <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">
+                      <span className="mr-1 inline-flex items-center gap-0.5 rounded border px-1 align-middle text-[10px] leading-4">
+                        <SparklesIcon className="size-2.5" aria-hidden />
+                        AI
+                      </span>
+                      {b.brief}
+                    </p>
                   )}
                 </div>
                 <div className="flex items-center gap-2">
@@ -307,6 +313,12 @@ async function AdminInbox() {
                         <Badge variant="secondary" className="capitalize">
                           {c.stage}
                         </Badge>
+                        {c.emailOptOut && (
+                          <>
+                            {" "}
+                            <Badge variant="outline">No email</Badge>
+                          </>
+                        )}
                       </p>
                     </div>
                     <div className="flex items-center gap-2">

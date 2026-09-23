@@ -42,6 +42,11 @@ export type WorkspaceSettings = {
     connectedAt?: string;
     feePercent?: number | null;
   } | null;
+  /**
+   * Postal address printed in the footer of outreach emails (proposals, payment requests,
+   * follow-ups), which commercial-email law requires alongside the unsubscribe link.
+   */
+  postalAddress?: string;
   /** Auto-capture: transcript retention (days, default 90) and Deepgram language (default auto). */
   capture?: { retentionDays?: number; language?: string };
   /**

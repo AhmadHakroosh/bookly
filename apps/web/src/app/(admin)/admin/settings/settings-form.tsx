@@ -30,6 +30,7 @@ type Values = {
   paymentBody: string;
   checkInSubject: string;
   checkInBody: string;
+  postalAddress: string;
   confirmationSubject: string;
   confirmationBody: string;
   reminderSubject: string;
@@ -276,6 +277,21 @@ export function SettingsForm({
             </div>
           </fieldset>
         </fieldset>
+        <Field>
+          <FieldLabel htmlFor="postalAddress">Postal address</FieldLabel>
+          <Input
+            id="postalAddress"
+            name="postalAddress"
+            defaultValue={workspace.postalAddress}
+            placeholder="Acme Ltd, 1 Example Street, City, Country"
+          />
+          <FieldDescription>
+            Printed in the footer of proposals, payment requests and follow-ups next to the
+            unsubscribe link. Commercial-email law (CAN-SPAM and its equivalents) requires a
+            physical address on those emails, so add one before you send any.
+          </FieldDescription>
+          <FieldError errors={err("postalAddress")} />
+        </Field>
         <fieldset className="space-y-3 rounded-lg border p-4">
           <legend className="px-1 text-base font-semibold tracking-tight">Guest emails</legend>
           <FieldDescription>

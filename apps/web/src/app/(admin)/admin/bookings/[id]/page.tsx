@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { and, eq, schema } from "@bookly/db";
 import { Badge } from "@/components/ui/badge";
+import { AiLabel } from "@/components/ai-label";
 import { SubmitButton } from "@/components/submit-button";
 import { db } from "@/lib/db";
 import { fmtDateTime } from "@/lib/time";
@@ -90,7 +91,10 @@ async function BookingBriefPage({ params }: PageProps<"/admin/bookings/[id]">) {
       </div>
       <section className="rounded-xl border p-5">
         <div className="flex items-center justify-between gap-3">
-          <h2 className="text-base font-semibold tracking-tight">Briefing</h2>
+          <h2 className="flex items-center gap-2 text-base font-semibold tracking-tight">
+            Briefing
+            {assistantConfigured() && <AiLabel />}
+          </h2>
           <form action={regenerateBrief.bind(null, b.id)}>
             <SubmitButton variant="outline">Regenerate</SubmitButton>
           </form>

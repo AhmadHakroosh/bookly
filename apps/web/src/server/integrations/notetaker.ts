@@ -21,6 +21,10 @@ export const NOTETAKER_PROVIDERS = new Set(["zoom", "google_meet", "teams"]);
 
 export const notetakerConfigured = () => !!loadEnv().RECALL_API_KEY;
 
+/** What participants read in the meeting chat when the notetaker joins. */
+export const recordingNotice = () =>
+  `${loadEnv().RECALL_BOT_NAME} is transcribing this call so the host can share notes afterwards. If you would rather not be transcribed, tell the host now and they can end it.`;
+
 /** Whether a location type can be transcribed on this install. */
 export function captureSupportsLocation(type: string | undefined | null): boolean {
   if (type === "daily") return true;
@@ -72,6 +76,12 @@ export async function scheduleNotetaker(input: {
       bot_name: env.RECALL_BOT_NAME,
       ...(scheduled ? { join_at: new Date(joinAtMs).toISOString() } : {}),
       metadata: { bookingId: input.booking.id, workspaceId: input.booking.workspaceId },
+      // Announce the transcription in the meeting chat when the bot joins and to everyone who
+      // joins later, so participants who never saw the booking page are told too.
+      chat: {
+        on_join: { send_to: "everyone", message: recordingNotice() },
+        on_participant_join: { message: recordingNotice(), exclude_host: false },
+      },
       recording_config: {
         transcript: {
           provider: {

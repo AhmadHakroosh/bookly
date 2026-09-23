@@ -5,8 +5,14 @@ import { z } from "zod";
 import { CONTACT_STAGES, type ContactStage } from "@bookly/db/schema";
 import { brandForPreview } from "@/emails/brand";
 import { paymentsReady } from "@/server/payments";
-import { getContact, logContactEvent, setStage, updateContact } from "@/server/contacts";
-import { paymentLink, sendOutreach, renderOutreach } from "@/server/outreach";
+import {
+  getContact,
+  logContactEvent,
+  setEmailOptOut,
+  setStage,
+  updateContact,
+} from "@/server/contacts";
+import { OptedOutError, paymentLink, sendOutreach, renderOutreach } from "@/server/outreach";
 import { fillTemplate, type OutreachKind } from "@/server/outreach-text";
 import { formatPrice } from "@/server/payments";
 import { baseUrl, getProfileByUser } from "@/server/scheduling";
@@ -58,7 +64,10 @@ export async function saveContact(_prev: ContactState, formData: FormData): Prom
   return { ok: true };
 }
 
-export async function sendProposal(id: string, formData: FormData) {
+export async function sendProposal(
+  id: string,
+  formData: FormData,
+): Promise<{ error?: string } | void> {
   const { ws, session } = await ctx();
   const c = await getContact(ws.id, id);
   if (!c) return;
@@ -74,15 +83,23 @@ export async function sendProposal(id: string, formData: FormData) {
     },
   );
   if (!t.subject || !t.body) return;
-  await sendOutreach(ws, c, session.user.id, "proposal", {
-    ...t,
-    followUpDays: Number(formData.get("followUpDays")) || 0,
-  });
+  try {
+    await sendOutreach(ws, c, session.user.id, "proposal", {
+      ...t,
+      followUpDays: Number(formData.get("followUpDays")) || 0,
+    });
+  } catch (e) {
+    if (e instanceof OptedOutError) return { error: e.message };
+    throw e;
+  }
   revalidatePath(`/admin/contacts/${id}`);
 }
 
 /** The follow-up nudge: same flow as a proposal, defaulting to a week until the next check-in. */
-export async function sendFollowUp(id: string, formData: FormData) {
+export async function sendFollowUp(
+  id: string,
+  formData: FormData,
+): Promise<{ error?: string } | void> {
   const { ws, session } = await ctx();
   const c = await getContact(ws.id, id);
   if (!c) return;
@@ -99,15 +116,23 @@ export async function sendFollowUp(id: string, formData: FormData) {
     },
   );
   if (!t.subject || !t.body) return;
-  await sendOutreach(ws, c, session.user.id, "checkIn", {
-    ...t,
-    followUpDays: Number(formData.get("followUpDays")) || 0,
-  });
+  try {
+    await sendOutreach(ws, c, session.user.id, "checkIn", {
+      ...t,
+      followUpDays: Number(formData.get("followUpDays")) || 0,
+    });
+  } catch (e) {
+    if (e instanceof OptedOutError) return { error: e.message };
+    throw e;
+  }
   revalidatePath(`/admin/contacts/${id}`);
   revalidatePath("/admin");
 }
 
-export async function sendPaymentRequest(id: string, formData: FormData) {
+export async function sendPaymentRequest(
+  id: string,
+  formData: FormData,
+): Promise<{ error?: string } | void> {
   const { ws, session } = await ctx();
   const c = await getContact(ws.id, id);
   if (!c) return;
@@ -137,13 +162,18 @@ export async function sendPaymentRequest(id: string, formData: FormData) {
     },
   );
   if (!t.subject || !t.body) return;
-  await sendOutreach(ws, c, session.user.id, "paymentRequest", {
-    ...t,
-    payLink: link ?? undefined,
-    amountCents,
-    currency,
-    followUpDays: Number(formData.get("followUpDays")) || 0,
-  });
+  try {
+    await sendOutreach(ws, c, session.user.id, "paymentRequest", {
+      ...t,
+      payLink: link ?? undefined,
+      amountCents,
+      currency,
+      followUpDays: Number(formData.get("followUpDays")) || 0,
+    });
+  } catch (e) {
+    if (e instanceof OptedOutError) return { error: e.message };
+    throw e;
+  }
   revalidatePath(`/admin/contacts/${id}`);
 }
 
@@ -208,6 +238,7 @@ export async function previewOutreach(
   if (!t.subject || !t.body) return { error: "Subject and message are required." };
   const mail = await renderOutreach(
     ws,
+    c,
     host?.displayName ?? ws.name,
     t.subject,
     t.body,
@@ -222,4 +253,12 @@ export async function previewOutreach(
       ? `The button and link will point to a Stripe Checkout page for ${formatPrice(amountCents, currency)}, created when you send.`
       : undefined,
   };
+}
+
+/** Host-side opt-out (a contact asked in person) or opt-in again (they asked for emails back). */
+export async function setContactEmailOptOut(id: string, optOut: boolean) {
+  const { ws } = await ctx();
+  await setEmailOptOut(ws.id, id, optOut, "host");
+  revalidatePath(`/admin/contacts/${id}`);
+  revalidatePath("/admin");
 }

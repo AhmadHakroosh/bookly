@@ -2,6 +2,7 @@ import Link from "next/link";
 import { CheckIcon, ThermometerIcon } from "lucide-react";
 import type { MeetingRecap } from "@bookly/db/schema";
 import { Badge } from "@/components/ui/badge";
+import { AiLabel } from "@/components/ai-label";
 import { SubmitButton } from "@/components/submit-button";
 import type { Recap } from "@/server/recap-text";
 import {
@@ -47,7 +48,10 @@ export function RecapPanel({
   return (
     <section className="space-y-5 rounded-xl border p-5 text-sm">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <h2 className="text-base font-semibold tracking-tight">Meeting recap</h2>
+        <h2 className="flex items-center gap-2 text-base font-semibold tracking-tight">
+          Meeting recap
+          <AiLabel />
+        </h2>
         <div className="flex items-center gap-2">
           {temp && (
             <Badge variant="outline" className="capitalize">

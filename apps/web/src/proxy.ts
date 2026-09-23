@@ -37,6 +37,7 @@ const MARKETING_PATHS = new Set([
   "security",
   "privacy",
   "terms",
+  "dpa",
   "changelog",
   "og",
 ]);

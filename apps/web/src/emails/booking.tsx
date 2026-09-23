@@ -2,7 +2,7 @@ import type { Booking, EventType, Profile } from "@bookly/db/schema";
 import { Text } from "@react-email/components";
 import { formatPhone } from "@/lib/phone";
 import { fmtDateTime } from "@/lib/time";
-import { captureSupportsLocation } from "@/server/integrations/notetaker";
+import { captureEnabled } from "@/server/transcripts";
 import { locationLabel } from "@/server/scheduling";
 import { fillEmailTemplate, resolveEmailTemplate, type EmailTemplateOverrides } from "./defaults";
 import { styles, type EmailBrand } from "./layout";
@@ -115,11 +115,12 @@ export async function attendeeConfirmation(ctx: BookingMailCtx): Promise<Mail> {
     : resolveEmailTemplate("confirmation", ctx.templates);
   const { subject, body } = fillEmailTemplate(t, vars(ctx, tz));
   const locType = ctx.booking.location.type;
-  const transcribed = ctx.eventType?.autoCapture === "always" && captureSupportsLocation(locType);
+  const transcribed = captureEnabled(ctx.booking, ctx.eventType ?? null);
   const transcribedNote =
-    locType === "daily"
-      ? "This call is transcribed so both sides get notes afterwards."
-      : "A notetaker joins the call to transcribe it, so both sides get notes afterwards.";
+    (locType === "daily"
+      ? "This call is transcribed so both sides get notes afterwards. "
+      : "A notetaker joins the call to transcribe it, so both sides get notes afterwards. ") +
+    "Everyone who joins is told at the start, and you can delete the transcript from your booking page.";
   const { html, text } = await renderEmail(
     <BookingEmail
       brand={ctx.brand}
@@ -318,6 +319,9 @@ export async function letterMail(input: {
   body: string;
   signedBy: string;
   cta?: { href: string; label: string };
+  /** Sender's postal address and unsubscribe link (commercial email from a host). */
+  address?: string;
+  unsubscribeUrl?: string;
 }): Promise<Mail> {
   const { html, text } = await renderEmail(
     <LetterEmail
@@ -327,6 +331,8 @@ export async function letterMail(input: {
       body={input.body}
       cta={input.cta}
       signedBy={input.signedBy}
+      address={input.address}
+      unsubscribeUrl={input.unsubscribeUrl}
     />,
   );
   return { subject: input.subject, text, html };

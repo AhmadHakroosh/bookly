@@ -190,6 +190,7 @@ async function EventPage({ params, searchParams }: PageProps<"/[username]/[event
                   type: l.type,
                   label: locationLabel(l),
                   capture: et.autoCapture === "ask" && captureSupportsLocation(l.type),
+                  captureAlways: et.autoCapture === "always" && captureSupportsLocation(l.type),
                   ask:
                     l.type === "phone"
                       ? "phone"

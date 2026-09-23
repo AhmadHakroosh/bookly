@@ -68,6 +68,8 @@ export const envSchema = z.object({
 
   // ---- Payments (Stripe) ----
   STRIPE_SECRET_KEY: z.string().optional(),
+  /** "on" adds Stripe Tax (automatic tax, VAT-id collection) to plan checkouts; needs Stripe Tax enabled on the account. */
+  STRIPE_TAX: z.enum(["on", "off"]).default("off"),
   STRIPE_WEBHOOK_SECRET: z.string().optional(),
   /** Cloud mode: signing secret of the Connect webhook endpoint (events from hosts' accounts). */
   STRIPE_CONNECT_WEBHOOK_SECRET: z.string().optional(),
@@ -82,6 +84,8 @@ export const envSchema = z.object({
   PLATFORM_ADMIN_EMAILS: z.string().default(""),
   /** Shown on the marketing site's contact, legal and footer (cloud mode). */
   SUPPORT_EMAIL: z.string().optional(),
+  /** Operator's postal address, one line, printed on the legal pages and in platform emails. */
+  OPERATOR_ADDRESS: z.string().max(300).optional(),
   /**
    * Daily update check: the install asks TELEMETRY_URL for the latest version and sends its own
    * version, tenancy and an anonymous install id. "off" disables it entirely. Usage statistics

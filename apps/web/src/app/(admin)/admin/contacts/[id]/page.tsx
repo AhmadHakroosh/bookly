@@ -31,7 +31,7 @@ import { contactBookings, contactTimeline, getContact } from "@/server/contacts"
 import { getProfileByUser } from "@/server/scheduling";
 import { requireStaff } from "@/server/session";
 import { getCurrentWorkspace } from "@/server/workspace";
-import { addNote, changeStage } from "../actions";
+import { addNote, changeStage, setContactEmailOptOut } from "../actions";
 import { templatesFor } from "@/server/outreach";
 import { paymentsReady } from "@/server/payments";
 import { ContactDetailsForm } from "./details-form";
@@ -87,6 +87,23 @@ async function ContactPage({ params, searchParams }: PageProps<"/admin/contacts/
             {c.company ? ` · ${c.company}` : ""}
             {c.phone ? ` · ${c.phone}` : ""}
           </p>
+          <form
+            action={setContactEmailOptOut.bind(null, c.id, !c.emailOptOut)}
+            className="mt-2 flex flex-wrap items-center gap-2 text-xs"
+          >
+            {c.emailOptOut ? (
+              <>
+                <Badge variant="secondary">Unsubscribed from emails</Badge>
+                <SubmitButton variant="ghost" size="sm">
+                  Opt back in
+                </SubmitButton>
+              </>
+            ) : (
+              <SubmitButton variant="ghost" size="sm" className="text-muted-foreground">
+                Opt out of emails
+              </SubmitButton>
+            )}
+          </form>
         </div>
         <form action={changeStage.bind(null, c.id)} className="flex items-center gap-2 text-sm">
           <label htmlFor="stage" className="text-muted-foreground">
@@ -183,6 +200,7 @@ async function ContactPage({ params, searchParams }: PageProps<"/admin/contacts/
             payment={templatesFor(ws).paymentRequest}
             followUp={templatesFor(ws).checkIn}
             initial={(await searchParams).compose === "followup" ? "followUp" : null}
+            optedOut={c.emailOptOut}
             stripe={paymentsReady(ws)}
           />
           <TaskList tasks={tasks} tz={tz} path={`/admin/contacts/${c.id}`} contactId={c.id} />

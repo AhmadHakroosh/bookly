@@ -261,6 +261,42 @@ export async function updateContact(
   refreshWorkspace(workspaceId);
 }
 
+/**
+ * Opt the contact out of (or back into) the host's outreach emails. `by` says who did it: the
+ * contact through an unsubscribe link, or a host on the contact's request. Booking emails
+ * (confirmations, reminders) are unaffected: the contact asked for those by booking.
+ */
+export async function setEmailOptOut(
+  workspaceId: string,
+  id: string,
+  optOut: boolean,
+  by: "contact" | "host",
+) {
+  const [row] = await db()
+    .update(schema.contacts)
+    .set({ emailOptOut: optOut, emailOptOutAt: optOut ? new Date() : null })
+    .where(and(eq(schema.contacts.workspaceId, workspaceId), eq(schema.contacts.id, id)))
+    .returning({ id: schema.contacts.id, was: schema.contacts.emailOptOut });
+  if (!row) return false;
+  await logContactEvent(
+    workspaceId,
+    id,
+    "note",
+    optOut
+      ? by === "contact"
+        ? "Unsubscribed from emails (via the link in an email)"
+        : "Opted out of emails (by the host)"
+      : "Opted back in to emails (by the host)",
+  );
+  refreshWorkspace(workspaceId);
+  return true;
+}
+
+/** Finds a contact by id alone (unsubscribe links carry no workspace). */
+export async function getContactById(id: string): Promise<Contact | null> {
+  return (await db().query.contacts.findFirst({ where: eq(schema.contacts.id, id) })) ?? null;
+}
+
 /** Existing customers (active / won) and anyone tagged `vip` get priority scheduling. */
 export const isPriorityContact = (c: Pick<Contact, "stage" | "tags"> | null | undefined) =>
   !!c &&

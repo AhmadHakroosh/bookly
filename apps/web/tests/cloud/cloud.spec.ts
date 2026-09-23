@@ -28,6 +28,7 @@ test.describe("marketing site", () => {
     ["/security", "Security"],
     ["/privacy", "Privacy policy"],
     ["/terms", "Terms of service"],
+    ["/dpa", "Data processing agreement"],
     ["/changelog", "Changelog"],
   ];
   for (const [path, heading] of pages)

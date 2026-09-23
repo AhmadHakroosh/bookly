@@ -155,6 +155,13 @@
       "when": 1790116160427,
       "tag": "0021_superb_sabra",
       "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1790154417069,
+      "tag": "0022_broken_living_lightning",
+      "breakpoints": true
     }
   ]
 }

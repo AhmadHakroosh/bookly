@@ -47,8 +47,8 @@ export default function AboutPage() {
       </p>
       <h2>Who builds it</h2>
       <p>
-        Bookly is built by {SITE.operator}, an independent software engineer. It is developed in the
-        open on{" "}
+        Bookly is built by {SITE.maker}, an independent software engineer, and operated by{" "}
+        {SITE.operator}. It is developed in the open on{" "}
         <a href={SITE.github} target="_blank" rel="noreferrer">
           GitHub
         </a>

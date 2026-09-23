@@ -20,8 +20,10 @@ custom domains, enabling paid bookings / workflows / team scheduling, the keyed 
 
 ## Billing
 
-Stripe subscriptions, same keys as paid bookings (`STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`),
-plus recurring prices `STRIPE_PRICE_PRO` (per workspace) and `STRIPE_PRICE_TEAM` (per member; the
+Stripe subscriptions, same keys as paid bookings (`STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`).
+`STRIPE_TAX=on` (after enabling Stripe Tax on the account and setting the origin address there)
+makes plan checkouts collect the billing address and VAT id and add sales tax or VAT
+automatically; leave it off until then or checkout fails. Recurring prices are `STRIPE_PRICE_PRO` (per workspace) and `STRIPE_PRICE_TEAM` (per member; the
 quantity follows the member count). Optional `STRIPE_PRICE_PRO_YEARLY` and
 `STRIPE_PRICE_TEAM_YEARLY` add yearly billing (two months free, charged up front): the pricing
 page and Admin → Billing show a monthly/yearly switch, the interval is mirrored onto the workspace
@@ -101,6 +103,21 @@ path on the platform host is a 404. Tenant hosts stay out of search engines.
 - The legal pages are a starting point written for a sole-operator SaaS. Have them reviewed
   before you take paying customers, and update `legalUpdated` in
   `apps/web/src/app/(platform)/platform/site.ts` when you change them.
+
+## Legal pages and compliance
+
+The platform host serves `/terms`, `/privacy`, `/dpa` (the data processing agreement with the
+sub-processor table, incorporated into the terms) and `/security`. The operator is
+`SITE.operator` in `platform/site.ts` (Cloudeo Solutions, LLC) with its address from
+`OPERATOR_ADDRESS`; `SUPPORT_EMAIL` is the contact on every page. What the product does for the
+operator: recording notices and stored consent (`docs/contacts.md` → Auto-capture), unsubscribe
+links and one-click headers on host outreach (→ Proposals), AI-generated labels on briefings and
+recaps, error reports scrubbed of guest emails and phone numbers before they reach Sentry, and
+Stripe Tax on plan checkouts (`STRIPE_TAX`). What stays with the operator: accept each
+sub-processor's DPA, keep the table on `/dpa` current (14 days' notice to workspace owners for
+additions), register for sales tax / VAT where thresholds are crossed, and complete the Google,
+Microsoft and Zoom app reviews (`docs/integrations.md`). The hosted service signs no HIPAA
+business associate agreements; the terms say so.
 
 ## Deploying on Vercel (bookly-app.io)
 

@@ -10,6 +10,7 @@ import { logContactEvent, updateContact, noteToCrm } from "./contacts";
 import { DEFAULT_TEMPLATES, type OutreachKind, type Template } from "./outreach-text";
 import { platformFeeCents, platformFeePercent } from "./connect";
 import { formatPrice, paymentsFor, stripe } from "./payments";
+import { unsubscribePostUrl, unsubscribeUrl } from "./unsubscribe";
 import { baseUrl, getProfileByUser } from "./scheduling";
 
 export function templatesFor(ws: Workspace) {
@@ -24,9 +25,14 @@ export function templatesFor(ws: Workspace) {
   };
 }
 
-/** The exact email a contact receives: used for the preview step and for sending. */
+/**
+ * The exact email a contact receives: used for the preview step and for sending. Outreach is
+ * commercial email, so the footer carries the workspace's postal address and an unsubscribe link
+ * for the contact (CAN-SPAM, and what mailbox providers expect).
+ */
 export function renderOutreach(
   ws: Workspace,
+  c: Pick<Contact, "id">,
   signedBy: string,
   subject: string,
   body: string,
@@ -39,7 +45,16 @@ export function renderOutreach(
     body: body.trim().slice(0, 8000),
     signedBy,
     cta: payLink ? { href: payLink, label: "Pay securely" } : undefined,
+    address: ws.settings.postalAddress?.trim() || undefined,
+    unsubscribeUrl: unsubscribeUrl(c.id),
   });
+}
+
+/** Thrown by `sendOutreach` when the contact has unsubscribed. */
+export class OptedOutError extends Error {
+  constructor() {
+    super("This contact has unsubscribed from your emails.");
+  }
 }
 
 /** A Stripe Checkout link for an arbitrary amount (null when Stripe is not set up). */
@@ -96,6 +111,7 @@ export async function sendOutreach(
     payLink?: string;
   },
 ) {
+  if (c.emailOptOut) throw new OptedOutError();
   const [host, user] = await Promise.all([
     getProfileByUser(ws.id, hostUserId),
     db().query.users.findFirst({
@@ -105,7 +121,15 @@ export async function sendOutreach(
   ]);
   const subject = input.subject.trim().slice(0, 200);
   const body = input.body.trim().slice(0, 8000);
-  const mail = await renderOutreach(ws, host?.displayName ?? ws.name, subject, body, input.payLink);
+  const mail = await renderOutreach(
+    ws,
+    c,
+    host?.displayName ?? ws.name,
+    subject,
+    body,
+    input.payLink,
+  );
+  const unsub = unsubscribePostUrl(c.id);
   await sendEmail({
     to: c.email,
     subject,
@@ -113,6 +137,11 @@ export async function sendOutreach(
     html: mail.html,
     replyTo: user?.email ?? undefined,
     fromName: host?.displayName ?? ws.name,
+    // One-click unsubscribe (RFC 8058): mailbox providers show their own button and POST here.
+    headers: {
+      "List-Unsubscribe": `<${unsub}>`,
+      "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+    },
   });
   const label =
     kind === "proposal"

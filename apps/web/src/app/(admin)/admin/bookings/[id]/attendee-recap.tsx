@@ -54,7 +54,8 @@ export function AttendeeRecap({
         )}
       </div>
       <p className="mt-1 text-xs text-muted-foreground">
-        A neutral summary with decisions and who does what, ready to forward. Untick items you would
+        A neutral summary with decisions and who does what, drafted by the assistant from the
+        transcript. Read it before sending: it goes out under your name. Untick items you would
         rather keep internal.
       </p>
       {open && !sentAt && (

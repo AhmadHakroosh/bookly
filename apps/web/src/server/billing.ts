@@ -69,6 +69,15 @@ export async function startUpgrade(
     subscription_data: { metadata: { workspaceId: ws.id, plan, interval } },
     metadata: { workspaceId: ws.id, plan, interval },
     allow_promotion_codes: true,
+    // Stripe Tax: sales tax / VAT on the subscription, with the customer's address and VAT id
+    // collected at checkout (B2B reverse charge in the EU).
+    ...(loadEnv().STRIPE_TAX === "on"
+      ? {
+          automatic_tax: { enabled: true },
+          tax_id_collection: { enabled: true },
+          customer_update: { address: "auto", name: "auto" },
+        }
+      : {}),
     success_url: `${back}?upgraded=1`,
     cancel_url: back,
   });

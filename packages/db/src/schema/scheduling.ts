@@ -231,6 +231,9 @@ export const contacts = pgTable(
     notes: text("notes"),
     /** When the host wants to be nudged about this person. */
     nextFollowUpAt: timestamp("next_follow_up_at", { withTimezone: true }),
+    /** The contact unsubscribed from the host's outreach emails (proposals, follow-ups). */
+    emailOptOut: boolean("email_opt_out").notNull().default(false),
+    emailOptOutAt: timestamp("email_opt_out_at", { withTimezone: true }),
     lastActivityAt: timestamp("last_activity_at", { withTimezone: true }).notNull().defaultNow(),
     bookingsCount: integer("bookings_count").notNull().default(0),
     ...timestamps,
@@ -352,8 +355,12 @@ export const bookings = pgTable(
     /** Pre-meeting briefing for the host (see server/brief.ts). */
     brief: text("brief"),
     briefAt: timestamp("brief_at", { withTimezone: true }),
-    /** Attendee agreed to transcription (event types with autoCapture = ask). */
+    /**
+     * Attendee agreed to transcription: ticked the box (autoCapture = ask) or booked an event type
+     * that states it is always transcribed. `captureConsentAt` records when.
+     */
     captureConsent: boolean("capture_consent"),
+    captureConsentAt: timestamp("capture_consent_at", { withTimezone: true }),
     /** null | pending | recording | ready | failed | deleted */
     transcriptStatus: text("transcript_status"),
     location: jsonb("location").$type<EventLocation>().notNull().default({ type: "custom" }),

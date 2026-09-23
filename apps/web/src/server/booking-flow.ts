@@ -1,3 +1,4 @@
+import { captureEnabled } from "./transcripts";
 import "server-only";
 import { and, asc, eq, gt, inArray, ne, schema } from "@bookly/db";
 import type { Booking, EventType, Profile, Workspace } from "@bookly/db/schema";
@@ -47,6 +48,7 @@ export type BookingInput = {
   /** Existing customers may use focus blocks and exceed the weekly budget. */
   priority?: boolean;
   /** Attendee's answer to the transcription question (event types with autoCapture = ask). */
+  /** true when the attendee ticked the box, or booked an event type that is always transcribed. */
   captureConsent?: boolean | null;
   /** Where to meet, chosen from the event type's locations (type only). */
   location?: string | null;
@@ -114,7 +116,15 @@ function icsEvent(
     start: b.startAt,
     end: b.endAt,
     summary: `${ctx.eventType?.title ?? "Meeting"}: ${ctx.host.displayName} and ${b.attendeeName}`,
-    description: `${b.meetingUrl ?? locationLabel(b.location)}\n\nManage: ${ctx.baseUrl}/booking/${b.manageToken}`,
+    description: [
+      b.meetingUrl ?? locationLabel(b.location),
+      captureEnabled(b, ctx.eventType ?? null)
+        ? "This call is transcribed so both sides get notes afterwards. Everyone who joins is told at the start."
+        : "",
+      `Manage: ${ctx.baseUrl}/booking/${b.manageToken}`,
+    ]
+      .filter(Boolean)
+      .join("\n\n"),
     location: b.meetingUrl ?? locationLabel(b.location),
     url: `${ctx.baseUrl}/booking/${b.manageToken}`,
     organizer: {
@@ -355,6 +365,11 @@ export async function createBooking(
         seriesIndex: prev?.seriesIndex ?? (seriesId ? i + 1 : null),
         seriesCount: prev?.seriesCount ?? (seriesId ? bookable.length : null),
         captureConsent: input.captureConsent ?? prev?.captureConsent ?? null,
+        captureConsentAt: input.captureConsent
+          ? new Date()
+          : input.captureConsent === false
+            ? null
+            : (prev?.captureConsentAt ?? null),
         location,
         amountCents: needsPayment ? eventType.priceCents : null,
         currency: needsPayment ? (eventType.currency ?? "usd") : null,

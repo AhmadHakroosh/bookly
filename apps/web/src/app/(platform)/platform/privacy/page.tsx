@@ -21,8 +21,9 @@ export default function PrivacyPage() {
       <JsonLd data={breadcrumbLd([["Privacy policy", "/privacy"]])} />
       <h2>Who we are</h2>
       <p>
-        The hosted Bookly service (“Bookly”, “we”) is operated by {SITE.operator}. You can reach us
-        at <a href={`mailto:${SITE.supportEmail}`}>{SITE.supportEmail}</a>. This policy covers the
+        The hosted Bookly service (“Bookly”, “we”) is operated by {SITE.operator}
+        {SITE.operatorAddress ? `, ${SITE.operatorAddress}` : ""}. You can reach us at{" "}
+        <a href={`mailto:${SITE.supportEmail}`}>{SITE.supportEmail}</a>. This policy covers the
         hosted service only. If you self-host Bookly, you are the operator and this policy does not
         apply to your installation.
       </p>
@@ -89,9 +90,12 @@ export default function PrivacyPage() {
         Sub-processors that host or deliver the service: the hosting and database providers, the
         email, SMS and WhatsApp delivery providers, Daily.co for Bookly video and transcription,
         Recall.ai for the notetaker that transcribes Google Meet, Teams and Zoom calls, Stripe for
-        payments, Anthropic for AI features, and Sentry for error reports. Each is bound by a
-        data-processing agreement. The current list is available on request. Data you choose to sync
-        to Google, Microsoft, Zoom, HubSpot or Pipedrive is governed by their policies.
+        payments, Anthropic for AI features, and Sentry for error reports (with guest emails and
+        phone numbers removed before anything is sent). Each is bound by a data-processing
+        agreement; the full list with locations and purposes is in our{" "}
+        <Link href="/dpa">data processing agreement</Link>. Data you choose to sync to Google,
+        Microsoft, Zoom, HubSpot or Pipedrive is governed by their policies. We do not sell personal
+        data and do not share it for advertising.
       </p>
       <h2>How long we keep it</h2>
       <ul>
@@ -113,6 +117,25 @@ export default function PrivacyPage() {
         your supervisory authority. Guests should contact the host first, as the host controls their
         booking data; we will help either way.
       </p>
+      <p>
+        <strong>Recording and transcription.</strong> When a host turns on transcription for a call,
+        you are told on the booking page (or asked to agree there), in the confirmation email and in
+        the call itself. Transcripts are kept for the period the host sets, and you can delete yours
+        from your booking page at any time. Meeting notes and recaps are generated with AI from the
+        transcript and are marked as such wherever they are shown.
+      </p>
+      <p>
+        <strong>Emails from hosts.</strong> Proposals, payment requests and follow-ups from a host
+        carry an unsubscribe link; using it stops those emails from that host. Booking confirmations
+        and reminders are part of the booking you made and continue.
+      </p>
+      <p>
+        <strong>California and other US state laws.</strong> You have the right to know what we hold
+        about you, to delete it, to correct it, and not to be discriminated against for exercising
+        those rights. We do not sell or share personal information as those laws define it, so there
+        is nothing to opt out of. Requests go to{" "}
+        <a href={`mailto:${SITE.supportEmail}`}>{SITE.supportEmail}</a>; we answer within 45 days.
+      </p>
       <h2>Cookies</h2>
       <p>
         We use a session cookie to keep you signed in and a preference cookie for your theme. No
@@ -127,8 +150,9 @@ export default function PrivacyPage() {
       </p>
       <h2>Children</h2>
       <p>
-        The hosted service is not directed at children under 16 and we do not knowingly collect
-        their data.
+        Accounts are for adults (18 or older). Booking pages are not directed at children and we do
+        not knowingly collect data from anyone under 13, or under 16 where local law sets that age;
+        tell us if you believe we have and we will delete it.
       </p>
       <h2>Changes</h2>
       <p>

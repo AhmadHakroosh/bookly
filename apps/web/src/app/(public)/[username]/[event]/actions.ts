@@ -59,7 +59,10 @@ export async function book(_prev: BookState, formData: FormData): Promise<BookSt
       notes: d.notes,
       answers,
       rescheduleToken: d.reschedule || null,
-      captureConsent: et.autoCapture === "ask" ? !!d.captureConsent : null,
+      // "ask": the box on the form. "always": the booking page and the confirmation say so, and
+      // booking is the agreement; the timestamp is kept either way.
+      captureConsent:
+        et.autoCapture === "ask" ? !!d.captureConsent : et.autoCapture === "always" ? true : null,
       location: d.location || null,
       locationValue: d.address || null,
     });

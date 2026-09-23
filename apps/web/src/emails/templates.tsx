@@ -81,6 +81,8 @@ export function LetterEmail({
   body,
   cta,
   signedBy,
+  address,
+  unsubscribeUrl,
 }: {
   brand: EmailBrand;
   preview: string;
@@ -88,6 +90,8 @@ export function LetterEmail({
   body: string;
   cta?: { href: string; label: string };
   signedBy: string;
+  address?: string;
+  unsubscribeUrl?: string;
 }) {
   return (
     <EmailLayout
@@ -95,9 +99,21 @@ export function LetterEmail({
       preview={preview}
       title={title ?? `A note from ${signedBy}`}
       footer={
-        <Text style={styles.muted}>
-          Sent by {signedBy} via {brand.name}. Reply to this email to answer them directly.
-        </Text>
+        <>
+          <Text style={styles.muted}>
+            Sent by {signedBy} via {brand.name}. Reply to this email to answer them directly.
+          </Text>
+          {address && <Text style={{ ...styles.muted, marginTop: "6px" }}>{address}</Text>}
+          {unsubscribeUrl && (
+            <Text style={{ ...styles.muted, marginTop: "6px" }}>
+              Don&apos;t want emails like this from {signedBy}?{" "}
+              <Link href={unsubscribeUrl} style={{ color: "#71717a" }}>
+                Unsubscribe
+              </Link>
+              . Booking confirmations and reminders are not affected.
+            </Text>
+          )}
+        </>
       }
     >
       <Paragraphs text={body} />

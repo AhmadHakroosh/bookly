@@ -48,6 +48,7 @@ async function SettingsPage({ searchParams }: PageProps<"/admin/settings">) {
           paymentBody: workspace.settings.templates?.paymentRequest?.body ?? "",
           checkInSubject: workspace.settings.templates?.checkIn?.subject ?? "",
           checkInBody: workspace.settings.templates?.checkIn?.body ?? "",
+          postalAddress: workspace.settings.postalAddress ?? "",
           confirmationSubject: workspace.settings.templates?.confirmation?.subject ?? "",
           confirmationBody: workspace.settings.templates?.confirmation?.body ?? "",
           reminderSubject: workspace.settings.templates?.reminder?.subject ?? "",

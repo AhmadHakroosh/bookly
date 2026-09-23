@@ -18,13 +18,15 @@ type Props = {
   /** Occurrences this booking reserves (recurring event types). */
   sessions?: number;
   /**
-   * Ways to meet; with more than one the attendee picks. `capture`: consent applies there.
+   * Ways to meet; with more than one the attendee picks. `capture`: the consent box applies
+   * there; `captureAlways`: the call is transcribed and the form says so before booking.
    * `ask`: what the attendee must supply for it (their phone number, or the address to meet at).
    */
   locations: {
     type: string;
     label: string;
     capture: boolean;
+    captureAlways?: boolean;
     ask: "phone" | "address" | null;
     note?: string;
   }[];
@@ -220,6 +222,13 @@ export function BookingForm({
           className="w-full rounded-lg border bg-background px-3 py-2 text-sm"
         />
       </label>
+      {chosen?.captureAlways && (
+        <p className="rounded-lg border bg-muted/40 p-3 text-xs text-muted-foreground" role="note">
+          This call is transcribed so both sides get notes and action items afterwards. Everyone who
+          joins is told at the start, and you can delete the transcript from your booking page at
+          any time. By booking you agree to this.
+        </p>
+      )}
       {askCapture && (
         <label className="flex items-start gap-2 text-sm">
           <input type="checkbox" name="captureConsent" className="mt-1" />
