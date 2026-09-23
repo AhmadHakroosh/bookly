@@ -415,10 +415,15 @@ const eventSchema = z.object({
     .default("usd"),
 });
 
-export async function saveEventType(
-  _prev: { ok?: boolean; error?: string; slug?: string },
-  formData: FormData,
-) {
+export type EventTypeSaveState = {
+  ok?: boolean;
+  error?: string;
+  slug?: string;
+  /** Set when the error is a plan limit: the form offers a link to upgrade. */
+  upgradeTo?: string;
+};
+
+export async function saveEventType(_prev: EventTypeSaveState, formData: FormData) {
   const { ws } = await ctx();
   const parsed = eventSchema.safeParse({
     ...Object.fromEntries(formData),
@@ -461,7 +466,7 @@ export async function saveEventType(
     )
       assertFeature(ws, "workflows");
   } catch (e) {
-    if (e instanceof LimitError) return { error: `${e.message} (Billing)` };
+    if (e instanceof LimitError) return { error: e.message, upgradeTo: e.upgradeTo };
     throw e;
   }
   await db()

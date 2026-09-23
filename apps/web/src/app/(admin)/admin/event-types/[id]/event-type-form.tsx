@@ -8,7 +8,8 @@ import { Field, FieldDescription, FieldGroup, FieldLabel } from "@/components/ui
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import type { EventLocation, EventQuestion, FollowUp, Recurrence } from "@bookly/db/schema";
-import { deleteEventType, saveEventType } from "../../scheduling-actions";
+import { useRouter } from "next/navigation";
+import { deleteEventType, saveEventType, type EventTypeSaveState } from "../../scheduling-actions";
 import { QuestionBuilder } from "./question-builder";
 import { LocationsEditor, type ConferencingReady } from "./locations-editor";
 import { Dropdown } from "@/components/dropdown";
@@ -66,10 +67,7 @@ export function EventTypeForm({
   notetaker?: boolean;
   teammates: { userId: string; name: string }[];
 }) {
-  const [state, action, pending] = useActionState(
-    saveEventType,
-    {} as { ok?: boolean; error?: string; slug?: string },
-  );
+  const [state, action, pending] = useActionState(saveEventType, {} as EventTypeSaveState);
   const [locs, setLocs] = useState<EventLocation[]>(initial.locations);
   const types = locs.map((l) => l.type);
   const captureable = types.some(
@@ -77,10 +75,17 @@ export function EventTypeForm({
   );
   const [assignment, setAssignment] = useState(initial.assignment);
   const [repeats, setRepeats] = useState(!!initial.recurrence.enabled);
+  const router = useRouter();
   useEffect(() => {
     if (state.ok) toast.success("Saved");
+    else if (state.error && state.upgradeTo)
+      // A plan limit: the toast carries the way out.
+      toast.error(state.error, {
+        duration: 8000,
+        action: { label: "Upgrade", onClick: () => router.push("/admin/billing") },
+      });
     else if (state.error) toast.error(state.error);
-  }, [state]);
+  }, [state, router]);
   // Numeric fields in a row: single-line labels so the inputs line up, and the unit as an
   // addon joined to the field, outside the input so it never sits over the spinner arrows.
   const num = (name: keyof Values, label: string, unit: string, hint?: string) => (
