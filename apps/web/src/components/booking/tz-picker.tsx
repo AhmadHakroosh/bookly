@@ -18,7 +18,7 @@ export function TzPicker({ value, zones }: { value: string; zones: string[] }) {
       }}
       className="max-w-full rounded-md border bg-background px-2 py-1 text-xs"
     >
-      {zones.map((z) => (
+      {(zones.includes(value) ? zones : [value, ...zones]).map((z) => (
         <option key={z} value={z}>
           {z.replace(/_/g, " ")}
         </option>

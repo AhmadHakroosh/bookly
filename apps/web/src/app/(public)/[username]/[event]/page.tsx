@@ -8,7 +8,14 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { MonthCalendar } from "@/components/booking/month-calendar";
 import { TzDetect } from "@/components/booking/tz-detect";
 import { TzPicker } from "@/components/booking/tz-picker";
-import { addDays, fmtDateTime, fmtTime, isValidTimezone, timezoneList, todayIn } from "@/lib/time";
+import {
+  addDays,
+  canonicalTimezone,
+  fmtDateTime,
+  fmtTime,
+  timezoneList,
+  todayIn,
+} from "@/lib/time";
 import { planSeries } from "@/server/booking-flow";
 import { describeRecurrence, recurrenceOf } from "@/server/recurrence";
 import {
@@ -51,7 +58,7 @@ async function EventPage({ params, searchParams }: PageProps<"/[username]/[event
 
   const paid = paymentsReady(ws);
   const country = await detectCountry();
-  const tzParam = typeof sp.tz === "string" && isValidTimezone(sp.tz) ? sp.tz : null;
+  const tzParam = typeof sp.tz === "string" ? canonicalTimezone(sp.tz) : null;
   const tz = tzParam ?? profile.timezone;
   const today = todayIn(tz);
   const month =

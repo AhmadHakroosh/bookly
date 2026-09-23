@@ -41,6 +41,19 @@ export function todayIn(tz: string, now = new Date()): string {
   return utcToZoned(now, tz).date;
 }
 
+/**
+ * The canonical IANA name for a zone the runtime accepts ("America/Argentina/Buenos_Aires" →
+ * "America/Buenos_Aires", "Asia/Calcutta" → "Asia/Kolkata"), or null when it is not a zone.
+ * Pickers list canonical names, so aliases from URLs and browsers are mapped before use.
+ */
+export function canonicalTimezone(tz: string): string | null {
+  try {
+    return Intl.DateTimeFormat(undefined, { timeZone: tz }).resolvedOptions().timeZone;
+  } catch {
+    return null;
+  }
+}
+
 export function isValidTimezone(tz: string): boolean {
   try {
     Intl.DateTimeFormat(undefined, { timeZone: tz });

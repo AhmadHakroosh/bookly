@@ -58,3 +58,15 @@ describe("daily webhook probe", () => {
     expect(isProbe("not json")).toBe(false);
   });
 });
+
+describe("canonicalTimezone", () => {
+  it("maps aliases to the canonical IANA name and rejects nonsense", async () => {
+    const { canonicalTimezone } = await import("@/lib/time");
+    expect(canonicalTimezone("America/Argentina/Buenos_Aires")).toBe("America/Buenos_Aires");
+    // Which spelling is canonical depends on the runtime's ICU; it must be one the picker lists.
+    const { timezoneList } = await import("@/lib/time");
+    expect(timezoneList()).toContain(canonicalTimezone("Asia/Calcutta"));
+    expect(canonicalTimezone("Europe/Berlin")).toBe("Europe/Berlin");
+    expect(canonicalTimezone("Mars/Olympus")).toBeNull();
+  });
+});
