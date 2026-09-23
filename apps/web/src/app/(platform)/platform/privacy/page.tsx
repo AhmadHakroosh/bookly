@@ -97,6 +97,25 @@ export default function PrivacyPage() {
         Microsoft, Zoom, HubSpot or Pipedrive is governed by their policies. We do not sell personal
         data and do not share it for advertising.
       </p>
+      <p>
+        <strong>Calendar and conferencing accounts you connect.</strong> When a host connects
+        Google, Microsoft or Zoom, Bookly asks only for the access it needs: to read free/busy time
+        on the calendars the host ticks, to add, update and remove the calendar events and meeting
+        links for bookings, and the account&apos;s email address to label the connection. Bookly
+        stores the access tokens encrypted, keeps a cached view of busy times for one minute, and
+        never reads the contents of other events, contacts or mail. The host can disconnect an
+        account at any time from Admin → Calendars or Conferencing, which deletes the tokens;
+        revoking access at the provider has the same effect. Bookly&apos;s use of information
+        received from Google APIs adheres to the{" "}
+        <a
+          href="https://developers.google.com/terms/api-services-user-data-policy"
+          target="_blank"
+          rel="noreferrer"
+        >
+          Google API Services User Data Policy
+        </a>
+        , including the Limited Use requirements.
+      </p>
       <h2>How long we keep it</h2>
       <ul>
         <li>

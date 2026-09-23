@@ -12,7 +12,24 @@ without keys shows as "Not set up on this server".
 | Daily.co  | **Bookly video** rooms, no account needed by hosts or attendees (cloud: Pro and up) | `DAILY_API_KEY`, `DAILY_DOMAIN`, optional `MEET_URL`                                   |
 | Recall.ai | **Notetaker**: auto-capture on Google Meet, Teams and Zoom calls                    | `RECALL_API_KEY`, `RECALL_REGION`, `RECALL_WEBHOOK_SECRET`, optional `RECALL_BOT_NAME` |
 
-Redirect URI for every OAuth provider: `<APP_URL>/api/integrations/<provider>/callback`.
+Redirect URI for every OAuth provider: `<APP_URL>/api/integrations/<provider>/callback`. In
+cloud mode `APP_URL` is the platform host (`https://bookly-app.io/...`), one URI for every
+workspace: the signed `state` carries the workspace, the callback verifies the user is a member
+of it and sends them back to their own subdomain (the session cookie spans subdomains).
+
+Going public with the hosted service needs each provider's review, done once by the operator:
+
+- **Google**: the Calendar scopes are "sensitive", so the OAuth consent screen must be verified
+  before anyone outside the test users can connect: a privacy policy on the app's verified domain
+  that names the Google API Services User Data Policy (ours does, `/privacy`), the homepage on the
+  same domain, and a short screencast of the consent flow and what Bookly does with the data.
+  Until verified, only listed test users can connect and their tokens expire after 7 days.
+- **Microsoft**: a multi-tenant app shows "unverified publisher" on the consent prompt until the
+  publisher is verified through a Microsoft Partner Center (MPN) account tied to the legal entity.
+  Some tenants block consent to unverified apps outright.
+- **Zoom**: an unpublished app can only be authorised by accounts on its allow list. For any
+  Zoom user to connect, the app must pass Marketplace review (privacy and support URLs, a
+  deauthorization notification URL, the security questionnaire) and be published.
 
 ## How bookings use them
 
