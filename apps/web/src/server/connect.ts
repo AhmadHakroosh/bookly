@@ -1,5 +1,5 @@
 import "server-only";
-import { effectivePlan } from "@bookly/cloud";
+import { effectivePlan, PLANS, type PlanId } from "@bookly/cloud";
 import type Stripe from "stripe";
 import { desc, eq, isNotNull, schema } from "@bookly/db";
 import type { Workspace } from "@bookly/db/schema";
@@ -21,18 +21,34 @@ export const DEFAULT_FEE_PERCENT = 5;
 
 export type ConnectStatus = NonNullable<Workspace["settings"]["payments"]>;
 
-/** The console-wide override, or null when plans use their own rates. */
-export async function platformFeeOverride(): Promise<number | null> {
+/** Console overrides of the per-plan rates; a plan missing here uses `PLANS[plan].feePercent`. */
+export type PlanFees = Partial<Record<PlanId, number>>;
+
+/** The console's per-plan overrides (empty when every plan is on its built-in rate). */
+export async function planFeeOverrides(): Promise<PlanFees> {
   const s = await db().query.platformState.findFirst({
     where: eq(schema.platformState.key, STATE_KEY),
   });
-  const v = s?.value.feePercent;
-  return typeof v === "number" ? clampFee(v) : null;
+  const raw = (s?.value.fees ?? {}) as Record<string, unknown>;
+  const out: PlanFees = {};
+  for (const id of Object.keys(PLANS) as PlanId[]) {
+    const v = raw[id];
+    if (typeof v === "number") out[id] = clampFee(v);
+  }
+  return out;
+}
+
+/** The rate each plan currently pays: the console override where set, else the plan's own. */
+export async function planFees(): Promise<Record<PlanId, number>> {
+  const over = await planFeeOverrides();
+  const out = {} as Record<PlanId, number>;
+  for (const id of Object.keys(PLANS) as PlanId[]) out[id] = over[id] ?? PLANS[id].feePercent;
+  return out;
 }
 
 /**
  * Platform fee, as a percentage of each booking payment: the workspace's own override, else the
- * console-wide override, else the rate of the workspace's plan (Free 5%, Pro 3%, Team 1%; a
+ * rate of the workspace's plan (Free 5%, Pro and Team 0% unless the console changed them; a
  * lapsed plan pays Free's), else the default outside cloud plans.
  */
 export async function platformFeePercent(
@@ -40,19 +56,18 @@ export async function platformFeePercent(
 ): Promise<number> {
   const override = ws?.settings.payments?.feePercent;
   if (typeof override === "number") return clampFee(override);
-  const global = await platformFeeOverride();
-  if (global !== null) return global;
   const plan = ws ? effectivePlan(ws.plan, ws.planStatus) : null;
-  return plan ? plan.feePercent : DEFAULT_FEE_PERCENT;
+  if (!plan) return DEFAULT_FEE_PERCENT;
+  return (await planFees())[plan.id];
 }
 
-/** Sets the console-wide override; null returns every workspace to its plan's rate. */
-export async function setPlatformFeePercent(percent: number | null) {
-  if (percent === null) {
-    await db().delete(schema.platformState).where(eq(schema.platformState.key, STATE_KEY));
-    return;
-  }
-  const value = { feePercent: clampFee(percent) };
+/** Sets a plan's rate from the console; null returns it to the built-in one. */
+export async function setPlanFeePercent(plan: PlanId, percent: number | null) {
+  const current = await planFeeOverrides();
+  const fees: PlanFees = { ...current };
+  if (percent === null) delete fees[plan];
+  else fees[plan] = clampFee(percent);
+  const value = { fees };
   await db()
     .insert(schema.platformState)
     .values({ key: STATE_KEY, value, updatedAt: new Date() })

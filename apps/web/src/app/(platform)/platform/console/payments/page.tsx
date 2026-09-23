@@ -7,10 +7,10 @@ import { ExternalLink } from "@/components/links";
 import { SubmitButton } from "@/components/submit-button";
 import { PageSkeleton } from "@/components/page-skeleton";
 import { billingConfigured, planName } from "@/server/billing";
-import { PLANS } from "@bookly/cloud";
-import { listConnectedWorkspaces, platformFeeOverride } from "@/server/connect";
+import { effectivePlan, PLANS, type PlanId } from "@bookly/cloud";
+import { listConnectedWorkspaces, planFeeOverrides, planFees } from "@/server/connect";
 import { paymentsConfigured } from "@/server/payments";
-import { disconnectWorkspaceStripe, setPlatformFee } from "../actions";
+import { disconnectWorkspaceStripe, setPlatformFees } from "../actions";
 import { NumberField } from "@/components/number-field";
 
 export const metadata = { title: "Payments", robots: { index: false } };
@@ -35,7 +35,11 @@ function Check({ ok, label, detail }: { ok: boolean; label: string; detail: stri
 async function PaymentsPage() {
   await connection();
   const env = loadEnv();
-  const [fee, rows] = await Promise.all([platformFeeOverride(), listConnectedWorkspaces()]);
+  const [fees, rates, rows] = await Promise.all([
+    planFeeOverrides(),
+    planFees(),
+    listConnectedWorkspaces(),
+  ]);
   const ready = rows.filter((w) => w.settings.payments?.chargesEnabled).length;
   return (
     <div className="space-y-8">
@@ -88,29 +92,31 @@ async function PaymentsPage() {
         <h3 className="text-base font-semibold tracking-tight">Platform fee</h3>
         <p className="mt-1 text-sm text-muted-foreground">
           Kept from every booking payment and payment request on a connected account, on top of
-          Stripe&apos;s processing fee. Refunds return it. Each plan has its own rate (
+          Stripe&apos;s processing fee. Refunds return it. One rate per plan; blank means the
+          built-in rate (
           {Object.values(PLANS)
             .map((p) => `${p.name} ${p.feePercent}%`)
             .join(", ")}
-          ); a value here replaces all of them, blank restores them. Override it per workspace on
-          the workspace page.
+          ). A lapsed paid plan pays Free&apos;s rate. Override a single workspace on its page.
         </p>
-        <form action={setPlatformFee} className="mt-3 flex flex-wrap items-center gap-2">
-          <label htmlFor="feePercent" className="text-sm">
-            Fee
-          </label>
-          <NumberField
-            id="feePercent"
-            name="feePercent"
-            min={0}
-            max={50}
-            step={0.5}
-            decimals={1}
-            defaultValue={fee ?? undefined}
-            placeholder="Plan rates"
-            unit="%"
-            className="w-44"
-          />
+        <form action={setPlatformFees} className="mt-3 flex flex-wrap items-end gap-3">
+          {(Object.keys(PLANS) as PlanId[]).map((id) => (
+            <label key={id} className="space-y-1 text-sm">
+              <span className="block">{PLANS[id].name}</span>
+              <NumberField
+                name={`fee_${id}`}
+                min={0}
+                max={50}
+                step={0.5}
+                decimals={1}
+                defaultValue={fees[id]}
+                placeholder={String(PLANS[id].feePercent)}
+                ariaLabel={`${PLANS[id].name} fee percent`}
+                unit="%"
+                className="w-40"
+              />
+            </label>
+          ))}
           <SubmitButton variant="outline">Save</SubmitButton>
         </form>
       </section>
@@ -159,7 +165,9 @@ async function PaymentsPage() {
                     )}
                   </td>
                   <td className="p-3 whitespace-nowrap">
-                    {typeof p?.feePercent === "number" ? `${p.feePercent}% (override)` : `${fee}%`}
+                    {typeof p?.feePercent === "number"
+                      ? `${p.feePercent}% (override)`
+                      : `${rates[effectivePlan(w.plan, w.planStatus)?.id ?? "free"]}%`}
                   </td>
                   <td className="p-3 text-right">
                     <form action={disconnectWorkspaceStripe.bind(null, w.id)}>

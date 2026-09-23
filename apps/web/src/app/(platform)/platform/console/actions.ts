@@ -1,5 +1,7 @@
 "use server";
 
+import { PLANS, type PlanId } from "@bookly/cloud";
+
 import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
@@ -8,7 +10,7 @@ import { eq, schema } from "@bookly/db";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { refreshWorkspace } from "@/server/cache";
-import { disconnectStripe, setPlatformFeePercent, setWorkspaceFeePercent } from "@/server/connect";
+import { disconnectStripe, setPlanFeePercent, setWorkspaceFeePercent } from "@/server/connect";
 import { audit } from "@/server/ops";
 import { isPlatformAdmin, tenantUrl } from "@/server/platform";
 import { getSession } from "@/server/session";
@@ -157,12 +159,16 @@ const percentField = (formData: FormData, name: string) => {
   return Number.isFinite(n) ? n : null;
 };
 
-/** The platform's cut of every booking payment on a connected account. */
-export async function setPlatformFee(formData: FormData) {
+/** The platform's cut of every booking payment, one rate per plan (blank = the built-in rate). */
+export async function setPlatformFees(formData: FormData) {
   const s = await operator();
-  const percent = percentField(formData, "feePercent");
-  await setPlatformFeePercent(percent);
-  await audit(s.user.email, "platform.fee.set", { type: "platform" }, { percent });
+  const fees: Record<string, number | null> = {};
+  for (const id of Object.keys(PLANS) as PlanId[]) {
+    const percent = percentField(formData, `fee_${id}`);
+    await setPlanFeePercent(id, percent);
+    fees[id] = percent;
+  }
+  await audit(s.user.email, "platform.fee.set", { type: "platform" }, { fees });
   back();
 }
 

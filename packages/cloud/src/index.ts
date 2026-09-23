@@ -90,7 +90,7 @@ export const PLANS: Record<PlanId, Plan> = {
     priceMonthly: 19,
     priceYearly: 190,
     minSeats: 1,
-    feePercent: 3,
+    feePercent: 0,
     limits: {
       eventTypes: null,
       members: 1,
@@ -107,16 +107,16 @@ export const PLANS: Record<PlanId, Plan> = {
       removeBranding: true,
     },
     highlights: [
-      "Auto-capture: transcripts, AI recaps, tasks (300 min / month, then 5¢ a minute)",
+      "Auto-capture: transcripts, AI recaps, tasks (5 hours a month, then $3 an hour)",
       "Bookly video, no account needed by anyone",
-      "Paid bookings via Stripe, 3% platform fee",
+      "Paid bookings via Stripe, no platform fee",
       "Custom reminders, follow-ups, SMS and WhatsApp",
       "Unlimited event types",
       "Custom domain, your logo and colour, no Bookly branding",
       "API, webhooks, HubSpot and Pipedrive sync",
     ],
     featured: [
-      "Auto-capture: transcripts, AI recaps, tasks (300 min / month, then 5¢ a minute)",
+      "Auto-capture: transcripts, AI recaps, tasks (5 hours a month, then $3 an hour)",
       "Bookly video, no account needed by anyone",
     ],
   },
@@ -124,10 +124,10 @@ export const PLANS: Record<PlanId, Plan> = {
     id: "team",
     name: "Team",
     tagline: "For teams that share the calendar.",
-    priceMonthly: 16,
-    priceYearly: 160,
+    priceMonthly: 25,
+    priceYearly: 250,
     minSeats: 2,
-    feePercent: 1,
+    feePercent: 0,
     limits: {
       eventTypes: null,
       members: 25,
@@ -135,7 +135,7 @@ export const PLANS: Record<PlanId, Plan> = {
       domains: 3,
       bookingsPerMonth: null,
       apiRequestsPerMinute: 1200,
-      captureMinutesPerMonth: 200,
+      captureMinutesPerMonth: 300,
       captureMinutesPerMember: true,
       booklyVideo: true,
       payments: true,
@@ -146,15 +146,15 @@ export const PLANS: Record<PlanId, Plan> = {
     },
     highlights: [
       "Everything in Pro",
+      "Shared customer memory: every contact, timeline and briefing across the team",
       "Round-robin and collective event types",
-      "Auto-capture: 200 transcribed minutes a month per member, pooled, then 5¢ a minute",
-      "Paid bookings at a 1% platform fee",
+      "Auto-capture: 5 hours a month per member, pooled, then $3 an hour",
       "2 to 25 members, priced per member",
       "3 custom domains",
     ],
     featured: [
+      "Shared customer memory: every contact, timeline and briefing across the team",
       "Round-robin and collective event types",
-      "Auto-capture: 200 transcribed minutes a month per member, pooled, then 5¢ a minute",
     ],
   },
 };
@@ -178,6 +178,15 @@ export const UNLIMITED: Limits = {
 
 /** USD per transcribed minute beyond the plan's included minutes (Stripe metered price). */
 export const CAPTURE_OVERAGE_PER_MINUTE = 0.05;
+/** The same rate as people read it: capture is sold in hours, billed by the minute. */
+export const CAPTURE_OVERAGE_PER_HOUR = CAPTURE_OVERAGE_PER_MINUTE * 60;
+
+/** "5 hours", "1.5 hours", "45 min": minutes as the hours people think in. */
+export function captureHours(minutes: number): string {
+  if (minutes < 60) return `${minutes} min`;
+  const h = Math.round((minutes / 60) * 10) / 10;
+  return `${h % 1 === 0 ? h : h.toFixed(1)} ${h === 1 ? "hour" : "hours"}`;
+}
 
 /**
  * Minutes to bill for a transcript that took the month from `usedBefore` to `usedAfter`

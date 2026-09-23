@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
 import {
+  CAPTURE_OVERAGE_PER_HOUR,
   CAPTURE_OVERAGE_PER_MINUTE,
   captureBudget,
+  captureHours,
   captureOverageDelta,
   effectivePlan,
   limitsFor,
@@ -20,11 +22,11 @@ describe("plans", () => {
   it("prices, seats and fees", () => {
     expect([PLANS.pro.priceMonthly, PLANS.pro.priceYearly]).toEqual([19, 190]);
     expect([PLANS.team.priceMonthly, PLANS.team.priceYearly, PLANS.team.minSeats]).toEqual([
-      16, 160, 2,
+      25, 250, 2,
     ]);
     expect(monthsFreeYearly(PLANS.pro)).toBe(2);
     expect(monthsFreeYearly(PLANS.team)).toBe(2);
-    expect([PLANS.free.feePercent, PLANS.pro.feePercent, PLANS.team.feePercent]).toEqual([5, 3, 1]);
+    expect([PLANS.free.feePercent, PLANS.pro.feePercent, PLANS.team.feePercent]).toEqual([5, 0, 0]);
   });
   it("gates Bookly video behind Pro and drops it for a lapsed plan", () => {
     expect(PLANS.free.limits.booklyVideo).toBe(false);
@@ -34,10 +36,10 @@ describe("plans", () => {
     expect(effectivePlan("team", "unpaid")?.feePercent).toBe(5);
     expect(effectivePlan("self-hosted")).toBeNull();
   });
-  it("pools 200 minutes per billed Team seat and 300 flat on Pro", () => {
+  it("pools 300 minutes per billed Team seat and 300 flat on Pro", () => {
     expect(captureBudget(PLANS.pro, 1)).toBe(300);
-    expect(captureBudget(PLANS.team, 1)).toBe(400);
-    expect(captureBudget(PLANS.team, 4)).toBe(800);
+    expect(captureBudget(PLANS.team, 1)).toBe(600);
+    expect(captureBudget(PLANS.team, 4)).toBe(1200);
     expect(captureBudget(PLANS.free, 1)).toBe(0);
   });
   it("bills only the minutes past the budget", () => {
@@ -46,6 +48,11 @@ describe("plans", () => {
     expect(captureOverageDelta(290, 320, 300)).toBe(20);
     expect(captureOverageDelta(320, 350, 300)).toBe(30);
     expect(captureOverageDelta(0, 30, null)).toBe(0);
+    expect(CAPTURE_OVERAGE_PER_HOUR).toBe(3);
+    expect(captureHours(300)).toBe("5 hours");
+    expect(captureHours(90)).toBe("1.5 hours");
+    expect(captureHours(60)).toBe("1 hour");
+    expect(captureHours(45)).toBe("45 min");
   });
 });
 

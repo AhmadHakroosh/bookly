@@ -244,7 +244,7 @@ export async function usageSummary(ws: Workspace) {
     {
       key: "captureMinutesPerMonth",
       label: limits.captureMinutesPerMember
-        ? "transcribed minutes this month (pooled, per member)"
+        ? "transcribed minutes this month (pooled across the team)"
         : "transcribed minutes this month",
       used: await captureMinutesThisMonth(ws),
       max: isPlanId(ws.plan)

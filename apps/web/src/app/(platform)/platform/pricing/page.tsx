@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { CheckIcon, MinusIcon } from "lucide-react";
-import { CAPTURE_OVERAGE_PER_MINUTE, PLANS, type Plan } from "@bookly/cloud";
+import { CAPTURE_OVERAGE_PER_HOUR, captureHours, PLANS, type Plan } from "@bookly/cloud";
 import { Button } from "@/components/ui/button";
 import { breadcrumbLd, faqLd, JsonLd } from "../json-ld";
 import { PlanGrid } from "../plan-card";
@@ -10,7 +10,7 @@ import { pageMetadata, SITE } from "../site";
 export const metadata: Metadata = pageMetadata({
   title: "Pricing",
   description:
-    "Bookly plans: Free with contacts, briefings and the Meeting Inbox; Pro at $19/month or $190/year adds Bookly video, auto-capture, paid bookings, a custom domain; Team at $16 a member, two months free yearly.",
+    "Bookly plans: Free with contacts, briefings and the Meeting Inbox; Pro at $19/month or $190/year adds Bookly video, auto-capture, paid bookings with no platform fee, a custom domain; Team at $25 a member shares the customer memory, two months free yearly.",
   path: "/pricing",
 });
 
@@ -27,23 +27,29 @@ const ROWS: [string, (p: Plan) => string | boolean][] = [
   ["Bookly video (no account needed)", ({ limits: l }) => l.booklyVideo],
   ["Email confirmations and reminders", () => true],
   ["Contacts, timeline and Meeting Inbox", () => true],
+  [
+    "Customer memory",
+    ({ limits: l }) => (l.members !== null && l.members > 1 ? "Shared across the team" : "Yours"),
+  ],
   ["Pre-meeting briefings", () => true],
   ["Group sessions, series, waitlists, routing", () => true],
   ["Paid bookings via Stripe", ({ limits: l }) => l.payments],
-  ["Platform fee on paid bookings", (p) => (p.limits.payments ? `${p.feePercent}%` : false)],
+  [
+    "Platform fee on paid bookings",
+    (p) => (p.limits.payments ? (p.feePercent ? `${p.feePercent}%` : "None") : false),
+  ],
   ["Custom reminders, SMS and WhatsApp", ({ limits: l }) => l.workflows],
   ["Round-robin and collective events", ({ limits: l }) => l.teamScheduling],
   [
-    "Auto-capture transcription minutes / month",
+    "Auto-capture: meeting hours included / month",
     ({ limits: l }) =>
       l.captureMinutesPerMonth
-        ? `${fmt(l.captureMinutesPerMonth)}${l.captureMinutesPerMember ? " per member, pooled" : ""}`
+        ? `${captureHours(l.captureMinutesPerMonth)}${l.captureMinutesPerMember ? " per member, pooled" : ""}`
         : false,
   ],
   [
-    "Extra transcription minutes",
-    ({ limits: l }) =>
-      l.captureMinutesPerMonth ? `${CAPTURE_OVERAGE_PER_MINUTE * 100}¢ a minute` : false,
+    "Extra meeting hours",
+    ({ limits: l }) => (l.captureMinutesPerMonth ? `$${CAPTURE_OVERAGE_PER_HOUR} an hour` : false),
   ],
   [
     "AI recap, tasks and follow-up drafts",
@@ -62,19 +68,19 @@ const FAQ: [string, string][] = [
   ],
   [
     "What counts as a member?",
-    "A member is a person who signs in to your workspace and has their own calendar and booking pages. Team is billed per member with a minimum of two seats, and seats are added or credited as people join or leave. Guests who book with you are never charged for.",
+    "A member is a person who signs in to your workspace and has their own calendar and booking pages. Team is billed per member with a minimum of two seats, and seats are added or credited as people join or leave. Every member sees the same contacts, timelines and briefings, so whoever takes the next call knows the whole history. Guests who book with you are never charged for.",
   ],
   [
     "What are transcription minutes?",
-    "Auto-capture transcribes calls on Bookly video, Google Meet, Zoom and Teams; on the external providers a Bookly notetaker joins the call. Pro includes 300 transcribed minutes a month; Team includes 200 per member, pooled, so a team of four shares 800. Past that, transcription continues at 5 cents a minute on your next invoice, or you can tell Bookly to stop at the included minutes from the billing page.",
+    "Auto-capture transcribes calls on Bookly video, Google Meet, Zoom and Teams; on the external providers a Bookly notetaker joins the call. Pro includes 5 meeting hours a month; Team includes 5 hours per member, pooled, so a team of four shares 20. Past that, transcription continues at $3 an hour, billed by the minute on your next invoice, or you can tell Bookly to stop at the included hours from the billing page.",
   ],
   [
     "Monthly or yearly?",
-    "Both. Yearly is charged up front and works out to two months free ($190 a year for Pro, $160 a member for Team). Yearly plans renew each year; cancelling stops the renewal and the plan stays active until the year ends. Partial years are not refunded unless the law requires it.",
+    "Both. Yearly is charged up front and works out to two months free ($190 a year for Pro, $250 a member for Team). Yearly plans renew each year; cancelling stops the renewal and the plan stays active until the year ends. Partial years are not refunded unless the law requires it.",
   ],
   [
     "What does a paid booking cost me?",
-    "Guests pay into your own Stripe account, which you connect from Settings. Bookly keeps a platform fee of each payment, 5% on Free, 3% on Pro and 1% on Team, taken automatically before Stripe pays you out; Stripe's processing fee applies on top. Refund a booking and the fee comes back with it. Self-hosted installs pay no fee.",
+    "Guests pay into your own Stripe account, which you connect from Settings. On Pro and Team you keep everything except Stripe's processing fee: Bookly takes no platform fee. On Free, Bookly keeps 5% of each payment, taken automatically before Stripe pays you out, and refunds return it. Self-hosted installs pay no fee either.",
   ],
   [
     "Can I self-host instead?",

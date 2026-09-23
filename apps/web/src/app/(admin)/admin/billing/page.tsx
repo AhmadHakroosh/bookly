@@ -1,6 +1,12 @@
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
-import { CAPTURE_OVERAGE_PER_MINUTE, PLANS, isPlanId } from "@bookly/cloud";
+import {
+  CAPTURE_OVERAGE_PER_HOUR,
+  CAPTURE_OVERAGE_PER_MINUTE,
+  captureHours,
+  PLANS,
+  isPlanId,
+} from "@bookly/cloud";
 import { SubmitButton } from "@/components/submit-button";
 import { billingConfigured, overageConfigured, planName, yearlyConfigured } from "@/server/billing";
 import { overageAllowed, usageSummary, workspaceLimits } from "@/server/limits";
@@ -78,20 +84,20 @@ async function BillingPage({ searchParams }: PageProps<"/admin/billing">) {
                   className="mt-1"
                 />
                 <span>
-                  Keep transcribing past the included minutes at $
-                  {CAPTURE_OVERAGE_PER_MINUTE.toFixed(2)} a minute, on your next invoice.
+                  Keep transcribing past the included hours at ${CAPTURE_OVERAGE_PER_HOUR} an hour,
+                  billed by the minute on your next invoice.
                   <span className="block text-xs text-muted-foreground">
                     {overageOn
                       ? overMinutes > 0
-                        ? `${overMinutes} extra minutes so far this month, about $${(overMinutes * CAPTURE_OVERAGE_PER_MINUTE).toFixed(2)}.`
+                        ? `${captureHours(overMinutes)} extra so far this month, about $${(overMinutes * CAPTURE_OVERAGE_PER_MINUTE).toFixed(2)}.`
                         : "Nothing extra so far this month."
-                      : "Off: transcription stops for the month once the included minutes are used up."}
+                      : "Off: transcription stops for the month once the included hours are used up."}
                   </span>
                 </span>
               </label>
               {canManage && (
                 <SubmitButton variant="outline" size="sm" className="mt-2">
-                  {overageOn ? "Stop at the included minutes" : "Turn on"}
+                  {overageOn ? "Stop at the included hours" : "Turn on"}
                 </SubmitButton>
               )}
             </form>
