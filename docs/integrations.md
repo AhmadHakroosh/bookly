@@ -84,11 +84,22 @@ Busy time from connected calendars is cached for 60 seconds. When `APP_URL` is a
 
 ## Zoom
 
-1. Zoom App Marketplace → Develop → Build App → **OAuth** (user-managed).
-2. Redirect URL and allow list: `https://<your-host>/api/integrations/zoom/callback`.
-3. Scopes: `meeting:write`, `meeting:read`, `user:read` (granular: `meeting:write:meeting`,
-   `meeting:delete:meeting`, `user:read:user`).
-4. Set `ZOOM_CLIENT_ID` / `ZOOM_CLIENT_SECRET`.
+1. Zoom App Marketplace → Develop → Build App → **General App**, user-managed.
+2. OAuth redirect URL (strict mode) and allow list: `https://<your-host>/api/integrations/zoom/callback`.
+3. Scopes: `meeting:write:meeting`, `meeting:read:meeting`, `meeting:delete:meeting`,
+   `user:read:user`. No product surface, no embed, no in-client features.
+4. Set `ZOOM_CLIENT_ID` / `ZOOM_CLIENT_SECRET`. A General App has development credentials
+   (usable at once by your own Zoom account) and production credentials (active after
+   publication); swap them when the app is published.
+5. Features → Access: copy the **Secret Token** into `ZOOM_WEBHOOK_SECRET`, turn on
+   **Event Subscription**, add `https://<your-host>/api/webhooks/zoom` and subscribe to
+   `app_deauthorized` only. Zoom validates the URL when you save (the route answers the
+   challenge). When a user removes Bookly from their Zoom account, the route deletes their
+   connection and tokens at once; Zoom requires that within ten days of the event.
+
+Until the app is published only Zoom users on its allow list can authorise it. Publishing needs
+the Marketplace review: listing texts, privacy/terms/support URLs, a short demo video, the
+deauthorization endpoint above and the security questionnaire.
 
 ## Daily.co (Bookly video)
 

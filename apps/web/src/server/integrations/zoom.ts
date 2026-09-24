@@ -1,6 +1,37 @@
+import { createHmac, timingSafeEqual } from "node:crypto";
 import { api, type ConferencingDriver, type MeetingSpec } from "./types";
 
 const BASE = "https://api.zoom.us/v2";
+
+/* ---------------- event notifications (deauthorization) ---------------- */
+
+const hmacHex = (secret: string, message: string) =>
+  createHmac("sha256", secret).update(message).digest("hex");
+
+/**
+ * Zoom signs every event notification: `x-zm-signature` is `v0=` + HMAC-SHA256 of
+ * `v0:<x-zm-request-timestamp>:<body>` with the app's Secret Token. Requests older than five
+ * minutes are refused.
+ */
+export function verifyZoomSignature(
+  secret: string,
+  headers: { timestamp: string | null; signature: string | null },
+  body: string,
+  now = Date.now(),
+): boolean {
+  if (!headers.timestamp || !headers.signature) return false;
+  const ts = Number(headers.timestamp);
+  if (!Number.isFinite(ts) || Math.abs(now / 1000 - ts) > 300) return false;
+  const expected = `v0=${hmacHex(secret, `v0:${headers.timestamp}:${body}`)}`;
+  const a = Buffer.from(expected);
+  const b = Buffer.from(headers.signature);
+  return a.length === b.length && timingSafeEqual(a, b);
+}
+
+/** Zoom validates a new endpoint by sending a plainToken; the answer is its HMAC with the secret. */
+export function zoomChallenge(secret: string, plainToken: string) {
+  return { plainToken, encryptedToken: hmacHex(secret, plainToken) };
+}
 
 export async function zoomAccount(token: string) {
   const me = await api<{ email?: string; id?: string }>(`${BASE}/users/me`, { token });

@@ -35,6 +35,8 @@ export const envSchema = z.object({
   MICROSOFT_TENANT: z.string().default("common"),
   ZOOM_CLIENT_ID: z.string().optional(),
   ZOOM_CLIENT_SECRET: z.string().optional(),
+  /** Zoom app "Secret Token" (Features → Access): verifies deauthorization notifications. */
+  ZOOM_WEBHOOK_SECRET: z.string().optional(),
   /** Daily.co (Bookly video). DAILY_DOMAIN is your Daily subdomain, e.g. "acme.daily.co". */
   DAILY_API_KEY: z.string().optional(),
   DAILY_DOMAIN: z.string().optional(),
