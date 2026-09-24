@@ -6,6 +6,8 @@ import { marked } from "marked";
 /**
  * The repository's `docs/*.md` served in-app at /docs, so every install ships its own manual.
  * Files are read from the repo root in development and from the image's `docs/` in Docker.
+ * The reads are marked `turbopackIgnore` so the bundler does not trace the whole repository
+ * into the server output; `next.config.ts` lists `docs/**` in `outputFileTracingIncludes` instead.
  */
 export type DocPage = { slug: string; title: string; description: string };
 export type Heading = { id: string; text: string; level: 2 | 3 };
@@ -31,7 +33,7 @@ export const DOCS_REPO_URL = "https://github.com/AhmadHakroosh/bookly/blob/main/
 async function docsDir(): Promise<string | null> {
   for (const c of [path.join(process.cwd(), "docs"), path.join(process.cwd(), "../../docs")]) {
     try {
-      if ((await stat(c)).isDirectory()) return c;
+      if ((await stat(/*turbopackIgnore: true*/ c)).isDirectory()) return c;
     } catch {
       /* try next */
     }
@@ -61,11 +63,14 @@ export const slugify = (text: string) =>
 export async function listDocs(): Promise<DocPage[]> {
   const dir = await docsDir();
   if (!dir) return [];
-  const files = (await readdir(dir)).filter((f) => f.endsWith(".md"));
+  const files = (await readdir(/*turbopackIgnore: true*/ dir)).filter((f) => f.endsWith(".md"));
   const pages = await Promise.all(
     files.map(async (f) => {
       const slug = f.replace(/\.md$/, "");
-      const md = await readFile(path.join(dir, f), "utf8");
+      const md = await readFile(
+        /*turbopackIgnore: true*/ path.join(/*turbopackIgnore: true*/ dir, f),
+        "utf8",
+      );
       return { slug, title: titleOf(md, slug), description: descriptionOf(md) };
     }),
   );
@@ -101,7 +106,10 @@ export async function renderDoc(slug: string): Promise<{
   if (!dir) return null;
   let md: string;
   try {
-    md = await readFile(path.join(dir, `${slug}.md`), "utf8");
+    md = await readFile(
+      /*turbopackIgnore: true*/ path.join(/*turbopackIgnore: true*/ dir, `${slug}.md`),
+      "utf8",
+    );
   } catch {
     return null;
   }
