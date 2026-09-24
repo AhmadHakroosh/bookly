@@ -85,14 +85,15 @@ export async function seedDemo() {
       .values({ organizationId: orgId, slug: "demo", name: "Demo Workspace", plan })
       .returning();
     ws = w!;
+    // Cloud: the tenant lives on its subdomain, like a signed-up workspace; the platform host is
+    // never a workspace domain. Self-host: the install's own host.
+    const host =
+      env.TENANCY === "multi" && env.ROOT_DOMAIN
+        ? `demo.${env.ROOT_DOMAIN}`.toLowerCase()
+        : new URL(env.APP_URL).host.toLowerCase();
     await db()
       .insert(schema.workspaceDomains)
-      .values({
-        workspaceId: ws.id,
-        host: new URL(env.APP_URL).host.toLowerCase(),
-        isPrimary: true,
-        verifiedAt: new Date(),
-      });
+      .values({ workspaceId: ws.id, host, isPrimary: true, verifiedAt: new Date() });
   }
   const member = await db().query.members.findFirst({
     where: and(

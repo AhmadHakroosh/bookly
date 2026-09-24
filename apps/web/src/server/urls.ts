@@ -39,7 +39,8 @@ export function invalidatePrimaryDomainCache() {
  */
 export function publicOrigin(ws: Pick<Ws, "slug">, primary: string | null): string {
   const env = loadEnv();
-  if (isCloud() && env.ROOT_DOMAIN && primary) {
+  const platformHost = new URL(env.APP_URL).host.toLowerCase();
+  if (isCloud() && env.ROOT_DOMAIN && primary && primary !== platformHost) {
     const proto = env.APP_URL.startsWith("https") ? "https" : "http";
     return `${proto}://${primary}`;
   }

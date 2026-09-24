@@ -56,7 +56,10 @@ export async function resolveWorkspaceByHost(
         ),
         columns: { host: true },
       });
-      value = { workspaceId, primaryHost: primary?.host ?? null };
+      // The platform host is never a workspace's address, whatever an old row says.
+      const platformHost = new URL(env.APP_URL).host.toLowerCase();
+      const primaryHost = primary?.host && primary.host !== platformHost ? primary.host : null;
+      value = { workspaceId, primaryHost };
     }
   }
   cache.set(key, { value, at: Date.now() });

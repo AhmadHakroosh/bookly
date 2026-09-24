@@ -30,6 +30,8 @@ describe("workspace URLs", () => {
     });
     expect(publicOrigin(ws, null)).toBe("https://acme.bookly.test");
     expect(publicOrigin(ws, "book.example.com")).toBe("https://book.example.com");
+    // A stale row naming the platform host never becomes a workspace address.
+    expect(publicOrigin(ws, "bookly.test")).toBe("https://acme.bookly.test");
   });
   it("cloud: the admin stays on the slug host, where the session cookie is valid", async () => {
     const { adminBaseUrl } = await load({
