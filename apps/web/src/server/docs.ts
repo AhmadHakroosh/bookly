@@ -15,6 +15,7 @@ const ORDER = [
   "scheduling",
   "contacts",
   "integrations",
+  "zoom",
   "payments",
   "notifications",
   "teams",
