@@ -1,4 +1,5 @@
 import "server-only";
+import { adminBaseUrl } from "./urls";
 import { anthropic } from "@ai-sdk/anthropic";
 import { generateText } from "ai";
 import { and, asc, eq, isNull, lte, schema, sql } from "@bookly/db";
@@ -230,7 +231,7 @@ export async function nudgeOverdueTasks(now = new Date()): Promise<number> {
     const profile = ws ? await getProfileByUser(ws.id, userId) : null;
     const tz = profile?.timezone ?? ws?.timezone ?? "UTC";
     const lines = list.map((t) => `• ${t.title}${t.dueAt ? ` (due ${fmtDate(t.dueAt, tz)})` : ""}`);
-    const text = `${list.length} task${list.length === 1 ? " is" : "s are"} overdue:\n\n${lines.join("\n")}\n\n${baseUrl()}/admin`;
+    const text = `${list.length} task${list.length === 1 ? " is" : "s are"} overdue:\n\n${lines.join("\n")}\n\n${ws ? adminBaseUrl(ws) : baseUrl()}/admin`;
     await notifyHost(userId, "reminder1h", {
       subject: `${list.length} overdue task${list.length === 1 ? "" : "s"}`,
       text,

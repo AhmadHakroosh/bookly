@@ -3,11 +3,11 @@ import { senderFor } from "@bookly/email";
 
 describe("senderFor", () => {
   it("puts the person's name in front of the platform name at the platform address", () => {
-    expect(senderFor("Ahmad Hakroosh", "Bookly <noreply@bookly.app>")).toBe(
-      '"Ahmad Hakroosh via Bookly" <noreply@bookly.app>',
+    expect(senderFor("Ahmad Hakroosh", "Bookly <noreply@bookly-app.io>")).toBe(
+      '"Ahmad Hakroosh via Bookly" <noreply@bookly-app.io>',
     );
-    expect(senderFor("Ahmad Hakroosh", "noreply@bookly.app")).toBe(
-      '"Ahmad Hakroosh via Bookly" <noreply@bookly.app>',
+    expect(senderFor("Ahmad Hakroosh", "noreply@bookly-app.io")).toBe(
+      '"Ahmad Hakroosh via Bookly" <noreply@bookly-app.io>',
     );
     expect(senderFor("Ahmad", '"Acme Scheduling" <hello@acme.example>')).toBe(
       '"Ahmad via Acme Scheduling" <hello@acme.example>',

@@ -1,5 +1,6 @@
 "use server";
 
+import { publicBaseUrl } from "@/server/urls";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { CONTACT_STAGES, type ContactStage } from "@bookly/db/schema";
@@ -112,7 +113,7 @@ export async function sendFollowUp(
       host: host?.displayName ?? ws.name,
       amount: "",
       payLink: "",
-      bookingUrl: host ? `${baseUrl()}/${host.username}` : baseUrl(),
+      bookingUrl: host ? `${await publicBaseUrl(ws)}/${host.username}` : await publicBaseUrl(ws),
     },
   );
   if (!t.subject || !t.body) return;
@@ -232,7 +233,7 @@ export async function previewOutreach(
       host: host?.displayName ?? ws.name,
       amount: kind === "paymentRequest" ? formatPrice(amountCents, currency) : "",
       payLink: willLink ? "https://checkout.stripe.com/…" : "",
-      bookingUrl: host ? `${baseUrl()}/${host.username}` : baseUrl(),
+      bookingUrl: host ? `${await publicBaseUrl(ws)}/${host.username}` : await publicBaseUrl(ws),
     },
   );
   if (!t.subject || !t.body) return { error: "Subject and message are required." };

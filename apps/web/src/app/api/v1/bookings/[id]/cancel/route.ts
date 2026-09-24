@@ -1,4 +1,5 @@
 import { apiContext, apiError, json, options, readJson, serializeBooking } from "@/server/api";
+import { publicBaseUrl } from "@/server/urls";
 import { cancelBooking } from "@/server/booking-flow";
 
 export const OPTIONS = options;
@@ -14,5 +15,5 @@ export async function POST(req: Request, ctx: RouteContext<"/api/v1/bookings/[id
   const reason = typeof body.reason === "string" ? body.reason.slice(0, 500) : null;
   const b = await cancelBooking(api.workspace, id, by, reason);
   if (!b) return apiError("Booking not found", 404, "not_found");
-  return json(serializeBooking(b));
+  return json(serializeBooking(b, await publicBaseUrl(api.workspace)));
 }

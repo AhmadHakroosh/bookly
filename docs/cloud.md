@@ -2,7 +2,7 @@
 
 Set `TENANCY=multi`. Then:
 
-- **Platform host** = the host of `APP_URL` (e.g. `bookly.app`). It serves the landing page,
+- **Platform host** = the host of `APP_URL` (e.g. `bookly-app.io`). It serves the landing page,
   `/pricing`, `/signup`, `/workspaces` (a signed-in user's workspaces), `/login` and the operator
   console at `/console`.
 - **Tenants** live at `<slug>.<ROOT_DOMAIN>` and on verified custom domains. Sign-up creates the

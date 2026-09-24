@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { and, eq, schema } from "@bookly/db";
 import { db } from "@/lib/db";
 import { normalizeHost, verifyDomain } from "@/server/domains";
+import { invalidatePrimaryDomainCache } from "@/server/urls";
 import { assertWithinLimit, LimitError } from "@/server/limits";
 import { requireStaff } from "@/server/session";
 import { getCurrentWorkspace } from "@/server/workspace";
@@ -20,7 +21,7 @@ export type DomainState = { error?: string; ok?: boolean };
 export async function addDomain(_prev: DomainState, formData: FormData): Promise<DomainState> {
   const workspace = await ctx();
   const host = normalizeHost(String(formData.get("host") ?? ""));
-  if (!host) return { error: "Enter a valid hostname, e.g. blog.example.com" };
+  if (!host) return { error: "Enter a valid hostname, e.g. book.example.com" };
   try {
     await assertWithinLimit(workspace, "domains");
   } catch (e) {
@@ -54,6 +55,7 @@ export async function checkDomain(id: string) {
   const workspace = await ctx();
   await verifyDomain(workspace.id, id);
   invalidateHostCache();
+  invalidatePrimaryDomainCache();
   revalidatePath("/admin/domains");
 }
 
@@ -74,6 +76,8 @@ export async function makePrimary(id: string) {
         ),
       );
   });
+  invalidateHostCache();
+  invalidatePrimaryDomainCache();
   revalidatePath("/admin/domains");
 }
 
@@ -88,5 +92,6 @@ export async function removeDomain(id: string) {
   if (!row || row.isPrimary) return;
   await db().delete(schema.workspaceDomains).where(eq(schema.workspaceDomains.id, id));
   invalidateHostCache();
+  invalidatePrimaryDomainCache();
   revalidatePath("/admin/domains");
 }

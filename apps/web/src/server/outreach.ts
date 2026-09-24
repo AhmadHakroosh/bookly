@@ -1,4 +1,5 @@
 import "server-only";
+import { publicBaseUrl } from "./urls";
 import { eq, schema } from "@bookly/db";
 import type { Contact, Workspace } from "@bookly/db/schema";
 import { sendEmail } from "@bookly/email";
@@ -30,7 +31,7 @@ export function templatesFor(ws: Workspace) {
  * commercial email, so the footer carries the workspace's postal address and an unsubscribe link
  * for the contact (CAN-SPAM, and what mailbox providers expect).
  */
-export function renderOutreach(
+export async function renderOutreach(
   ws: Workspace,
   c: Pick<Contact, "id">,
   signedBy: string,
@@ -46,7 +47,7 @@ export function renderOutreach(
     signedBy,
     cta: payLink ? { href: payLink, label: "Pay securely" } : undefined,
     address: ws.settings.postalAddress?.trim() || undefined,
-    unsubscribeUrl: unsubscribeUrl(c.id),
+    unsubscribeUrl: unsubscribeUrl(await publicBaseUrl(ws), c.id),
   });
 }
 
@@ -84,8 +85,8 @@ export async function paymentLink(
       ],
       metadata: { contactId: c.id, workspaceId: ws.id, kind: "payment_request" },
       ...(fee > 0 ? { payment_intent_data: { application_fee_amount: fee } } : {}),
-      success_url: `${baseUrl()}/?paid=1`,
-      cancel_url: baseUrl(),
+      success_url: `${await publicBaseUrl(ws)}/?paid=1`,
+      cancel_url: await publicBaseUrl(ws),
     },
     route.account ? { stripeAccount: route.account } : undefined,
   );
@@ -129,7 +130,7 @@ export async function sendOutreach(
     body,
     input.payLink,
   );
-  const unsub = unsubscribePostUrl(c.id);
+  const unsub = unsubscribePostUrl(await publicBaseUrl(ws), c.id);
   await sendEmail({
     to: c.email,
     subject,

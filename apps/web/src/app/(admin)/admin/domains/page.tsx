@@ -35,7 +35,8 @@ async function DomainsPage() {
               <code>
                 {workspace.slug}.{env.ROOT_DOMAIN}
               </code>
-              . Add a custom domain and point it at <code>{target}</code>.
+              . Add a custom domain and point it at <code>{target}</code>. The primary domain is the
+              address in links and emails; guest pages on other hosts redirect to it.
             </>
           )}
         </p>

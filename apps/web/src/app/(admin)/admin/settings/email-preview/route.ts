@@ -1,3 +1,4 @@
+import { adminBaseUrl, publicBaseUrl } from "@/server/urls";
 import { NextResponse } from "next/server";
 import { connection } from "next/server";
 import { brandForPreview } from "@/emails/brand";
@@ -31,7 +32,7 @@ export async function GET(req: Request) {
       host: host?.displayName ?? session.user.name,
       amount: kind === "paymentRequest" ? "$1,200.00" : "",
       payLink: kind === "paymentRequest" ? "https://checkout.stripe.com/…" : "",
-      bookingUrl: `${baseUrl()}/you`,
+      bookingUrl: `${await publicBaseUrl(ws)}/you`,
     });
     const mail = await renderOutreach(
       ws,
@@ -77,7 +78,8 @@ export async function GET(req: Request) {
       username: "you",
     }) as never,
     workspaceName: ws.name,
-    baseUrl: baseUrl(),
+    baseUrl: await publicBaseUrl(ws),
+    adminUrl: adminBaseUrl(ws),
     brand: await brandForPreview(ws),
     templates: ws.settings.templates,
   };

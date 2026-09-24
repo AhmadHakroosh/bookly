@@ -1,4 +1,5 @@
 import "server-only";
+import { adminBaseUrl, publicBaseUrl } from "./urls";
 import { and, eq, gte, inArray, lte, schema, sql } from "@bookly/db";
 import { sendEmail } from "@bookly/email";
 import { db } from "@/lib/db";
@@ -65,7 +66,8 @@ export async function sendDueReminders(
       workspaceName: ws.name,
       brand: brandFor(ws),
       templates: ws.settings.templates,
-      baseUrl: baseUrl(),
+      baseUrl: await publicBaseUrl(ws),
+      adminUrl: adminBaseUrl(ws),
     };
     // Only the nearest due offset gets a message; the others are just marked (avoids a burst after downtime).
     const m = Math.min(...due);
@@ -73,7 +75,7 @@ export async function sendDueReminders(
     const a = await reminderMail(ctx, false, hours);
     const brief = await briefForBooking(ws, b, et ?? null).catch(() => null);
     const h = await reminderMail({ ...ctx, brief: brief ?? undefined }, true, hours);
-    const line = `Reminder: ${et?.title ?? "Meeting"} with ${host.displayName} in ${hours === 1 ? "1 hour" : `${hours} hours`}. ${b.meetingUrl ?? `${baseUrl()}/booking/${b.manageToken}`}`;
+    const line = `Reminder: ${et?.title ?? "Meeting"} with ${host.displayName} in ${hours === 1 ? "1 hour" : `${hours} hours`}. ${b.meetingUrl ?? `${ctx.baseUrl}/booking/${b.manageToken}`}`;
     await Promise.all([
       sendEmail({
         to: b.attendeeEmail,
@@ -143,7 +145,8 @@ export async function sendDueReminders(
       workspaceName: ws.name,
       brand: brandFor(ws),
       templates: ws.settings.templates,
-      baseUrl: baseUrl(),
+      baseUrl: await publicBaseUrl(ws),
+      adminUrl: adminBaseUrl(ws),
     });
     await sendEmail({
       to: b.attendeeEmail,

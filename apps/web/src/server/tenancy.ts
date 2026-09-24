@@ -1,8 +1,8 @@
-import { eq, schema } from "@bookly/db";
+import { and, eq, isNotNull, schema } from "@bookly/db";
 import { loadEnv } from "@bookly/config";
 import { db } from "@/lib/db";
 
-type Resolved = { workspaceId: string } | null;
+type Resolved = { workspaceId: string; primaryHost: string | null } | null;
 
 const cache = new Map<string, { value: Resolved; at: number }>();
 // Positive hits are cached for 30s. Misses only 2s: the proxy bundle has its own module
@@ -28,20 +28,38 @@ export async function resolveWorkspaceByHost(
   let value: Resolved = null;
   if (env.TENANCY === "single") {
     const workspace = await db().query.workspaces.findFirst({ columns: { id: true } });
-    value = workspace ? { workspaceId: workspace.id } : null;
+    value = workspace ? { workspaceId: workspace.id, primaryHost: null } : null;
   } else if (host) {
     const domain = await db().query.workspaceDomains.findFirst({
-      where: eq(schema.workspaceDomains.host, host),
+      where: and(
+        eq(schema.workspaceDomains.host, host),
+        isNotNull(schema.workspaceDomains.verifiedAt),
+      ),
       columns: { workspaceId: true },
     });
-    if (domain) value = { workspaceId: domain.workspaceId };
-    else if (env.ROOT_DOMAIN && host.endsWith(`.${env.ROOT_DOMAIN}`)) {
+    let workspaceId = domain?.workspaceId ?? null;
+    if (!workspaceId && env.ROOT_DOMAIN && host.endsWith(`.${env.ROOT_DOMAIN}`)) {
       const slug = host.slice(0, -(env.ROOT_DOMAIN.length + 1));
       const workspace = await db().query.workspaces.findFirst({
         where: eq(schema.workspaces.slug, slug),
         columns: { id: true },
       });
-      if (workspace) value = { workspaceId: workspace.id };
+      workspaceId = workspace?.id ?? null;
+    }
+    if (workspaceId) {
+      // The verified domain marked primary: guest pages on any other host redirect to it.
+      const primary = await db().query.workspaceDomains.findFirst({
+        where: and(
+          eq(schema.workspaceDomains.workspaceId, workspaceId),
+          eq(schema.workspaceDomains.isPrimary, true),
+          isNotNull(schema.workspaceDomains.verifiedAt),
+        ),
+        columns: { host: true },
+      });
+      // The platform host is never a workspace's address, whatever an old row says.
+      const platformHost = new URL(env.APP_URL).host.toLowerCase();
+      const primaryHost = primary?.host && primary.host !== platformHost ? primary.host : null;
+      value = { workspaceId, primaryHost };
     }
   }
   cache.set(key, { value, at: Date.now() });

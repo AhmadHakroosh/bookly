@@ -40,8 +40,12 @@ describe("unsubscribe tokens", () => {
     expect(readUnsubscribeToken(t.slice(0, -2) + "zz")).toBeNull();
     expect(readUnsubscribeToken("c_999." + t.split(".")[1])).toBeNull();
     expect(readUnsubscribeToken("garbage")).toBeNull();
-    expect(unsubscribeUrl("c_123")).toBe(`http://localhost:3002/unsubscribe/${t}`);
-    expect(unsubscribePostUrl("c_123")).toBe(`http://localhost:3002/api/unsubscribe/${t}`);
+    expect(unsubscribeUrl("http://localhost:3002", "c_123")).toBe(
+      `http://localhost:3002/unsubscribe/${t}`,
+    );
+    expect(unsubscribePostUrl("http://localhost:3002", "c_123")).toBe(
+      `http://localhost:3002/api/unsubscribe/${t}`,
+    );
   });
 });
 
