@@ -21,7 +21,7 @@ export type DomainState = { error?: string; ok?: boolean };
 export async function addDomain(_prev: DomainState, formData: FormData): Promise<DomainState> {
   const workspace = await ctx();
   const host = normalizeHost(String(formData.get("host") ?? ""));
-  if (!host) return { error: "Enter a valid hostname, e.g. blog.example.com" };
+  if (!host) return { error: "Enter a valid hostname, e.g. book.example.com" };
   try {
     await assertWithinLimit(workspace, "domains");
   } catch (e) {
