@@ -2,11 +2,11 @@
 
 # Bookly — self-hostable scheduling platform
 
-Third of Ahmad's three products (personal site `ahmadhakroosh.com`, **Warqa** blog platform, **Bookly**). The cross-product roadmap is `PLAN.md` in the `ahmadhakroosh.com` repo (Product 3, phases K0–K6). Keep its checkboxes current.
+Instructions for AI coding agents (and a fast orientation for people). The full contributor guide is `CONTRIBUTING.md`; user-facing behaviour is documented in `docs/`, and every change a self-hoster would notice needs a `docs/` and `CHANGELOG.md` update.
 
 ## Conventions
 
-- Same skeleton as Warqa: pnpm 11 workspaces + Turborepo, Node 24, versions pinned in `pnpm-workspace.yaml` `catalog:`. Dev server on **port 3002**, Postgres on **5433** so Warqa and Bookly can run side by side.
+- pnpm 11 workspaces + Turborepo, Node 24, versions pinned in `pnpm-workspace.yaml` `catalog:`. Dev server on **port 3002**, Postgres on **5433** (`docker compose` in `docs/self-hosting.md`).
 - Tenancy: the tenant is a **workspace** (`workspaces`, `workspace_domains`); every scheduling table carries `workspace_id`. `src/proxy.ts` resolves the host and sets `x-bookly-workspace`; read it with `getCurrentWorkspace()` from `src/server/workspace.ts`. `TENANCY=single|multi`.
 - Auth: Better Auth (`src/lib/auth.ts`) with email+password, magic link, organization (owns workspaces), admin. Staff-only admin via `requireStaff()`. After changing plugins run `pnpm auth:generate`, then `pnpm db:generate` + `pnpm db:migrate`.
 - Cache Components are enabled: every page is `XPage` + `XPageBoundary` (Suspense); layouts wrap their shell in Suspense; cached data uses `"use cache"` + `workspaceTag`; server actions call `refreshWorkspace`, route handlers `refreshWorkspaceBackground`.

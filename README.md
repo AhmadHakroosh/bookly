@@ -8,6 +8,7 @@
 
 <p align="center">
   <a href="https://github.com/AhmadHakroosh/bookly/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/AhmadHakroosh/bookly/actions/workflows/ci.yml/badge.svg" /></a>
+  <a href="https://github.com/AhmadHakroosh/bookly/actions/workflows/codeql.yml"><img alt="CodeQL" src="https://github.com/AhmadHakroosh/bookly/actions/workflows/codeql.yml/badge.svg" /></a>
   <a href="LICENSE"><img alt="License: AGPL-3.0" src="https://img.shields.io/badge/license-AGPL--3.0-blue.svg" /></a>
   <a href="CHANGELOG.md"><img alt="Changelog" src="https://img.shields.io/badge/changelog-unreleased-lightgrey.svg" /></a>
 </p>
