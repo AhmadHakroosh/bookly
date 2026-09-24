@@ -29,8 +29,8 @@ describe("plans", () => {
   });
   it("pools Team's capture minutes per member; Pro's are flat", () => {
     expect(captureBudget(PLANS.pro, 5)).toBe(300);
-    expect(captureBudget(PLANS.team, 1)).toBe(600); // two seats minimum, two seats of minutes
-    expect(captureBudget(PLANS.team, 4)).toBe(1200);
+    expect(captureBudget(PLANS.team, 1)).toBe(960); // two seats minimum, two seats of minutes
+    expect(captureBudget(PLANS.team, 4)).toBe(1920);
     expect(captureBudget(PLANS.free, 3)).toBe(0);
   });
   it("bills Team for at least two seats", () => {

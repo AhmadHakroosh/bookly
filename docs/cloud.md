@@ -24,7 +24,7 @@ existing Bookly video rows are hidden from the booking page and provisioning ski
 keyed API, and the "Powered by Bookly" line on booking pages and emails (and the workspace's own
 logo and colour in its place).
 
-Auto-capture: Pro 300 minutes a month, Team 300 per member pooled; the UI talks in hours
+Auto-capture: Pro 300 minutes a month (5 hours), Team 480 per member pooled (8 hours); the UI talks in hours
 (`captureHours`, "5 hours", "$3 an hour") while billing counts minutes. Past the budget transcription
 continues and the excess is billed at `CAPTURE_OVERAGE_PER_MINUTE` ($0.05) when
 `STRIPE_PRICE_CAPTURE_OVERAGE` is set: a metered price on a Stripe Billing meter whose event name

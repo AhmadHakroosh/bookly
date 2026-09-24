@@ -75,7 +75,7 @@ const FAQ: [string, string][] = [
   ],
   [
     "What are transcription minutes?",
-    "Auto-capture transcribes calls on Bookly video, Google Meet, Zoom and Teams; on the external providers a Bookly notetaker joins the call. Pro includes 5 meeting hours a month; Team includes 5 hours per member, pooled, so a team of four shares 20. Past that, transcription continues at $3 an hour, billed by the minute on your next invoice, or you can tell Bookly to stop at the included hours from the billing page.",
+    "Auto-capture transcribes calls on Bookly video, Google Meet, Zoom and Teams; on the external providers a Bookly notetaker joins the call. Pro includes 5 meeting hours a month; Team includes 8 hours per member, pooled, so a team of four shares 32. Past that, transcription continues at $3 an hour, billed by the minute on your next invoice, or you can tell Bookly to stop at the included hours from the billing page.",
   ],
   [
     "Monthly or yearly?",

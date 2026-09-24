@@ -36,10 +36,11 @@ describe("plans", () => {
     expect(effectivePlan("team", "unpaid")?.feePercent).toBe(5);
     expect(effectivePlan("self-hosted")).toBeNull();
   });
-  it("pools 300 minutes per billed Team seat and 300 flat on Pro", () => {
+  it("pools 480 minutes (8 hours) per billed Team seat and 300 flat on Pro", () => {
     expect(captureBudget(PLANS.pro, 1)).toBe(300);
-    expect(captureBudget(PLANS.team, 1)).toBe(600);
-    expect(captureBudget(PLANS.team, 4)).toBe(1200);
+    expect(captureBudget(PLANS.team, 1)).toBe(960);
+    expect(captureBudget(PLANS.team, 4)).toBe(1920);
+    expect(captureHours(480)).toBe("8 hours");
     expect(captureBudget(PLANS.free, 1)).toBe(0);
   });
   it("bills only the minutes past the budget", () => {
