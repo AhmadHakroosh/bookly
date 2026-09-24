@@ -10,6 +10,7 @@ on:
 
 permissions:
   contents: read
+  actions: read
   security-events: write
 
 jobs:
@@ -18,10 +19,20 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - uses: github/codeql-action/init@v3
+      - uses: github/codeql-action/init@v4
         with:
           languages: javascript-typescript
           queries: security-and-quality
-      - uses: github/codeql-action/analyze@v3
+      - uses: github/codeql-action/analyze@v4
         with:
           category: "/language:javascript-typescript"
+          output: codeql-results
+          # The code-scanning tab needs a public repo or Advanced Security; the report is kept
+          # as an artifact either way so it can be shown in reviews.
+          upload: ${{ github.event.repository.private && 'never' || 'always' }}
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: codeql-sarif
+          path: codeql-results
+          retention-days: 90
