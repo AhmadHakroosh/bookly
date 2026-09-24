@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { attendeeJoinUrl } from "@/lib/meet-link";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
@@ -92,7 +93,10 @@ async function BookingPage({ params, searchParams }: PageProps<"/booking/[token]
             <dt className="w-16 shrink-0 text-muted-foreground">Where</dt>
             <dd>
               {b.meetingUrl ? (
-                <a href={b.meetingUrl} className="underline underline-offset-4">
+                <a
+                  href={attendeeJoinUrl(b) ?? b.meetingUrl}
+                  className="underline underline-offset-4"
+                >
                   {b.meetingUrl}
                 </a>
               ) : (

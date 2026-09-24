@@ -4,8 +4,6 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { and, eq, schema } from "@bookly/db";
 import { db } from "@/lib/db";
-import { baseUrl } from "@/server/scheduling";
-import { registerDailyWebhook, removeDailyWebhook } from "@/server/integrations";
 import { requireStaff } from "@/server/session";
 import { getCurrentWorkspace } from "@/server/workspace";
 
@@ -72,33 +70,22 @@ export async function saveNotificationPrefs(
   return { ok: true };
 }
 
-/** Registers the Daily.co webhook so "attendee joined" pings work (owner/admin only). */
+/** Turns the "attendee joined" ping on for the workspace (owner/admin only). */
 export async function enableJoinNotifications(): Promise<PrefsState> {
-  const [{ role }, ws] = await Promise.all([requireStaff(), getCurrentWorkspace()]);
-  if (!ws) return { error: "No workspace" };
-  if (role !== "owner" && role !== "admin") return { error: "Only owners can change this." };
-  try {
-    const url = `${baseUrl()}/api/webhooks/daily`;
-    const hook = await registerDailyWebhook(url, ws.settings.daily?.webhookId);
-    await db()
-      .update(schema.workspaces)
-      .set({ settings: { ...ws.settings, daily: { webhookId: hook.id, hmac: hook.hmac, url } } })
-      .where(eq(schema.workspaces.id, ws.id));
-  } catch (e) {
-    return { error: e instanceof Error ? e.message : "Registration failed" };
-  }
-  revalidatePath("/admin", "layout");
-  return { ok: true };
+  return setJoinPings(true);
 }
 
 export async function disableJoinNotifications(): Promise<PrefsState> {
+  return setJoinPings(false);
+}
+
+async function setJoinPings(on: boolean): Promise<PrefsState> {
   const [{ role }, ws] = await Promise.all([requireStaff(), getCurrentWorkspace()]);
   if (!ws) return { error: "No workspace" };
   if (role !== "owner" && role !== "admin") return { error: "Only owners can change this." };
-  if (ws.settings.daily?.webhookId) await removeDailyWebhook(ws.settings.daily.webhookId);
   await db()
     .update(schema.workspaces)
-    .set({ settings: { ...ws.settings, daily: null } })
+    .set({ settings: { ...ws.settings, daily: { ...(ws.settings.daily ?? {}), joinPings: on } } })
     .where(eq(schema.workspaces.id, ws.id));
   revalidatePath("/admin", "layout");
   return { ok: true };

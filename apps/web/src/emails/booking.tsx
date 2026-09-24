@@ -1,6 +1,7 @@
 import type { Booking, EventType, Profile } from "@bookly/db/schema";
 import { Text } from "@react-email/components";
 import { formatPhone } from "@/lib/phone";
+import { attendeeJoinUrl } from "@/lib/meet-link";
 import { fmtDateTime } from "@/lib/time";
 import { captureEnabled } from "@/server/transcripts";
 import { locationLabel } from "@/server/scheduling";
@@ -89,13 +90,18 @@ function whenRow(ctx: BookingMailCtx, tz: string): [string, React.ReactNode] {
   ];
 }
 
-function whereRow(ctx: BookingMailCtx, tz: string): [string, React.ReactNode] {
+function whereRow(
+  ctx: BookingMailCtx,
+  tz: string,
+  audience: "attendee" | "host" = "attendee",
+): [string, React.ReactNode] {
   const d = details(ctx, tz);
+  const url = audience === "attendee" ? attendeeJoinUrl(ctx.booking) : ctx.booking.meetingUrl;
   return [
     "Where",
-    ctx.booking.meetingUrl ? (
-      <a href={ctx.booking.meetingUrl} style={{ color: "#18181b" }}>
-        {ctx.booking.meetingUrl}
+    url ? (
+      <a href={url} style={{ color: "#18181b" }}>
+        {url}
       </a>
     ) : (
       d.where
@@ -261,7 +267,7 @@ export async function reminderMail(
   const rows: [string, React.ReactNode][] = [
     ["What", d.title],
     ["When", d.when],
-    whereRow(ctx, tz),
+    whereRow(ctx, tz, "host"),
   ];
   if (forHost) {
     const subject = `Reminder: ${d.title} with ${ctx.booking.attendeeName} ${relative}`;

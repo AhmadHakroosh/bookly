@@ -1,4 +1,5 @@
 import { captureEnabled } from "./transcripts";
+import { attendeeJoinUrl } from "@/lib/meet-link";
 import "server-only";
 import { and, asc, eq, gt, inArray, ne, schema } from "@bookly/db";
 import type { Booking, EventType, Profile, Workspace } from "@bookly/db/schema";
@@ -117,7 +118,7 @@ function icsEvent(
     end: b.endAt,
     summary: `${ctx.eventType?.title ?? "Meeting"}: ${ctx.host.displayName} and ${b.attendeeName}`,
     description: [
-      b.meetingUrl ?? locationLabel(b.location),
+      attendeeJoinUrl(b) ?? locationLabel(b.location),
       captureEnabled(b, ctx.eventType ?? null)
         ? "This call is transcribed so both sides get notes afterwards. Everyone who joins is told at the start."
         : "",
@@ -125,7 +126,7 @@ function icsEvent(
     ]
       .filter(Boolean)
       .join("\n\n"),
-    location: b.meetingUrl ?? locationLabel(b.location),
+    location: attendeeJoinUrl(b) ?? locationLabel(b.location),
     url: `${ctx.baseUrl}/booking/${b.manageToken}`,
     organizer: {
       name: ctx.host.displayName,

@@ -11,11 +11,12 @@ incoming webhook. Each host sets their own phone, channel and toggles.
 
 ## Attendee joined (Bookly video)
 
-Turn it on under Admin → Notifications. Bookly registers a Daily.co webhook for
-`participant.joined` pointing at `<APP_URL>/api/webhooks/daily` and stores the HMAC key on the
-workspace. The first person to enter a booking's room triggers one ping; the host joining their own
-room is ignored by display name, so set your booking-page display name to what you use in the
-video room.
+On by default; owners can mute it for the workspace under Admin → Notifications
+(`settings.daily.joinPings`). The first attendee to enter a booking's room triggers one ping. The
+host is recognised because the meeting page gives signed-in workspace members a Daily owner
+token (`owner: true` on the `participant.joined` event); a host who opens the raw room link
+elsewhere is still matched by display name as a fallback. The Daily webhook itself is registered
+once for the whole install (`docs/integrations.md` → Daily.co), not per workspace.
 
 ## Text messages (Twilio)
 

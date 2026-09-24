@@ -72,6 +72,30 @@ export async function registerDailyWebhook(url: string, previousId?: string | nu
   return { id: hook.uuid, hmac: hook.hmac, url: hook.url };
 }
 
+/**
+ * A Daily meeting token that names the participant and, for hosts, marks them the room owner.
+ * The `participant.joined` webhook then carries `owner: true`, which is how Bookly tells the host
+ * from attendees without comparing typed names.
+ */
+export async function createMeetingToken(
+  room: string,
+  opts: { userName: string; isOwner: boolean; expiresAt: Date },
+): Promise<string> {
+  const { token } = await api<{ token: string }>(`${BASE}/meeting-tokens`, {
+    method: "POST",
+    token: loadEnv().DAILY_API_KEY!,
+    body: JSON.stringify({
+      properties: {
+        room_name: room,
+        user_name: opts.userName,
+        is_owner: opts.isOwner,
+        exp: Math.floor(opts.expiresAt.getTime() / 1000),
+      },
+    }),
+  });
+  return token;
+}
+
 export async function removeDailyWebhook(id: string) {
   if (!dailyConfigured()) return;
   await api(`${BASE}/webhooks/${id}`, { method: "DELETE", token: loadEnv().DAILY_API_KEY! }).catch(

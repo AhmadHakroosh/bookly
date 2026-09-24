@@ -98,6 +98,17 @@ Busy time from connected calendars is cached for 60 seconds. When `APP_URL` is a
    Point that host at the same deployment (add it as a domain in Vercel / your reverse proxy);
    the proxy rewrites `meet.example.com/<room>` to `/meet/<room>`.
 
+Bookly registers one Daily webhook for the install, at `<APP_URL>/api/webhooks/daily`, for
+`participant.joined` and the `transcript.*` events; both auto-capture and "attendee joined" pings
+depend on it. It is created (or replaced when `APP_URL` changed) the first time a room is
+provisioned and checked on every job tick, and stored in `platform_state` under `daily.webhook`.
+`APP_URL` must be public https for Daily to accept it; Console → Health shows whether it exists.
+The webhook route finds the booking by room name across workspaces. Attendees' links carry
+`?t=<manage token>`, which the meeting page turns into a Daily token that pre-fills their name;
+signed-in workspace members get an owner token, so the host is identified by `owner: true` rather
+than by the name they typed. Transcription on Bookly video starts once the owner and one other
+participant are in the room.
+
 Rooms are public, named after the booking, can be opened any time and expire two hours after
 the end. The `/meet/<room>` page shows the meeting title and embeds Daily Prebuilt with chat, emoji
 reactions, hand raising, picture-in-picture, background effects and noise cancellation enabled.

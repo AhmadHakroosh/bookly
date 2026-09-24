@@ -11,12 +11,15 @@ type Line = { t: number; speaker: string; text: string };
  */
 export function Call({
   url,
+  token,
   room,
   capture,
   hostName,
   attendeeName,
 }: {
   url: string;
+  /** Daily meeting token naming the participant (and marking the host as owner), if known. */
+  token?: string | null;
   room: string;
   capture: boolean;
   hostName: string;
@@ -29,6 +32,7 @@ export function Call({
     if (!container.current) return;
     const call: DailyCall = DailyIframe.createFrame(container.current, {
       url,
+      ...(token ? { token } : {}),
       showLeaveButton: true,
       // Absolute inside the relative container: fills it whatever the flex layout decides,
       // instead of the iframe's default 150px when a percentage height cannot resolve.
@@ -89,7 +93,7 @@ export function Call({
       flush();
       void call.destroy();
     };
-  }, [url, room, capture, hostName, attendeeName]);
+  }, [url, token, room, capture, hostName, attendeeName]);
   return (
     <div className="flex min-h-0 w-full flex-1 flex-col">
       <div ref={container} className="relative min-h-0 w-full flex-1" />

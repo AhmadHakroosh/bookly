@@ -6,12 +6,13 @@ import { verifyDailySignature } from "@/server/integrations";
 import { notifyHost } from "@/server/notify";
 import { getProfileByUser } from "@/server/scheduling";
 import {
-  bookingForRoom,
+  bookingForRoomAnywhere,
   captureEnabled,
   markTranscriptFailed,
   startTranscription,
 } from "@/server/transcripts";
-import { getCurrentWorkspace } from "@/server/workspace";
+import { getCurrentWorkspace, getWorkspaceById } from "@/server/workspace";
+import { currentDailyWebhook } from "@/server/daily-webhook";
 import { enqueue } from "@/server/jobs";
 
 type DailyEvent = {
@@ -21,6 +22,8 @@ type DailyEvent = {
     room_name?: string;
     user_name?: string | null;
     user_id?: string | null;
+    /** true when the participant joined with an owner meeting token (the host). */
+    owner?: boolean | null;
     transcriptId?: string;
     transcript_id?: string;
     id?: string;
@@ -46,9 +49,12 @@ export async function POST(req: Request) {
   // Daily verifies a new webhook with {"test":"test"} and needs a 200 within 8 seconds. The
   // signing key is only stored once registration succeeds, so answer before checking anything.
   if (isProbe(body)) return NextResponse.json({ ok: true });
-  const ws = await getCurrentWorkspace();
-  const hmac = ws?.settings.daily?.hmac;
-  if (!ws || !hmac) return NextResponse.json({ error: "Webhook not registered" }, { status: 404 });
+  // One platform-wide webhook (platform_state); older installs may still carry the key on the
+  // workspace that registered it from the notifications page.
+  const platformHook = await currentDailyWebhook();
+  const legacyHmac = platformHook ? null : (await getCurrentWorkspace())?.settings.daily?.hmac;
+  const hmac = platformHook?.hmac ?? legacyHmac;
+  if (!hmac) return NextResponse.json({ error: "Webhook not registered" }, { status: 404 });
   const ts = req.headers.get("x-webhook-timestamp") ?? "";
   const sig = req.headers.get("x-webhook-signature") ?? "";
   if (!ts || !sig || !verifyDailySignature(hmac, ts, sig, body))
@@ -56,8 +62,10 @@ export async function POST(req: Request) {
   const ev = JSON.parse(body) as DailyEvent;
   const room = ev.payload?.room ?? ev.payload?.room_name;
   if (!room) return NextResponse.json({ ok: true, ignored: "no room" });
-  const b = await bookingForRoom(ws.id, room);
+  const b = await bookingForRoomAnywhere(room);
   if (!b) return NextResponse.json({ ok: true, ignored: "unknown room" });
+  const ws = await getWorkspaceById(b.workspaceId);
+  if (!ws) return NextResponse.json({ ok: true, ignored: "no workspace" });
   const et = b.eventTypeId
     ? await db().query.eventTypes.findFirst({ where: eq(schema.eventTypes.id, b.eventTypeId) })
     : null;
@@ -80,7 +88,10 @@ export async function POST(req: Request) {
 
   const host = await getProfileByUser(ws.id, b.hostUserId);
   const who = ev.payload?.user_name?.trim() || "Someone";
-  const isHost = !!host && who.toLowerCase() === host.displayName.toLowerCase();
+  // Hosts open the meeting page signed in and get an owner token; the typed-name comparison is
+  // only a fallback for a host who opened the room link elsewhere.
+  const isHost =
+    ev.payload?.owner === true || (!!host && who.toLowerCase() === host.displayName.toLowerCase());
 
   // Presence: remember who has been in the room so transcription starts once both sides are in.
   const ref = (b.meetingRef ?? {}) as Record<string, unknown> & { joined?: string[] };
@@ -94,8 +105,10 @@ export async function POST(req: Request) {
   if (bothIn && captureEnabled(b, et ?? null) && b.transcriptStatus !== "recording")
     await startTranscription(ws, b).catch((e) => console.error("[capture]", e));
 
-  // The host joining their own room is not news.
+  // The host joining their own room is not news, and the workspace may have muted join pings.
   if (isHost) return NextResponse.json({ ok: true, ignored: "host" });
+  if (ws.settings.daily?.joinPings === false)
+    return NextResponse.json({ ok: true, ignored: "join pings off" });
   const key = "joined";
   if (b.remindersSent.includes(key))
     return NextResponse.json({ ok: true, ignored: "already notified" });

@@ -15,7 +15,7 @@ async function NotificationsPage() {
   const [{ session, role }, ws] = await Promise.all([requireStaff(), getCurrentWorkspace()]);
   if (!ws) return null;
   const profile = await getProfileByUser(ws.id, session.user.id);
-  const joinEnabled = !!ws.settings.daily?.hmac;
+  const joinEnabled = ws.settings.daily?.joinPings !== false;
   const canManage = role === "owner" || role === "admin";
   return (
     <div className="max-w-2xl space-y-10">
@@ -45,8 +45,8 @@ async function NotificationsPage() {
               </Badge>
             </h2>
             <p className="text-sm text-muted-foreground">
-              Bookly video tells Bookly when the first person enters a room, and Bookly pings you on
-              the channels above. Needs Bookly video to be set up.
+              When the first attendee enters a Bookly video room, Bookly pings you on the channels
+              above. Needs Bookly video to be set up.
             </p>
           </div>
           {canManage && dailyConfigured() && <JoinToggle enabled={joinEnabled} />}

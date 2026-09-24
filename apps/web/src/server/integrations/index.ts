@@ -32,6 +32,7 @@ import { zoom, zoomAccount } from "./zoom";
 export { authorizeUrl, isProvider, providerConfigured, redirectUri } from "./oauth";
 export { pushSupported, verifyNotification } from "./watch";
 export {
+  createMeetingToken,
   dailyConfigured,
   dailyRoomUrl,
   meetPageUrl,
@@ -386,6 +387,9 @@ export async function provisionBooking(
       meetingUrl = m.url;
       meetingProvider = "daily";
       meetingRef = m.ref;
+      // Joins and transcripts arrive through the platform webhook; make sure it exists.
+      const { ensureDailyWebhook } = await import("@/server/daily-webhook");
+      await ensureDailyWebhook().catch((e) => console.error("[daily] webhook", e));
       return true;
     }
     if (type === "google_meet" || type === "teams") {

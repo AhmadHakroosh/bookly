@@ -19,6 +19,7 @@ import { db } from "@/lib/db";
 import { jobsHealth } from "./jobs";
 import { getLimiter } from "./ratelimit";
 import { dailyConfigured } from "./integrations";
+import { currentDailyWebhook } from "./daily-webhook";
 import { notetakerConfigured } from "./integrations/notetaker";
 import { paymentsConfigured } from "./payments";
 import { isCloud } from "./platform";
@@ -108,6 +109,7 @@ export type HealthCheck = { name: string; ok: boolean; detail: string };
 /** Everything an operator wants to know at a glance about whether the install is healthy. */
 export async function healthReport(now = new Date()): Promise<HealthCheck[]> {
   const env = loadEnv();
+  const dailyHook = await currentDailyWebhook().catch(() => null);
   const [tick, failedHooks, brokenIntegrations, stuckPayments, dbOk, limiterOk, jobs] =
     await Promise.all([
       getState("jobs.lastTick"),
@@ -186,8 +188,12 @@ export async function healthReport(now = new Date()): Promise<HealthCheck[]> {
     },
     {
       name: "Bookly video (Daily)",
-      ok: dailyConfigured(),
-      detail: dailyConfigured() ? "configured" : "not configured",
+      ok: dailyConfigured() && !!dailyHook,
+      detail: !dailyConfigured()
+        ? "not configured"
+        : dailyHook
+          ? `configured; webhook at ${dailyHook.url}`
+          : "configured; webhook not registered yet (registers on the first room or job tick; needs an https APP_URL)",
     },
     {
       name: "Notetaker (Recall.ai)",

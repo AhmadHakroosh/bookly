@@ -1,5 +1,5 @@
 import "server-only";
-import { and, eq, lte, schema } from "@bookly/db";
+import { and, eq, lte, schema, sql } from "@bookly/db";
 import { loadEnv } from "@bookly/config";
 import type {
   Booking,
@@ -266,4 +266,15 @@ export async function bookingForRoom(workspaceId: string, room: string): Promise
     ),
   });
   return rows.find((r) => (r.meetingRef as { room?: string } | null)?.room === room) ?? null;
+}
+
+/** Room names carry the booking id, so a room identifies its booking across every workspace. */
+export async function bookingForRoomAnywhere(room: string): Promise<Booking | null> {
+  const rows = await db().query.bookings.findMany({
+    where: and(
+      eq(schema.bookings.meetingProvider, "daily"),
+      sql`${schema.bookings.meetingRef} ->> 'room' = ${room}`,
+    ),
+  });
+  return rows[0] ?? null;
 }

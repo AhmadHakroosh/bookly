@@ -21,7 +21,11 @@ export type WorkspaceSettings = {
   /** Booking page footer / privacy text. */
   footerText?: string;
   /** Daily.co webhook registered for join notifications. */
-  daily?: { webhookId?: string; hmac?: string; url?: string } | null;
+  /**
+   * Bookly video. `joinPings: false` mutes the "attendee joined" notification for the workspace.
+   * `webhookId` / `hmac` / `url` are from before the webhook moved to `platform_state`.
+   */
+  daily?: { joinPings?: boolean; webhookId?: string; hmac?: string; url?: string } | null;
   /** Emails or `@domains` whose bookings are refused. */
   blockedEmails?: string[];
   /** CRM sync: contacts and meeting notes are pushed here (API key is encrypted at rest). */
