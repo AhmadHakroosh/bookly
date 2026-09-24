@@ -6,6 +6,7 @@ import { conferencingAvailability, listIntegrations } from "@/server/integration
 import { requireStaff } from "@/server/session";
 import { ConnectButton } from "@/components/connect-button";
 import { disconnect } from "../integrations-actions";
+import { IntegrationError } from "../integration-errors";
 import { PageSkeleton } from "@/components/page-skeleton";
 
 export const metadata = { title: "Conferencing" };
@@ -90,11 +91,7 @@ async function ConferencingPage({ searchParams }: PageProps<"/admin/conferencing
           note in the email.
         </p>
       </div>
-      {typeof sp.error === "string" && (
-        <p className="rounded-md border border-destructive/40 p-3 text-sm">
-          Connection failed ({sp.error}). Please try again.
-        </p>
-      )}
+      <IntegrationError code={typeof sp.error === "string" ? sp.error : undefined} />
       <ul className="divide-y rounded-xl border">
         {rows.map((r) => (
           <li key={r.name} className="flex items-start justify-between gap-4 p-4">
