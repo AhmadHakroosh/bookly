@@ -80,9 +80,9 @@ export const PLANS: Record<PlanId, Plan> = {
     },
     highlights: [
       "Contacts, briefings and the Meeting Inbox",
-      "Google Meet, Zoom, Teams, phone, in person",
+      "1 connected account: Google (Calendar + Meet), Microsoft (Outlook + Teams) or Zoom",
+      "Phone and in-person meetings",
       "1 booking page, 2 event types",
-      "1 connected calendar",
       "Email confirmations and reminders",
       "Paid bookings via Stripe, 5% platform fee",
     ],
@@ -114,6 +114,7 @@ export const PLANS: Record<PlanId, Plan> = {
     highlights: [
       "Auto-capture: transcripts, AI recaps, tasks (5 hours a month, then $3 an hour)",
       "Bookly video, no account needed by anyone",
+      "Unlimited connected accounts: Google, Microsoft and Zoom together",
       "Paid bookings via Stripe, no platform fee",
       "Custom reminders, follow-ups, SMS and WhatsApp",
       "Unlimited event types",

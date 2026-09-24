@@ -20,10 +20,13 @@ const fmt = (n: number | null) => (n === null ? "Unlimited" : String(n));
 const ROWS: [string, (p: Plan) => string | boolean][] = [
   ["Event types", ({ limits: l }) => fmt(l.eventTypes)],
   ["Members", ({ limits: l }) => fmt(l.members)],
-  ["Connected calendars / conferencing per member", ({ limits: l }) => fmt(l.integrations)],
+  [
+    "Connected accounts per member (Google, Microsoft, Zoom)",
+    ({ limits: l }) => fmt(l.integrations),
+  ],
   ["Bookings per month", ({ limits: l }) => fmt(l.bookingsPerMonth)],
   ["Custom domains", ({ limits: l }) => (l.domains ? String(l.domains) : false)],
-  ["Google Meet, Zoom, Teams, phone, in person", () => true],
+  ["Google Meet, Teams or Zoom links, phone, in person", () => true],
   ["Bookly video (no account needed)", ({ limits: l }) => l.booklyVideo],
   ["Email confirmations and reminders", () => true],
   ["Contacts, timeline and Meeting Inbox", () => true],
@@ -64,7 +67,7 @@ const ROWS: [string, (p: Plan) => string | boolean][] = [
 const FAQ: [string, string][] = [
   [
     "Is there a free plan?",
-    "Yes. Free gives you a booking page, two event types, one connected calendar, Google Meet, Zoom or Teams links, email reminders and paid bookings through your own Stripe account (with a 5% platform fee), for as long as you like. No card needed. Bookly video, the built-in room nobody needs an account for, starts on Pro.",
+    "Yes. Free gives you a booking page, two event types, one connected account (Google for Calendar and Meet, Microsoft for Outlook and Teams, or Zoom), email reminders and paid bookings through your own Stripe account (with a 5% platform fee), for as long as you like. No card needed. Pro lifts the one-account limit and adds Bookly video, the built-in room nobody needs an account for.",
   ],
   [
     "What counts as a member?",
