@@ -16,6 +16,8 @@ export type BookingMailCtx = {
   host: Profile;
   workspaceName: string;
   baseUrl: string;
+  /** Where host-facing buttons point; defaults to `baseUrl`. */
+  adminUrl?: string;
   brand: EmailBrand;
   /** The workspace's own wording, when set. */
   templates?: EmailTemplateOverrides;
@@ -174,7 +176,7 @@ export async function hostNotification(ctx: BookingMailCtx): Promise<Mail> {
         ...(b.notes ? ([["Notes", b.notes]] as [string, string][]) : []),
         ...answers.map((a) => ["Answer", a] as [string, string]),
       ]}
-      cta={{ href: `${ctx.baseUrl}/admin/bookings`, label: "Open bookings" }}
+      cta={{ href: `${ctx.adminUrl ?? ctx.baseUrl}/admin/bookings`, label: "Open bookings" }}
     />,
   );
   return { subject, text, html };
@@ -205,7 +207,7 @@ export async function cancellationMail(ctx: BookingMailCtx, forHost: boolean): P
         preview={subject}
         intro={`${by} cancelled ${dates.length ? "the remaining sessions" : "this meeting"}. The calendar entry is withdrawn by the attached update.`}
         rows={rows}
-        cta={{ href: `${ctx.baseUrl}/admin/bookings`, label: "Open bookings" }}
+        cta={{ href: `${ctx.adminUrl ?? ctx.baseUrl}/admin/bookings`, label: "Open bookings" }}
       />,
     );
     return { subject, text, html };
@@ -281,7 +283,7 @@ export async function reminderMail(
         cta={
           ctx.booking.meetingUrl
             ? { href: ctx.booking.meetingUrl, label: "Join the call" }
-            : { href: `${ctx.baseUrl}/admin/bookings`, label: "Open bookings" }
+            : { href: `${ctx.adminUrl ?? ctx.baseUrl}/admin/bookings`, label: "Open bookings" }
         }
         extra={
           ctx.brief ? (

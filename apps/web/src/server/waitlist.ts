@@ -1,4 +1,5 @@
 import "server-only";
+import { publicBaseUrl } from "./urls";
 import { and, asc, eq, gte, inArray, schema } from "@bookly/db";
 import type { Booking, EventType, WaitlistEntry, Workspace } from "@bookly/db/schema";
 import { sendEmail } from "@bookly/email";
@@ -83,7 +84,7 @@ export async function joinWaitlist(
   await sendEmail({
     to: email,
     subject: `You're on the waitlist: ${eventType.title}`,
-    text: `We'll email you as soon as a spot opens for ${eventType.title} with ${host?.displayName ?? workspace.name} (${when}).\n\nLeave the waitlist: ${baseUrl()}/waitlist/${entry!.token}`,
+    text: `We'll email you as soon as a spot opens for ${eventType.title} with ${host?.displayName ?? workspace.name} (${when}).\n\nLeave the waitlist: ${await publicBaseUrl(workspace)}/waitlist/${entry!.token}`,
   }).catch((e) => console.error("[waitlist] email failed", e));
   refreshWorkspace(workspace.id);
   return entry!;
@@ -164,7 +165,8 @@ export async function notifyWaitlist(
     getProfileByUser(workspace.id, booking.hostUserId),
     getProfileByUser(workspace.id, eventType.userId),
   ]);
-  const page = `${baseUrl()}/${profileOwner?.username ?? ""}/${eventType.slug}`;
+  const base = await publicBaseUrl(workspace);
+  const page = `${base}/${profileOwner?.username ?? ""}/${eventType.slug}`;
   await Promise.all(
     targets.map((w) => {
       const link = w.startAt
@@ -176,7 +178,7 @@ export async function notifyWaitlist(
       return sendEmail({
         to: w.attendeeEmail,
         subject: `A spot opened: ${eventType.title}`,
-        text: `Good news, ${w.attendeeName}: a spot opened for ${eventType.title} with ${host?.displayName ?? workspace.name} (${when}). It goes to whoever books first:\n\n${link}\n\nYou were emailed because you joined the waitlist. Leave it: ${baseUrl()}/waitlist/${w.token}`,
+        text: `Good news, ${w.attendeeName}: a spot opened for ${eventType.title} with ${host?.displayName ?? workspace.name} (${when}). It goes to whoever books first:\n\n${link}\n\nYou were emailed because you joined the waitlist. Leave it: ${base}/waitlist/${w.token}`,
       }).catch((e) => console.error("[waitlist] notify failed", e));
     }),
   );

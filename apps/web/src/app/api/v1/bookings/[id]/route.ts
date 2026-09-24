@@ -1,6 +1,7 @@
 import { and, eq, schema } from "@bookly/db";
 import { db } from "@/lib/db";
 import { apiContext, apiError, json, options, serializeBooking } from "@/server/api";
+import { publicBaseUrl } from "@/server/urls";
 
 export const OPTIONS = options;
 
@@ -19,5 +20,5 @@ export async function GET(req: Request, ctx: RouteContext<"/api/v1/bookings/[id]
         columns: { id: true, slug: true, title: true },
       })
     : null;
-  return json(serializeBooking(b, { eventType: et ?? null }));
+  return json(serializeBooking(b, await publicBaseUrl(api.workspace), { eventType: et ?? null }));
 }

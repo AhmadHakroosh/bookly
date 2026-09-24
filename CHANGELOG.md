@@ -4,7 +4,10 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 ## [Unreleased]
 
-Nothing yet.
+### Changed
+
+- Cloud: a verified custom domain marked **primary** is now the workspace's public address. Booking pages, manage links, waitlist and unsubscribe links in emails and in the API use it, and guest pages requested on `<slug>.bookly-app.io` or another verified host redirect to it. The admin stays on the slug host, where the session cookie lives. Emails sent by cloud workspaces previously linked to the platform host, where booking pages do not exist
+- Vercel builds production only (`ignoreCommand` in `apps/web/vercel.json`); the docs pages no longer trace the whole repository into the server bundle
 
 ## [0.1.0] - 2026-09-24
 

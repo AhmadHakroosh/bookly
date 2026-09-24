@@ -1,4 +1,5 @@
 import "server-only";
+import { adminBaseUrl } from "./urls";
 import { anthropic } from "@ai-sdk/anthropic";
 import { generateText } from "ai";
 import { and, desc, eq, isNull, schema } from "@bookly/db";
@@ -123,7 +124,7 @@ export async function notifyRecapReady(
       columns: { email: true },
     }),
   ]);
-  const link = `${baseUrl()}/admin/bookings/${booking.id}`;
+  const link = `${adminBaseUrl(ws)}/admin/bookings/${booking.id}`;
   const r = recapOf(recap);
   const when = fmtDateTime(booking.startAt, host?.timezone ?? ws.timezone);
   const subject = r

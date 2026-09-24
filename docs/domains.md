@@ -15,6 +15,7 @@ Behind an existing reverse proxy (nginx, Traefik, a PaaS): terminate TLS there a
 - `TENANCY=multi` and `ROOT_DOMAIN=bookly.app`: every workspace is served at `<slug>.bookly.app`.
 - A workspace owner adds `blog.example.com` under **Admin → Domains**, publishes the `TXT` record shown at `_bookly.blog.example.com`, and points the host at `ROOT_DOMAIN` (CNAME) or its IP (A). **Verify** checks both with DNS.
 - Only verified domains resolve to a workspace and only verified domains get certificates (Caddy on-demand TLS uses the same check).
+- **Make primary** on a verified domain makes it the workspace's public address: booking pages, manage links, waitlist and unsubscribe links in emails and the API use it, and guest pages requested on `<slug>.bookly.app` or any other verified host redirect (308) to it. The admin stays on `<slug>.bookly.app`, where the session cookie lives.
 - Wildcard DNS (`*.bookly.app`) plus a wildcard certificate for the root domain is recommended; Caddy can do this with a DNS challenge plugin, or use your platform's wildcard support.
 
 ## Platform notes

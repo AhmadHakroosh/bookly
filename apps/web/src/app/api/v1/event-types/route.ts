@@ -1,4 +1,5 @@
 import { apiContext, apiError, json, options, serializeEventType } from "@/server/api";
+import { publicBaseUrl } from "@/server/urls";
 import { getProfileByUsername, listAllEventTypes, listProfiles } from "@/server/scheduling";
 
 export const OPTIONS = options;
@@ -15,9 +16,10 @@ export async function GET(req: Request) {
   if (username && profiles.length === 0) return apiError("Host not found", 404, "not_found");
   const byUser = new Map(profiles.map((p) => [p.userId, p]));
   const all = await listAllEventTypes(workspace.id);
+  const base = await publicBaseUrl(workspace);
   const visible = all.filter((e) => e.active && byUser.has(e.userId) && (key || !e.hidden));
   return json(
-    visible.map((e) => serializeEventType(e, byUser.get(e.userId)!)),
+    visible.map((e) => serializeEventType(e, byUser.get(e.userId)!, base)),
     { meta: { total: visible.length, authenticated: !!key } },
   );
 }

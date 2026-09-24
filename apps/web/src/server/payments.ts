@@ -1,4 +1,5 @@
 import "server-only";
+import { publicBaseUrl } from "./urls";
 import Stripe from "stripe";
 import { and, asc, eq, inArray, lte, schema } from "@bookly/db";
 import { loadEnv } from "@bookly/config";
@@ -99,7 +100,7 @@ export async function createCheckout(
 ): Promise<string> {
   const route = paymentsFor(workspace);
   if (!route.ok) throw new Error(paymentsHint(workspace));
-  const manage = `${baseUrl()}/booking/${booking.manageToken}`;
+  const manage = `${await publicBaseUrl(workspace)}/booking/${booking.manageToken}`;
   const members = await unpaidMembers(booking);
   const total = eventType.priceCents! * members.length;
   const fee = route.account ? platformFeeCents(total, await platformFeePercent(workspace)) : 0;

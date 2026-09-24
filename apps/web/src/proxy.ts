@@ -25,6 +25,25 @@ const PLATFORM_HOST = (() => {
   }
 })();
 const CLOUD = process.env.TENANCY === "multi";
+
+/**
+ * Paths that stay on the host they were requested on. The admin and auth pages need the session
+ * cookie, which is scoped to the root domain; meeting rooms recognise the host the same way.
+ */
+const HOST_BOUND = [
+  "/admin",
+  "/api/",
+  "/login",
+  "/logout",
+  "/forgot-password",
+  "/reset-password",
+  "/accept-invitation",
+  "/setup",
+  "/meet",
+  "/workspaces",
+];
+const isHostBound = (pathname: string) =>
+  HOST_BOUND.some((p) => pathname === p.replace(/\/$/, "") || pathname.startsWith(p));
 /** Top-level paths that exist under app/(platform)/platform; anything else is a 404 on the platform host. */
 const MARKETING_PATHS = new Set([
   "",
@@ -122,6 +141,21 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(new URL("/setup", request.url));
   }
   if (pathname.startsWith("/setup")) return NextResponse.redirect(new URL("/admin", request.url));
+
+  // Guest pages live on the primary domain: any other host for this workspace redirects there.
+  if (
+    CLOUD &&
+    workspace.primaryHost &&
+    host !== workspace.primaryHost &&
+    !isHostBound(pathname) &&
+    (request.method === "GET" || request.method === "HEAD")
+  ) {
+    const url = request.nextUrl.clone();
+    const [h, p] = workspace.primaryHost.split(":");
+    url.hostname = h!;
+    if (p) url.port = p;
+    return NextResponse.redirect(url, 308);
+  }
 
   const requestHeaders = new Headers(request.headers);
   requestHeaders.set(WORKSPACE_HEADER, workspace.workspaceId);

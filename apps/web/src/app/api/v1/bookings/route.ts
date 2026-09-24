@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { apiContext, apiError, json, options, readJson, serializeBooking } from "@/server/api";
+import { publicBaseUrl } from "@/server/urls";
 import { isValidTimezone } from "@/lib/time";
 import { BookingError, createBooking } from "@/server/booking-flow";
 import { getEventType, getProfileByUsername, listBookings } from "@/server/scheduling";
@@ -17,6 +18,7 @@ export async function GET(req: Request) {
   const upcoming = q.get("upcoming") === "1" ? true : q.get("upcoming") === "0" ? false : undefined;
   const status = q.get("status");
   const limit = Math.min(500, Math.max(1, Number(q.get("limit")) || 100));
+  const base = await publicBaseUrl(ctx.workspace);
   const rows = await listBookings(ctx.workspace.id, {
     userId: profile?.userId,
     upcoming,
@@ -25,7 +27,7 @@ export async function GET(req: Request) {
   const filtered = status ? rows.filter((b) => b.status === status) : rows;
   return json(
     filtered.map((b) =>
-      serializeBooking(b, {
+      serializeBooking(b, base, {
         eventType: b.eventTypeId
           ? { id: b.eventTypeId, slug: "", title: b.eventTitle ?? "" }
           : null,
@@ -81,7 +83,7 @@ export async function POST(req: Request) {
       location: d.location ?? null,
       locationValue: d.address ?? null,
     });
-    return json(serializeBooking(b, { eventType: et }), {
+    return json(serializeBooking(b, await publicBaseUrl(ctx.workspace), { eventType: et }), {
       status: 201,
       meta: b.skipped?.length ? { skipped: b.skipped.map((d) => d.toISOString()) } : undefined,
     });

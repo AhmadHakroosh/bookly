@@ -1,5 +1,6 @@
 import { apiContext, json, options } from "@/server/api";
-import { baseUrl, listProfiles } from "@/server/scheduling";
+import { listProfiles } from "@/server/scheduling";
+import { publicBaseUrl } from "@/server/urls";
 
 export const OPTIONS = options;
 
@@ -9,18 +10,19 @@ export async function GET(req: Request) {
   if (ctx instanceof Response) return ctx;
   const { workspace } = ctx;
   const profiles = await listProfiles(workspace.id);
+  const base = await publicBaseUrl(workspace);
   return json({
     name: workspace.name,
     description: workspace.description,
     timezone: workspace.timezone,
-    url: baseUrl(),
+    url: base,
     hosts: profiles.map((p) => ({
       username: p.username,
       name: p.displayName,
       bio: p.bio,
       avatarUrl: p.avatarUrl,
       timezone: p.timezone,
-      url: `${baseUrl()}/${p.username}`,
+      url: `${base}/${p.username}`,
     })),
   });
 }

@@ -17,7 +17,7 @@ import { apiBudget } from "@bookly/cloud";
 import { hasFeature, workspaceLimits } from "./limits";
 import { bump } from "./ops";
 import { recurrenceOf } from "./recurrence";
-import { baseUrl, eventLocations, locationLabel } from "./scheduling";
+import { eventLocations, locationLabel } from "./scheduling";
 import { getCurrentWorkspace } from "./workspace";
 
 /* ---------------- Keys ---------------- */
@@ -119,11 +119,16 @@ export async function apiContext(
 
 /* ---------------- Serializers ---------------- */
 
-export function serializeEventType(e: EventType, host: Pick<Profile, "username" | "displayName">) {
+/** `base`: the workspace's public origin (`publicBaseUrl`). */
+export function serializeEventType(
+  e: EventType,
+  host: Pick<Profile, "username" | "displayName">,
+  base: string,
+) {
   return {
     id: e.id,
     slug: e.slug,
-    url: `${baseUrl()}/${host.username}/${e.slug}`,
+    url: `${base}/${host.username}/${e.slug}`,
     title: e.title,
     description: e.description,
     durationMin: e.durationMin,
@@ -178,6 +183,7 @@ export function serializeTask(t: Task) {
 
 export function serializeBooking(
   b: Booking,
+  base: string,
   extra: { eventType?: Pick<EventType, "id" | "slug" | "title"> | null } = {},
 ) {
   return {
@@ -191,7 +197,7 @@ export function serializeBooking(
     answers: b.answers,
     location: { type: b.location.type, label: locationLabel(b.location) },
     meetingUrl: b.meetingUrl,
-    manageUrl: `${baseUrl()}/booking/${b.manageToken}`,
+    manageUrl: `${base}/booking/${b.manageToken}`,
     eventType: extra.eventType
       ? { id: extra.eventType.id, slug: extra.eventType.slug, title: extra.eventType.title }
       : b.eventTypeId

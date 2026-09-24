@@ -15,6 +15,7 @@ import { fmtDateTime } from "@/lib/time";
 import { buildIcsCalendar, type IcsEvent } from "./ics";
 import { deprovisionBooking, provisionBooking, syncEventAttendees } from "./integrations";
 import { serializeBooking } from "./api";
+import { adminBaseUrl, publicBaseUrl } from "./urls";
 import { notifyHost } from "./notify";
 import { isPaid, paymentsReady, recordPayment, refundBooking } from "./payments";
 import { notifyWaitlist } from "./waitlist";
@@ -100,7 +101,8 @@ async function mailCtx(
     eventType,
     host,
     workspaceName: workspace.name,
-    baseUrl: baseUrl(),
+    baseUrl: await publicBaseUrl(workspace),
+    adminUrl: adminBaseUrl(workspace),
     brand: brandFor(workspace),
     templates: workspace.settings.templates,
   };
@@ -467,10 +469,12 @@ export async function finalizeBooking(
     const series = booking.seriesCount ? ` (${booking.seriesCount} sessions)` : "";
     void notifyHost(booking.hostUserId, "onBooking", {
       subject: `New booking: ${eventType.title}`,
-      text: `${booking.attendeeName} booked ${eventType.title}${series} on ${when}${booking.status === "pending" ? " (needs your confirmation)" : ""}. ${baseUrl()}/admin/bookings`,
+      text: `${booking.attendeeName} booked ${eventType.title}${series} on ${when}${booking.status === "pending" ? " (needs your confirmation)" : ""}. ${adminBaseUrl(workspace)}/admin/bookings`,
     });
   }
-  const payload = { booking: serializeBooking(booking, { eventType }) };
+  const payload = {
+    booking: serializeBooking(booking, await publicBaseUrl(workspace), { eventType }),
+  };
   emitEvent(workspace.id, "booking.created", payload);
   if (booking.status === "confirmed") void scheduleFor(booking, eventType);
   if (rescheduledFromId)
@@ -540,7 +544,7 @@ export async function confirmBooking(workspace: Workspace, bookingId: string) {
     `Confirmed ${et?.title ?? "meeting"} for ${fmtDateTime(updated!.startAt, updated!.timezone)}`,
   );
   emitEvent(workspace.id, "booking.confirmed", {
-    booking: serializeBooking(updated!, { eventType: et ?? null }),
+    booking: serializeBooking(updated!, await publicBaseUrl(workspace), { eventType: et ?? null }),
   });
   void scheduleFor(updated!, et ?? null);
   const ctx = await mailCtx(updated!, et ?? null, workspace);
@@ -607,7 +611,7 @@ export async function cancelBooking(
     { by, reason: reason ?? null },
   );
   emitEvent(workspace.id, "booking.cancelled", {
-    booking: serializeBooking(updated!, { eventType: et ?? null }),
+    booking: serializeBooking(updated!, await publicBaseUrl(workspace), { eventType: et ?? null }),
   });
   refreshWorkspace(workspace.id);
   if (opts.quiet) return updated!;
