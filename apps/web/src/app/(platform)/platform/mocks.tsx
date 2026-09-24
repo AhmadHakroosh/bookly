@@ -90,7 +90,7 @@ function Sidebar() {
 /** The Meeting Inbox as the host sees it on a normal Tuesday. */
 export function InboxMock() {
   return (
-    <BrowserFrame url="app.bookly.app/admin">
+    <BrowserFrame url="acme.bookly-app.io/admin">
       <div className="flex">
         <Sidebar />
         <div className="min-w-0 flex-1 space-y-5 p-5 text-sm">
