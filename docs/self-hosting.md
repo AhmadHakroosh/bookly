@@ -37,6 +37,7 @@ The same code runs on Vercel:
 
 - Root Directory `apps/web`, Node 24.
 - Postgres: any provider (Neon works well). `DATABASE_URL` = pooled connection string.
+- Only production builds: `apps/web/vercel.json` sets an `ignoreCommand` that skips preview deployments, because a preview without its own database, auth secret and job worker cannot run. To get previews, give the Preview environment the same variables as Production (ideally against a database branch) and remove the `ignoreCommand`.
 - Set `JOBS_WORKER=false` and configure QStash (`QSTASH_TOKEN` and the two signing keys) so reminders, retries, transcripts and schedules run through it; see [docs/cloud.md](cloud.md#background-jobs-on-qstash). Without QStash, `CRON_SECRET` plus `apps/web/vercel.json` (daily on Hobby) or the GitHub Actions tick is the fallback.
 - Run migrations from your machine: `DATABASE_URL='…' pnpm db:migrate`.
 

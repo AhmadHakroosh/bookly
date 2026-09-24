@@ -62,6 +62,12 @@ const nextConfig: NextConfig = {
   ],
   serverExternalPackages: ["pg", "pg-boss", "nodemailer", "sharp", "shiki"],
   outputFileTracingRoot: new URL("../../", import.meta.url).pathname,
+  // The in-app manual reads the repo's docs/ at runtime (see src/server/docs.ts).
+  outputFileTracingIncludes: {
+    "/docs": ["../../docs/*.md"],
+    "/docs/[slug]": ["../../docs/*.md"],
+    "/sitemap.xml": ["../../docs/*.md"],
+  },
   images: {
     remotePatterns: [
       { protocol: "https", hostname: "**" },
