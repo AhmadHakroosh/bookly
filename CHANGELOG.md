@@ -4,28 +4,11 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 ## [Unreleased]
 
-Everything below is on `main` ahead of the first release, which will be tagged `v0.1.0`.
+Nothing yet.
 
-### Changed
+## [0.1.0] - 2026-09-24
 
-- Cloud pricing: Pro is $24 a month or $240 a year ($20 a month billed yearly), Team $30 a member ($300 yearly, $25 a month; two seats minimum). Bookly video moves to Pro (Free keeps Meet, Zoom, Teams, phone and in-person; a Free workspace's Bookly video rows are hidden from booking pages and cannot be saved). Auto-capture is sold in hours: 5 a month on Pro, 8 per member pooled on Team, and past the budget transcription continues at $3 an hour billed by the minute on the next invoice through a Stripe metered price (`STRIPE_PRICE_CAPTURE_OVERAGE`), with a switch on Admin → Billing to stop at the included hours instead. Paid bookings are available on every plan, Free included: paid plans pay no platform fee, Free pays 5%; Console → Payments sets a rate per plan. Team's shared customer memory (contacts, timelines, briefings across the workspace) is now stated on the plan. Pre-meeting briefings run on Haiku 4.5 (`ASSISTANT_BRIEF_MODEL`); recaps stay on the main model
-- Dropdowns and date pickers use the app's own components everywhere (the shadcn Select and Calendar over Base UI) instead of the browser's: event type and routing editors, booking and routing forms including the country picker and choice questions, the booking page timezone picker, the console, team invites, notifications, contacts and calendar settings; dates are picked from a popover calendar with a clear button where optional; times in availability hours and date overrides are picked from a quarter-hour dropdown; colours (event type colour, branding accent) come from a popover with preset swatches and a hex field instead of the browser dialog; number fields have their own minus and plus buttons with the unit joined to the field
-- The built-in video option is now called **Bookly video** everywhere: booking pages, admin, marketing, docs and health checks
-- Team has a two-seat minimum: checkout and the seat sync bill at least two members, and the pooled capture budget counts the billed seats, so a one-person Team pays $20 and gets 600 minutes; the plan card, FAQ and terms say so
-- Team's auto-capture budget is 300 transcribed minutes a month per member, pooled across the workspace (a team of four shares 1,200), instead of a flat 1,000; Pro keeps 300. Billing shows the pooled total. Paid overage is planned after launch
-- The platform fee on hosted paid bookings defaults to 5% and is published: terms §6 and a pricing FAQ entry explain that it is deducted before payout, returned on refunds and does not apply to self-hosted installs; the pricing comparison row says so too. Legal date bumped to September 23, 2026
-
-### Fixed
-
-- Admin → Domains: a newly added custom domain no longer stretches the list off the page; each domain is a card and the TXT record, token and target wrap on any screen
-
-### Removed
-
-- The unused storage layer (`packages/storage`, `STORAGE_*` and `S3_*` variables, the MinIO service in Compose): nothing in Bookly uploads files; profile photos and logos are URLs
-
-### Fixed
-
-- Bookly video: the Daily webhook that drives auto-capture and "attendee joined" pings is registered automatically for the whole install (first room or job tick, `platform_state` key `daily.webhook`) instead of only when a workspace turned join notifications on; the webhook route finds the booking by room across workspaces. Hosts are recognised by a Daily owner token issued when a signed-in member opens the meeting page, so transcription starts even if both sides typed the same name; attendee links carry their manage token to pre-fill their name. "Attendee joined" is now a plain on/off preference per workspace (on by default). Console → Health reports the webhook.
+First public release: the self-hostable scheduling platform with contacts, briefings, auto-capture and recaps, plus the hosted cloud mode at bookly-app.io.
 
 ### Added
 
@@ -36,7 +19,7 @@ Everything below is on `main` ahead of the first release, which will be tagged `
 - Event types can offer several ways to meet (Bookly video, Meet, Zoom, Teams, phone, in person, custom): the editor lists them, the first is the default, and with more than one the attendee picks on the booking form; a phone call asks for the attendee's number with a country picker preselected from their location and stores it as E.164, an in-person meeting without a host address asks the attendee for one, and both show in the invitation, the emails and the booking pages (the choice is kept when rescheduling; the API takes `location` and lists `locations`). Auto-capture is offered when any of them can be transcribed and applies to the chosen one; migration 0021
 - Auto-capture on Google Meet, Microsoft Teams and Zoom: with `RECALL_API_KEY` set, a notetaker bot (Recall.ai) joins calls that should be transcribed, streams the transcript live to Bookly and delivers the full transcript when it leaves; from there recap, tasks and follow-ups work exactly as on Bookly video. Same consent, plan and minute-budget rules; the bot is capped at the remaining minutes and cancelled with the booking. Event types on those providers now offer the Auto-capture setting, the confirmation email says a notetaker joins, and the health page shows the notetaker status
 - Daily seat reconcile for Team subscriptions on the job tick: every Team workspace's Stripe quantity is compared to its member count and corrected, so a failed update at join or leave time cannot leave seats unbilled; the terms now state how added and removed seats are charged and credited
-- Yearly billing: Pro $120 a year and Team $100 a member a year (two months free), behind `STRIPE_PRICE_PRO_YEARLY` / `STRIPE_PRICE_TEAM_YEARLY`. The landing page, pricing page and Admin → Billing share a monthly/yearly switch (yearly by default), Stripe's interval is mirrored onto the workspace, offers in the structured data list both periods, and the terms and pricing FAQ describe yearly renewal and cancellation
+- Yearly billing (two months free), behind `STRIPE_PRICE_PRO_YEARLY` / `STRIPE_PRICE_TEAM_YEARLY`. The landing page, pricing page and Admin → Billing share a monthly/yearly switch (yearly by default), Stripe's interval is mirrored onto the workspace, offers in the structured data list both periods, and the terms and pricing FAQ describe yearly renewal and cancellation
 - Cloud deployment target bookly-app.io: `www` redirects to the apex on the platform host, the update-check default points at `https://bookly-app.io/api/telemetry`, and `docs/cloud.md` gains a Vercel deployment walkthrough (domains, env import, migrations, Stripe endpoints)
 - Stripe Connect for cloud mode: guests pay the host's own Stripe account, never the platform's. Owners connect through Stripe's hosted onboarding (Settings → Payments, Pro and Team); prices apply once Stripe enables charges, refunds run on the host's account, and payment requests follow the same route. A second webhook endpoint (`/api/webhooks/stripe/connect`, `STRIPE_CONNECT_WEBHOOK_SECRET`) confirms those payments and tracks onboarding. Console → Payments shows the Stripe setup, the connected hosts and sets the platform fee, with a per-workspace override on the workspace page; migration 0020 adds `stripe_account_id`
 - Booking pages carry the workspace name with the Bookly mark and a “Powered by Bookly” footer; on plans that remove branding (Pro, Team, self-hosted) the logo and accent colour from Settings → Branding replace them, and the colour recolours buttons, selected days and focus rings. Emails say “Powered by Bookly” too
@@ -91,3 +74,23 @@ Everything below is on `main` ahead of the first release, which will be tagged `
 - Cloud (multi-tenant) mode with Free, Pro and Team plans, billing and an operator console (`packages/cloud`, proprietary).
 - Docker Compose self-hosting with optional Caddy HTTPS; Vercel deployment path.
 - Documentation in `docs/`.
+
+### Changed
+
+- Cloud pricing: Pro is $24 a month or $240 a year ($20 a month billed yearly), Team $30 a member ($300 yearly, $25 a month; two seats minimum). Bookly video moves to Pro (Free keeps Meet, Zoom, Teams, phone and in-person; a Free workspace's Bookly video rows are hidden from booking pages and cannot be saved). Auto-capture is sold in hours: 5 a month on Pro, 8 per member pooled on Team, and past the budget transcription continues at $3 an hour billed by the minute on the next invoice through a Stripe metered price (`STRIPE_PRICE_CAPTURE_OVERAGE`), with a switch on Admin → Billing to stop at the included hours instead. Paid bookings are available on every plan, Free included: paid plans pay no platform fee, Free pays 5%; Console → Payments sets a rate per plan. Team's shared customer memory (contacts, timelines, briefings across the workspace) is now stated on the plan. Pre-meeting briefings run on Haiku 4.5 (`ASSISTANT_BRIEF_MODEL`); recaps stay on the main model
+- Dropdowns and date pickers use the app's own components everywhere (the shadcn Select and Calendar over Base UI) instead of the browser's: event type and routing editors, booking and routing forms including the country picker and choice questions, the booking page timezone picker, the console, team invites, notifications, contacts and calendar settings; dates are picked from a popover calendar with a clear button where optional; times in availability hours and date overrides are picked from a quarter-hour dropdown; colours (event type colour, branding accent) come from a popover with preset swatches and a hex field instead of the browser dialog; number fields have their own minus and plus buttons with the unit joined to the field
+- The built-in video option is now called **Bookly video** everywhere: booking pages, admin, marketing, docs and health checks
+- Team has a two-seat minimum: checkout and the seat sync bill at least two members, and the pooled capture budget counts the billed seats, so a one-person Team pays $20 and gets 600 minutes; the plan card, FAQ and terms say so
+
+### Fixed
+
+- Admin → Domains: a newly added custom domain no longer stretches the list off the page; each domain is a card and the TXT record, token and target wrap on any screen
+
+- Bookly video: the Daily webhook that drives auto-capture and "attendee joined" pings is registered automatically for the whole install (first room or job tick, `platform_state` key `daily.webhook`) instead of only when a workspace turned join notifications on; the webhook route finds the booking by room across workspaces. Hosts are recognised by a Daily owner token issued when a signed-in member opens the meeting page, so transcription starts even if both sides typed the same name; attendee links carry their manage token to pre-fill their name. "Attendee joined" is now a plain on/off preference per workspace (on by default). Console → Health reports the webhook.
+
+### Removed
+
+- The unused storage layer (`packages/storage`, `STORAGE_*` and `S3_*` variables, the MinIO service in Compose): nothing in Bookly uploads files; profile photos and logos are URLs
+
+[Unreleased]: https://github.com/AhmadHakroosh/bookly/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/AhmadHakroosh/bookly/releases/tag/v0.1.0

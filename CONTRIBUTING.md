@@ -40,6 +40,19 @@ Before pushing: `pnpm format && pnpm lint && pnpm typecheck && pnpm test && pnpm
 
 By contributing you agree that your contributions are licensed under the AGPL-3.0, like the rest of the project. Contributions to `packages/cloud` are not accepted from outside the core team.
 
+## Releasing
+
+Releases are cut from `main` by tag; the release workflow builds the image, pushes it to
+`ghcr.io/ahmadhakroosh/bookly` (tags `X.Y.Z`, `X.Y`, `latest`) and creates the GitHub release with
+the notes for that version from `CHANGELOG.md`. Do these in order, in one commit, before tagging:
+
+1. Bump `version` in `package.json` and `apps/web/package.json` (the app reports it to the update
+   check and the console).
+2. In `CHANGELOG.md`, turn the `[Unreleased]` section into `## [X.Y.Z] - YYYY-MM-DD`, start a fresh
+   empty `[Unreleased]` above it, and update the compare links at the bottom. The changelog page on
+   the marketing site renders this file at build time, so it goes live with the deploy.
+3. Commit, then `git tag -a vX.Y.Z -m "Bookly vX.Y.Z" && git push origin main vX.Y.Z`.
+
 ## End-to-end tests
 
 Two Playwright suites run in CI against a production build:
