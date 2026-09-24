@@ -4,10 +4,7 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 ## [Unreleased]
 
-### Changed
-
-- Cloud: a verified custom domain marked **primary** is now the workspace's public address. Booking pages, manage links, waitlist and unsubscribe links in emails and in the API use it, and guest pages requested on `<slug>.bookly-app.io` or another verified host redirect to it. The admin stays on the slug host, where the session cookie lives. Emails sent by cloud workspaces previously linked to the platform host, where booking pages do not exist
-- Vercel builds production only (`ignoreCommand` in `apps/web/vercel.json`); the docs pages no longer trace the whole repository into the server bundle
+Nothing yet.
 
 ## [0.1.0] - 2026-09-24
 
@@ -15,6 +12,7 @@ First public release: the self-hostable scheduling platform with contacts, brief
 
 ### Added
 
+- Custom domains on the cloud: a verified domain marked **primary** under Admin → Domains is the workspace's public address. Booking pages, manage links, waitlist and unsubscribe links in emails and in the API use it, and guest pages requested on `<slug>.bookly-app.io` or another verified host redirect to it; the admin stays on the slug host, where the session cookie lives
 - Zoom deauthorization endpoint (`/api/webhooks/zoom`, verified with `ZOOM_WEBHOOK_SECRET`): answers Zoom's URL validation, and removes a user's Zoom connection and tokens when they uninstall Bookly from their Zoom account, as Marketplace publication requires
 - Compliance for the hosted service: outreach emails (proposals, payment requests, follow-ups) carry the workspace's postal address (new Settings field) and an unsubscribe link with one-click `List-Unsubscribe` headers; a contact who unsubscribes is marked on their page and in the inbox and the composer refuses to send, and hosts can opt a contact out or back in on request (migration 0022). Event types set to always transcribe now say so on the booking form and in the calendar invitation as well as the confirmation, bookings store when consent was given, and the notetaker announces itself in the meeting chat to everyone who joins. Briefings, recaps and drafts are labelled AI-generated. Error reports have guest emails and phone numbers scrubbed before they reach Sentry. `STRIPE_TAX=on` adds Stripe Tax (address and VAT-id collection) to plan checkouts. New `/dpa` page with the sub-processor table, incorporated into the terms; terms and privacy updated for the operating entity (Cloudeo Solutions, LLC, address from `OPERATOR_ADDRESS`), an 18+ rule, no regulated (HIPAA) data, recording-consent and commercial-email responsibilities, US state privacy rights and tax at checkout
 - Follow-up emails from a contact page: a third outreach button beside Proposal and Payment request, with its own editable template (Settings → Proposal, payment and follow-up emails, placeholder `{bookingUrl}` for your booking page), the same preview-then-send flow, a timeline entry and a new follow-up date. The inbox's follow-up list links straight into the composer
