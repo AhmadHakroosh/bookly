@@ -36,8 +36,9 @@ export function UpgradeCards({
       <div className="grid gap-4 md:grid-cols-3">
         {plans.map((p) => (
           <div key={p.id} className="flex flex-col rounded-xl border p-4">
-            <p className="font-medium">
-              {p.name} {p.id === current && <Badge>Current</Badge>}
+            <p className="flex items-center gap-2 font-medium">
+              {p.name}
+              {p.id === current && <Badge>Current</Badge>}
             </p>
             <PriceLine plan={p} interval={interval} />
             <ul className="mt-3 flex-1 space-y-1 text-xs text-muted-foreground">

@@ -76,14 +76,14 @@ async function BookingBriefPage({ params }: PageProps<"/admin/bookings/[id]">) {
             b.attendeeName
           )}
         </h1>
-        <p className="text-sm text-muted-foreground">
-          {fmtDateTime(b.startAt, tz)} ·{" "}
+        <p className="flex flex-wrap items-center gap-x-1.5 gap-y-1 text-sm text-muted-foreground">
+          <span>{fmtDateTime(b.startAt, tz)} ·</span>
           {b.meetingUrl ? (
             <ExternalLink href={b.meetingUrl}>Join meeting</ExternalLink>
           ) : (
-            locationLabel(b.location)
-          )}{" "}
-          ·{" "}
+            <span>{locationLabel(b.location)}</span>
+          )}
+          <span>·</span>
           <Badge variant="secondary" className="capitalize">
             {b.status.replace("_", " ")}
           </Badge>

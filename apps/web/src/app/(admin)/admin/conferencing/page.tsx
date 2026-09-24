@@ -122,8 +122,8 @@ async function ConferencingPage({ searchParams }: PageProps<"/admin/conferencing
         {rows.map((r) => (
           <li key={r.name} className="flex items-start justify-between gap-4 p-4">
             <div>
-              <p className="font-medium">
-                {r.name}{" "}
+              <p className="flex flex-wrap items-center gap-2 font-medium">
+                {r.name}
                 <Badge variant={r.ok ? "default" : r.badge ? "outline" : "secondary"}>
                   {r.ok ? "Ready" : (r.badge ?? "Not ready")}
                 </Badge>

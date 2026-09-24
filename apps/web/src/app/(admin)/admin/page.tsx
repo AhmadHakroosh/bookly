@@ -305,20 +305,17 @@ async function AdminInbox() {
                         {c.name || c.email}
                       </Link>
                       {c.company && <span className="text-muted-foreground"> · {c.company}</span>}
-                      <p className="text-muted-foreground">
-                        {due
-                          ? `Follow-up due ${fmtDate(c.nextFollowUpAt!, tz)}`
-                          : `Quiet since ${fmtDate(c.lastActivityAt, tz)}`}
-                        {" · "}
+                      <p className="flex flex-wrap items-center gap-x-1.5 gap-y-1 text-muted-foreground">
+                        <span>
+                          {due
+                            ? `Follow-up due ${fmtDate(c.nextFollowUpAt!, tz)}`
+                            : `Quiet since ${fmtDate(c.lastActivityAt, tz)}`}
+                          {" ·"}
+                        </span>
                         <Badge variant="secondary" className="capitalize">
                           {c.stage}
                         </Badge>
-                        {c.emailOptOut && (
-                          <>
-                            {" "}
-                            <Badge variant="outline">No email</Badge>
-                          </>
-                        )}
+                        {c.emailOptOut && <Badge variant="outline">No email</Badge>}
                       </p>
                     </div>
                     <div className="flex items-center gap-2">
