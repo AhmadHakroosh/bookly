@@ -78,7 +78,7 @@ export function CalendarCard({
             label="Reconnect"
             variant="outline"
           />
-          <form action={() => disconnect(integration.provider)}>
+          <form action={disconnect.bind(null, integration.provider)}>
             <SubmitButton variant="ghost">Disconnect</SubmitButton>
           </form>
         </div>

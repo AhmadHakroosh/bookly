@@ -98,7 +98,7 @@ async function ConferencingPage({ searchParams }: PageProps<"/admin/conferencing
             label="Reconnect"
             variant="outline"
           />
-          <form action={() => disconnect("zoom")}>
+          <form action={disconnect.bind(null, "zoom")}>
             <SubmitButton variant="ghost">Disconnect</SubmitButton>
           </form>
         </div>
