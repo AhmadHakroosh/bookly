@@ -10,8 +10,13 @@ export const SITE = {
   github: "https://github.com/AhmadHakroosh/bookly",
   /** The legal entity behind the hosted service (contracts, invoices, legal pages). */
   operator: "Cloudeo Solutions, LLC",
-  /** Its postal address, from the environment so the repo carries no address. */
-  operatorAddress: process.env.OPERATOR_ADDRESS ?? "",
+  /**
+   * Its postal address, from the environment so the repo carries no address. The legal pages print
+   * it after the entity name, so a value that starts with the name loses that prefix.
+   */
+  operatorAddress: (process.env.OPERATOR_ADDRESS ?? "")
+    .replace(/^\s*Cloudeo Solutions,? LLC,?\s*/i, "")
+    .trim(),
   /** Who builds it (about page, footer credit). */
   maker: "Ahmad Hakroosh",
   supportEmail: process.env.SUPPORT_EMAIL ?? "support@bookly-app.io",
