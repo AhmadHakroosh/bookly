@@ -24,9 +24,12 @@ Going public with the hosted service needs each provider's review, done once by 
   that names the Google API Services User Data Policy (ours does, `/privacy`), the homepage on the
   same domain, and a short screencast of the consent flow and what Bookly does with the data.
   Until verified, only listed test users can connect and their tokens expire after 7 days.
-- **Microsoft**: a multi-tenant app shows "unverified publisher" on the consent prompt until the
-  publisher is verified through a Microsoft Partner Center (MPN) account tied to the legal entity.
-  Some tenants block consent to unverified apps outright.
+- **Microsoft**: users in other organisations cannot consent to an unverified multi-tenant app at
+  all (personal accounts can), so publisher verification is needed before work accounts connect:
+  a Partner Center (MPN) account for the legal entity, and the publisher domain proven by
+  `public/.well-known/microsoft-identity-association.json`, which lists the app's client id
+  (update it if the registration is ever recreated). Enter the Partner ID under the app's
+  Branding & properties once Microsoft has verified the business.
 - **Zoom**: an unpublished app can only be authorised by accounts on its allow list. For any
   Zoom user to connect, the app must pass Marketplace review (privacy and support URLs, a
   deauthorization notification URL, the security questionnaire) and be published.
