@@ -41,7 +41,7 @@ async function ConferencingPage({ searchParams }: PageProps<"/admin/conferencing
       note: !avail.daily ? (
         "Not set up on this server. The admin adds a Daily.co API key (docs/integrations.md)."
       ) : videoPlan ? (
-        "Ready. A private room is created for every booking; no account needed by anyone."
+        "A private room is created for every booking; no account needed by anyone."
       ) : (
         <>
           A private room for every booking, no account needed by anyone. Included from the Pro plan.{" "}
@@ -56,7 +56,7 @@ async function ConferencingPage({ searchParams }: PageProps<"/admin/conferencing
       name: "Google Meet",
       ok: avail.google_meet,
       note: avail.google_meet ? (
-        "Ready. Meet links are created with the calendar event."
+        "Meet links are created with the calendar event."
       ) : (
         <>
           Connect Google under{" "}
@@ -71,7 +71,7 @@ async function ConferencingPage({ searchParams }: PageProps<"/admin/conferencing
       name: "Microsoft Teams",
       ok: avail.teams,
       note: avail.teams ? (
-        "Ready. Teams links are created with the Outlook event."
+        "Teams links are created with the Outlook event."
       ) : (
         <>
           Connect Microsoft under{" "}
