@@ -4,6 +4,10 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 ## [Unreleased]
 
+Nothing yet.
+
+## [0.2.0] - 2026-09-25
+
 ### Changed
 
 - Group sessions, series and waitlists show their numbers everywhere: the booking page carries a "6 sessions" badge, the series note and "N seats left" on every time (full times stay in place as "Full · waitlist" or "Full · 2 waiting"); the attendee's booking page has a session card with "2 / 3 seats", the open seats and the waitlist size; `Admin → Bookings` folds each session into one card with the seat count, every attendee (name, company, email, status, actions) and who is waiting, and the brief page lists the attendees. The profile page badges recurring and group event types. The layouts fit phones as well as wide screens
@@ -94,5 +98,6 @@ First public release: the self-hostable scheduling platform with contacts, brief
 
 - The unused storage layer (`packages/storage`, `STORAGE_*` and `S3_*` variables, the MinIO service in Compose): nothing in Bookly uploads files; profile photos and logos are URLs
 
-[Unreleased]: https://github.com/AhmadHakroosh/bookly/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/AhmadHakroosh/bookly/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/AhmadHakroosh/bookly/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/AhmadHakroosh/bookly/releases/tag/v0.1.0
