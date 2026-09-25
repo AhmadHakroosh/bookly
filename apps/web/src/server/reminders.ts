@@ -15,7 +15,7 @@ import { ensureDailyWebhook } from "./daily-webhook";
 import { trackBooking } from "./contacts";
 import { notifyHost, sendText } from "./notify";
 import { expireUnpaidBookings } from "./payments";
-import { baseUrl, getProfileByUser } from "./scheduling";
+import { getProfileByUser } from "./scheduling";
 import { fmtDateTime } from "@/lib/time";
 
 /**

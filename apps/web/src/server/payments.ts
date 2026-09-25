@@ -8,7 +8,6 @@ import { db } from "@/lib/db";
 import { platformFeeCents, platformFeePercent } from "./connect";
 import { hasFeature } from "./limits";
 import { isCloud } from "./platform";
-import { baseUrl } from "./scheduling";
 
 let client: Stripe | undefined;
 export function stripe(): Stripe {

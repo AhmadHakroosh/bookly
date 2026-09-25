@@ -1,4 +1,5 @@
 import "server-only";
+import type { EventType } from "@bookly/db/schema";
 import { hashPassword } from "better-auth/crypto";
 import { and, eq, schema } from "@bookly/db";
 import { loadEnv } from "@bookly/config";
@@ -8,7 +9,18 @@ import { ensureDefaultSchedule } from "./scheduling";
 export const DEMO_EMAIL = "demo@example.com";
 export const DEMO_PASSWORD = "demo-password-1234";
 
-const EVENTS = [
+type DemoEvent = {
+  slug: string;
+  title: string;
+  durationMin: number;
+  description: string;
+  requiresConfirmation?: boolean;
+  questions?: EventType["questions"];
+  seats?: number;
+  recurrence?: EventType["recurrence"];
+};
+
+const EVENTS: DemoEvent[] = [
   {
     slug: "intro-call",
     title: "Intro call",
@@ -29,6 +41,8 @@ const EVENTS = [
     durationMin: 60,
     description: "An hour on a concrete problem. Send context ahead of time.",
     requiresConfirmation: true,
+    seats: 3,
+    recurrence: { enabled: true, freq: "weekly", interval: 1, count: 6 },
   },
 ];
 
@@ -141,6 +155,8 @@ export async function seedDemo() {
         durationMin: e.durationMin,
         questions: e.questions ?? [],
         requiresConfirmation: !!e.requiresConfirmation,
+        seats: e.seats ?? 1,
+        recurrence: e.recurrence ?? {},
         location: { type: "custom", value: "Video call, link sent by email" },
         locations: [
           { type: "custom", value: "Video call, link sent by email" },

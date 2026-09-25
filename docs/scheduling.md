@@ -15,7 +15,7 @@ Your calendar is governed by intent, not just busy/free:
 
 ## Group sessions (seats)
 
-`Seats per slot` on an event type (default 1) turns it into a group session: the same start time can be booked by several people until it is full. The public page shows "N seats left" once a session has started filling; the API reports the same in `seatsLeft`. Everyone in a session gets the same meeting link, and the host's calendar holds one event for the session with every attendee as a guest; the guest list is updated as people book or cancel, and the event moves to the next attendee if the first one cancels. Sessions at other times block the host like any booking.
+`Seats per slot` on an event type (default 1) turns it into a group session: the same start time can be booked by several people until it is full. Every time on the public page shows "N seats left" (the API reports the same in `seatsLeft`), the attendee's booking page shows the session's numbers ("2 / 3 seats", how many seats are still open, how many people are waiting), and `Admin → Bookings` folds the bookings of one session into a single card with the seat count, every attendee (name, company, email, status, own actions) and the people waiting for that session; the booking's brief page lists the same attendees. Everyone in a session gets the same meeting link, and the host's calendar holds one event for the session with every attendee as a guest; the guest list is updated as people book or cancel, and the event moves to the next attendee if the first one cancels. Sessions at other times block the host like any booking.
 
 ## Recurring bookings
 
@@ -23,7 +23,7 @@ Turn on `Recurring bookings` on an event type and choose the frequency (daily, w
 
 ## Waitlist
 
-When a group session is full, its time still shows on the booking page as "Full · join waitlist"; when a day has no free times at all, the page offers a waitlist for that day. People leave a name and email and get a confirmation with a leave link. On a cancellation Bookly emails the first person waiting for that session (one per freed seat) and everyone waiting for that day, with a link straight to the freed time; the spot goes to whoever books first. Hosts see and can remove entries under `Admin → Bookings`.
+When a group session is full, its time still shows on the booking page, in its place in the day, as "Full · waitlist" (or "Full · 2 waiting" once people are queued); when a day has no free times at all, the page offers a waitlist for that day. People leave a name and email and get a confirmation with a leave link. On a cancellation Bookly emails the first person waiting for that session (one per freed seat) and everyone waiting for that day, with a link straight to the freed time; the spot goes to whoever books first. Hosts see and can remove entries under `Admin → Bookings`.
 
 ## Abuse controls
 

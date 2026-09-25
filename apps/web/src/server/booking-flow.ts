@@ -29,7 +29,6 @@ import { refreshWorkspace } from "./cache";
 import { hasFeature, assertBookingQuota, LimitError } from "./limits";
 import { occurrences, recurrenceOf } from "./recurrence";
 import {
-  baseUrl,
   eventLocations,
   getProfileByUser,
   locationLabel,

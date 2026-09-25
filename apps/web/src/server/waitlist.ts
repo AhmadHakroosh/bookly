@@ -7,7 +7,7 @@ import { db } from "@/lib/db";
 import { fmtDate, fmtDateTime, utcToZoned } from "@/lib/time";
 import { refreshWorkspace } from "./cache";
 import { logContactEvent, upsertContact } from "./contacts";
-import { baseUrl, getProfileByUser, newToken, occupiedSessions } from "./scheduling";
+import { getProfileByUser, newToken, occupiedSessions } from "./scheduling";
 
 export type WaitlistTarget = { startAt: Date } | { date: string };
 

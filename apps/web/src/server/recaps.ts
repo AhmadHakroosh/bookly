@@ -15,7 +15,7 @@ import { dueDate } from "./capture-text";
 import { logContactEvent, setStage, trackBooking, noteToCrm } from "./contacts";
 import { notifyHost } from "./notify";
 import { parseRecap, RECAP_SYSTEM, type Recap } from "./recap-text";
-import { baseUrl, getProfileByUser } from "./scheduling";
+import { getProfileByUser } from "./scheduling";
 import { renderTranscript } from "./transcript-text";
 import { getTranscript } from "./transcripts";
 import { emitEvent } from "./webhooks";
