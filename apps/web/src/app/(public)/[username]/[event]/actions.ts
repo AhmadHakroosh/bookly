@@ -106,6 +106,7 @@ export async function joinWaitlistAction(
   const profile = ws ? await getProfileByUsername(ws.id, d.username) : null;
   const et = ws && profile ? await getEventType(ws.id, profile.userId, d.event) : null;
   if (!ws || !profile || !et) return { error: "This booking page no longer exists." };
+  if (!et.waitlistEnabled) return { error: "This event type has no waitlist." };
   if (!(await throttlePublicForm(ws.id, "waitlist")))
     return { error: "Too many attempts. Please wait a few minutes and try again." };
   let target: WaitlistTarget;

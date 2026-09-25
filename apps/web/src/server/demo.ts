@@ -17,6 +17,7 @@ type DemoEvent = {
   requiresConfirmation?: boolean;
   questions?: EventType["questions"];
   seats?: number;
+  waitlistEnabled?: boolean;
   recurrence?: EventType["recurrence"];
 };
 
@@ -42,6 +43,7 @@ const EVENTS: DemoEvent[] = [
     description: "An hour on a concrete problem. Send context ahead of time.",
     requiresConfirmation: true,
     seats: 3,
+    waitlistEnabled: true,
     recurrence: { enabled: true, freq: "weekly", interval: 1, count: 6 },
   },
 ];
@@ -156,6 +158,7 @@ export async function seedDemo() {
         questions: e.questions ?? [],
         requiresConfirmation: !!e.requiresConfirmation,
         seats: e.seats ?? 1,
+        waitlistEnabled: !!e.waitlistEnabled,
         recurrence: e.recurrence ?? {},
         location: { type: "custom", value: "Video call, link sent by email" },
         locations: [

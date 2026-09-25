@@ -162,6 +162,13 @@
       "when": 1790154417069,
       "tag": "0022_broken_living_lightning",
       "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1790365816488,
+      "tag": "0023_early_whirlwind",
+      "breakpoints": true
     }
   ]
 }

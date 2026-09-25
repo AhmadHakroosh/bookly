@@ -40,6 +40,7 @@ export async function joinWaitlist(
   eventType: EventType,
   input: { name: string; email: string; timezone: string; target: WaitlistTarget },
 ): Promise<WaitlistEntry> {
+  if (!eventType.waitlistEnabled) throw new Error("This event type has no waitlist.");
   const email = input.email.trim().toLowerCase();
   const startAt = "startAt" in input.target ? input.target.startAt : null;
   const date = "date" in input.target ? input.target.date : null;

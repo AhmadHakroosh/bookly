@@ -71,7 +71,8 @@ export function MonthCalendar({
             ) : (
               <span
                 key={d}
-                className={`flex aspect-square items-center justify-center text-sm text-muted-foreground tabular-nums ${d === today ? "underline underline-offset-4" : ""}`}
+                className={`flex aspect-square items-center justify-center text-sm text-muted-foreground tabular-nums line-through decoration-muted-foreground/50 ${d === today ? "font-medium" : ""}`}
+                aria-label={`${d}, no times`}
               >
                 {Number(d.slice(-2))}
               </span>

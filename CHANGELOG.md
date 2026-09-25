@@ -6,6 +6,23 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 Nothing yet.
 
+## [0.2.1] - 2026-09-25
+
+### Added
+
+- Event types have a **Waitlist** switch (off by default). With it on, a full group session or an empty day offers "tell me when a spot opens"; with it off, a full session shows as "Full" and cannot be joined (migration 0023)
+
+### Changed
+
+- The booking calendar strikes through days with no times
+- Marking a booking as no-show removes the automatic "Meeting took place" note from the contact's timeline and, when the contact became active only through that meeting, returns them to lead; undoing the no-show does the reverse
+- The marketing footer no longer carries a "Built by" line
+
+### Fixed
+
+- Group sessions stayed unbookable while seats remained when the host's connected calendar returned the session's own event as busy time
+- A booking made the same day no longer receives the "tomorrow" reminder right after booking; reminder offsets that had already passed when the booking was made are skipped
+
 ## [0.2.0] - 2026-09-25
 
 ### Changed
@@ -98,6 +115,7 @@ First public release: the self-hostable scheduling platform with contacts, brief
 
 - The unused storage layer (`packages/storage`, `STORAGE_*` and `S3_*` variables, the MinIO service in Compose): nothing in Bookly uploads files; profile photos and logos are URLs
 
-[Unreleased]: https://github.com/AhmadHakroosh/bookly/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/AhmadHakroosh/bookly/compare/v0.2.1...HEAD
+[0.2.1]: https://github.com/AhmadHakroosh/bookly/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/AhmadHakroosh/bookly/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/AhmadHakroosh/bookly/releases/tag/v0.1.0
