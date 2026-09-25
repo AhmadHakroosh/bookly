@@ -405,6 +405,7 @@ const eventSchema = z.object({
   autoCapture: z.enum(["off", "ask", "always"]).default("off"),
   requiresConfirmation: z.enum(["on", "off"]).default("off"),
   hidden: z.enum(["on", "off"]).default("off"),
+  waitlist: z.enum(["on", "off"]).default("off"),
   remindByText: z.enum(["on", "off"]).default("off"),
   price: z.coerce.number().min(0).max(100000).default(0),
   currency: z
@@ -506,6 +507,7 @@ export async function saveEventType(_prev: EventTypeSaveState, formData: FormDat
           : {},
       requiresConfirmation: d.requiresConfirmation === "on",
       hidden: d.hidden === "on",
+      waitlistEnabled: d.waitlist === "on",
       remindByText: d.remindByText === "on",
       priceCents: d.price > 0 ? Math.round(d.price * 100) : null,
       currency: d.price > 0 ? d.currency : null,

@@ -33,6 +33,7 @@ type Values = {
   scheduleId: string;
   requiresConfirmation: boolean;
   hidden: boolean;
+  waitlistEnabled: boolean;
   priceCents: number;
   currency: string;
   remindByText: boolean;
@@ -416,6 +417,13 @@ export function EventTypeForm({
           <label className="inline-flex items-center gap-2">
             <input type="checkbox" name="remindByText" defaultChecked={initial.remindByText} /> Text
             reminders to attendees who leave a phone number
+          </label>
+          <label className="inline-flex items-center gap-2">
+            <input type="checkbox" name="waitlist" defaultChecked={initial.waitlistEnabled} />{" "}
+            Waitlist
+            <span className="text-muted-foreground">
+              (full sessions and empty days offer &ldquo;tell me when a spot opens&rdquo;)
+            </span>
           </label>
         </div>
         <div className="flex items-center justify-between">

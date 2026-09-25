@@ -90,7 +90,7 @@ async function EventPage({ params, searchParams }: PageProps<"/[username]/[event
   const seats = await slotSeats(et, daySlots);
   const full = date ? await fullSessions(et, tz, date) : [];
   const waiting = await waitingCounts(et.id, full);
-  const waitlist = typeof sp.waitlist === "string" ? sp.waitlist : undefined;
+  const waitlist = et.waitlistEnabled && typeof sp.waitlist === "string" ? sp.waitlist : undefined;
   const rule = prev ? null : recurrenceOf(et.recurrence);
   const plan =
     slot && !Number.isNaN(slot.getTime()) && rule ? await planSeries(et, tz, slot, priority) : null;
@@ -259,9 +259,19 @@ async function EventPage({ params, searchParams }: PageProps<"/[username]/[event
                         return (
                           <li key={`full-${s.toISOString()}`}>
                             <SlotChip
-                              href={makeHref({ waitlist: s.toISOString() })}
+                              href={
+                                et.waitlistEnabled
+                                  ? makeHref({ waitlist: s.toISOString() })
+                                  : undefined
+                              }
                               time={fmtTime(s, tz)}
-                              note={n ? `Full · ${n} waiting` : "Full · waitlist"}
+                              note={
+                                !et.waitlistEnabled
+                                  ? "Full"
+                                  : n
+                                    ? `Full · ${n} waiting`
+                                    : "Full · waitlist"
+                              }
                               full
                             />
                           </li>
@@ -285,10 +295,15 @@ async function EventPage({ params, searchParams }: PageProps<"/[username]/[event
                 </ul>
                 {date && daySlots.length === 0 && full.length === 0 && (
                   <p className="text-sm text-muted-foreground">
-                    No times left this day.{" "}
-                    <Link href={makeHref({ waitlist: date })} className="underline">
-                      Join the waitlist
-                    </Link>
+                    No times left this day.
+                    {et.waitlistEnabled && (
+                      <>
+                        {" "}
+                        <Link href={makeHref({ waitlist: date })} className="underline">
+                          Join the waitlist
+                        </Link>
+                      </>
+                    )}
                   </p>
                 )}
               </div>

@@ -77,6 +77,7 @@ async function EditEventTypePage({ params }: PageProps<"/admin/event-types/[id]"
         recurrence: et.recurrence,
         autoCapture: et.autoCapture,
         hidden: et.hidden,
+        waitlistEnabled: et.waitlistEnabled,
       }}
       schedules={schedules.map((s) => ({
         id: s.id,

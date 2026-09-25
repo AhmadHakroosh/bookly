@@ -183,6 +183,8 @@ export const eventTypes = pgTable(
     requiresConfirmation: boolean("requires_confirmation").notNull().default(false),
     color: text("color").notNull().default("#2563eb"),
     hidden: boolean("hidden").notNull().default(false),
+    /** Lets people ask to be told when a full session or an empty day frees up. */
+    waitlistEnabled: boolean("waitlist_enabled").notNull().default(false),
     active: boolean("active").notNull().default(true),
     position: integer("position").notNull().default(0),
     priceCents: integer("price_cents"),

@@ -23,7 +23,7 @@ Turn on `Recurring bookings` on an event type and choose the frequency (daily, w
 
 ## Waitlist
 
-When a group session is full, its time still shows on the booking page, in its place in the day, as "Full · waitlist" (or "Full · 2 waiting" once people are queued); when a day has no free times at all, the page offers a waitlist for that day. People leave a name and email and get a confirmation with a leave link. On a cancellation Bookly emails the first person waiting for that session (one per freed seat) and everyone waiting for that day, with a link straight to the freed time; the spot goes to whoever books first. Hosts see and can remove entries under `Admin → Bookings`.
+Turn on **Waitlist** on an event type to let people ask to be told when a spot opens (off by default). With it on, a full group session still shows on the booking page, in its place in the day, as "Full · waitlist" (or "Full · 2 waiting" once people are queued), and a day with no free times offers a waitlist for that day; with it off, a full session shows as "Full" and cannot be joined. People leave a name and email and get a confirmation with a leave link. On a cancellation Bookly emails the first person waiting for that session (one per freed seat) and everyone waiting for that day, with a link straight to the freed time; the spot goes to whoever books first. Hosts see and can remove entries under `Admin → Bookings`.
 
 ## Abuse controls
 
