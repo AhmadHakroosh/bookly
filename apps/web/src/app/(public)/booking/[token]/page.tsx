@@ -12,6 +12,9 @@ import { bookingSeries } from "@/server/booking-flow";
 import { getBookingByToken, getProfileByUser, locationLabel } from "@/server/scheduling";
 import { getCurrentWorkspace } from "@/server/workspace";
 import { formatPrice } from "@/server/payments";
+import { sessionSummary } from "@/server/sessions";
+import { Badge } from "@/components/ui/badge";
+import { ClockIcon, UsersIcon } from "lucide-react";
 import { cancelByAttendee, cancelRemainingByAttendee, deleteMyTranscript, payNow } from "./actions";
 
 export const metadata: Metadata = { title: "Your booking", robots: { index: false } };
@@ -31,6 +34,7 @@ async function BookingPage({ params, searchParams }: PageProps<"/booking/[token]
   const skipped = Number(sp.skipped) || 0;
   const upcoming = b.endAt > new Date();
   const series = b.seriesId ? await bookingSeries(b) : [];
+  const session = await sessionSummary(b, et ?? null);
   const remaining = series.filter(
     (s) => s.endAt > new Date() && (s.status === "confirmed" || s.status === "pending"),
   );
@@ -133,6 +137,37 @@ async function BookingPage({ params, searchParams }: PageProps<"/booking/[token]
             </dd>
           </div>
         </dl>
+        {session && b.status !== "cancelled" && b.status !== "rescheduled" && (
+          <section className="mt-6 rounded-xl border p-4 text-sm">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <p className="font-medium">Group session</p>
+                <p className="text-xs text-muted-foreground">
+                  {b.seriesCount ? `Session ${b.seriesIndex} of ${b.seriesCount} · ` : ""}
+                  {et?.durationMin} min · {locationLabel(b.location)}
+                </p>
+              </div>
+              <Badge className="shrink-0">
+                <UsersIcon className="mr-1 size-3" aria-hidden />
+                {session.taken} / {session.seats} seats
+              </Badge>
+            </div>
+            <p className="mt-2 text-muted-foreground">
+              {session.taken <= 1
+                ? "You are the first to book this session."
+                : `${session.taken - 1} other ${session.taken === 2 ? "person has" : "people have"} booked this session.`}
+              {session.seats - session.taken > 0
+                ? ` ${session.seats - session.taken} ${session.seats - session.taken === 1 ? "seat is" : "seats are"} still open.`
+                : " It is full."}
+            </p>
+            {session.waiting > 0 && (
+              <p className="mt-3 inline-flex items-center gap-1.5 rounded-lg border border-dashed px-2.5 py-1.5 text-xs">
+                <ClockIcon className="size-3 text-muted-foreground" aria-hidden />
+                Waitlist: {session.waiting} {session.waiting === 1 ? "person" : "people"}
+              </p>
+            )}
+          </section>
+        )}
         {(b.transcriptStatus === "recording" || b.transcriptStatus === "ready") && (
           <div className="mt-6 rounded-xl border p-4 text-sm">
             <p className="font-medium">This call is transcribed</p>

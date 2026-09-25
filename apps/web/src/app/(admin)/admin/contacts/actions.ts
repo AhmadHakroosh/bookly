@@ -16,7 +16,7 @@ import {
 import { OptedOutError, paymentLink, sendOutreach, renderOutreach } from "@/server/outreach";
 import { fillTemplate, type OutreachKind } from "@/server/outreach-text";
 import { formatPrice } from "@/server/payments";
-import { baseUrl, getProfileByUser } from "@/server/scheduling";
+import { getProfileByUser } from "@/server/scheduling";
 import { requireStaff } from "@/server/session";
 import { getCurrentWorkspace } from "@/server/workspace";
 

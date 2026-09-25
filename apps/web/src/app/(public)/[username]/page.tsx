@@ -3,6 +3,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
+import { Badge } from "@/components/ui/badge";
+import { recurrenceOf } from "@/server/recurrence";
 import { PublicContainer, PublicSkeleton } from "../container";
 import { formatPrice, paymentsReady } from "@/server/payments";
 import {
@@ -52,11 +54,19 @@ async function ProfilePage({ params }: PageProps<"/[username]">) {
                 className="block rounded-xl border p-4 hover:bg-muted/40"
                 style={{ borderLeftColor: e.color, borderLeftWidth: 4 }}
               >
-                <span className="block font-medium">{e.title}</span>
+                <span className="flex items-start justify-between gap-3">
+                  <span className="block font-medium">{e.title}</span>
+                  {recurrenceOf(e.recurrence) && (
+                    <Badge variant="outline" className="shrink-0">
+                      {recurrenceOf(e.recurrence)!.count} sessions
+                    </Badge>
+                  )}
+                </span>
                 <span className="block text-sm text-muted-foreground">
                   {e.durationMin} min ·{" "}
                   {locationsLabel(eventLocations(e, { video: hasFeature(ws, "booklyVideo") }))}
                   {e.priceCents && paid ? ` · ${formatPrice(e.priceCents, e.currency)}` : ""}
+                  {e.seats > 1 ? ` · Group of up to ${e.seats}` : ""}
                 </span>
                 {e.description && (
                   <span className="mt-1 line-clamp-2 block text-sm text-muted-foreground">

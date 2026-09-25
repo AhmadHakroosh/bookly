@@ -24,6 +24,8 @@ import { requireStaff } from "@/server/session";
 import { getCurrentWorkspace } from "@/server/workspace";
 import { regenerateBrief } from "../../scheduling-actions";
 import { PageSkeleton } from "@/components/page-skeleton";
+import { sessionSummary } from "@/server/sessions";
+import { CheckIcon, ClockIcon, UsersIcon } from "lucide-react";
 
 export const metadata = { title: "Meeting brief" };
 
@@ -62,6 +64,7 @@ async function BookingBriefPage({ params }: PageProps<"/admin/bookings/[id]">) {
       })
     : null;
   const past = b.endAt <= new Date() || b.status === "completed" || b.status === "no_show";
+  const session = await sessionSummary(b, et ?? null);
   return (
     <div className="max-w-2xl space-y-6">
       <div>
@@ -78,6 +81,11 @@ async function BookingBriefPage({ params }: PageProps<"/admin/bookings/[id]">) {
         </h1>
         <p className="flex flex-wrap items-center gap-x-1.5 gap-y-1 text-sm text-muted-foreground">
           <span>{fmtDateTime(b.startAt, tz)} ·</span>
+          {b.seriesCount && (
+            <span>
+              Session {b.seriesIndex} of {b.seriesCount} ·
+            </span>
+          )}
           {b.meetingUrl ? (
             <ExternalLink href={b.meetingUrl}>Join meeting</ExternalLink>
           ) : (
@@ -89,6 +97,45 @@ async function BookingBriefPage({ params }: PageProps<"/admin/bookings/[id]">) {
           </Badge>
         </p>
       </div>
+      {session && (
+        <section className="rounded-xl border p-5 text-sm">
+          <div className="flex items-center justify-between gap-3">
+            <h2 className="text-base font-semibold tracking-tight">Who is in this session</h2>
+            <Badge>
+              <UsersIcon className="mr-1 size-3" aria-hidden />
+              {session.taken} / {session.seats} seats
+            </Badge>
+          </div>
+          <ul className="mt-3 divide-y rounded-lg border">
+            {session.attendees.map((a) => (
+              <li key={a.id} className="flex items-center justify-between gap-3 px-3 py-2">
+                <span className="min-w-0">
+                  {a.id === b.id ? (
+                    <span className="font-medium">{a.name}</span>
+                  ) : (
+                    <Link href={`/admin/bookings/${a.id}`} className="font-medium hover:underline">
+                      {a.name}
+                    </Link>
+                  )}
+                  {a.company && <span className="text-muted-foreground"> · {a.company}</span>}
+                  <span className="block truncate text-xs text-muted-foreground">{a.email}</span>
+                </span>
+                <span className="inline-flex shrink-0 items-center gap-1 text-xs text-muted-foreground capitalize">
+                  {a.status === "confirmed" && <CheckIcon className="size-3" aria-hidden />}
+                  {a.status}
+                </span>
+              </li>
+            ))}
+          </ul>
+          {session.waiting > 0 && (
+            <p className="mt-3 inline-flex items-center gap-1.5 rounded-lg border border-dashed px-2.5 py-1.5 text-xs">
+              <ClockIcon className="size-3 text-muted-foreground" aria-hidden />
+              Waitlist: {session.waiting} {session.waiting === 1 ? "person" : "people"} · first in
+              line is offered a seat if someone cancels
+            </p>
+          )}
+        </section>
+      )}
       <section className="rounded-xl border p-5">
         <div className="flex items-center justify-between gap-3">
           <h2 className="flex items-center gap-2 text-base font-semibold tracking-tight">

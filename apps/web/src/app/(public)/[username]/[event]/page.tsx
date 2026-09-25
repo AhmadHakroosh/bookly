@@ -35,6 +35,9 @@ import { getCurrentWorkspace } from "@/server/workspace";
 import { hasFeature } from "@/server/limits";
 import { priorityForEmail } from "@/server/contacts";
 import { fullSessions } from "@/server/waitlist";
+import { waitingCounts } from "@/server/sessions";
+import { Badge } from "@/components/ui/badge";
+import { SlotChip } from "@/components/booking/slot-chip";
 import { BookingForm } from "./booking-form";
 import { WaitlistForm } from "./waitlist-form";
 
@@ -86,6 +89,7 @@ async function EventPage({ params, searchParams }: PageProps<"/[username]/[event
   const daySlots = date ? (days.find((d) => d.date === date)?.slots ?? []) : [];
   const seats = await slotSeats(et, daySlots);
   const full = date ? await fullSessions(et, tz, date) : [];
+  const waiting = await waitingCounts(et.id, full);
   const waitlist = typeof sp.waitlist === "string" ? sp.waitlist : undefined;
   const rule = prev ? null : recurrenceOf(et.recurrence);
   const plan =
@@ -116,14 +120,21 @@ async function EventPage({ params, searchParams }: PageProps<"/[username]/[event
       <div className="grid gap-8 rounded-2xl border md:grid-cols-[260px_1fr]">
         <aside className="border-b p-6 md:border-r md:border-b-0">
           <BackLink href={`/${profile.username}`}>{profile.displayName}</BackLink>
-          <h1 className="mt-3 text-2xl font-semibold tracking-tight">{et.title}</h1>
+          <div className="mt-3 flex items-start justify-between gap-3">
+            <h1 className="text-2xl font-semibold tracking-tight">{et.title}</h1>
+            {rule && (
+              <Badge variant="outline" className="mt-1 shrink-0">
+                {rule.count} sessions
+              </Badge>
+            )}
+          </div>
           <p className="mt-2 text-sm text-muted-foreground">
             {et.durationMin} min · {locationsLabel(eventLocations(et, video))}
             {et.priceCents && paid ? ` · ${formatPrice(et.priceCents, et.currency)}` : ""}
             {et.seats > 1 ? ` · Group of up to ${et.seats}` : ""}
           </p>
           {rule && (
-            <p className="mt-1 text-sm text-muted-foreground">
+            <p className="mt-2 rounded-md bg-muted/60 px-2.5 py-1.5 text-xs text-muted-foreground">
               {describeRecurrence(rule)}. One booking reserves the whole series
               {et.priceCents && paid
                 ? ` (${formatPrice(et.priceCents * rule.count, et.currency)} for ${rule.count} sessions)`
@@ -215,14 +226,16 @@ async function EventPage({ params, searchParams }: PageProps<"/[username]/[event
               />
             </div>
           ) : (
-            <div className="grid gap-8 md:grid-cols-[1fr_180px]">
-              <MonthCalendar
-                month={month}
-                availableDates={availableDates}
-                selected={date}
-                today={today}
-                makeHref={makeHref}
-              />
+            <div className="space-y-6">
+              <div className="max-w-sm">
+                <MonthCalendar
+                  month={month}
+                  availableDates={availableDates}
+                  selected={date}
+                  today={today}
+                  makeHref={makeHref}
+                />
+              </div>
               <div>
                 <p className="mb-2 text-sm font-medium">
                   {date
@@ -234,45 +247,50 @@ async function EventPage({ params, searchParams }: PageProps<"/[username]/[event
                       })
                     : "Pick a day"}
                 </p>
-                <ul className="max-h-80 space-y-2 overflow-y-auto pr-1">
-                  {daySlots.map((s) => {
-                    const left = seats.get(s.getTime());
-                    return (
-                      <li key={s.toISOString()}>
-                        <Link
-                          href={makeHref({ slot: s.toISOString() })}
-                          className="block rounded-lg border px-3 py-2 text-center text-sm font-medium hover:border-primary hover:text-primary"
-                        >
-                          {fmtTime(s, tz)}
-                          {left != null && left < et.seats && (
-                            <span className="block text-xs font-normal text-muted-foreground">
-                              {left} {left === 1 ? "seat" : "seats"} left
-                            </span>
-                          )}
-                        </Link>
-                      </li>
-                    );
-                  })}
-                  {full.map((s) => (
-                    <li key={`full-${s.toISOString()}`}>
-                      <Link
-                        href={makeHref({ waitlist: s.toISOString() })}
-                        className="block rounded-lg border border-dashed px-3 py-2 text-center text-sm text-muted-foreground hover:border-primary hover:text-primary"
-                      >
-                        {fmtTime(s, tz)}
-                        <span className="block text-xs">Full · join waitlist</span>
-                      </Link>
-                    </li>
-                  ))}
-                  {date && daySlots.length === 0 && (
-                    <li className="text-sm text-muted-foreground">
-                      No times left this day.{" "}
-                      <Link href={makeHref({ waitlist: date })} className="underline">
-                        Join the waitlist
-                      </Link>
-                    </li>
-                  )}
+                <ul className="grid grid-cols-3 gap-2 sm:grid-cols-4 lg:grid-cols-5">
+                  {[
+                    ...daySlots.map((s) => ({ s, full: false })),
+                    ...full.map((s) => ({ s, full: true })),
+                  ]
+                    .sort((a, b) => a.s.getTime() - b.s.getTime())
+                    .map(({ s, full: isFull }) => {
+                      if (isFull) {
+                        const n = waiting.get(s.getTime()) ?? 0;
+                        return (
+                          <li key={`full-${s.toISOString()}`}>
+                            <SlotChip
+                              href={makeHref({ waitlist: s.toISOString() })}
+                              time={fmtTime(s, tz)}
+                              note={n ? `Full · ${n} waiting` : "Full · waitlist"}
+                              full
+                            />
+                          </li>
+                        );
+                      }
+                      const left = seats.get(s.getTime());
+                      return (
+                        <li key={s.toISOString()}>
+                          <SlotChip
+                            href={makeHref({ slot: s.toISOString() })}
+                            time={fmtTime(s, tz)}
+                            note={
+                              et.seats > 1 && left != null
+                                ? `${left} ${left === 1 ? "seat" : "seats"} left`
+                                : undefined
+                            }
+                          />
+                        </li>
+                      );
+                    })}
                 </ul>
+                {date && daySlots.length === 0 && full.length === 0 && (
+                  <p className="text-sm text-muted-foreground">
+                    No times left this day.{" "}
+                    <Link href={makeHref({ waitlist: date })} className="underline">
+                      Join the waitlist
+                    </Link>
+                  </p>
+                )}
               </div>
             </div>
           )}

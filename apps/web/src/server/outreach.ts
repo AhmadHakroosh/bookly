@@ -12,7 +12,7 @@ import { DEFAULT_TEMPLATES, type OutreachKind, type Template } from "./outreach-
 import { platformFeeCents, platformFeePercent } from "./connect";
 import { formatPrice, paymentsFor, stripe } from "./payments";
 import { unsubscribePostUrl, unsubscribeUrl } from "./unsubscribe";
-import { baseUrl, getProfileByUser } from "./scheduling";
+import { getProfileByUser } from "./scheduling";
 
 export function templatesFor(ws: Workspace) {
   const t = ws.settings.templates ?? {};

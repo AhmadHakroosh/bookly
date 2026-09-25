@@ -483,7 +483,13 @@ export async function getBookingByToken(token: string): Promise<Booking | null> 
 export async function listBookings(
   workspaceId: string,
   opts: { userId?: string; upcoming?: boolean; limit?: number } = {},
-): Promise<(Booking & { eventTitle: string | null; eventSeats: number | null })[]> {
+): Promise<
+  (Booking & {
+    eventTitle: string | null;
+    eventSeats: number | null;
+    contactCompany: string | null;
+  })[]
+> {
   const conds = [eq(schema.bookings.workspaceId, workspaceId)];
   if (opts.userId) conds.push(eq(schema.bookings.hostUserId, opts.userId));
   if (opts.upcoming === true) conds.push(gte(schema.bookings.endAt, new Date()));
@@ -493,13 +499,20 @@ export async function listBookings(
       b: schema.bookings,
       eventTitle: schema.eventTypes.title,
       eventSeats: schema.eventTypes.seats,
+      contactCompany: schema.contacts.company,
     })
     .from(schema.bookings)
     .leftJoin(schema.eventTypes, eq(schema.eventTypes.id, schema.bookings.eventTypeId))
+    .leftJoin(schema.contacts, eq(schema.contacts.id, schema.bookings.contactId))
     .where(and(...conds))
     .orderBy(opts.upcoming === false ? desc(schema.bookings.startAt) : asc(schema.bookings.startAt))
     .limit(opts.limit ?? 200);
-  return rows.map((r) => ({ ...r.b, eventTitle: r.eventTitle, eventSeats: r.eventSeats }));
+  return rows.map((r) => ({
+    ...r.b,
+    eventTitle: r.eventTitle,
+    eventSeats: r.eventSeats,
+    contactCompany: r.contactCompany,
+  }));
 }
 
 export const LOCATION_TYPES = [
