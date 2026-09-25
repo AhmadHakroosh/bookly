@@ -10,7 +10,12 @@ import { revalidatePath } from "next/cache";
 import { cancelBooking, confirmBooking } from "@/server/booking-flow";
 import { briefForBooking } from "@/server/brief";
 import { addTask, captureMeeting, completeTask, deleteTask, sendFollowUp } from "@/server/capture";
-import { logContactEvent, updateContact } from "@/server/contacts";
+import {
+  logContactEvent,
+  reconsiderStageAfterNoShow,
+  retractBookingEvents,
+  updateContact,
+} from "@/server/contacts";
 import { deleteTranscript } from "@/server/transcripts";
 import {
   acceptRecapActions,
@@ -541,8 +546,11 @@ export async function hostMark(id: string, status: "completed" | "no_show" | "co
     .set({ status })
     .where(and(eq(schema.bookings.id, id), eq(schema.bookings.workspaceId, ws.id)))
     .returning();
-  if (b && status !== "confirmed")
-    await trackBooking(
+  if (b && status !== "confirmed") {
+    // The tick may already have logged the meeting as held; a no-show replaces that note (and
+    // the reverse when the host undoes it), so the timeline tells one story.
+    await retractBookingEvents(b.id, status === "no_show" ? "completed" : "no_show");
+    const contact = await trackBooking(
       ws,
       b,
       status,
@@ -550,6 +558,8 @@ export async function hostMark(id: string, status: "completed" | "no_show" | "co
         ? `Did not show up on ${fmtDateTime(b.startAt, b.timezone)}`
         : `Meeting took place on ${fmtDateTime(b.startAt, b.timezone)}`,
     );
+    if (status === "no_show") await reconsiderStageAfterNoShow(ws, contact);
+  }
   refreshWorkspace(ws.id);
 }
 

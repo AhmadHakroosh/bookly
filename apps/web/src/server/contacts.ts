@@ -150,6 +150,26 @@ export async function trackBooking(
   return contact;
 }
 
+/** Removes the timeline entries a booking logged under `type`, e.g. the automatic "took place" note once the host records a no-show. */
+export async function retractBookingEvents(bookingId: string, type: ContactEventType) {
+  await db()
+    .delete(schema.contactEvents)
+    .where(and(eq(schema.contactEvents.bookingId, bookingId), eq(schema.contactEvents.type, type)));
+}
+
+/**
+ * After a no-show: a contact that became "active" only because this meeting was counted as
+ * held goes back to "lead" unless another meeting with them actually took place.
+ */
+export async function reconsiderStageAfterNoShow(workspace: Workspace, contact: Contact) {
+  if (contact.stage !== "active") return;
+  const held = await db().query.bookings.findFirst({
+    where: and(eq(schema.bookings.contactId, contact.id), eq(schema.bookings.status, "completed")),
+    columns: { id: true },
+  });
+  if (!held) await setStage(workspace.id, contact.id, "lead", "system");
+}
+
 async function recount(contactId: string) {
   await db()
     .update(schema.contacts)
