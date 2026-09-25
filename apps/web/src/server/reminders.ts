@@ -1,4 +1,5 @@
 import "server-only";
+import { dueReminderOffsets } from "@/lib/reminder-offsets";
 import { adminBaseUrl, publicBaseUrl } from "./urls";
 import { and, eq, gte, inArray, lte, schema, sql } from "@bookly/db";
 import { sendEmail } from "@bookly/email";
@@ -46,9 +47,9 @@ export async function sendDueReminders(
       ? await db().query.eventTypes.findFirst({ where: eq(schema.eventTypes.id, b.eventTypeId) })
       : null;
     const offsets = et?.reminders?.length ? et.reminders : [1440, 60];
-    const minutesLeft = (b.startAt.getTime() - now.getTime()) / 60_000;
-    // Due when we are inside [offset, offset - 15min); catches up if the tick was late, but never after the start.
-    const due = offsets.filter((m) => minutesLeft <= m && !b.remindersSent.includes(`r:${m}`));
+    // Catches up if the tick was late, never after the start, and skips offsets that had already
+    // passed when the booking was made (a same-day booking gets no "tomorrow" reminder).
+    const due = dueReminderOffsets(offsets, b, now);
     if (!due.length) continue;
     const [ws, host, hostUser] = await Promise.all([
       db().query.workspaces.findFirst({ where: eq(schema.workspaces.id, b.workspaceId) }),
