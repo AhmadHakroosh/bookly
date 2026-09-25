@@ -116,6 +116,59 @@ export default function PrivacyPage() {
         </a>
         , including the Limited Use requirements.
       </p>
+      <h2>Google user data</h2>
+      <p>
+        This section spells out, for the Google account a host connects, what Bookly receives, how
+        it is used, with whom it is shared and how it is protected.
+      </p>
+      <p>
+        <strong>What we receive.</strong> The email address of the Google account, the list of the
+        host&apos;s calendars, the free/busy times of the calendars the host ticks, and the details
+        of the calendar events Bookly itself creates for bookings (title, time, attendees, Meet
+        link). Bookly does not read the contents of other events, and never accesses Gmail, Contacts
+        or Drive.
+      </p>
+      <p>
+        <strong>How we use it.</strong> Only to show a booking page with the host&apos;s real
+        availability, to add, update and remove the calendar events and Meet links for bookings, and
+        to label the connection in the admin. Google user data is not used for advertising, is not
+        sold, and is not used to develop, improve or train generalised AI or machine-learning
+        models. The optional AI briefings work from Bookly&apos;s own booking records, not from
+        Google calendar data.
+      </p>
+      <p>
+        <strong>With whom we share, transfer or disclose it.</strong> Google user data is not shared
+        with, transferred to or disclosed to any third party for that party&apos;s own use. It is
+        processed only by the sub-processors that run Bookly on our behalf and under a data
+        processing agreement: Vercel (application hosting), Neon (the database, where the encrypted
+        tokens are stored) and Upstash (the job queue that schedules calendar updates). Event
+        details that Bookly creates are visible to the host&apos;s workspace members, to the guest
+        who booked, and to the other attendees of a group session, because they are the participants
+        of that meeting. We disclose data to authorities only when the law requires it, and we tell
+        the host unless we are legally barred from doing so. A change of ownership of the service
+        would be announced in advance and the same policy would continue to apply.
+      </p>
+      <p>
+        <strong>How we protect it.</strong> Google access and refresh tokens are encrypted at rest
+        with AES-256-GCM using a key that lives only in the server environment, never in the
+        database or in logs. All traffic between your browser, Bookly, its sub-processors and Google
+        uses TLS; the database and its backups are encrypted at rest by the provider. Access to
+        production systems is limited to the people who operate the service, protected by
+        multi-factor authentication, and every request Bookly makes to Google is scoped to the
+        minimum permissions listed above. Error reports have personal data removed before they leave
+        the server. The cached view of busy times is held for one minute and is never written to a
+        log.
+      </p>
+      <p>
+        <strong>Retention and deletion.</strong> Tokens are deleted the moment a host disconnects
+        the account in Admin → Calendars or Conferencing or deletes their workspace. If a host
+        revokes Bookly&apos;s access in their Google account instead, the stored tokens stop
+        working, the connection is marked as broken and the host is told, and the tokens are removed
+        when the host disconnects or the workspace is deleted. The cached view of busy times expires
+        after one minute. Calendar events Bookly created remain in the host&apos;s Google calendar,
+        where the host controls them. Bookings and their event details follow the retention periods
+        below.
+      </p>
       <h2>How long we keep it</h2>
       <ul>
         <li>
