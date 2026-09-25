@@ -167,6 +167,20 @@ export function isSlotAvailable(input: Omit<EngineInput, "from" | "to">, start: 
   return days.some((d) => d.slots.some((s) => s.getTime() === start.getTime()));
 }
 
+/**
+ * Drops busy intervals that are only the calendar echo of this event type's own sessions: the
+ * event Bookly created for a group session comes back from the host's connected calendar as
+ * busy time and would block the session's remaining seats.
+ */
+export function withoutSessionEchoes(busy: Interval[], occupied: Occupied[]): Interval[] {
+  return busy.filter(
+    (b) =>
+      !occupied.some(
+        (o) => o.start.getTime() === b.start.getTime() && o.end.getTime() === b.end.getTime(),
+      ),
+  );
+}
+
 /** Seats still free for each slot start (ms epoch), given the sessions already booked. */
 export function seatsLeft(seats: number, occupied: Occupied[], slots: Date[]): SeatMap {
   const map: SeatMap = new Map();
