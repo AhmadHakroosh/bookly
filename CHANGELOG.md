@@ -4,6 +4,12 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-09-26
+
+### Added
+
+- Sign in with Google, Microsoft or GitHub. Each provider appears on the sign-in, sign-up and invitation pages once its OAuth client is configured (`GITHUB_CLIENT_ID`/`GITHUB_CLIENT_SECRET` are new; Google and Microsoft reuse the calendar clients with an extra callback URL). Sign-in asks for identity only, never calendar access. A provider never creates an account by itself: the sign-up page records consent first and a self-hosted install still requires an invitation. Google and Microsoft attach to an existing account with the same verified email; Admin → Booking page → Sign-in methods connects or disconnects providers and lets an account created through one set a password
+
 ### Changed
 
 - Search and sharing: a workspace host (tenant subdomain, custom domain or self-hosted install) serves its own robots.txt and a sitemap of its public pages on its primary domain; profile, event and routing-form pages carry canonical and Open Graph tags and structured data (Person, Service, Offer); workspace pages are titled after the workspace and drop the "— Bookly" suffix on plans that remove branding. On the marketing site, docs pages get canonical tags, social tags and their own descriptions, the social card shows each page's title, the sitemap carries real dates or none, product mocks no longer inject headings, and the 404 page has a title. The event page streams its calendar behind a skeleton, and the build targets evergreen browsers
@@ -117,7 +123,8 @@ First public release: the self-hostable scheduling platform with contacts, brief
 
 - The unused storage layer (`packages/storage`, `STORAGE_*` and `S3_*` variables, the MinIO service in Compose): nothing in Bookly uploads files; profile photos and logos are URLs
 
-[Unreleased]: https://github.com/AhmadHakroosh/bookly/compare/v0.2.1...HEAD
+[Unreleased]: https://github.com/AhmadHakroosh/bookly/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/AhmadHakroosh/bookly/compare/v0.2.1...v0.3.0
 [0.2.1]: https://github.com/AhmadHakroosh/bookly/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/AhmadHakroosh/bookly/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/AhmadHakroosh/bookly/releases/tag/v0.1.0

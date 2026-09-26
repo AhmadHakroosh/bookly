@@ -9,8 +9,16 @@ import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { authClient } from "@/lib/auth-client";
+import type { SocialProvider } from "@/lib/social-providers";
+import { OrDivider, SocialButtons } from "@/components/social-buttons";
 
-export function LoginForm({ next }: { next: string }) {
+export function LoginForm({
+  next,
+  providers,
+}: {
+  next: string;
+  providers: readonly SocialProvider[];
+}) {
   const router = useRouter();
   const [pending, setPending] = useState(false);
 
@@ -51,59 +59,71 @@ export function LoginForm({ next }: { next: string }) {
   }
 
   return (
-    <Tabs defaultValue="password">
-      <TabsList className="w-full">
-        <TabsTrigger value="password" className="flex-1">
-          Password
-        </TabsTrigger>
-        <TabsTrigger value="magic" className="flex-1">
-          Email link
-        </TabsTrigger>
-      </TabsList>
-      <TabsContent value="password">
-        <form onSubmit={onPassword} className="mt-4">
-          <FieldGroup>
-            <Field>
-              <FieldLabel htmlFor="email">Email</FieldLabel>
-              <Input id="email" name="email" type="email" autoComplete="email" required />
-            </Field>
-            <Field>
-              <FieldLabel htmlFor="password">Password</FieldLabel>
-              <Input
-                id="password"
-                name="password"
-                type="password"
-                autoComplete="current-password"
-                required
-              />
-            </Field>
-            <p className="-mt-2 text-right text-xs">
-              <Link
-                href={`/forgot-password?next=${encodeURIComponent(next)}`}
-                className="text-muted-foreground underline underline-offset-4 hover:text-foreground"
-              >
-                Forgot your password?
-              </Link>
-            </p>
-            <Button type="submit" className="w-full" disabled={pending}>
-              Sign in
-            </Button>
-          </FieldGroup>
-        </form>
-      </TabsContent>
-      <TabsContent value="magic">
-        <form onSubmit={onMagic} className="mt-4">
-          <FieldGroup>
-            <Field>
-              <FieldLabel htmlFor="magic-email">Email</FieldLabel>
-              <Input id="magic-email" name="email" type="email" autoComplete="email" required />
-            </Field>
-            <Button type="submit" className="w-full" disabled={pending}>
-              Send sign-in link
-            </Button>
-          </FieldGroup>
-        </form>
-      </TabsContent>
-    </Tabs>
+    <>
+      {providers.length > 0 && (
+        <>
+          <SocialButtons
+            providers={providers}
+            callbackURL={next}
+            errorCallbackURL={`/login?next=${encodeURIComponent(next)}`}
+          />
+          <OrDivider />
+        </>
+      )}
+      <Tabs defaultValue="password">
+        <TabsList className="w-full">
+          <TabsTrigger value="password" className="flex-1">
+            Password
+          </TabsTrigger>
+          <TabsTrigger value="magic" className="flex-1">
+            Email link
+          </TabsTrigger>
+        </TabsList>
+        <TabsContent value="password">
+          <form onSubmit={onPassword} className="mt-4">
+            <FieldGroup>
+              <Field>
+                <FieldLabel htmlFor="email">Email</FieldLabel>
+                <Input id="email" name="email" type="email" autoComplete="email" required />
+              </Field>
+              <Field>
+                <FieldLabel htmlFor="password">Password</FieldLabel>
+                <Input
+                  id="password"
+                  name="password"
+                  type="password"
+                  autoComplete="current-password"
+                  required
+                />
+              </Field>
+              <p className="-mt-2 text-right text-xs">
+                <Link
+                  href={`/forgot-password?next=${encodeURIComponent(next)}`}
+                  className="text-muted-foreground underline underline-offset-4 hover:text-foreground"
+                >
+                  Forgot your password?
+                </Link>
+              </p>
+              <Button type="submit" className="w-full" disabled={pending}>
+                Sign in
+              </Button>
+            </FieldGroup>
+          </form>
+        </TabsContent>
+        <TabsContent value="magic">
+          <form onSubmit={onMagic} className="mt-4">
+            <FieldGroup>
+              <Field>
+                <FieldLabel htmlFor="magic-email">Email</FieldLabel>
+                <Input id="magic-email" name="email" type="email" autoComplete="email" required />
+              </Field>
+              <Button type="submit" className="w-full" disabled={pending}>
+                Send sign-in link
+              </Button>
+            </FieldGroup>
+          </form>
+        </TabsContent>
+      </Tabs>
+    </>
   );
 }

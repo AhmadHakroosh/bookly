@@ -8,6 +8,9 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Field, FieldDescription, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { OrDivider, SocialButtons } from "@/components/social-buttons";
+import type { SocialProvider } from "@/lib/social-providers";
+import { rememberConsentAction } from "@/server/consent-actions";
 import { createWorkspace, type CreateState } from "./actions";
 
 /** Two steps on one page: create the account (client, Better Auth), then the workspace (server action). */
@@ -15,15 +18,20 @@ export function SignupForm({
   rootDomain,
   signedIn,
   legalVersion,
+  providers,
 }: {
   rootDomain: string;
   signedIn: boolean;
   /** Date of the terms/privacy revision being accepted, stored with the account. */
   legalVersion: string;
+  providers: readonly SocialProvider[];
 }) {
   const [step, setStep] = useState<1 | 2>(signedIn ? 2 : 1);
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
+  // Both boxes gate the social buttons too: a provider account is created only with consent on record.
+  const [terms, setTerms] = useState(false);
+  const [privacy, setPrivacy] = useState(false);
   const [state, action, creating] = useActionState(createWorkspace, {} as CreateState);
   const [slug, setSlug] = useState("");
   const router = useRouter();
@@ -85,6 +93,8 @@ export function SignupForm({
                 required
                 className="mt-0.5"
                 aria-label="I agree to the terms of service"
+                checked={terms}
+                onCheckedChange={(v) => setTerms(v === true)}
               />
               <span>
                 I agree to the{" "}
@@ -100,6 +110,8 @@ export function SignupForm({
                 required
                 className="mt-0.5"
                 aria-label="I have read the privacy policy and consent to the processing it describes"
+                checked={privacy}
+                onCheckedChange={(v) => setPrivacy(v === true)}
               />
               <span>
                 I have read the{" "}
@@ -115,6 +127,31 @@ export function SignupForm({
             {pending ? "Creating account…" : "Continue"}
           </Button>
         </FieldGroup>
+        {providers.length > 0 && (
+          <>
+            <OrDivider />
+            <SocialButtons
+              providers={providers}
+              signUp
+              callbackURL="/signup"
+              disabled={pending}
+              beforeRedirect={async () => {
+                if (!terms || !privacy) {
+                  setError("Accept the terms of service and privacy policy first.");
+                  return false;
+                }
+                setError(null);
+                const { ok } = await rememberConsentAction(legalVersion);
+                if (!ok) setError("Could not record your consent. Try again.");
+                return ok;
+              }}
+            />
+            <p className="mt-3 text-xs text-muted-foreground">
+              Signing in with a provider shares your name, email address and profile picture with
+              Bookly, nothing else.
+            </p>
+          </>
+        )}
       </form>
     );
 

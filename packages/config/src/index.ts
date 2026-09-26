@@ -33,6 +33,9 @@ export const envSchema = z.object({
   MICROSOFT_CLIENT_SECRET: z.string().optional(),
   /** Entra tenant: "common" (any account), "consumers", "organizations" or a tenant id. */
   MICROSOFT_TENANT: z.string().default("common"),
+  /** GitHub OAuth app (sign-in only). Callback: <APP_URL>/api/auth/callback/github */
+  GITHUB_CLIENT_ID: z.string().optional(),
+  GITHUB_CLIENT_SECRET: z.string().optional(),
   ZOOM_CLIENT_ID: z.string().optional(),
   ZOOM_CLIENT_SECRET: z.string().optional(),
   /** Zoom app "Secret Token" (Features → Access): verifies deauthorization notifications. */

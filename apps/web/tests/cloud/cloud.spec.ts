@@ -129,7 +129,7 @@ test.describe("sign-up and tenants", () => {
     await page.locator('input[name="email"]').fill(`${slug}@example.com`);
     await page.locator('input[name="password"]').fill("ci-owner-password-1");
     for (const box of await page.getByRole("checkbox").all()) await box.check();
-    await page.getByRole("button", { name: "Continue" }).click();
+    await page.getByRole("button", { name: "Continue", exact: true }).click();
     await page.locator('input[name="name"]').fill("CI Workspace");
     await page.locator('input[name="slug"]').fill(slug);
     await page.getByRole("button", { name: "Create workspace" }).click();

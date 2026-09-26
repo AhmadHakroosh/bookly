@@ -37,7 +37,10 @@ export default function PrivacyPage() {
       <h2>What we collect</h2>
       <h3>From hosts</h3>
       <ul>
-        <li>Account details: name, email, password hash, profile photo and timezone.</li>
+        <li>
+          Account details: name, email, password hash, profile photo and timezone, and, when you
+          sign in with Google, Microsoft or GitHub, the identifier of that provider account.
+        </li>
         <li>Workspace content: event types, availability, contacts, notes, tasks and settings.</li>
         <li>
           Integration data you connect: calendar events (to detect conflicts and create events),
@@ -127,6 +130,14 @@ export default function PrivacyPage() {
         of the calendar events Bookly itself creates for bookings (title, time, attendees, Meet
         link). Bookly does not read the contents of other events, and never accesses Gmail, Contacts
         or Drive.
+      </p>
+      <p>
+        <strong>Signing in with Google.</strong> &ldquo;Continue with Google&rdquo; on the sign-in
+        and sign-up pages is a separate, narrower use: Bookly receives only the name, email address
+        and profile picture of the Google account, to create or recognise your Bookly account. It
+        asks for no calendar access; connecting a calendar is a distinct step under Admin →
+        Calendars with its own consent screen. The same applies to signing in with Microsoft or
+        GitHub.
       </p>
       <p>
         <strong>How we use it.</strong> Only to show a booking page with the host&apos;s real

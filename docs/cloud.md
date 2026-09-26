@@ -148,8 +148,9 @@ video `https://meet.bookly-app.io`, `www` redirected to the apex by the proxy.
 3. **Environment.** Import `.env.cloud` from the repository root (it is git-ignored and carries
    the fixed values: hosts, drivers, `JOBS_WORKER=false`, `TELEMETRY_URL`) and fill in each
    `SET:` line: Neon, `AUTH_SECRET`, Resend (verify `bookly-app.io` there first),
-   Upstash Redis and QStash, Anthropic, Daily, the OAuth apps and Stripe. `APP_URL` is read at
-   build time too, so set it before the first build.
+   Upstash Redis and QStash, Anthropic, Daily, the OAuth apps (Google, Microsoft, Zoom, and a
+   GitHub OAuth app for sign-in) and Stripe. `APP_URL` is read at build time too, so set it
+   before the first build.
 4. **Database.** From your machine: `DATABASE_URL='<neon pooled url>' pnpm db:migrate`.
 5. **Stripe.** Two webhook endpoints: `https://bookly-app.io/api/webhooks/stripe` on your
    account (subscriptions and Checkout) and `https://bookly-app.io/api/webhooks/stripe/connect`
