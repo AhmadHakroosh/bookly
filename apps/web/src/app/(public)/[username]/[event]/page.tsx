@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import type { EventType } from "@bookly/db/schema";
 import Link from "next/link";
 import { BackLink } from "@/components/links";
 import { notFound } from "next/navigation";
@@ -93,12 +94,6 @@ async function EventPage({ params, searchParams }: PageProps<"/[username]/[event
   );
   const knownEmail = typeof sp.email === "string" ? sp.email : prev?.attendeeEmail;
   const priority = await priorityForEmail(ws.id, knownEmail);
-  const days = await availableSlots(et, tz, monthStart, monthEnd, { priority });
-  const availableDates = new Set(days.map((d) => d.date));
-  const daySlots = date ? (days.find((d) => d.date === date)?.slots ?? []) : [];
-  const seats = await slotSeats(et, daySlots);
-  const full = date ? await fullSessions(et, tz, date) : [];
-  const waiting = await waitingCounts(et.id, full);
   const waitlist = et.waitlistEnabled && typeof sp.waitlist === "string" ? sp.waitlist : undefined;
   const rule = prev ? null : recurrenceOf(et.recurrence);
   const plan =
@@ -260,92 +255,147 @@ async function EventPage({ params, searchParams }: PageProps<"/[username]/[event
               />
             </div>
           ) : (
-            <div className="space-y-6">
-              <div className="max-w-sm">
-                <MonthCalendar
-                  month={month}
-                  availableDates={availableDates}
-                  selected={date}
-                  today={today}
-                  makeHref={makeHref}
-                />
-              </div>
-              <div>
-                <p className="mb-2 text-sm font-medium">
-                  {date
-                    ? new Date(`${date}T12:00:00Z`).toLocaleDateString("en", {
-                        weekday: "long",
-                        month: "short",
-                        day: "numeric",
-                        timeZone: "UTC",
-                      })
-                    : "Pick a day"}
-                </p>
-                <ul className="grid grid-cols-3 gap-2 sm:grid-cols-4 lg:grid-cols-5">
-                  {[
-                    ...daySlots.map((s) => ({ s, full: false })),
-                    ...full.map((s) => ({ s, full: true })),
-                  ]
-                    .sort((a, b) => a.s.getTime() - b.s.getTime())
-                    .map(({ s, full: isFull }) => {
-                      if (isFull) {
-                        const n = waiting.get(s.getTime()) ?? 0;
-                        return (
-                          <li key={`full-${s.toISOString()}`}>
-                            <SlotChip
-                              href={
-                                et.waitlistEnabled
-                                  ? makeHref({ waitlist: s.toISOString() })
-                                  : undefined
-                              }
-                              time={fmtTime(s, tz)}
-                              note={
-                                !et.waitlistEnabled
-                                  ? "Full"
-                                  : n
-                                    ? `Full · ${n} waiting`
-                                    : "Full · waitlist"
-                              }
-                              full
-                            />
-                          </li>
-                        );
-                      }
-                      const left = seats.get(s.getTime());
-                      return (
-                        <li key={s.toISOString()}>
-                          <SlotChip
-                            href={makeHref({ slot: s.toISOString() })}
-                            time={fmtTime(s, tz)}
-                            note={
-                              et.seats > 1 && left != null
-                                ? `${left} ${left === 1 ? "seat" : "seats"} left`
-                                : undefined
-                            }
-                          />
-                        </li>
-                      );
-                    })}
-                </ul>
-                {date && daySlots.length === 0 && full.length === 0 && (
-                  <p className="text-sm text-muted-foreground">
-                    No times left this day.
-                    {et.waitlistEnabled && (
-                      <>
-                        {" "}
-                        <Link href={makeHref({ waitlist: date })} className="underline">
-                          Join the waitlist
-                        </Link>
-                      </>
-                    )}
-                  </p>
-                )}
-              </div>
-            </div>
+            <Suspense fallback={<PickerSkeleton />}>
+              <Picker
+                et={et}
+                tz={tz}
+                month={month}
+                monthStart={monthStart}
+                monthEnd={monthEnd}
+                date={date}
+                today={today}
+                priority={priority}
+                makeHref={makeHref}
+              />
+            </Suspense>
           )}
         </section>
       </div>
     </PublicContainer>
+  );
+}
+
+/**
+ * The calendar and the day's times. Availability needs the host's calendars (a network call on
+ * a cold server), so this streams in after the page shell with a skeleton in its place.
+ */
+async function Picker({
+  et,
+  tz,
+  month,
+  monthStart,
+  monthEnd,
+  date,
+  today,
+  priority,
+  makeHref,
+}: {
+  et: EventType;
+  tz: string;
+  month: string;
+  monthStart: string;
+  monthEnd: string;
+  date: string | undefined;
+  today: string;
+  priority: boolean;
+  makeHref: (over: Record<string, string | undefined>) => string;
+}) {
+  const days = await availableSlots(et, tz, monthStart, monthEnd, { priority });
+  const availableDates = new Set(days.map((d) => d.date));
+  const daySlots = date ? (days.find((d) => d.date === date)?.slots ?? []) : [];
+  const seats = await slotSeats(et, daySlots);
+  const full = date ? await fullSessions(et, tz, date) : [];
+  const waiting = await waitingCounts(et.id, full);
+  return (
+    <div className="space-y-6">
+      <div className="max-w-sm">
+        <MonthCalendar
+          month={month}
+          availableDates={availableDates}
+          selected={date}
+          today={today}
+          makeHref={makeHref}
+        />
+      </div>
+      <div>
+        <p className="mb-2 text-sm font-medium">
+          {date
+            ? new Date(`${date}T12:00:00Z`).toLocaleDateString("en", {
+                weekday: "long",
+                month: "short",
+                day: "numeric",
+                timeZone: "UTC",
+              })
+            : "Pick a day"}
+        </p>
+        <ul className="grid grid-cols-3 gap-2 sm:grid-cols-4 lg:grid-cols-5">
+          {[...daySlots.map((s) => ({ s, full: false })), ...full.map((s) => ({ s, full: true }))]
+            .sort((a, b) => a.s.getTime() - b.s.getTime())
+            .map(({ s, full: isFull }) => {
+              if (isFull) {
+                const n = waiting.get(s.getTime()) ?? 0;
+                return (
+                  <li key={`full-${s.toISOString()}`}>
+                    <SlotChip
+                      href={
+                        et.waitlistEnabled ? makeHref({ waitlist: s.toISOString() }) : undefined
+                      }
+                      time={fmtTime(s, tz)}
+                      note={
+                        !et.waitlistEnabled ? "Full" : n ? `Full · ${n} waiting` : "Full · waitlist"
+                      }
+                      full
+                    />
+                  </li>
+                );
+              }
+              const left = seats.get(s.getTime());
+              return (
+                <li key={s.toISOString()}>
+                  <SlotChip
+                    href={makeHref({ slot: s.toISOString() })}
+                    time={fmtTime(s, tz)}
+                    note={
+                      et.seats > 1 && left != null
+                        ? `${left} ${left === 1 ? "seat" : "seats"} left`
+                        : undefined
+                    }
+                  />
+                </li>
+              );
+            })}
+        </ul>
+        {date && daySlots.length === 0 && full.length === 0 && (
+          <p className="text-sm text-muted-foreground">
+            No times left this day.
+            {et.waitlistEnabled && (
+              <>
+                {" "}
+                <Link href={makeHref({ waitlist: date })} className="underline">
+                  Join the waitlist
+                </Link>
+              </>
+            )}
+          </p>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function PickerSkeleton() {
+  return (
+    <div className="space-y-6">
+      <div className="max-w-sm space-y-3">
+        <Skeleton className="h-5 w-40 rounded-md" />
+        <Skeleton className="aspect-[7/6] w-full rounded-lg" />
+      </div>
+      <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 lg:grid-cols-5">
+        {Array.from({ length: 5 }, (_, i) => (
+          <Skeleton key={i} className="h-14 rounded-lg" />
+        ))}
+      </div>
+    </div>
   );
 }
 
