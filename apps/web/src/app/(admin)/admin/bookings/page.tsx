@@ -162,6 +162,9 @@ async function BookingsPage({ searchParams }: PageProps<"/admin/bookings">) {
                       {b.attendeeEmail}
                       {b.notes ? ` · “${b.notes}”` : ""}
                     </p>
+                    {b.guests.length > 0 && (
+                      <p className="text-xs text-muted-foreground">With {b.guests.join(", ")}</p>
+                    )}
                   </div>
                   <div className="flex flex-wrap items-center gap-2">
                     {b.seriesCount && (

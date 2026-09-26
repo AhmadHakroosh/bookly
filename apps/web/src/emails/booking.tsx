@@ -13,7 +13,7 @@ import { BookingEmail, HostEmail, LetterEmail } from "./templates";
 export type BookingMailCtx = {
   booking: Booking;
   eventType: EventType | null;
-  host: Profile;
+  host: Profile & { email?: string };
   workspaceName: string;
   baseUrl: string;
   /** Where host-facing buttons point; defaults to `baseUrl`. */

@@ -116,7 +116,9 @@ async function mailCtx(
   eventType: EventType | null,
   workspace: Workspace,
 ): Promise<BookingMailCtx> {
-  const host = (await getProfileByUser(workspace.id, booking.hostUserId))!;
+  const profile = (await getProfileByUser(workspace.id, booking.hostUserId))!;
+  // The host's sign-in address is the invitation's organizer, so calendar apps show who sent it.
+  const host = { ...profile, email: (await hostEmail(booking.hostUserId)) ?? undefined };
   return {
     booking,
     eventType,
@@ -153,7 +155,7 @@ function icsEvent(
     url: `${ctx.baseUrl}/booking/${b.manageToken}`,
     organizer: {
       name: ctx.host.displayName,
-      email: (ctx.host as Profile & { email?: string }).email ?? "noreply@bookly",
+      email: ctx.host.email ?? "noreply@bookly",
     },
     attendees: attendeeParty(b),
     method,
