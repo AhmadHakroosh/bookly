@@ -47,7 +47,10 @@ export interface EmailDriver {
 }
 
 /** One line for the log: header fields come from user input and must not fake extra lines. */
-const oneLine = (v: unknown) => String(v ?? "").replace(/[\r\n]+/g, " ");
+const oneLine = (v: unknown) =>
+  String(v ?? "")
+    .replace(/\r/g, "")
+    .replace(/\n/g, "");
 
 class ConsoleDriver implements EmailDriver {
   async send(m: EmailMessage) {
@@ -62,9 +65,10 @@ class ConsoleDriver implements EmailDriver {
     ]
       .filter(Boolean)
       .join(" ");
-    // The body is printed indented, so its lines cannot pass for log entries of their own.
-    const body = m.text.replace(/\r?\n/g, "\n    ");
-    console.log(`\n📧 [email:console] ${header}\n    ${body}\n`);
+    // The body is printed as a JSON array of lines: readable, and no line can pass for a log
+    // entry of its own.
+    const body = JSON.stringify(m.text.split(/\r?\n/), null, 2);
+    console.log(`\n📧 [email:console] ${header}\n${body}\n`);
     return {};
   }
 }

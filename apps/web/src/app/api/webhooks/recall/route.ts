@@ -49,11 +49,13 @@ export async function POST(req: Request) {
       return NextResponse.json({ ok: true });
     case "recording_permission_denied":
     case "fatal": {
-      const why = String(ev.data?.status?.sub_code ?? ev.data?.status?.message ?? code);
       // Webhook fields go into one log line: newlines would let a payload forge log entries.
-      console.warn(
-        `[notetaker] ${code.replace(/[\r\n]+/g, " ")} for booking ${b.id}: ${why.replace(/[\r\n]+/g, " ")}`,
-      );
+      const oneLine = (v: unknown) =>
+        String(v ?? "")
+          .replace(/\r/g, "")
+          .replace(/\n/g, "");
+      const why = oneLine(ev.data?.status?.sub_code ?? ev.data?.status?.message ?? code);
+      console.warn(`[notetaker] ${oneLine(code)} for booking ${b.id}: ${why}`);
       if (b.transcriptStatus !== "ready") await markTranscriptFailed(b.id);
       return NextResponse.json({ ok: true });
     }
