@@ -293,11 +293,11 @@ async function allBusy(
   rangeEnd: Date,
   excludeEventTypeId?: string,
 ) {
-  const [busy, ext] = await Promise.all([
+  const [bookings, ext] = await Promise.all([
     hostBusy(hostUserId, rangeStart, rangeEnd, excludeEventTypeId),
     externalBusy(hostUserId, rangeStart, rangeEnd),
   ]);
-  return [...busy, ...ext];
+  return { all: [...bookings, ...ext], bookings };
 }
 
 /**
@@ -323,16 +323,17 @@ async function engineInput(
   const rangeEnd = new Date(`${addDays(to, 2)}T23:59:59Z`);
   const hosts = eventType.assignment === "collective" ? eventHosts(eventType) : [hostUserId];
   const group = eventType.seats > 1;
-  const [busyAll, occupied] = await Promise.all([
+  const [busyByHost, occupied] = await Promise.all([
     Promise.all(
       hosts.map((h) => allBusy(h, rangeStart, rangeEnd, group ? eventType.id : undefined)),
-    ).then((r) => r.flat()),
+    ),
     group
       ? Promise.all(hosts.map((h) => occupiedSessions(eventType.id, h, rangeStart, rangeEnd))).then(
           (r) => r.flat(),
         )
       : Promise.resolve([] as Occupied[]),
   ]);
+  const busyAll = busyByHost.flatMap((b) => b.all);
   return {
     scheduleTz: fallback.timezone,
     rules: fallback.rules,
@@ -345,6 +346,7 @@ async function engineInput(
     maxDaysAhead: opts.horizon === false ? 3660 : eventType.maxDaysAhead,
     maxPerDay: eventType.maxPerDay,
     busy: group ? withoutSessionEchoes(busyAll, occupied) : busyAll,
+    bookings: busyByHost.flatMap((b) => b.bookings),
     seats: eventType.seats,
     occupied,
     priority: opts.priority,
