@@ -72,7 +72,7 @@ export function RoutingMock() {
   return (
     <div aria-hidden className={card}>
       <div className="flex items-center justify-between">
-        <h4 className="text-base font-semibold tracking-tight">How can we help?</h4>
+        <p className="text-base font-semibold tracking-tight">How can we help?</p>
         <Badge variant="outline">
           <SplitIcon className="mr-1 size-3" aria-hidden />
           routing
@@ -124,7 +124,7 @@ export function SeatsMock() {
     <div aria-hidden className={card}>
       <div className="flex items-center justify-between">
         <div>
-          <h4 className="text-base font-semibold tracking-tight">Working session · Tue 14:30</h4>
+          <p className="text-base font-semibold tracking-tight">Working session · Tue 14:30</p>
           <p className="text-xs text-muted-foreground">Session 2 of 6 · 60 min · Bookly video</p>
         </div>
         <Badge>
@@ -159,10 +159,10 @@ export function FollowUpMock() {
   return (
     <div aria-hidden className={card}>
       <div className="flex items-center justify-between">
-        <h4 className="inline-flex items-center gap-1.5 text-base font-semibold tracking-tight">
+        <p className="inline-flex items-center gap-1.5 text-base font-semibold tracking-tight">
           <MailIcon className="size-4 text-muted-foreground" aria-hidden />
           Follow-up
-        </h4>
+        </p>
         <Badge variant="outline">draft</Badge>
       </div>
       <dl className="mt-3 grid grid-cols-[3.5rem_minmax(0,1fr)] gap-x-2 gap-y-1 text-xs">
