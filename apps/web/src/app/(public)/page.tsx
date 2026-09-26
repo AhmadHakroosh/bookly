@@ -4,6 +4,20 @@ import { Suspense } from "react";
 import { PublicContainer, PublicSkeleton } from "./container";
 import { listProfiles } from "@/server/scheduling";
 import { getCurrentWorkspace } from "@/server/workspace";
+import { publicBaseUrl } from "@/server/urls";
+import type { Metadata } from "next";
+
+export async function generateMetadata(): Promise<Metadata> {
+  const ws = await getCurrentWorkspace();
+  if (!ws) return {};
+  const url = `${await publicBaseUrl(ws)}/`;
+  const description = ws.description ?? `Book a time with ${ws.name}.`;
+  return {
+    description,
+    alternates: { canonical: url },
+    openGraph: { type: "website", url, title: ws.name, description },
+  };
+}
 
 async function HomePage() {
   const workspace = await getCurrentWorkspace();
