@@ -18,7 +18,9 @@ export function Reveal() {
     const shown = new WeakSet<Element>();
     const show = (el: HTMLElement) => {
       shown.add(el);
-      const delay = parseFloat(getComputedStyle(el).getPropertyValue("--reveal-delay")) || 0;
+      // The delay is an inline style, so reading it costs no layout (getComputedStyle after
+      // the previous element's animation started would force a reflow per element).
+      const delay = parseFloat(el.style.getPropertyValue("--reveal-delay")) || 0;
       el.animate(
         [
           { opacity: 0, translate: "0 18px" },

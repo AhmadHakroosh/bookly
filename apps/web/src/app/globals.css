@@ -286,17 +286,29 @@
 .marquee:hover .marquee-track {
   animation-play-state: paused;
 }
+/* A ring that grows and fades: transform + opacity only, so it runs on the compositor. */
 @keyframes lifecycle-pulse {
   0%,
   100% {
-    box-shadow: 0 0 0 0 color-mix(in oklch, var(--brand) 45%, transparent);
+    opacity: 0.45;
+    transform: scale(1);
   }
   50% {
-    box-shadow: 0 0 0 8px transparent;
+    opacity: 0;
+    transform: scale(3);
   }
 }
 .lifecycle-dot {
+  position: relative;
+}
+.lifecycle-dot::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+  background: var(--brand);
   animation: lifecycle-pulse 2.4s ease-out infinite;
+  animation-delay: inherit;
 }
 @keyframes transcript-line {
   from {
@@ -322,7 +334,7 @@
     transition: none;
   }
   .marquee-track,
-  .lifecycle-dot,
+  .lifecycle-dot::after,
   .transcript-line {
     animation: none;
   }

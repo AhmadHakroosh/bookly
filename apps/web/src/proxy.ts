@@ -60,6 +60,18 @@ const MARKETING_PATHS = new Set([
   "changelog",
   "og",
 ]);
+/** Files served as-is from public/ and the app's icon and manifest routes. */
+const STATIC_FILES = new Set([
+  "/embed.js",
+  "/logo-mark.png",
+  "/favicon.ico",
+  "/icon.svg",
+  "/apple-icon.png",
+  "/manifest.webmanifest",
+]);
+/** Text files rendered per host (robots.ts, sitemap.ts, llms.txt); they go through the normal flow. */
+const HOST_TEXT = new Set(["/robots.txt", "/sitemap.xml", "/llms.txt"]);
+const hasExtension = (pathname: string) => /\.[A-Za-z0-9]+$/.test(pathname);
 /**
  * The host a request is really for. After a server-action `redirect()`, Next renders the
  * target with an internal request whose Host is the server's own address and the original host
@@ -83,6 +95,13 @@ export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const host = requestHost(request);
 
+  if (STATIC_FILES.has(pathname) || pathname.startsWith("/.well-known/"))
+    return NextResponse.next();
+  // A path that looks like a file but is none (`/foo.txt`, `/ai-catalog.json`) gets a real 404
+  // instead of streaming the not-found page as a 200 from the public `[username]` route.
+  if (hasExtension(pathname) && !HOST_TEXT.has(pathname) && !pathname.startsWith("/api/"))
+    return notFound(request);
+
   // www is not a tenant: send it to the apex with the path intact.
   if (CLOUD && host === `www.${PLATFORM_HOST}`) {
     const url = request.nextUrl.clone();
@@ -92,7 +111,7 @@ export async function proxy(request: NextRequest) {
   // Cloud mode: the platform host serves marketing, sign-up, pricing and the operator console.
   if (CLOUD && host === PLATFORM_HOST) {
     if (pathname.startsWith("/platform")) return notFound(request);
-    if (pathname === "/robots.txt" || pathname === "/sitemap.xml") return NextResponse.next();
+    if (HOST_TEXT.has(pathname)) return NextResponse.next();
     // Auth redirects (magic links, sign-in) land on the platform host; the admin lives on a
     // workspace host, so send people to the chooser instead of a 404.
     if (pathname.startsWith("/admin"))
@@ -174,5 +193,6 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|uploads/|.*\\.[\\w]+$).*)"],
+  // Every path, including ones with a file extension, so unknown "files" get a real 404.
+  matcher: ["/((?!_next/|uploads/).*)"],
 };

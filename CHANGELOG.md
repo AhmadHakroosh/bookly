@@ -4,6 +4,18 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 ## [Unreleased]
 
+## [0.3.2] - 2026-09-26
+
+### Changed
+
+- Marketing site: the stylesheet is inlined so the first paint no longer waits on a blocking request (mobile LCP), the scroll-reveal reads its stagger delay without forcing layout, and the lifecycle dots pulse on the compositor
+- `/llms.txt` on the platform host: a Markdown map of the site and the manual for AI crawlers
+- Every response carries `Cross-Origin-Opener-Policy: same-origin-allow-popups`
+
+### Fixed
+
+- Paths that look like files (`/foo.txt`, `/ai-catalog.json`) returned the not-found page with a 200; they are real 404s now, on every host
+
 ## [0.3.1] - 2026-09-26
 
 ### Fixed
@@ -129,7 +141,8 @@ First public release: the self-hostable scheduling platform with contacts, brief
 
 - The unused storage layer (`packages/storage`, `STORAGE_*` and `S3_*` variables, the MinIO service in Compose): nothing in Bookly uploads files; profile photos and logos are URLs
 
-[Unreleased]: https://github.com/AhmadHakroosh/bookly/compare/v0.3.1...HEAD
+[Unreleased]: https://github.com/AhmadHakroosh/bookly/compare/v0.3.2...HEAD
+[0.3.2]: https://github.com/AhmadHakroosh/bookly/compare/v0.3.1...v0.3.2
 [0.3.1]: https://github.com/AhmadHakroosh/bookly/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/AhmadHakroosh/bookly/compare/v0.2.1...v0.3.0
 [0.2.1]: https://github.com/AhmadHakroosh/bookly/compare/v0.2.0...v0.2.1

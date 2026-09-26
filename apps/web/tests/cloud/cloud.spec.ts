@@ -75,6 +75,25 @@ test.describe("marketing site", () => {
     expect(tenant?.status()).toBe(404);
   });
 
+  test("llms.txt and file-like paths", async ({ page }) => {
+    await page.goto("/");
+    const llms = await api(page, "/llms.txt");
+    expect(llms.status).toBe(200);
+    expect(llms.type).toContain("text/markdown");
+    expect(llms.text).toMatch(/^# Bookly\n/);
+    expect(llms.text).toContain("/docs/");
+    // A path that looks like a file but is none is a real 404, not the not-found page as a 200.
+    const fake = await api(page, "/ai-catalog.json");
+    expect(fake.status).toBe(404);
+    const embed = await api(page, "/embed.js");
+    expect(embed.status).toBe(200);
+    expect(embed.type).toContain("javascript");
+    // Workspace hosts have no llms.txt of their own.
+    await page.goto(tenantUrl(DEMO.username) + "/");
+    const tenantLlms = await api(page, "/llms.txt");
+    expect(tenantLlms.status).toBe(404);
+  });
+
   test("telemetry receiver validates pings", async ({ page }) => {
     await page.goto("/");
     const bad = await api(page, "/api/telemetry", { method: "POST", body: { installId: "x" } });
