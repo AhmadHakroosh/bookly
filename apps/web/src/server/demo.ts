@@ -19,6 +19,8 @@ type DemoEvent = {
   seats?: number;
   waitlistEnabled?: boolean;
   recurrence?: EventType["recurrence"];
+  /** Colleagues the attendee may bring. */
+  maxGuests?: number;
 };
 
 const EVENTS: DemoEvent[] = [
@@ -26,6 +28,7 @@ const EVENTS: DemoEvent[] = [
     slug: "intro-call",
     title: "Intro call",
     durationMin: 30,
+    maxGuests: 3,
     description: "A free 30-minute conversation. Tell me what you are working on.",
     questions: [
       {
@@ -158,6 +161,7 @@ export async function seedDemo() {
         questions: e.questions ?? [],
         requiresConfirmation: !!e.requiresConfirmation,
         seats: e.seats ?? 1,
+        maxGuests: e.maxGuests ?? 0,
         waitlistEnabled: !!e.waitlistEnabled,
         recurrence: e.recurrence ?? {},
         location: { type: "custom", value: "Video call, link sent by email" },

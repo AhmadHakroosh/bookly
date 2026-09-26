@@ -80,6 +80,11 @@ function Attendee({ b }: { b: Row }) {
         {b.attendeeEmail}
         {b.notes ? ` · “${b.notes}”` : ""}
       </span>
+      {b.guests.length > 0 && (
+        <span className="block truncate text-xs text-muted-foreground">
+          With {b.guests.join(", ")}
+        </span>
+      )}
     </span>
   );
 }

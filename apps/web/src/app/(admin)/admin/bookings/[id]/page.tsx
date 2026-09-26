@@ -97,6 +97,9 @@ async function BookingBriefPage({ params }: PageProps<"/admin/bookings/[id]">) {
           </Badge>
         </p>
       </div>
+      {b.guests.length > 0 && (
+        <p className="text-sm text-muted-foreground">Guests: {b.guests.join(", ")}</p>
+      )}
       {session && (
         <section className="rounded-xl border p-5 text-sm">
           <div className="flex items-center justify-between gap-3">

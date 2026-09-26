@@ -28,6 +28,7 @@ type Values = {
   minNoticeMin: number;
   maxDaysAhead: number;
   maxPerDay: number;
+  maxGuests: number;
   locations: EventLocation[];
   color: string;
   scheduleId: string;
@@ -239,11 +240,12 @@ export function EventTypeForm({
             cannot take are skipped. With a price, the whole series is paid in one checkout.
           </FieldDescription>
         </fieldset>
-        <div className="grid gap-6 sm:grid-cols-4">
+        <div className="grid gap-6 sm:grid-cols-5">
           {num("bufferBeforeMin", "Gap before", "min", "Kept free before each booking")}
           {num("bufferAfterMin", "Gap after", "min", "Kept free after each booking")}
           {num("minNoticeMin", "Minimum notice", "min", "e.g. 720 = 12 hours, 1440 = 1 day")}
           {num("maxDaysAhead", "Book up to", "days", "How far into the future people can book")}
+          {num("maxGuests", "Guests", "per booking", "Colleagues the attendee may bring; 0 = none")}
         </div>
         <Field>
           <FieldLabel>Where to meet</FieldLabel>

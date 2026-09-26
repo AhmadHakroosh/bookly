@@ -134,6 +134,9 @@ async function BookingPage({ params, searchParams }: PageProps<"/booking/[token]
             <dd>
               {b.attendeeName} · {b.attendeeEmail}
               {b.attendeePhone ? ` · ${formatPhone(b.attendeePhone)}` : ""}
+              {b.guests.length > 0 && (
+                <span className="block text-muted-foreground">With {b.guests.join(", ")}</span>
+              )}
             </dd>
           </div>
         </dl>

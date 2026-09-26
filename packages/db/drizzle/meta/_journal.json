@@ -176,6 +176,13 @@
       "when": 1790431182314,
       "tag": "0024_verify_existing_users",
       "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1790436305305,
+      "tag": "0025_nice_venus",
+      "breakpoints": true
     }
   ]
 }

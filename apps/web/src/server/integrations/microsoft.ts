@@ -18,12 +18,10 @@ export function microsoftEventBody(spec: MeetingSpec, conference: boolean) {
     start: { dateTime: spec.start.toISOString().replace("Z", ""), timeZone: "UTC" },
     end: { dateTime: spec.end.toISOString().replace("Z", ""), timeZone: "UTC" },
     location: spec.meetingUrl ? { displayName: spec.meetingUrl } : undefined,
-    attendees: [
-      {
-        emailAddress: { address: spec.attendee.email, name: spec.attendee.name },
-        type: "required",
-      },
-    ],
+    attendees: [spec.attendee, ...(spec.guests ?? [])].map((a) => ({
+      emailAddress: { address: a.email, name: a.name },
+      type: "required",
+    })),
     ...(conference ? { isOnlineMeeting: true, onlineMeetingProvider: "teamsForBusiness" } : {}),
   };
 }

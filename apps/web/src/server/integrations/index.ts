@@ -356,6 +356,7 @@ export async function provisionBooking(
     timezone: booking.timezone,
     host,
     attendee: { name: booking.attendeeName, email: booking.attendeeEmail },
+    guests: booking.guests.map((email) => ({ name: email, email })),
     meetingUrl: null,
     transcription:
       !!eventType &&

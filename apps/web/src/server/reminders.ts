@@ -79,7 +79,7 @@ export async function sendDueReminders(
     const line = `Reminder: ${et?.title ?? "Meeting"} with ${host.displayName} in ${hours === 1 ? "1 hour" : `${hours} hours`}. ${b.meetingUrl ?? `${ctx.baseUrl}/booking/${b.manageToken}`}`;
     await Promise.all([
       sendEmail({
-        to: b.attendeeEmail,
+        to: [b.attendeeEmail, ...b.guests],
         subject: a.subject,
         text: a.text,
         html: a.html,

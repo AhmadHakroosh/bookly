@@ -26,6 +26,7 @@ const schema = z.object({
   location: z.string().max(20).optional(),
   phoneCountry: z.string().max(2).optional(),
   address: z.string().trim().max(300).optional(),
+  guests: z.string().max(2000).optional(),
 });
 
 export type BookState = { error?: string };
@@ -65,6 +66,7 @@ export async function book(_prev: BookState, formData: FormData): Promise<BookSt
         et.autoCapture === "ask" ? !!d.captureConsent : et.autoCapture === "always" ? true : null,
       location: d.location || null,
       locationValue: d.address || null,
+      guests: d.guests ?? null,
     });
     token = b.manageToken;
     skipped = b.skipped?.length ?? 0;

@@ -381,6 +381,7 @@ const eventSchema = z.object({
     .default(120),
   maxDaysAhead: z.coerce.number().int().min(1).max(365).default(60),
   maxPerDay: z.coerce.number().int().min(0).max(100).default(0),
+  maxGuests: z.coerce.number().int().min(0).max(10).default(0),
   locationType: z.enum(LOCATIONS).optional(),
   locationValue: z.string().trim().max(300).default(""),
   /** JSON array of { type, value? } from the locations editor; overrides locationType. */
@@ -488,6 +489,7 @@ export async function saveEventType(_prev: EventTypeSaveState, formData: FormDat
       minNoticeMin: d.minNoticeMin,
       maxDaysAhead: d.maxDaysAhead,
       maxPerDay: d.maxPerDay || null,
+      maxGuests: d.maxGuests,
       location,
       locations,
       color: d.color,

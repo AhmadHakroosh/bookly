@@ -140,12 +140,42 @@ export async function attendeeConfirmation(ctx: BookingMailCtx): Promise<Mail> {
         whenRow(ctx, tz),
         whereRow(ctx, tz),
         ["With", d.hostName],
+        ...(ctx.booking.guests.length
+          ? ([["Guests", ctx.booking.guests.join(", ")]] as [string, string][])
+          : []),
       ]}
       cta={{ href: manageUrl(ctx), label: "Reschedule or cancel" }}
       note={
         (pending ? "" : "A calendar invitation is attached. ") +
         (transcribed ? transcribedNote : "")
       }
+      signedBy={d.hostName}
+    />,
+  );
+  return { subject, text, html };
+}
+
+/** For a colleague the attendee brought along: the invitation without the booker's manage link. */
+export async function guestInvitation(ctx: BookingMailCtx): Promise<Mail> {
+  const tz = ctx.booking.timezone;
+  const d = details(ctx, tz);
+  const b = ctx.booking;
+  const subject = `${b.attendeeName} added you: ${d.title} with ${d.hostName}`;
+  const { html, text } = await renderEmail(
+    <BookingEmail
+      brand={ctx.brand}
+      title="You're invited"
+      preview={subject}
+      body={`Hi,\n\n${b.attendeeName} (${b.attendeeEmail}) booked ${d.title} with ${d.hostName} and added you to it.`}
+      rows={[
+        ["What", `${d.title} · ${d.duration} min`],
+        whenRow(ctx, tz),
+        whereRow(ctx, tz),
+        ["With", d.hostName],
+        ["Booked by", `${b.attendeeName} · ${b.attendeeEmail}`],
+      ]}
+      cta={b.meetingUrl ? { href: b.meetingUrl, label: "Join the call" } : undefined}
+      note={`A calendar invitation is attached. To change or cancel the meeting, ask ${b.attendeeName}.`}
       signedBy={d.hostName}
     />,
   );
@@ -170,6 +200,7 @@ export async function hostNotification(ctx: BookingMailCtx): Promise<Mail> {
           "Who",
           `${b.attendeeName} · ${b.attendeeEmail}${b.attendeePhone ? ` · ${formatPhone(b.attendeePhone)}` : ""}`,
         ],
+        ...(b.guests.length ? ([["Guests", b.guests.join(", ")]] as [string, string][]) : []),
         ["What", `${d.title} · ${d.duration} min`],
         whenRow(ctx, tz),
         ["Where", d.where],

@@ -61,6 +61,7 @@ async function EditEventTypePage({ params }: PageProps<"/admin/event-types/[id]"
         minNoticeMin: et.minNoticeMin,
         maxDaysAhead: et.maxDaysAhead,
         maxPerDay: et.maxPerDay ?? 0,
+        maxGuests: et.maxGuests,
         locations: eventLocations(et),
         color: et.color,
         scheduleId: et.scheduleId ?? "",

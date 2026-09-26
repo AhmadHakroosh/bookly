@@ -19,7 +19,10 @@ export function googleEventBody(spec: MeetingSpec, conference: boolean) {
     start: { dateTime: spec.start.toISOString(), timeZone: spec.timezone },
     end: { dateTime: spec.end.toISOString(), timeZone: spec.timezone },
     location: spec.meetingUrl ?? undefined,
-    attendees: [{ email: spec.attendee.email, displayName: spec.attendee.name }],
+    attendees: [spec.attendee, ...(spec.guests ?? [])].map((a) => ({
+      email: a.email,
+      displayName: a.name,
+    })),
     reminders: { useDefault: true },
     ...(conference
       ? {

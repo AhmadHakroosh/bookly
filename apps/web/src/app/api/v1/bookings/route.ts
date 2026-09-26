@@ -51,6 +51,8 @@ const createSchema = z.object({
   location: z.string().max(20).optional(),
   /** Attendee's address for an in-person meeting when the event type leaves it to them. */
   address: z.string().trim().max(300).optional(),
+  /** Colleagues to invite along; the event type's `maxGuests` caps the list. */
+  guests: z.array(z.string().trim().max(254)).max(20).optional(),
 });
 
 /** POST /api/v1/bookings (scope bookings:write) — books a slot exactly like the public page. */
@@ -80,6 +82,7 @@ export async function POST(req: Request) {
       phone: d.phone,
       notes: d.notes,
       answers,
+      guests: d.guests ?? [],
       location: d.location ?? null,
       locationValue: d.address ?? null,
     });
