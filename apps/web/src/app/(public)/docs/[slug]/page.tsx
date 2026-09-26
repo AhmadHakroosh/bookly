@@ -13,7 +13,8 @@ export async function generateMetadata({ params }: PageProps<"/docs/[slug]">): P
   const doc = await renderDoc(slug);
   if (!doc) return {};
   return pageMetadata({
-    title: `${doc.title} · Docs`,
+    // "Self-hosting Bookly · Docs — Bookly" repeats the brand; the template adds it once.
+    title: `${doc.title.replace(/\s+Bookly$/i, "")} · Docs`,
     description: doc.description || `${doc.title}: how it works in Bookly and how to set it up.`,
     path: `/docs/${slug}`,
   });
