@@ -33,6 +33,7 @@ import { captureSupportsLocation } from "@/server/integrations/notetaker";
 import { formatPrice, paymentsReady } from "@/server/payments";
 import { getCurrentWorkspace } from "@/server/workspace";
 import { publicBaseUrl } from "@/server/urls";
+import { JsonLd } from "@/components/json-ld";
 import { hasFeature } from "@/server/limits";
 import { priorityForEmail } from "@/server/contacts";
 import { fullSessions } from "@/server/waitlist";
@@ -104,6 +105,30 @@ async function EventPage({ params, searchParams }: PageProps<"/[username]/[event
     slot && !Number.isNaN(slot.getTime()) && rule ? await planSeries(et, tz, slot, priority) : null;
   const bookable = plan?.filter((p) => p.hostUserId).length ?? 1;
   const base = `/${profile.username}/${et.slug}`;
+  const origin = await publicBaseUrl(ws);
+  const ld = {
+    "@context": "https://schema.org",
+    "@type": "Service",
+    name: et.title,
+    ...(et.description ? { description: et.description } : {}),
+    url: `${origin}${base}`,
+    serviceType: "Appointment",
+    provider: {
+      "@type": "Person",
+      name: profile.displayName,
+      url: `${origin}/${profile.username}`,
+    },
+    ...(et.priceCents && paid
+      ? {
+          offers: {
+            "@type": "Offer",
+            price: (et.priceCents / 100).toFixed(2),
+            priceCurrency: (et.currency ?? "usd").toUpperCase(),
+            url: `${origin}${base}`,
+          },
+        }
+      : {}),
+  };
   const makeHref = (over: Record<string, string | undefined>) => {
     const q = new URLSearchParams();
     const merged = {
@@ -122,6 +147,7 @@ async function EventPage({ params, searchParams }: PageProps<"/[username]/[event
 
   return (
     <PublicContainer>
+      <JsonLd data={ld} />
       <Suspense fallback={null}>
         <TzDetect />
       </Suspense>
