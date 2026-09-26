@@ -4,6 +4,13 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 ## [Unreleased]
 
+## [0.4.2] - 2026-09-26
+
+### Fixed
+
+- Admin → Bookings lists a booking's guests on single bookings too, not only on group-session seats
+- Calendar invitations name the host's own address as the organizer instead of a placeholder
+
 ## [0.4.1] - 2026-09-26
 
 ### Fixed
@@ -182,7 +189,8 @@ First public release: the self-hostable scheduling platform with contacts, brief
 
 - The unused storage layer (`packages/storage`, `STORAGE_*` and `S3_*` variables, the MinIO service in Compose): nothing in Bookly uploads files; profile photos and logos are URLs
 
-[Unreleased]: https://github.com/AhmadHakroosh/bookly/compare/v0.4.1...HEAD
+[Unreleased]: https://github.com/AhmadHakroosh/bookly/compare/v0.4.2...HEAD
+[0.4.2]: https://github.com/AhmadHakroosh/bookly/compare/v0.4.1...v0.4.2
 [0.4.1]: https://github.com/AhmadHakroosh/bookly/compare/v0.4.0...v0.4.1
 [0.4.0]: https://github.com/AhmadHakroosh/bookly/compare/v0.3.5...v0.4.0
 [0.3.5]: https://github.com/AhmadHakroosh/bookly/compare/v0.3.4...v0.3.5
