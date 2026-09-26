@@ -5,8 +5,14 @@ import { ArrowRightIcon } from "lucide-react";
 import { ExternalLink } from "@/components/links";
 import { DOCS_REPO_URL, listDocs } from "@/server/docs";
 import { PageSkeleton } from "@/components/page-skeleton";
+import { pageMetadata } from "@/app/(platform)/platform/site";
 
-export const metadata: Metadata = { title: "Documentation" };
+export const metadata: Metadata = pageMetadata({
+  title: "Documentation",
+  description:
+    "Self-hosting, scheduling, contacts, integrations, payments, teams, embeds, domains and the API: everything about running and using Bookly.",
+  path: "/docs",
+});
 
 async function DocsIndex() {
   const pages = await listDocs();
