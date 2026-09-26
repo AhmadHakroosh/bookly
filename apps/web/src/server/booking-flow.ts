@@ -3,7 +3,7 @@ import { captureEnabled } from "./transcripts";
 import { attendeeJoinUrl } from "@/lib/meet-link";
 import "server-only";
 import { and, asc, eq, gt, inArray, ne, schema } from "@bookly/db";
-import type { Booking, EventType, Profile, Workspace } from "@bookly/db/schema";
+import type { Booking, EventType, Workspace } from "@bookly/db/schema";
 import { sendEmail } from "@bookly/email";
 import { db } from "@/lib/db";
 import {
