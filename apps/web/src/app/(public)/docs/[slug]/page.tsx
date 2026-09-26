@@ -6,11 +6,18 @@ import { ArrowLeftIcon, ArrowRightIcon } from "lucide-react";
 import { ExternalLink } from "@/components/links";
 import { DOCS_REPO_URL, renderDoc } from "@/server/docs";
 import { PageSkeleton } from "@/components/page-skeleton";
+import { pageMetadata } from "@/app/(platform)/platform/site";
 
 export async function generateMetadata({ params }: PageProps<"/docs/[slug]">): Promise<Metadata> {
   const { slug } = await params;
   const doc = await renderDoc(slug);
-  return doc ? { title: `${doc.title} · Docs` } : {};
+  if (!doc) return {};
+  return pageMetadata({
+    // "Self-hosting Bookly · Docs — Bookly" repeats the brand; the template adds it once.
+    title: `${doc.title.replace(/\s+Bookly$/i, "")} · Docs`,
+    description: doc.description || `${doc.title}: how it works in Bookly and how to set it up.`,
+    path: `/docs/${slug}`,
+  });
 }
 
 async function DocPage({ params }: PageProps<"/docs/[slug]">) {

@@ -4,7 +4,9 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 ## [Unreleased]
 
-Nothing yet.
+### Changed
+
+- Search and sharing: a workspace host (tenant subdomain, custom domain or self-hosted install) serves its own robots.txt and a sitemap of its public pages on its primary domain; profile, event and routing-form pages carry canonical and Open Graph tags and structured data (Person, Service, Offer); workspace pages are titled after the workspace and drop the "— Bookly" suffix on plans that remove branding. On the marketing site, docs pages get canonical tags, social tags and their own descriptions, the social card shows each page's title, the sitemap carries real dates or none, product mocks no longer inject headings, and the 404 page has a title. The event page streams its calendar behind a skeleton, and the build targets evergreen browsers
 
 ## [0.2.1] - 2026-09-25
 

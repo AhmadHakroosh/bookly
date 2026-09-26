@@ -95,13 +95,13 @@ export function InboxMock() {
         <Sidebar />
         <div className="min-w-0 flex-1 space-y-5 p-5 text-sm">
           <div>
-            <h3 className="text-xl font-semibold tracking-tight">Inbox</h3>
+            <p className="text-xl font-semibold tracking-tight">Inbox</p>
             <p className="text-xs text-muted-foreground">
               Tue, Sep 22 · 2 meetings today · 1 request · 1 overdue task · 2 to follow up
             </p>
           </div>
           <section>
-            <h4 className="text-base font-semibold tracking-tight">Recaps to review</h4>
+            <p className="text-base font-semibold tracking-tight">Recaps to review</p>
             <div className="mt-2 flex items-start justify-between gap-3 rounded-xl border p-3">
               <div className="min-w-0">
                 <p className="font-medium">Discovery call with Omar Haddad · Mon, 15:00</p>
@@ -117,7 +117,7 @@ export function InboxMock() {
             </div>
           </section>
           <section className="border-t pt-4">
-            <h4 className="text-base font-semibold tracking-tight">Today</h4>
+            <p className="text-base font-semibold tracking-tight">Today</p>
             <ul className="mt-2 divide-y rounded-xl border">
               {[
                 [
@@ -148,7 +148,7 @@ export function InboxMock() {
           </section>
           <div className="grid gap-4 border-t pt-4 md:grid-cols-2">
             <section>
-              <h4 className="text-base font-semibold tracking-tight">Follow up</h4>
+              <p className="text-base font-semibold tracking-tight">Follow up</p>
               <ul className="mt-2 divide-y rounded-xl border">
                 {[
                   ["Sara Cohen · Northwind", "Proposal sent 6 days ago, no reply", "lead"],
@@ -167,7 +167,7 @@ export function InboxMock() {
               </ul>
             </section>
             <section className="rounded-xl border p-3">
-              <h4 className="text-base font-semibold tracking-tight">Tasks</h4>
+              <p className="text-base font-semibold tracking-tight">Tasks</p>
               <ul className="mt-2 space-y-1.5">
                 {[
                   ["Send Omar two proposal options", "due tomorrow", false],
@@ -204,7 +204,7 @@ export function BriefMock() {
       className="force-light rounded-xl border border-black/10 bg-background p-4 text-sm text-foreground shadow-xl shadow-black/15"
     >
       <div className="flex items-center justify-between">
-        <h4 className="text-base font-semibold tracking-tight">Briefing</h4>
+        <p className="text-base font-semibold tracking-tight">Briefing</p>
         <Badge variant="outline">
           <FileTextIcon className="mr-1 size-3" aria-hidden />
           1h before
@@ -261,7 +261,7 @@ export function RecapMock({ compact = false }: { compact?: boolean }) {
       className="force-light space-y-4 rounded-xl border border-black/10 bg-background p-4 text-sm text-foreground shadow-xl shadow-black/15"
     >
       <div className="flex items-center justify-between">
-        <h4 className="text-base font-semibold tracking-tight">Meeting recap</h4>
+        <p className="text-base font-semibold tracking-tight">Meeting recap</p>
         <Badge variant="outline">warm</Badge>
       </div>
       <p className="leading-relaxed">
@@ -270,9 +270,9 @@ export function RecapMock({ compact = false }: { compact?: boolean }) {
       </p>
       {!compact && (
         <div>
-          <h5 className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+          <p className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
             What he asked for
-          </h5>
+          </p>
           <ul className="mt-1 space-y-1">
             {[
               ["Online booking for three clinics", true],
@@ -294,9 +294,9 @@ export function RecapMock({ compact = false }: { compact?: boolean }) {
         </div>
       )}
       <div>
-        <h5 className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+        <p className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
           Action items
-        </h5>
+        </p>
         <ul className="mt-1 space-y-1.5">
           {[
             [
@@ -403,7 +403,7 @@ export function ContactMock() {
     >
       <div className="flex items-start justify-between gap-3">
         <div>
-          <h4 className="text-base font-semibold tracking-tight">Omar Haddad</h4>
+          <p className="text-base font-semibold tracking-tight">Omar Haddad</p>
           <p className="text-xs text-muted-foreground">
             omar@haddad-dental.example · Haddad Dental · 3 bookings
           </p>
@@ -439,7 +439,7 @@ export function BookingPageMock() {
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="text-xs text-muted-foreground">Ahmad Hakroosh</p>
-          <h4 className="text-base font-semibold tracking-tight">Working session</h4>
+          <p className="text-base font-semibold tracking-tight">Working session</p>
           <p className="mt-1 text-xs text-muted-foreground">
             60 min · Video call · Group of up to 3
           </p>

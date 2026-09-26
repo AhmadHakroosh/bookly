@@ -80,6 +80,7 @@ export function pageMetadata({
   const base = siteUrl();
   const full =
     absoluteTitle ?? (title ? `${title} — ${SITE.name}` : `${SITE.name} — ${SITE.tagline}`);
+  const image = title ? `${base}/og?title=${encodeURIComponent(title)}` : `${base}/og`;
   return {
     title: absoluteTitle ? { absolute: absoluteTitle } : title,
     description,
@@ -91,8 +92,8 @@ export function pageMetadata({
       title: full,
       description,
       locale: "en_US",
-      images: [{ url: `${base}/og`, width: 1200, height: 630, alt: full }],
+      images: [{ url: image, width: 1200, height: 630, alt: full }],
     },
-    twitter: { card: "summary_large_image", title: full, description, images: [`${base}/og`] },
+    twitter: { card: "summary_large_image", title: full, description, images: [image] },
   };
 }

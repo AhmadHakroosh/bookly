@@ -6,6 +6,25 @@ import { accentVars, workspaceBrand } from "@/server/brand";
 import { isCloud } from "@/server/platform";
 import { getCurrentWorkspace } from "@/server/workspace";
 import { loadEnv } from "@bookly/config";
+import type { Metadata } from "next";
+import { hasFeature } from "@/server/limits";
+import { publicBaseUrl } from "@/server/urls";
+
+/**
+ * Titles on a workspace host: the workspace's own name by default, and no "— Bookly" suffix on
+ * plans that remove Bookly branding, matching the footer rule. Workspaces without a
+ * description fall back to the root layout's.
+ */
+export async function generateMetadata(): Promise<Metadata> {
+  const ws = await getCurrentWorkspace();
+  if (!ws) return {};
+  const own = hasFeature(ws, "removeBranding");
+  return {
+    title: { default: ws.name, template: own ? "%s" : "%s — Bookly" },
+    description: ws.description ?? undefined,
+    alternates: { canonical: `${await publicBaseUrl(ws)}/` },
+  };
+}
 
 export default function PublicLayout({ children }: LayoutProps<"/">) {
   return (

@@ -8,7 +8,14 @@ export const OG_SIZE = { width: 1200, height: 630 };
 
 const STEPS = ["Booked", "Briefed", "Captured", "Recapped", "Followed up"];
 
-export function GET() {
+/**
+ * `?title=` puts a page's own title on the card (pricing, docs, legal pages) instead of the
+ * home page headline, so shares of those pages say what they are.
+ */
+export function GET(req: Request) {
+  const raw = new URL(req.url).searchParams.get("title")?.trim().slice(0, 90) ?? "";
+  const title = raw.replace(/\s+[—-]\s+Bookly$/, "");
+  const size = title.length > 48 ? 56 : 72;
   return new ImageResponse(
     <div
       style={{
@@ -45,19 +52,19 @@ export function GET() {
         </div>
       </div>
       <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-        <div style={{ fontSize: 72, fontWeight: 700, letterSpacing: -2, lineHeight: 1.05 }}>
-          The meeting is booked.
+        <div style={{ fontSize: size, fontWeight: 700, letterSpacing: -2, lineHeight: 1.05 }}>
+          {title || "The meeting is booked."}
         </div>
         <div
           style={{
-            fontSize: 72,
+            fontSize: title ? 40 : 72,
             fontWeight: 700,
-            letterSpacing: -2,
+            letterSpacing: title ? -1 : -2,
             lineHeight: 1.05,
             color: "#e8965a",
           }}
         >
-          Bookly handles the rest.
+          {title ? "Bookly" : "Bookly handles the rest."}
         </div>
         <div style={{ fontSize: 28, color: "#a3a3a3", marginTop: 8 }}>
           Briefings before, transcripts during, tasks and follow-ups after.

@@ -96,6 +96,7 @@ export function decorateHeadings(html: string): { html: string; headings: Headin
 
 export async function renderDoc(slug: string): Promise<{
   title: string;
+  description: string;
   html: string;
   headings: Heading[];
   prev: DocPage | null;
@@ -124,6 +125,7 @@ export async function renderDoc(slug: string): Promise<{
   const i = pages.findIndex((p) => p.slug === slug);
   return {
     title: titleOf(md, slug),
+    description: descriptionOf(md),
     html,
     headings,
     prev: i > 0 ? pages[i - 1]! : null,

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import type { EventType } from "@bookly/db/schema";
 import Link from "next/link";
 import { BackLink } from "@/components/links";
 import { notFound } from "next/navigation";
@@ -32,6 +33,8 @@ import { detectCountry } from "@/server/geo";
 import { captureSupportsLocation } from "@/server/integrations/notetaker";
 import { formatPrice, paymentsReady } from "@/server/payments";
 import { getCurrentWorkspace } from "@/server/workspace";
+import { publicBaseUrl } from "@/server/urls";
+import { JsonLd } from "@/components/json-ld";
 import { hasFeature } from "@/server/limits";
 import { priorityForEmail } from "@/server/contacts";
 import { fullSessions } from "@/server/waitlist";
@@ -48,9 +51,16 @@ export async function generateMetadata({
   const ws = await getCurrentWorkspace();
   const p = ws ? await getProfileByUsername(ws.id, username) : null;
   const et = ws && p ? await getEventType(ws.id, p.userId, event) : null;
-  return et
-    ? { title: `${et.title} · ${p!.displayName}`, description: et.description ?? undefined }
-    : {};
+  if (!ws || !p || !et) return {};
+  const url = `${await publicBaseUrl(ws)}/${p.username}/${et.slug}`;
+  const title = `${et.title} · ${p.displayName}`;
+  const description = et.description ?? `Book ${et.title} with ${p.displayName}.`;
+  return {
+    title,
+    description,
+    alternates: { canonical: url },
+    openGraph: { type: "website", url, title, description },
+  };
 }
 
 async function EventPage({ params, searchParams }: PageProps<"/[username]/[event]">) {
@@ -84,18 +94,36 @@ async function EventPage({ params, searchParams }: PageProps<"/[username]/[event
   );
   const knownEmail = typeof sp.email === "string" ? sp.email : prev?.attendeeEmail;
   const priority = await priorityForEmail(ws.id, knownEmail);
-  const days = await availableSlots(et, tz, monthStart, monthEnd, { priority });
-  const availableDates = new Set(days.map((d) => d.date));
-  const daySlots = date ? (days.find((d) => d.date === date)?.slots ?? []) : [];
-  const seats = await slotSeats(et, daySlots);
-  const full = date ? await fullSessions(et, tz, date) : [];
-  const waiting = await waitingCounts(et.id, full);
   const waitlist = et.waitlistEnabled && typeof sp.waitlist === "string" ? sp.waitlist : undefined;
   const rule = prev ? null : recurrenceOf(et.recurrence);
   const plan =
     slot && !Number.isNaN(slot.getTime()) && rule ? await planSeries(et, tz, slot, priority) : null;
   const bookable = plan?.filter((p) => p.hostUserId).length ?? 1;
   const base = `/${profile.username}/${et.slug}`;
+  const origin = await publicBaseUrl(ws);
+  const ld = {
+    "@context": "https://schema.org",
+    "@type": "Service",
+    name: et.title,
+    ...(et.description ? { description: et.description } : {}),
+    url: `${origin}${base}`,
+    serviceType: "Appointment",
+    provider: {
+      "@type": "Person",
+      name: profile.displayName,
+      url: `${origin}/${profile.username}`,
+    },
+    ...(et.priceCents && paid
+      ? {
+          offers: {
+            "@type": "Offer",
+            price: (et.priceCents / 100).toFixed(2),
+            priceCurrency: (et.currency ?? "usd").toUpperCase(),
+            url: `${origin}${base}`,
+          },
+        }
+      : {}),
+  };
   const makeHref = (over: Record<string, string | undefined>) => {
     const q = new URLSearchParams();
     const merged = {
@@ -114,6 +142,7 @@ async function EventPage({ params, searchParams }: PageProps<"/[username]/[event
 
   return (
     <PublicContainer>
+      <JsonLd data={ld} />
       <Suspense fallback={null}>
         <TzDetect />
       </Suspense>
@@ -226,92 +255,147 @@ async function EventPage({ params, searchParams }: PageProps<"/[username]/[event
               />
             </div>
           ) : (
-            <div className="space-y-6">
-              <div className="max-w-sm">
-                <MonthCalendar
-                  month={month}
-                  availableDates={availableDates}
-                  selected={date}
-                  today={today}
-                  makeHref={makeHref}
-                />
-              </div>
-              <div>
-                <p className="mb-2 text-sm font-medium">
-                  {date
-                    ? new Date(`${date}T12:00:00Z`).toLocaleDateString("en", {
-                        weekday: "long",
-                        month: "short",
-                        day: "numeric",
-                        timeZone: "UTC",
-                      })
-                    : "Pick a day"}
-                </p>
-                <ul className="grid grid-cols-3 gap-2 sm:grid-cols-4 lg:grid-cols-5">
-                  {[
-                    ...daySlots.map((s) => ({ s, full: false })),
-                    ...full.map((s) => ({ s, full: true })),
-                  ]
-                    .sort((a, b) => a.s.getTime() - b.s.getTime())
-                    .map(({ s, full: isFull }) => {
-                      if (isFull) {
-                        const n = waiting.get(s.getTime()) ?? 0;
-                        return (
-                          <li key={`full-${s.toISOString()}`}>
-                            <SlotChip
-                              href={
-                                et.waitlistEnabled
-                                  ? makeHref({ waitlist: s.toISOString() })
-                                  : undefined
-                              }
-                              time={fmtTime(s, tz)}
-                              note={
-                                !et.waitlistEnabled
-                                  ? "Full"
-                                  : n
-                                    ? `Full · ${n} waiting`
-                                    : "Full · waitlist"
-                              }
-                              full
-                            />
-                          </li>
-                        );
-                      }
-                      const left = seats.get(s.getTime());
-                      return (
-                        <li key={s.toISOString()}>
-                          <SlotChip
-                            href={makeHref({ slot: s.toISOString() })}
-                            time={fmtTime(s, tz)}
-                            note={
-                              et.seats > 1 && left != null
-                                ? `${left} ${left === 1 ? "seat" : "seats"} left`
-                                : undefined
-                            }
-                          />
-                        </li>
-                      );
-                    })}
-                </ul>
-                {date && daySlots.length === 0 && full.length === 0 && (
-                  <p className="text-sm text-muted-foreground">
-                    No times left this day.
-                    {et.waitlistEnabled && (
-                      <>
-                        {" "}
-                        <Link href={makeHref({ waitlist: date })} className="underline">
-                          Join the waitlist
-                        </Link>
-                      </>
-                    )}
-                  </p>
-                )}
-              </div>
-            </div>
+            <Suspense fallback={<PickerSkeleton />}>
+              <Picker
+                et={et}
+                tz={tz}
+                month={month}
+                monthStart={monthStart}
+                monthEnd={monthEnd}
+                date={date}
+                today={today}
+                priority={priority}
+                makeHref={makeHref}
+              />
+            </Suspense>
           )}
         </section>
       </div>
     </PublicContainer>
+  );
+}
+
+/**
+ * The calendar and the day's times. Availability needs the host's calendars (a network call on
+ * a cold server), so this streams in after the page shell with a skeleton in its place.
+ */
+async function Picker({
+  et,
+  tz,
+  month,
+  monthStart,
+  monthEnd,
+  date,
+  today,
+  priority,
+  makeHref,
+}: {
+  et: EventType;
+  tz: string;
+  month: string;
+  monthStart: string;
+  monthEnd: string;
+  date: string | undefined;
+  today: string;
+  priority: boolean;
+  makeHref: (over: Record<string, string | undefined>) => string;
+}) {
+  const days = await availableSlots(et, tz, monthStart, monthEnd, { priority });
+  const availableDates = new Set(days.map((d) => d.date));
+  const daySlots = date ? (days.find((d) => d.date === date)?.slots ?? []) : [];
+  const seats = await slotSeats(et, daySlots);
+  const full = date ? await fullSessions(et, tz, date) : [];
+  const waiting = await waitingCounts(et.id, full);
+  return (
+    <div className="space-y-6">
+      <div className="max-w-sm">
+        <MonthCalendar
+          month={month}
+          availableDates={availableDates}
+          selected={date}
+          today={today}
+          makeHref={makeHref}
+        />
+      </div>
+      <div>
+        <p className="mb-2 text-sm font-medium">
+          {date
+            ? new Date(`${date}T12:00:00Z`).toLocaleDateString("en", {
+                weekday: "long",
+                month: "short",
+                day: "numeric",
+                timeZone: "UTC",
+              })
+            : "Pick a day"}
+        </p>
+        <ul className="grid grid-cols-3 gap-2 sm:grid-cols-4 lg:grid-cols-5">
+          {[...daySlots.map((s) => ({ s, full: false })), ...full.map((s) => ({ s, full: true }))]
+            .sort((a, b) => a.s.getTime() - b.s.getTime())
+            .map(({ s, full: isFull }) => {
+              if (isFull) {
+                const n = waiting.get(s.getTime()) ?? 0;
+                return (
+                  <li key={`full-${s.toISOString()}`}>
+                    <SlotChip
+                      href={
+                        et.waitlistEnabled ? makeHref({ waitlist: s.toISOString() }) : undefined
+                      }
+                      time={fmtTime(s, tz)}
+                      note={
+                        !et.waitlistEnabled ? "Full" : n ? `Full · ${n} waiting` : "Full · waitlist"
+                      }
+                      full
+                    />
+                  </li>
+                );
+              }
+              const left = seats.get(s.getTime());
+              return (
+                <li key={s.toISOString()}>
+                  <SlotChip
+                    href={makeHref({ slot: s.toISOString() })}
+                    time={fmtTime(s, tz)}
+                    note={
+                      et.seats > 1 && left != null
+                        ? `${left} ${left === 1 ? "seat" : "seats"} left`
+                        : undefined
+                    }
+                  />
+                </li>
+              );
+            })}
+        </ul>
+        {date && daySlots.length === 0 && full.length === 0 && (
+          <p className="text-sm text-muted-foreground">
+            No times left this day.
+            {et.waitlistEnabled && (
+              <>
+                {" "}
+                <Link href={makeHref({ waitlist: date })} className="underline">
+                  Join the waitlist
+                </Link>
+              </>
+            )}
+          </p>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function PickerSkeleton() {
+  return (
+    <div className="space-y-6">
+      <div className="max-w-sm space-y-3">
+        <Skeleton className="h-5 w-40 rounded-md" />
+        <Skeleton className="aspect-[7/6] w-full rounded-lg" />
+      </div>
+      <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 lg:grid-cols-5">
+        {Array.from({ length: 5 }, (_, i) => (
+          <Skeleton key={i} className="h-14 rounded-lg" />
+        ))}
+      </div>
+    </div>
   );
 }
 

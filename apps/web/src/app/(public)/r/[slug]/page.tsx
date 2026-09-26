@@ -4,13 +4,26 @@ import { Suspense } from "react";
 import { PublicContainer, PublicSkeleton } from "../../container";
 import { getRoutingForm } from "@/server/routing";
 import { getCurrentWorkspace } from "@/server/workspace";
+import { publicBaseUrl } from "@/server/urls";
 import { RoutingFormView } from "./form";
 
 export async function generateMetadata({ params }: PageProps<"/r/[slug]">): Promise<Metadata> {
   const { slug } = await params;
   const ws = await getCurrentWorkspace();
   const form = ws ? await getRoutingForm(ws.id, slug) : null;
-  return form ? { title: form.name, description: form.description ?? undefined } : {};
+  if (!ws || !form) return {};
+  const url = `${await publicBaseUrl(ws)}/r/${form.slug}`;
+  return {
+    title: form.name,
+    description: form.description ?? undefined,
+    alternates: { canonical: url },
+    openGraph: {
+      type: "website",
+      url,
+      title: form.name,
+      description: form.description ?? undefined,
+    },
+  };
 }
 
 async function RoutingPage({ params, searchParams }: PageProps<"/r/[slug]">) {
