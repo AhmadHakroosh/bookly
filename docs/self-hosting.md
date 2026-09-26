@@ -86,6 +86,24 @@ their retention in mind when someone asks for erasure.
 
 Sign-in works with a password or an emailed link. A forgotten password is reset from "Forgot your password?" on the sign-in page: Bookly emails a link (valid for one hour) to `/reset-password`, so email must be configured (`RESEND_API_KEY` or SMTP; in development links print to the console). Signed-in users change their password under `Admin → Booking page`; changing it signs out every other session.
 
+### Sign in with Google, Microsoft or GitHub
+
+Optional. Each provider appears as a "Continue with …" button on the sign-in, sign-up and invitation pages as soon as its OAuth client is configured; nothing changes for installs without one.
+
+| Provider  | Env                                                                  | Callback URL to register                |
+| --------- | -------------------------------------------------------------------- | --------------------------------------- |
+| Google    | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`                           | `<APP_URL>/api/auth/callback/google`    |
+| Microsoft | `MICROSOFT_CLIENT_ID`, `MICROSOFT_CLIENT_SECRET`, `MICROSOFT_TENANT` | `<APP_URL>/api/auth/callback/microsoft` |
+| GitHub    | `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET`                           | `<APP_URL>/api/auth/callback/github`    |
+
+Google and Microsoft reuse the OAuth clients from `docs/integrations.md`: add the callback URL above next to the calendar one. Sign-in asks the provider for identity only (name, email, picture); calendar access stays a separate connection under Admin → Calendars, with its own scopes. GitHub needs an OAuth app (Settings → Developer settings → OAuth Apps) with the callback URL above.
+
+Rules that apply on every install:
+
+- A provider button never creates an account on its own. New accounts come from the sign-up page (cloud) or an invitation link (self-hosted, where sign-up is closed once the workspace exists), where the button is offered explicitly.
+- Google and Microsoft sign-ins attach to an existing account with the same email address, provided that account's own email is verified (signing in once with an emailed link verifies it). Otherwise, or for GitHub, sign in with the password or an email link and connect the provider under Admin → Booking page → Sign-in methods.
+- An account created through a provider can set a password there too; the last remaining sign-in method cannot be disconnected.
+
 ## Rate limiting across replicas
 
 One container needs nothing: limits are counted in memory. If you run several replicas behind

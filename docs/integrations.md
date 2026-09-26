@@ -58,7 +58,9 @@ invalidates all connections.
    `openid`. While the app is in "Testing", add your Google account as a test user (tokens then
    expire after 7 days; publish the app to remove that limit).
 3. Credentials → Create OAuth client ID → Web application. Authorized redirect URI:
-   `https://<your-host>/api/integrations/google/callback` (and the localhost one for dev).
+   `https://<your-host>/api/integrations/google/callback` (and the localhost one for dev). To
+   offer "Continue with Google" on the sign-in page, also add
+   `https://<your-host>/api/auth/callback/google` (`docs/self-hosting.md`, "Accounts").
 4. Set `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`.
 
 Meet links are created through the Calendar API (`conferenceData`), so Google Meet works for any
@@ -69,7 +71,8 @@ normal calendar invitation (`sendUpdates=all`), in addition to Bookly's confirma
 
 1. Entra admin center → App registrations → New registration. Supported account types: "Accounts
    in any organizational directory and personal Microsoft accounts" (matches `MICROSOFT_TENANT=common`).
-2. Redirect URI (Web): `https://<your-host>/api/integrations/microsoft/callback`.
+2. Redirect URI (Web): `https://<your-host>/api/integrations/microsoft/callback`, plus
+   `https://<your-host>/api/auth/callback/microsoft` for "Continue with Microsoft".
 3. Certificates & secrets → new client secret → `MICROSOFT_CLIENT_SECRET`. Application (client) ID
    → `MICROSOFT_CLIENT_ID`.
 4. API permissions (delegated): `Calendars.ReadWrite`, `OnlineMeetings.ReadWrite`, `User.Read`,
