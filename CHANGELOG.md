@@ -4,6 +4,17 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 ## [Unreleased]
 
+## [0.3.4] - 2026-09-26
+
+### Fixed
+
+- Signing in with an emailed link no longer removes the account's password. Better Auth 1.7 treats an account whose email was never confirmed as unproven and deletes its password (and every linked provider) on the first magic-link sign-in; Bookly never confirmed addresses, so any password user who tried the "Email link" tab was locked out of password sign-in. Sign-up on the hosted service now confirms the address first, invited members and the first self-hosted owner count as verified, and migration 0024 marks every existing password account as verified so this cannot happen to them
+- Magic links sign in existing accounts only; an unknown address no longer gets an account without the consent step
+
+### Changed
+
+- Cloud sign-up: after the account form, "Check your inbox" waits for the confirmation link (one hour), which signs the person in and opens the workspace step; a password sign-in before that explains and resends the link
+
 ## [0.3.3] - 2026-09-26
 
 ### Fixed
@@ -153,7 +164,8 @@ First public release: the self-hostable scheduling platform with contacts, brief
 
 - The unused storage layer (`packages/storage`, `STORAGE_*` and `S3_*` variables, the MinIO service in Compose): nothing in Bookly uploads files; profile photos and logos are URLs
 
-[Unreleased]: https://github.com/AhmadHakroosh/bookly/compare/v0.3.3...HEAD
+[Unreleased]: https://github.com/AhmadHakroosh/bookly/compare/v0.3.4...HEAD
+[0.3.4]: https://github.com/AhmadHakroosh/bookly/compare/v0.3.3...v0.3.4
 [0.3.3]: https://github.com/AhmadHakroosh/bookly/compare/v0.3.2...v0.3.3
 [0.3.2]: https://github.com/AhmadHakroosh/bookly/compare/v0.3.1...v0.3.2
 [0.3.1]: https://github.com/AhmadHakroosh/bookly/compare/v0.3.0...v0.3.1
