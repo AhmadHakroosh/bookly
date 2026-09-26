@@ -50,6 +50,15 @@ function socialProviders() {
 
 const isSocialSignUp = (path: string | undefined) => !!path?.startsWith("/callback");
 
+async function hasPendingInvitation(email: string): Promise<boolean> {
+  const pending = await db().query.invitations.findFirst({
+    where: (t, { and, eq, gt }) =>
+      and(eq(t.email, email.toLowerCase()), eq(t.status, "pending"), gt(t.expiresAt, new Date())),
+    columns: { id: true },
+  });
+  return !!pending;
+}
+
 /**
  * Auth for workspace owners, editors and (later) paying members.
  * - email + password and magic links work everywhere (self-host needs no third party)
@@ -68,6 +77,12 @@ export const auth = betterAuth({
   emailAndPassword: {
     enabled: true,
     minPasswordLength: 10,
+    // Cloud: a password account is usable only once the address is verified. Better Auth 1.7
+    // deletes every account of an *unverified* user the first time they sign in with a magic
+    // link (the "unproven account" rule), which took people's passwords away; verifying at
+    // sign-up is what makes a password account proven. Self-hosted installs verify by other
+    // means: the first owner controls the install, invitees came from an invitation email.
+    requireEmailVerification: env.TENANCY === "multi",
     sendResetPassword: async ({ user, url }) => {
       const { accountMail } = await import("@/emails/account");
       await sendEmail({
@@ -91,6 +106,26 @@ export const auth = betterAuth({
       trustedProviders: TRUSTED_SOCIAL_PROVIDERS,
     },
   },
+  emailVerification: {
+    sendOnSignUp: env.TENANCY === "multi",
+    sendOnSignIn: true,
+    autoSignInAfterVerification: true,
+    expiresIn: 60 * 60,
+    sendVerificationEmail: async ({ user, url }) => {
+      if (user.emailVerified) return; // invited users are verified by the invitation itself
+      const { accountMail } = await import("@/emails/account");
+      await sendEmail({
+        to: user.email,
+        ...(await accountMail({
+          subject: "Verify your email for Bookly",
+          title: "Confirm your email address",
+          body: `Hi ${user.name || "there"},\n\nUse the button below to confirm that this address is yours. The link works for one hour.`,
+          cta: { href: url, label: "Confirm my email" },
+          note: "If you didn't create a Bookly account, you can ignore this email.",
+        })),
+      });
+    },
+  },
   session: {
     expiresIn: 60 * 60 * 24 * 30,
     updateAge: 60 * 60 * 24,
@@ -111,7 +146,8 @@ export const auth = betterAuth({
     user: {
       create: {
         before: async (user, ctx) => {
-          // Cloud: public sign-up must record acceptance of the terms and privacy policy.
+          // Cloud: public sign-up must record acceptance of the terms and privacy policy. An
+          // invited person reached the form through an email to this address, which verifies it.
           if (env.TENANCY === "multi" && ctx?.path === "/sign-up/email") {
             const u = user as typeof user & { consentAt?: Date | string | null };
             if (!u.consentAt)
@@ -119,7 +155,14 @@ export const auth = betterAuth({
                 code: "consent_required",
                 message: "Please accept the terms of service and privacy policy.",
               });
-            return { data: { ...user, consentAt: new Date(u.consentAt) } };
+            const invited = await hasPendingInvitation(user.email);
+            return {
+              data: {
+                ...user,
+                consentAt: new Date(u.consentAt),
+                ...(invited && { emailVerified: true }),
+              },
+            };
           }
           // Cloud, social sign-up: the sign-up page stored the accepted legal version in a cookie
           // before sending the person to the provider. Without it there is no consent on record.
@@ -136,23 +179,17 @@ export const auth = betterAuth({
           // Single-tenant: once the workspace exists, only invitations may add accounts (public sign-up is closed).
           if (env.TENANCY !== "single") return;
           const workspace = await db().query.workspaces.findFirst({ columns: { id: true } });
-          if (!workspace) return; // first run: the setup wizard creates the owner
-          const pending = await db().query.invitations.findFirst({
-            where: (t, { and, eq, gt }) =>
-              and(
-                eq(t.email, user.email.toLowerCase()),
-                eq(t.status, "pending"),
-                gt(t.expiresAt, new Date()),
-              ),
-            columns: { id: true },
-          });
-          const invited = !!pending || ctx?.path?.includes("invitation");
+          // First run: the setup wizard creates the owner, who controls the install. Invitees
+          // arrived through an email to their address. Both count as a verified address.
+          if (!workspace) return { data: { ...user, emailVerified: true } };
+          const invited =
+            (await hasPendingInvitation(user.email)) || ctx?.path?.includes("invitation");
           if (!invited)
             throw new APIError("FORBIDDEN", {
               code: "signup_closed",
               message: "Sign-up is closed. Ask the workspace owner for an invitation.",
             });
-          return { data: user };
+          return { data: { ...user, emailVerified: true } };
         },
       },
     },
@@ -167,6 +204,9 @@ export const auth = betterAuth({
   },
   plugins: [
     magicLink({
+      // A link signs people in; accounts are created by the sign-up and invitation pages, which
+      // record consent (cloud) or check the invitation (self-hosted).
+      disableSignUp: true,
       sendMagicLink: async ({ email, url }) => {
         const { accountMail } = await import("@/emails/account");
         await sendEmail({

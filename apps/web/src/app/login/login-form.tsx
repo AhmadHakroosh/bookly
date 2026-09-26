@@ -39,6 +39,10 @@ export function LoginForm({
         email: String(f.get("email")),
         password: String(f.get("password")),
       });
+      if (error?.code === "EMAIL_NOT_VERIFIED")
+        return void toast.error(
+          "Confirm your email address first. We just sent you a new link; open it and you are in.",
+        );
       if (error) return void toast.error(error.message ?? "Sign-in failed");
       router.push(next);
       router.refresh();
