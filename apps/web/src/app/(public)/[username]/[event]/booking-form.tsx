@@ -35,6 +35,8 @@ type Props = {
   /** ISO country for the phone field, from the visitor's location. */
   defaultCountry: string;
   defaultPhone?: string | null;
+  /** Colleagues the attendee may bring (0 = the field is not shown). */
+  maxGuests?: number;
 };
 
 export function BookingForm({
@@ -51,6 +53,7 @@ export function BookingForm({
   defaultLocation,
   defaultCountry,
   defaultPhone,
+  maxGuests = 0,
 }: Props) {
   const [state, action, pending] = useActionState(book, {} as BookState);
   const [location, setLocation] = useState(
@@ -211,6 +214,22 @@ export function BookingForm({
           )}
         </label>
       ))}
+      {maxGuests > 0 && (
+        <label className="block text-sm">
+          <span className="mb-1 block font-medium">
+            Bring colleagues <span className="font-normal text-muted-foreground">(optional)</span>
+          </span>
+          <textarea
+            name="guests"
+            rows={2}
+            placeholder={`One email per line, up to ${maxGuests}`}
+            className="w-full rounded-lg border bg-background px-3 py-2 text-sm"
+          />
+          <span className="mt-1 block text-xs text-muted-foreground">
+            They get the calendar invitation and the reminders; only you can change or cancel it.
+          </span>
+        </label>
+      )}
       <label className="block text-sm">
         <span className="mb-1 block font-medium">
           Anything to prepare? <span className="font-normal text-muted-foreground">(optional)</span>

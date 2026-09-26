@@ -24,6 +24,18 @@ test.describe("public booking", () => {
     await expect(page.getByRole("heading", { name: "Booking cancelled" })).toBeVisible();
   });
 
+  test("the attendee can bring colleagues", async ({ page }) => {
+    await bookFirstSlot(
+      page,
+      { name: "E2E Lead", email: "e2e-lead@example.com" },
+      { guests: ["colleague-one@example.com", "Colleague-Two@example.com"] },
+    );
+    // The manage page lists them, lowercased and in order.
+    await expect(
+      page.getByText("With colleague-one@example.com, colleague-two@example.com"),
+    ).toBeVisible();
+  });
+
   test("a taken slot disappears", async ({ page }) => {
     await bookFirstSlot(page, { name: "E2E First", email: "e2e-first@example.com" });
     const manage = page.url();

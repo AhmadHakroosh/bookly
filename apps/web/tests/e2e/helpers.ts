@@ -22,7 +22,11 @@ export async function signIn(page: Page) {
 }
 
 /** Books the first slot on a day and returns the manage-page URL. */
-export async function bookFirstSlot(page: Page, attendee: { name: string; email: string }) {
+export async function bookFirstSlot(
+  page: Page,
+  attendee: { name: string; email: string },
+  opts: { guests?: string[] } = {},
+) {
   const date = upcomingWeekday();
   await page.goto(`/${DEMO.username}/intro-call?tz=UTC&month=${date.slice(0, 7)}&date=${date}`);
   const slot = page.locator('a[href*="slot="]').first();
@@ -30,6 +34,7 @@ export async function bookFirstSlot(page: Page, attendee: { name: string; email:
   await slot.click();
   await page.getByLabel("Name", { exact: true }).fill(attendee.name);
   await page.getByLabel("Email", { exact: true }).fill(attendee.email);
+  if (opts.guests) await page.locator('textarea[name="guests"]').fill(opts.guests.join("\n"));
   // Answer every booking question the event type asks (required ones block the form).
   for (const q of await page.locator('[name^="q_"]').all()) {
     const tag = await q.evaluate((el) => el.tagName.toLowerCase());

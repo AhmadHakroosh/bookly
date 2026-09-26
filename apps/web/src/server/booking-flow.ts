@@ -1,3 +1,4 @@
+import { parseGuests } from "@/lib/guests";
 import { captureEnabled } from "./transcripts";
 import { attendeeJoinUrl } from "@/lib/meet-link";
 import "server-only";
@@ -7,6 +8,7 @@ import { sendEmail } from "@bookly/email";
 import { db } from "@/lib/db";
 import {
   attendeeConfirmation,
+  guestInvitation,
   cancellationMail,
   hostNotification,
   type BookingMailCtx,
@@ -55,9 +57,29 @@ export type BookingInput = {
   location?: string | null;
   /** What the attendee supplied for that location: their phone number (E.164) or address. */
   locationValue?: string | null;
+  /** Colleagues to invite along (emails); accepted up to the event type's `maxGuests`. */
+  guests?: string[] | string | null;
 };
 
 export class BookingError extends Error {}
+
+/** Validates the colleagues an attendee brings: only when the event type allows guests. */
+function guestList(raw: BookingInput["guests"], eventType: EventType, attendeeEmail: string) {
+  if (!eventType.maxGuests) return [];
+  const { guests, invalid } = parseGuests(raw, { exclude: attendeeEmail });
+  if (invalid.length) throw new BookingError(`"${invalid[0]}" is not a valid email address.`);
+  if (guests.length > eventType.maxGuests)
+    throw new BookingError(
+      `You can bring up to ${eventType.maxGuests} ${eventType.maxGuests === 1 ? "person" : "people"}.`,
+    );
+  return guests;
+}
+
+/** Everyone on the attendee's side: the attendee and the colleagues they brought. */
+export const attendeeParty = (b: Pick<Booking, "attendeeName" | "attendeeEmail" | "guests">) => [
+  { name: b.attendeeName, email: b.attendeeEmail },
+  ...b.guests.map((email) => ({ name: email, email })),
+];
 
 /** Booking answers keyed by the question's label, for timelines and briefs. */
 function labelledAnswers(eventType: EventType, answers: Record<string, string>) {
@@ -133,7 +155,7 @@ function icsEvent(
       name: ctx.host.displayName,
       email: (ctx.host as Profile & { email?: string }).email ?? "noreply@bookly",
     },
-    attendees: [{ name: b.attendeeName, email: b.attendeeEmail }],
+    attendees: attendeeParty(b),
     method,
     sequence,
     status: method === "CANCEL" ? "CANCELLED" : "CONFIRMED",
@@ -274,6 +296,7 @@ export async function createBooking(
   }
   if (isBlocked(input.email, workspace.settings.blockedEmails as string[] | undefined))
     throw new BookingError("Bookings from this email address are not accepted.");
+  const guests = guestList(input.guests, eventType, input.email);
   if (!input.rescheduleToken) {
     try {
       await assertBookingQuota(workspace);
@@ -359,6 +382,7 @@ export async function createBooking(
         attendeeName: input.name.trim().slice(0, 120),
         attendeeEmail: input.email.trim().toLowerCase(),
         attendeePhone: input.phone?.trim() || null,
+        guests,
         notes: input.notes?.trim() || null,
         answers: input.answers,
         status,
@@ -494,6 +518,10 @@ async function notifyCreated(workspace: Workspace, booking: Booking, eventType: 
   const a = await attendeeConfirmation(ctx);
   const h = await hostNotification(ctx);
   const hostTo = await hostEmail(booking.hostUserId);
+  const invite =
+    booking.status === "confirmed"
+      ? [{ filename: "invite.ics", content: ics, contentType: "text/calendar; method=REQUEST" }]
+      : [];
   await Promise.all([
     sendEmail({
       to: booking.attendeeEmail,
@@ -502,10 +530,20 @@ async function notifyCreated(workspace: Workspace, booking: Booking, eventType: 
       html: a.html,
       replyTo: hostTo ?? undefined,
       fromName: ctx.host.displayName,
-      attachments:
-        booking.status === "confirmed"
-          ? [{ filename: "invite.ics", content: ics, contentType: "text/calendar; method=REQUEST" }]
-          : [],
+      attachments: invite,
+    }),
+    // Colleagues the attendee brought get the invitation too (no manage link: that stays with the booker).
+    ...(booking.status === "confirmed" ? booking.guests : []).map(async (guest) => {
+      const g = await guestInvitation(ctx);
+      return sendEmail({
+        to: guest,
+        subject: g.subject,
+        text: g.text,
+        html: g.html,
+        replyTo: hostTo ?? undefined,
+        fromName: ctx.host.displayName,
+        attachments: invite,
+      });
     }),
     hostTo
       ? sendEmail({
@@ -548,19 +586,30 @@ export async function confirmBooking(workspace: Workspace, bookingId: string) {
   void scheduleFor(updated!, et ?? null);
   const ctx = await mailCtx(updated!, et ?? null, workspace);
   const a = await attendeeConfirmation(ctx);
+  const invite = [
+    {
+      filename: "invite.ics",
+      content: await icsFor(ctx, "REQUEST", 1),
+      contentType: "text/calendar; method=REQUEST",
+    },
+  ];
   await sendEmail({
     to: b.attendeeEmail,
     subject: a.subject,
     text: a.text,
     html: a.html,
-    attachments: [
-      {
-        filename: "invite.ics",
-        content: await icsFor(ctx, "REQUEST", 1),
-        contentType: "text/calendar; method=REQUEST",
-      },
-    ],
+    attachments: invite,
   }).catch(() => {});
+  if (updated!.guests.length) {
+    const g = await guestInvitation(ctx);
+    await sendEmail({
+      to: updated!.guests,
+      subject: g.subject,
+      text: g.text,
+      html: g.html,
+      attachments: invite,
+    }).catch(() => {});
+  }
   refreshWorkspace(workspace.id);
   return updated!;
 }
@@ -626,7 +675,7 @@ export async function cancelBooking(
   const h = await cancellationMail(ctx, true);
   await Promise.all([
     sendEmail({
-      to: b.attendeeEmail,
+      to: [b.attendeeEmail, ...b.guests],
       subject: a.subject,
       text: a.text,
       html: a.html,
@@ -749,6 +798,7 @@ export async function rescheduleBooking(
     phone: prev.attendeePhone,
     notes: prev.notes,
     answers: prev.answers,
+    guests: prev.guests,
     rescheduleToken: prev.manageToken,
   });
 }

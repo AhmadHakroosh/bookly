@@ -13,6 +13,8 @@ export type MeetingSpec = {
   timezone: string;
   host: { name: string; email: string | null };
   attendee: { name: string; email: string };
+  /** Colleagues the attendee brought along; added to the calendar event as guests. */
+  guests?: { name: string; email: string }[];
   /** Existing meeting link to put in the calendar event's location, if any. */
   meetingUrl?: string | null;
   /** Bookly video: persist a transcript of the call (auto-capture). */

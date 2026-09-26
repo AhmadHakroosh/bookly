@@ -193,6 +193,7 @@ export function serializeBooking(
     end: b.endAt.toISOString(),
     timezone: b.timezone,
     attendee: { name: b.attendeeName, email: b.attendeeEmail, phone: b.attendeePhone },
+    guests: b.guests,
     notes: b.notes,
     answers: b.answers,
     location: { type: b.location.type, label: locationLabel(b.location) },

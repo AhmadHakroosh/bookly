@@ -225,6 +225,7 @@ async function EventPage({ params, searchParams }: PageProps<"/[username]/[event
                 slot={slot.toISOString()}
                 tz={tz}
                 questions={et.questions}
+                maxGuests={et.maxGuests}
                 reschedule={reschedule}
                 paid={!!et.priceCents && paid}
                 sessions={plan ? bookable : 1}

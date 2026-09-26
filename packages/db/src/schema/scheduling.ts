@@ -175,6 +175,8 @@ export const eventTypes = pgTable(
     minNoticeMin: integer("min_notice_min").notNull().default(120),
     maxDaysAhead: integer("max_days_ahead").notNull().default(60),
     maxPerDay: integer("max_per_day"),
+    /** Colleagues the attendee may add to a booking (email addresses); 0 = none. */
+    maxGuests: integer("max_guests").notNull().default(0),
     /** The default location (the first of `locations`, kept for older rows and readers). */
     location: jsonb("location").$type<EventLocation>().notNull().default({ type: "daily" }),
     /** Every way to meet the attendee may pick from; empty means just `location`. */
@@ -340,6 +342,8 @@ export const bookings = pgTable(
     attendeeName: text("attendee_name").notNull(),
     attendeeEmail: text("attendee_email").notNull(),
     attendeePhone: text("attendee_phone"),
+    /** Colleagues the attendee brought along (emails): invited to the event, reminded, told of changes. */
+    guests: jsonb("guests").$type<string[]>().notNull().default([]),
     notes: text("notes"),
     answers: jsonb("answers").$type<Record<string, string>>().notNull().default({}),
     status: bookingStatus("status").notNull().default("confirmed"),

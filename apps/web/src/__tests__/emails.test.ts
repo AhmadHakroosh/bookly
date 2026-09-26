@@ -19,6 +19,7 @@ const ctx = (templates?: Record<string, { subject?: string; body?: string }>) =>
   booking: {
     attendeeName: "Sam Lee",
     attendeeEmail: "sam@example.com",
+    guests: [],
     manageToken: "tok",
     startAt: new Date("2026-10-01T09:00:00Z"),
     endAt: new Date("2026-10-01T09:30:00Z"),
