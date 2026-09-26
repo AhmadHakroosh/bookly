@@ -20,7 +20,7 @@ const fmt = (d: Date) =>
     .replace(/[-:]/g, "")
     .replace(/\.\d{3}Z$/, "Z");
 const esc = (s: string) =>
-  s.replace(/\\/g, "\\\\").replace(/;/g, "\;").replace(/,/g, "\\,").replace(/\r?\n/g, "\\n");
+  s.replace(/\\/g, "\\\\").replace(/;/g, "\\;").replace(/,/g, "\\,").replace(/\r?\n/g, "\\n");
 const fold = (line: string) => {
   const out: string[] = [];
   let l = line;
