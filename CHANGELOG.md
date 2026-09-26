@@ -4,6 +4,8 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-09-26
+
 ### Added
 
 - Sign in with Google, Microsoft or GitHub. Each provider appears on the sign-in, sign-up and invitation pages once its OAuth client is configured (`GITHUB_CLIENT_ID`/`GITHUB_CLIENT_SECRET` are new; Google and Microsoft reuse the calendar clients with an extra callback URL). Sign-in asks for identity only, never calendar access. A provider never creates an account by itself: the sign-up page records consent first and a self-hosted install still requires an invitation. Google and Microsoft attach to an existing account with the same verified email; Admin → Booking page → Sign-in methods connects or disconnects providers and lets an account created through one set a password
@@ -121,7 +123,8 @@ First public release: the self-hostable scheduling platform with contacts, brief
 
 - The unused storage layer (`packages/storage`, `STORAGE_*` and `S3_*` variables, the MinIO service in Compose): nothing in Bookly uploads files; profile photos and logos are URLs
 
-[Unreleased]: https://github.com/AhmadHakroosh/bookly/compare/v0.2.1...HEAD
+[Unreleased]: https://github.com/AhmadHakroosh/bookly/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/AhmadHakroosh/bookly/compare/v0.2.1...v0.3.0
 [0.2.1]: https://github.com/AhmadHakroosh/bookly/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/AhmadHakroosh/bookly/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/AhmadHakroosh/bookly/releases/tag/v0.1.0
