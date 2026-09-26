@@ -21,9 +21,13 @@ export type EmailMessage = {
  * address, so SPF/DKIM stay intact while the inbox shows who wrote it.
  */
 export function senderFor(name: string, base: string): string {
-  const m = base.trim().match(/^(?:"?([^"<]*?)"?\s*)?<([^>]+)>$/);
-  const address = m ? m[2]!.trim() : base.trim();
-  const platform = (m?.[1] ?? "").trim() || "Bookly";
+  // "Name <address>" split on the last "<" (no regex: the name part is free text).
+  const b = base.trim();
+  const lt = b.lastIndexOf("<");
+  const bracketed = lt >= 0 && b.endsWith(">");
+  const address = bracketed ? b.slice(lt + 1, -1).trim() : b;
+  const platform =
+    (bracketed ? b.slice(0, lt).trim().replace(/^"|"$/g, "") : "").trim() || "Bookly";
   const clean = name
     .replace(/[\r\n"<>]+/g, " ")
     .replace(/\s+/g, " ")
@@ -42,11 +46,25 @@ export interface EmailDriver {
   send(message: EmailMessage): Promise<{ id?: string }>;
 }
 
+/** One line for the log: header fields come from user input and must not fake extra lines. */
+const oneLine = (v: unknown) => String(v ?? "").replace(/[\r\n]+/g, " ");
+
 class ConsoleDriver implements EmailDriver {
   async send(m: EmailMessage) {
-    console.log(
-      `\n📧 [email:console] from=${resolveFrom(m, loadEnv().EMAIL_FROM)} to=${m.to} subject="${m.subject}"${m.replyTo ? ` reply-to=${m.replyTo}` : ""}${m.attachments?.length ? ` attachments=${m.attachments.map((a) => a.filename).join(",")}` : ""}\n${m.text}\n`,
-    );
+    const header = [
+      `from=${oneLine(resolveFrom(m, loadEnv().EMAIL_FROM))}`,
+      `to=${oneLine(m.to)}`,
+      `subject="${oneLine(m.subject)}"`,
+      m.replyTo ? `reply-to=${oneLine(m.replyTo)}` : "",
+      m.attachments?.length
+        ? `attachments=${oneLine(m.attachments.map((a) => a.filename).join(","))}`
+        : "",
+    ]
+      .filter(Boolean)
+      .join(" ");
+    // The body is printed indented, so its lines cannot pass for log entries of their own.
+    const body = m.text.replace(/\r?\n/g, "\n    ");
+    console.log(`\n📧 [email:console] ${header}\n    ${body}\n`);
     return {};
   }
 }

@@ -120,9 +120,16 @@ export function verifyQstashSignature(
   if (typeof claims.exp === "number" && claims.exp * 1000 < now)
     return { ok: false, reason: "expired" };
   const bodyHash = b64url(createHash("sha256").update(body).digest());
-  const claimed = String(claims.body ?? "").replace(/=+$/, "");
-  if (claimed !== bodyHash.replace(/=+$/, "")) return { ok: false, reason: "body hash mismatch" };
+  if (trimPadding(String(claims.body ?? "")) !== trimPadding(bodyHash))
+    return { ok: false, reason: "body hash mismatch" };
   return { ok: true, claims };
+}
+
+/** Drops trailing `=` padding; a loop rather than `/=+$/`, which backtracks on long inputs. */
+function trimPadding(s: string): string {
+  let end = s.length;
+  while (end > 0 && s[end - 1] === "=") end--;
+  return s.slice(0, end);
 }
 
 /** Test helper: mint a signature the way QStash does. */
