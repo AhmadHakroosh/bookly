@@ -1,7 +1,12 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
+import { createEmailVerificationToken } from "better-auth/api";
+import { config } from "dotenv";
 import { platformUrl, tenantUrl } from "../../playwright.cloud.config";
 import { DEMO, upcomingWeekday } from "../e2e/helpers";
+
+// AUTH_SECRET signs the verification token the sign-up test mints for itself (the server reads the same files).
+config({ path: ["../../.env.local", "../../.env"] });
 
 const escapeRegExp = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
@@ -151,6 +156,15 @@ test.describe("sign-up and tenants", () => {
     await page.locator('input[name="password"]').fill("ci-owner-password-1");
     for (const box of await page.getByRole("checkbox").all()) await box.check();
     await page.getByRole("button", { name: "Continue", exact: true }).click();
+    // The address must be confirmed before the workspace step: open the link the email carries.
+    await expect(page.getByRole("heading", { name: "Check your inbox" })).toBeVisible();
+    const token = await createEmailVerificationToken(
+      process.env.AUTH_SECRET!,
+      `${slug}@example.com`,
+    );
+    await page.goto(
+      `${platformUrl}/api/auth/verify-email?token=${token}&callbackURL=${encodeURIComponent("/signup")}`,
+    );
     await page.locator('input[name="name"]').fill("CI Workspace");
     await page.locator('input[name="slug"]').fill(slug);
     await page.getByRole("button", { name: "Create workspace" }).click();
