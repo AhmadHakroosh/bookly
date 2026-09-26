@@ -27,6 +27,9 @@ export function SignupForm({
   providers: readonly SocialProvider[];
 }) {
   const [step, setStep] = useState<1 | 2>(signedIn ? 2 : 1);
+  // Email awaiting verification: the account exists, the session starts when the link is opened.
+  const [verify, setVerify] = useState<string | null>(null);
+  const [resent, setResent] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
   // Both boxes gate the social buttons too: a provider account is created only with consent on record.
@@ -48,19 +51,53 @@ export function SignupForm({
     setPending(true);
     setError(null);
     const fd = new FormData(e.currentTarget);
+    const email = String(fd.get("email"));
     const res = await authClient.signUp.email({
       name: String(fd.get("name")),
-      email: String(fd.get("email")),
+      email,
       password: String(fd.get("password")),
       consentAt: new Date(),
       consentVersion: legalVersion,
+      callbackURL: "/signup",
     });
     setPending(false);
     if (res.error) return setError(res.error.message ?? "Sign-up failed");
     setSlug((s) => s || slugify(String(fd.get("name"))));
+    // No session yet: the address must be confirmed first (the link brings them back here).
+    if (!res.data?.token) return setVerify(email);
     setStep(2);
     router.refresh();
   }
+
+  async function resend() {
+    if (!verify) return;
+    setPending(true);
+    const { error } = await authClient.sendVerificationEmail({
+      email: verify,
+      callbackURL: "/signup",
+    });
+    setPending(false);
+    if (error) return setError(error.message ?? "Could not resend the link");
+    setResent(true);
+  }
+
+  if (verify)
+    return (
+      <div className="rounded-xl border p-5" role="status">
+        <h2 className="text-base font-semibold tracking-tight">Check your inbox</h2>
+        <p className="mt-2 text-sm text-muted-foreground">
+          We sent a link to <span className="font-medium text-foreground">{verify}</span>. Open it
+          to confirm your address and continue to your workspace. It works for one hour.
+        </p>
+        {error && <p className="mt-3 text-sm text-destructive">{error}</p>}
+        <div className="mt-4 flex items-center gap-3">
+          <Button type="button" variant="outline" onClick={resend} disabled={pending || resent}>
+            {resent ? "Sent again" : "Resend the link"}
+          </Button>
+          <span className="text-xs text-muted-foreground">Wrong address? Sign up again.</span>
+        </div>
+      </div>
+    );
 
   if (step === 1)
     return (

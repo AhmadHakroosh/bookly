@@ -169,6 +169,13 @@
       "when": 1790365816488,
       "tag": "0023_early_whirlwind",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1790431182314,
+      "tag": "0024_verify_existing_users",
+      "breakpoints": true
     }
   ]
 }
