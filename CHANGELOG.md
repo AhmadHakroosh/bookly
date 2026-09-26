@@ -4,6 +4,12 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-09-26
+
+### Added
+
+- Guests on a booking: an event type can let the attendee bring colleagues ("Guests per booking" in the editor, migration 0025). The booking form asks for their emails, the manage page and Admin → Bookings list them, they are added to the calendar event and get the invitation, the reminders and any cancellation; only the person who booked can change or cancel. The API takes `guests` on `POST /bookings` and returns them on every booking
+
 ## [0.3.5] - 2026-09-26
 
 ### Fixed
@@ -170,7 +176,8 @@ First public release: the self-hostable scheduling platform with contacts, brief
 
 - The unused storage layer (`packages/storage`, `STORAGE_*` and `S3_*` variables, the MinIO service in Compose): nothing in Bookly uploads files; profile photos and logos are URLs
 
-[Unreleased]: https://github.com/AhmadHakroosh/bookly/compare/v0.3.5...HEAD
+[Unreleased]: https://github.com/AhmadHakroosh/bookly/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/AhmadHakroosh/bookly/compare/v0.3.5...v0.4.0
 [0.3.5]: https://github.com/AhmadHakroosh/bookly/compare/v0.3.4...v0.3.5
 [0.3.4]: https://github.com/AhmadHakroosh/bookly/compare/v0.3.3...v0.3.4
 [0.3.3]: https://github.com/AhmadHakroosh/bookly/compare/v0.3.2...v0.3.3
