@@ -68,7 +68,12 @@ async function ProfilePage({ searchParams }: PageProps<"/admin/profile">) {
         </p>
       )}
       {(providers.length > 0 || linked.length > 0) && (
-        <SignInMethods providers={providers} linked={linked} hasPassword={hasPassword} />
+        <SignInMethods
+          providers={providers}
+          linked={linked}
+          hasPassword={hasPassword}
+          email={session.user.email}
+        />
       )}
       {hasPassword ? <PasswordForm /> : <SetPasswordForm />}
       <DeleteAccount

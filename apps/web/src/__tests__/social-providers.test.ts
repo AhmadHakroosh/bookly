@@ -38,6 +38,11 @@ describe("socialErrorMessage", () => {
     expect(socialErrorMessage("signup_disabled", "google", false)).toMatch(/invitation/);
   });
 
+  it("uses Better Auth's own code for an email mismatch", () => {
+    expect(socialErrorMessage("email_does_not_match", "google", true)).toMatch(/different email/);
+    expect(socialErrorMessage("state_mismatch", "google", true)).toMatch(/expired/);
+  });
+
   it("names the provider", () => {
     expect(socialErrorMessage("account_not_linked", "microsoft", true)).toContain("Microsoft");
     expect(socialErrorMessage("whatever", "github", true)).toContain("GitHub");

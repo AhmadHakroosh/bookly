@@ -17,10 +17,13 @@ export function SignInMethods({
   providers,
   linked,
   hasPassword,
+  email,
 }: {
   providers: readonly SocialProvider[];
   linked: LinkedAccount[];
   hasPassword: boolean;
+  /** The account's email; a provider account must use the same address to be connected. */
+  email: string;
 }) {
   const router = useRouter();
   const [busy, setBusy] = useState<string | null>(null);
@@ -57,7 +60,8 @@ export function SignInMethods({
       <p className="mb-4 text-sm text-muted-foreground">
         {hasPassword
           ? "Your password works everywhere. Connect a provider to sign in with one click."
-          : "You sign in through a provider. Set a password below to have a second way in."}
+          : "You sign in through a provider. Set a password below to have a second way in."}{" "}
+        A provider account must use {email}.
       </p>
       <ul className="divide-y">
         {providers.map((p) => {

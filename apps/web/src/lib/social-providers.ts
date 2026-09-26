@@ -60,8 +60,17 @@ export function socialErrorMessage(code: string, provider: string, cloud: boolea
       return `An account with this email already exists. Sign in with your password or an email link, then connect ${name} under Booking page → Sign-in methods.`;
     case "email_not_found":
       return `${name} did not share an email address. Use another way to sign in.`;
-    case "email_doesnt_match":
-      return `That ${name} account uses a different email address than your Bookly account.`;
+    case "email_does_not_match":
+      return `That ${name} account uses a different email address than your Bookly account. Pick the ${name} account with the same address, or change your Bookly email first.`;
+    case "email_not_verified":
+      return `${name} reports that email address as unverified. Verify it there, then try again.`;
+    case "unable_to_link_account":
+      return `Could not connect ${name} to this account. Try again from Booking page → Sign-in methods.`;
+    case "state_mismatch":
+    case "state_invalid":
+    case "state_not_found":
+    case "invalid_code":
+      return `That sign-in attempt expired or was started in another browser. Try again.`;
     case "account_already_linked_to_different_user":
       return `That ${name} account is already connected to another Bookly account.`;
     case "access_denied":
