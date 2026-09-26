@@ -7,12 +7,53 @@ import { schema } from "@bookly/db";
 import { sendEmail } from "@bookly/email";
 import { db } from "./db";
 import { authStorage, getLimiter } from "@/server/ratelimit";
+import { CONSENT_COOKIE, consentCookieOptions } from "@/server/consent";
+import { configuredSocialProviders, TRUSTED_SOCIAL_PROVIDERS } from "@/lib/social-providers";
 
 const env = loadEnv();
 
 /**
+ * Social sign-in asks the provider for identity only (name, email, picture). Calendar access is
+ * a separate connection under Admin → Calendars with its own scopes, so the two never mix.
+ * Sign-in never creates an account by itself: the sign-up and invitation pages ask for one
+ * explicitly (`requestSignUp`), which keeps the consent and invitation rules below in force.
+ */
+function socialProviders() {
+  const configured = new Set(configuredSocialProviders(env).map((p) => p.id));
+  return {
+    ...(configured.has("google") && {
+      google: {
+        clientId: env.GOOGLE_CLIENT_ID!,
+        clientSecret: env.GOOGLE_CLIENT_SECRET!,
+        prompt: "select_account" as const,
+        disableImplicitSignUp: true,
+      },
+    }),
+    ...(configured.has("microsoft") && {
+      microsoft: {
+        clientId: env.MICROSOFT_CLIENT_ID!,
+        clientSecret: env.MICROSOFT_CLIENT_SECRET!,
+        tenantId: env.MICROSOFT_TENANT,
+        prompt: "select_account" as const,
+        disableImplicitSignUp: true,
+      },
+    }),
+    ...(configured.has("github") && {
+      github: {
+        clientId: env.GITHUB_CLIENT_ID!,
+        clientSecret: env.GITHUB_CLIENT_SECRET!,
+        disableImplicitSignUp: true,
+      },
+    }),
+  };
+}
+
+const isSocialSignUp = (path: string | undefined) => !!path?.startsWith("/callback");
+
+/**
  * Auth for workspace owners, editors and (later) paying members.
  * - email + password and magic links work everywhere (self-host needs no third party)
+ * - Google, Microsoft and GitHub sign-in when their OAuth clients are configured
  * - organizations = the ownership/membership layer for workspaces (one workspace per org)
  * - admin plugin = platform operator tools (cloud mode)
  */
@@ -41,6 +82,15 @@ export const auth = betterAuth({
       });
     },
   },
+  socialProviders: socialProviders(),
+  account: {
+    accountLinking: {
+      // Google and Microsoft vouch for the email they return, so their sign-in attaches to the
+      // existing account with that address (once that account's own email is verified, which a
+      // magic-link sign-in does). GitHub addresses are linked only from the profile page.
+      trustedProviders: TRUSTED_SOCIAL_PROVIDERS,
+    },
+  },
   session: {
     expiresIn: 60 * 60 * 24 * 30,
     updateAge: 60 * 60 * 24,
@@ -66,9 +116,22 @@ export const auth = betterAuth({
             const u = user as typeof user & { consentAt?: Date | string | null };
             if (!u.consentAt)
               throw new APIError("BAD_REQUEST", {
+                code: "consent_required",
                 message: "Please accept the terms of service and privacy policy.",
               });
             return { data: { ...user, consentAt: new Date(u.consentAt) } };
+          }
+          // Cloud, social sign-up: the sign-up page stored the accepted legal version in a cookie
+          // before sending the person to the provider. Without it there is no consent on record.
+          if (env.TENANCY === "multi" && isSocialSignUp(ctx?.path)) {
+            const version = ctx?.getCookie(CONSENT_COOKIE);
+            if (!version)
+              throw new APIError("BAD_REQUEST", {
+                code: "consent_required",
+                message: "Please accept the terms of service and privacy policy.",
+              });
+            ctx?.setCookie(CONSENT_COOKIE, "", { ...consentCookieOptions(), maxAge: 0 });
+            return { data: { ...user, consentAt: new Date(), consentVersion: version } };
           }
           // Single-tenant: once the workspace exists, only invitations may add accounts (public sign-up is closed).
           if (env.TENANCY !== "single") return;
@@ -86,6 +149,7 @@ export const auth = betterAuth({
           const invited = !!pending || ctx?.path?.includes("invitation");
           if (!invited)
             throw new APIError("FORBIDDEN", {
+              code: "signup_closed",
               message: "Sign-up is closed. Ask the workspace owner for an invitation.",
             });
           return { data: user };
