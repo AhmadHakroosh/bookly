@@ -32,6 +32,7 @@ import { detectCountry } from "@/server/geo";
 import { captureSupportsLocation } from "@/server/integrations/notetaker";
 import { formatPrice, paymentsReady } from "@/server/payments";
 import { getCurrentWorkspace } from "@/server/workspace";
+import { publicBaseUrl } from "@/server/urls";
 import { hasFeature } from "@/server/limits";
 import { priorityForEmail } from "@/server/contacts";
 import { fullSessions } from "@/server/waitlist";
@@ -48,9 +49,16 @@ export async function generateMetadata({
   const ws = await getCurrentWorkspace();
   const p = ws ? await getProfileByUsername(ws.id, username) : null;
   const et = ws && p ? await getEventType(ws.id, p.userId, event) : null;
-  return et
-    ? { title: `${et.title} · ${p!.displayName}`, description: et.description ?? undefined }
-    : {};
+  if (!ws || !p || !et) return {};
+  const url = `${await publicBaseUrl(ws)}/${p.username}/${et.slug}`;
+  const title = `${et.title} · ${p.displayName}`;
+  const description = et.description ?? `Book ${et.title} with ${p.displayName}.`;
+  return {
+    title,
+    description,
+    alternates: { canonical: url },
+    openGraph: { type: "website", url, title, description },
+  };
 }
 
 async function EventPage({ params, searchParams }: PageProps<"/[username]/[event]">) {

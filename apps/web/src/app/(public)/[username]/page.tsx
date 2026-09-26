@@ -14,12 +14,21 @@ import {
   locationsLabel,
 } from "@/server/scheduling";
 import { getCurrentWorkspace } from "@/server/workspace";
+import { publicBaseUrl } from "@/server/urls";
 
 export async function generateMetadata({ params }: PageProps<"/[username]">): Promise<Metadata> {
   const { username } = await params;
   const ws = await getCurrentWorkspace();
   const p = ws ? await getProfileByUsername(ws.id, username) : null;
-  return p ? { title: `Book ${p.displayName}`, description: p.bio ?? undefined } : {};
+  if (!ws || !p) return {};
+  const url = `${await publicBaseUrl(ws)}/${p.username}`;
+  const description = p.bio ?? `Book a time with ${p.displayName}.`;
+  return {
+    title: `Book ${p.displayName}`,
+    description,
+    alternates: { canonical: url },
+    openGraph: { type: "profile", url, title: `Book ${p.displayName}`, description },
+  };
 }
 
 async function ProfilePage({ params }: PageProps<"/[username]">) {
