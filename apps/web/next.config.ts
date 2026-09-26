@@ -35,6 +35,8 @@ const securityHeaders = [
   { key: "X-Content-Type-Options", value: "nosniff" },
   { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
   { key: "X-DNS-Prefetch-Control", value: "on" },
+  // Isolates the window from cross-origin pages that opened it; popups Bookly opens still work.
+  { key: "Cross-Origin-Opener-Policy", value: "same-origin-allow-popups" },
   {
     key: "Permissions-Policy",
     value:
@@ -51,6 +53,9 @@ const nextConfig: NextConfig = {
   // Standalone output feeds the Docker image; Vercel and the e2e build use the regular server.
   output: process.env.VERCEL || process.env.E2E ? undefined : "standalone",
   cacheComponents: true,
+  // The stylesheet is small (~24 KiB) and most visits to the marketing site are first visits:
+  // inlining it removes the render-blocking request that held the mobile LCP.
+  experimental: { inlineCss: true },
   // Local multi-tenant testing: <slug>.lvh.me resolves to 127.0.0.1 and accepts subdomain cookies.
   allowedDevOrigins: ["lvh.me", "*.lvh.me"],
   transpilePackages: [
@@ -67,6 +72,7 @@ const nextConfig: NextConfig = {
     "/docs": ["../../docs/*.md"],
     "/docs/[slug]": ["../../docs/*.md"],
     "/sitemap.xml": ["../../docs/*.md"],
+    "/llms.txt": ["../../docs/*.md"],
   },
   images: {
     remotePatterns: [
