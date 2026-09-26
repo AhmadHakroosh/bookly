@@ -3,9 +3,22 @@
  * Popup:   <button data-bookly-popup="https://book.example.com/ahmad/intro">Book a call</button><script src="https://book.example.com/embed.js" async></script>
  */
 (function () {
+  /* Only http(s) booking pages may be framed: a data-* attribute is page content, not code. */
+  function bookingUrl(url) {
+    try {
+      var u = new URL(url, document.baseURI);
+      if (u.protocol !== "https:" && u.protocol !== "http:") return null;
+      u.searchParams.set("embed", "1");
+      return u.href;
+    } catch {
+      return null;
+    }
+  }
   function frame(url, height) {
+    var src = bookingUrl(url);
+    if (!src) return null;
     var f = document.createElement("iframe");
-    f.src = url + (url.indexOf("?") > -1 ? "&" : "?") + "embed=1";
+    f.src = src;
     f.style.cssText =
       "width:100%;height:" +
       (height || 720) +
@@ -18,7 +31,8 @@
     document.querySelectorAll("[data-bookly]").forEach(function (el) {
       if (el.getAttribute("data-bookly-mounted")) return;
       el.setAttribute("data-bookly-mounted", "1");
-      el.appendChild(frame(el.getAttribute("data-bookly"), el.getAttribute("data-height")));
+      var f = frame(el.getAttribute("data-bookly"), el.getAttribute("data-height"));
+      if (f) el.appendChild(f);
     });
   }
   function popup(url) {
@@ -40,6 +54,7 @@
       if (e.target === overlay) overlay.remove();
     };
     var f = frame(url, 760);
+    if (!f) return;
     f.style.height = "100%";
     box.appendChild(close);
     box.appendChild(f);
