@@ -120,6 +120,10 @@ path on the platform host is a 404. Tenant hosts stay out of search engines.
   before you take paying customers, and update `legalUpdated` in
   `apps/web/src/app/(platform)/platform/site.ts` when you change them.
 
+## Accounts
+
+Sign-up creates the account, sends a verification link (valid one hour) and waits: the workspace step opens once the link is used, which also signs the person in. Password sign-in before that answers "confirm your email first" and sends a fresh link. Invited members skip the step (the invitation went to their address), and social sign-ins are verified by the provider. Magic links sign in existing accounts only; they never create one.
+
 ## Legal pages and compliance
 
 The platform host serves `/terms`, `/privacy`, `/dpa` (the data processing agreement with the

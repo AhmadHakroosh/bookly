@@ -84,7 +84,7 @@ their retention in mind when someone asks for erasure.
 
 ## Accounts and passwords
 
-Sign-in works with a password or an emailed link. A forgotten password is reset from "Forgot your password?" on the sign-in page: Bookly emails a link (valid for one hour) to `/reset-password`, so email must be configured (`RESEND_API_KEY` or SMTP; in development links print to the console). Signed-in users change their password under `Admin → Booking page`; changing it signs out every other session.
+Sign-in works with a password or an emailed link. On the hosted service a new account confirms its email address before the password can be used (the sign-up form sends the link); on a self-hosted install the first owner and every invited member count as verified, because the invitation itself went to their address. Better Auth removes the password of an _unverified_ account the first time that person signs in with an emailed link, so keep it that way. A forgotten password is reset from "Forgot your password?" on the sign-in page: Bookly emails a link (valid for one hour) to `/reset-password`, so email must be configured (`RESEND_API_KEY` or SMTP; in development links print to the console). Signed-in users change their password under `Admin → Booking page`; changing it signs out every other session.
 
 ### Sign in with Google, Microsoft or GitHub
 
