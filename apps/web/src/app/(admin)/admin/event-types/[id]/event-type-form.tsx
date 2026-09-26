@@ -136,7 +136,7 @@ export function EventTypeForm({
             defaultValue={initial.description}
           />
         </Field>
-        <div className="grid gap-6 sm:grid-cols-4">
+        <div className="grid gap-6 sm:grid-cols-3">
           {num("durationMin", "Duration", "min")}
           {num(
             "slotIntervalMin",
@@ -145,6 +145,9 @@ export function EventTypeForm({
             "0 = every duration, e.g. 9:00, 9:30 for a 30-minute call",
           )}
           {num("maxPerDay", "Max bookings", "per day", "0 = unlimited")}
+        </div>
+        {/* Who is in the room: independent bookings sharing a slot, and colleagues of one booker. */}
+        <div className="grid gap-6 sm:grid-cols-2">
           <Field>
             <FieldLabel htmlFor="seats" className="whitespace-nowrap">
               Seats per slot
@@ -162,6 +165,12 @@ export function EventTypeForm({
               and everyone gets the same meeting link.
             </FieldDescription>
           </Field>
+          {num(
+            "maxGuests",
+            "Guests",
+            "per booking",
+            "Colleagues the attendee may bring along; they get the invitation and reminders. 0 = none",
+          )}
         </div>
         {captureable && (
           <Field>
@@ -240,12 +249,11 @@ export function EventTypeForm({
             cannot take are skipped. With a price, the whole series is paid in one checkout.
           </FieldDescription>
         </fieldset>
-        <div className="grid gap-6 sm:grid-cols-5">
+        <div className="grid gap-6 sm:grid-cols-4">
           {num("bufferBeforeMin", "Gap before", "min", "Kept free before each booking")}
           {num("bufferAfterMin", "Gap after", "min", "Kept free after each booking")}
           {num("minNoticeMin", "Minimum notice", "min", "e.g. 720 = 12 hours, 1440 = 1 day")}
           {num("maxDaysAhead", "Book up to", "days", "How far into the future people can book")}
-          {num("maxGuests", "Guests", "per booking", "Colleagues the attendee may bring; 0 = none")}
         </div>
         <Field>
           <FieldLabel>Where to meet</FieldLabel>
