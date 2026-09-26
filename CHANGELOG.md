@@ -4,6 +4,12 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 ## [Unreleased]
 
+## [0.3.5] - 2026-09-26
+
+### Fixed
+
+- "Max bookings per day" and the schedule's weekly budget counted every busy interval, including events from a connected calendar, so a host with a normal calendar showed no times at all; both now count Bookly bookings only, while calendar events keep blocking the times they cover
+
 ## [0.3.4] - 2026-09-26
 
 ### Fixed
@@ -164,7 +170,8 @@ First public release: the self-hostable scheduling platform with contacts, brief
 
 - The unused storage layer (`packages/storage`, `STORAGE_*` and `S3_*` variables, the MinIO service in Compose): nothing in Bookly uploads files; profile photos and logos are URLs
 
-[Unreleased]: https://github.com/AhmadHakroosh/bookly/compare/v0.3.4...HEAD
+[Unreleased]: https://github.com/AhmadHakroosh/bookly/compare/v0.3.5...HEAD
+[0.3.5]: https://github.com/AhmadHakroosh/bookly/compare/v0.3.4...v0.3.5
 [0.3.4]: https://github.com/AhmadHakroosh/bookly/compare/v0.3.3...v0.3.4
 [0.3.3]: https://github.com/AhmadHakroosh/bookly/compare/v0.3.2...v0.3.3
 [0.3.2]: https://github.com/AhmadHakroosh/bookly/compare/v0.3.1...v0.3.2
