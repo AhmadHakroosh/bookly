@@ -2,6 +2,7 @@
  * Pure helpers for meeting transcripts: WebVTT parsing (Daily's stored file), merging the live
  * speaker-labelled feed with the stored text, and rendering for the model / the host.
  */
+import { stripTags } from "@/lib/strip-tags";
 import type { TranscriptSegment } from "@bookly/db/schema";
 
 const toSeconds = (ts: string) => {
@@ -33,7 +34,7 @@ export function parseVtt(vtt: string): TranscriptSegment[] {
     out.push({
       t: toSeconds(start),
       speaker: m ? m[1]!.trim() : "unknown",
-      text: (m ? m[2]! : text).replace(/<[^>]+>/g, "").trim(),
+      text: stripTags(m ? m[2]! : text).trim(),
     });
   }
   return out;
