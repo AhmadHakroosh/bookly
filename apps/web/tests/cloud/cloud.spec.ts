@@ -3,6 +3,8 @@ import { expect, test, type Page } from "@playwright/test";
 import { platformUrl, tenantUrl } from "../../playwright.cloud.config";
 import { DEMO, upcomingWeekday } from "../e2e/helpers";
 
+const escapeRegExp = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
 /** Fetch from inside the browser so the mapped hosts resolve (Node has no such mapping). */
 async function api(page: Page, path: string, init?: { method?: string; body?: unknown }) {
   return page.evaluate(
@@ -152,7 +154,7 @@ test.describe("sign-up and tenants", () => {
     await page.locator('input[name="name"]').fill("CI Workspace");
     await page.locator('input[name="slug"]').fill(slug);
     await page.getByRole("button", { name: "Create workspace" }).click();
-    await expect(page).toHaveURL(new RegExp(`^${tenantUrl(slug).replace(/[.:]/g, "\\$&")}/admin`));
+    await expect(page).toHaveURL(new RegExp(`^${escapeRegExp(tenantUrl(slug))}/admin`));
     await expect(page.getByRole("heading", { name: "Your booking page" })).toBeVisible();
   });
 

@@ -54,8 +54,12 @@ export async function POST(req: Request) {
         ),
       )
       .returning({ id: schema.integrations.id });
+    const oneLine = (v: unknown) =>
+      String(v ?? "?")
+        .replace(/\r/g, "")
+        .replace(/\n/g, "");
     console.log(
-      `[zoom] deauthorized user ${p.user_id} (account ${p.account_id ?? "?"}): ${removed.length} connection(s) removed`,
+      `[zoom] deauthorized user ${oneLine(p.user_id)} (account ${oneLine(p.account_id)}): ${removed.length} connection(s) removed`,
     );
     return NextResponse.json({ ok: true, removed: removed.length });
   }

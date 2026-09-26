@@ -14,7 +14,7 @@ describe("buildIcs", () => {
     });
     expect(ics).toContain("BEGIN:VCALENDAR");
     expect(ics).toContain("DTSTART:20260922T070000Z");
-    expect(ics).toContain("SUMMARY:Intro call\; with Ahmad");
+    expect(ics).toContain("SUMMARY:Intro call\\; with Ahmad");
     expect(ics).toContain("DESCRIPTION:Line 1\\nLine 2\\, comma");
     expect(ics).toContain("ORGANIZER;CN=Ahmad:mailto:ahmad@example.com");
     expect(ics).toContain(

@@ -80,7 +80,8 @@ describe("outreach email footer", () => {
       address: "Acme Ltd, 1 Example Street, London",
       unsubscribeUrl: "https://b.example/unsubscribe/abc",
     });
-    const html = mail.html.replace(/<!--.*?-->/g, "");
+    // React Email separates adjacent text nodes with an empty comment; drop it to match on strings.
+    const html = mail.html.split("<!-- -->").join("");
     expect(html).toContain("Acme Ltd, 1 Example Street, London");
     expect(html).toContain('href="https://b.example/unsubscribe/abc"');
     expect(html).toContain("Unsubscribe");

@@ -1,3 +1,4 @@
+import { stripTags } from "@/lib/strip-tags";
 import "server-only";
 import { readdir, readFile, stat } from "node:fs/promises";
 import path from "node:path";
@@ -53,9 +54,7 @@ const descriptionOf = (md: string) =>
     .slice(0, 160) ?? "";
 
 export const slugify = (text: string) =>
-  text
-    .toLowerCase()
-    .replace(/<[^>]+>/g, "")
+  stripTags(text.toLowerCase())
     .replace(/&[a-z]+;/g, "")
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "");
@@ -83,7 +82,7 @@ export function decorateHeadings(html: string): { html: string; headings: Headin
   const headings: Heading[] = [];
   const seen = new Map<string, number>();
   const out = html.replace(/<h([23])>([\s\S]*?)<\/h\1>/g, (_, lvl: string, inner: string) => {
-    const text = inner.replace(/<[^>]+>/g, "").trim();
+    const text = stripTags(inner).trim();
     let id = slugify(text) || `section-${headings.length + 1}`;
     const n = seen.get(id) ?? 0;
     seen.set(id, n + 1);

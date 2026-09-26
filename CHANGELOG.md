@@ -4,6 +4,18 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 ## [Unreleased]
 
+## [0.3.3] - 2026-09-26
+
+### Fixed
+
+- Calendar invitations (.ics) escape semicolons in titles and descriptions; a title such as "Intro call; with Ahmad" no longer breaks the event when a calendar app parses it
+- Prometheus metrics escape backslashes and newlines in label values
+- The embed script frames http(s) booking pages only, and adds `embed=1` as a proper query parameter
+
+### Changed
+
+- Code-scanning follow-ups: transcript cues and doc heading ids strip tags until stable, the From header is parsed without a backtracking regex, and webhook and console-email logs keep payload fields on one line
+
 ## [0.3.2] - 2026-09-26
 
 ### Changed
@@ -141,7 +153,8 @@ First public release: the self-hostable scheduling platform with contacts, brief
 
 - The unused storage layer (`packages/storage`, `STORAGE_*` and `S3_*` variables, the MinIO service in Compose): nothing in Bookly uploads files; profile photos and logos are URLs
 
-[Unreleased]: https://github.com/AhmadHakroosh/bookly/compare/v0.3.2...HEAD
+[Unreleased]: https://github.com/AhmadHakroosh/bookly/compare/v0.3.3...HEAD
+[0.3.3]: https://github.com/AhmadHakroosh/bookly/compare/v0.3.2...v0.3.3
 [0.3.2]: https://github.com/AhmadHakroosh/bookly/compare/v0.3.1...v0.3.2
 [0.3.1]: https://github.com/AhmadHakroosh/bookly/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/AhmadHakroosh/bookly/compare/v0.2.1...v0.3.0

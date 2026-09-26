@@ -1,3 +1,7 @@
+/** Prometheus text format: backslash, double quote and newline are the three escapes a label value needs. */
+const escapeLabel = (v: string) =>
+  v.replace(/\\/g, "\\\\").replace(/"/g, '\\"').replace(/\n/g, "\\n");
+
 /** Prometheus text exposition for a flat set of gauges. Pure. */
 export function renderMetrics(
   metrics: { name: string; help: string; value: number; labels?: Record<string, string> }[],
@@ -12,7 +16,7 @@ export function renderMetrics(
     const labels =
       m.labels && Object.keys(m.labels).length
         ? `{${Object.entries(m.labels)
-            .map(([k, v]) => `${k}="${String(v).replace(/"/g, '\\"')}"`)
+            .map(([k, v]) => `${k}="${escapeLabel(String(v))}"`)
             .join(",")}}`
         : "";
     lines.push(`${m.name}${labels} ${m.value}`);
