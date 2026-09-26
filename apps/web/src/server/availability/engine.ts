@@ -26,8 +26,13 @@ export type EngineInput = {
   minNoticeMin?: number;
   maxDaysAhead?: number;
   maxPerDay?: number | null;
-  /** Existing bookings of the host (UTC instants). Buffers are applied around these. */
+  /** Everything that blocks the host (Bookly bookings and calendar busy time, UTC instants). Buffers are applied around these. */
   busy: Interval[];
+  /**
+   * The Bookly bookings among `busy`: what the per-day cap and the weekly budget count. Calendar
+   * events only block the times they overlap; a full calendar is not "bookings". Defaults to `busy`.
+   */
+  bookings?: Interval[];
   /** Attendees per slot (default 1). With more, `occupied` sessions stay bookable until full. */
   seats?: number;
   /** Sessions of this same event type (excluded from `busy`), with their seat counts. */
@@ -98,14 +103,15 @@ export function computeSlots(input: EngineInput): DaySlots[] {
   const latest = new Date(now.getTime() + (input.maxDaysAhead ?? 60) * 86_400_000);
   // Buffers belong to the candidate slot ([start - before, end + after]); busy intervals are used as-is.
   const busy = input.busy;
+  const bookings = input.bookings ?? busy;
   const seats = Math.max(1, input.seats ?? 1);
   const occupied = input.occupied ?? [];
   const priority = !!input.priority;
-  // Weekly budget: bookings already on the calendar per week; priority visitors are exempt.
+  // Weekly budget: Bookly bookings already taken per week; priority visitors are exempt.
   const budget = !priority && input.weeklyBudget ? input.weeklyBudget : null;
   const perWeek = new Map<string, number>();
   if (budget)
-    for (const b of [...busy, ...occupied]) {
+    for (const b of [...bookings, ...occupied]) {
       const k = weekKey(b.start, input.scheduleTz);
       perWeek.set(k, (perWeek.get(k) ?? 0) + 1);
     }
@@ -148,8 +154,8 @@ export function computeSlots(input: EngineInput): DaySlots[] {
   for (const date of [...byDay.keys()].sort()) {
     let slots = byDay.get(date)!.sort((a, b) => a.getTime() - b.getTime());
     if (input.maxPerDay) {
-      // Count existing bookings on this host-day (approximate by attendee day) toward the cap.
-      const existing = [...input.busy, ...occupied].filter(
+      // Count existing Bookly bookings on this host-day (approximate by attendee day) toward the cap.
+      const existing = [...bookings, ...occupied].filter(
         (b) => utcToZoned(b.start, input.attendeeTz).date === date,
       ).length;
       const remaining = Math.max(0, input.maxPerDay - existing);

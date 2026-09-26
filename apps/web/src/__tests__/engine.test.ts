@@ -136,6 +136,35 @@ describe("priority-aware availability", () => {
     expect(regular[0]!.slots).toHaveLength(6); // 9:00 … 11:30
     expect(vip[0]!.slots).toHaveLength(14); // plus 13:00 … 16:30
   });
+  it("counts Bookly bookings, not calendar busy time, toward the cap and the budget", () => {
+    // Three calendar events on Tuesday and three more on Wednesday: a busy week, no bookings.
+    const calendar = ["2026-09-22", "2026-09-23"].flatMap((d) =>
+      [0, 1, 2].map((i) => ({
+        start: zonedToUtc(d, 13 * 60 + i * 60, tz),
+        end: zonedToUtc(d, 13 * 60 + i * 60 + 30, tz),
+      })),
+    );
+    const days = computeSlots({
+      ...base,
+      busy: calendar,
+      bookings: [],
+      weeklyBudget: 3,
+      maxPerDay: 2,
+      from: "2026-09-23",
+      to: "2026-09-23",
+    });
+    expect(days[0]!.slots.length).toBeGreaterThan(0);
+    // Without the split, the same calendar closes the week and the day.
+    const legacy = computeSlots({
+      ...base,
+      busy: calendar,
+      weeklyBudget: 3,
+      maxPerDay: 2,
+      from: "2026-09-23",
+      to: "2026-09-23",
+    });
+    expect(legacy).toEqual([]);
+  });
   it("closes the week to regular visitors once the budget is used up", () => {
     const busy = [0, 1, 2].map((i) => ({
       start: zonedToUtc("2026-09-22", 9 * 60 + i * 60, tz),
