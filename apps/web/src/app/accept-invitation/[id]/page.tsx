@@ -1,3 +1,4 @@
+import { AuthFormSkeleton } from "@/components/skeletons/pages";
 import type { Metadata } from "next";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
@@ -10,7 +11,6 @@ import { isCloud } from "@/server/platform";
 import { getSession } from "@/server/session";
 import { SITE } from "@/app/(platform)/platform/site";
 import { AcceptForm } from "./accept-form";
-import { PageSkeleton } from "@/components/page-skeleton";
 
 export const metadata: Metadata = { title: "Join the team", robots: { index: false } };
 
@@ -73,7 +73,13 @@ async function AcceptPage({ params, searchParams }: PageProps<"/accept-invitatio
 
 export default function AcceptPageBoundary(props: PageProps<"/accept-invitation/[id]">) {
   return (
-    <Suspense fallback={<PageSkeleton />}>
+    <Suspense
+      fallback={
+        <div className="mx-auto w-full max-w-md px-4 py-16">
+          <AuthFormSkeleton fields={3} width="max-w-md" />
+        </div>
+      }
+    >
       <AcceptPage {...props} />
     </Suspense>
   );

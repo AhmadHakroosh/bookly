@@ -1,8 +1,8 @@
+import { ConsoleListSkeleton } from "@/components/skeletons/pages";
 import Link from "next/link";
 import { connection } from "next/server";
 import { Suspense } from "react";
 import { listAudit } from "@/server/ops";
-import { PageSkeleton } from "@/components/page-skeleton";
 
 export const metadata = { title: "Audit log", robots: { index: false } };
 
@@ -44,7 +44,7 @@ async function AuditPage() {
 
 export default function AuditPageBoundary() {
   return (
-    <Suspense fallback={<PageSkeleton />}>
+    <Suspense fallback={<ConsoleListSkeleton />}>
       <AuditPage />
     </Suspense>
   );

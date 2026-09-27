@@ -1,4 +1,4 @@
-import { PageSkeleton } from "@/components/page-skeleton";
+import { ConsoleWorkspaceSkeleton } from "@/components/skeletons/pages";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { connection } from "next/server";
@@ -284,7 +284,7 @@ async function WorkspacePage({ params }: PageProps<"/platform/console/[id]">) {
 
 export default function WorkspacePageBoundary(props: PageProps<"/platform/console/[id]">) {
   return (
-    <Suspense fallback={<PageSkeleton />}>
+    <Suspense fallback={<ConsoleWorkspaceSkeleton />}>
       <WorkspacePage {...props} />
     </Suspense>
   );

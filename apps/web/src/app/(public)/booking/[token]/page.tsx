@@ -1,9 +1,10 @@
+import { ManageBookingSkeleton } from "@/components/skeletons/pages";
 import type { Metadata } from "next";
 import { attendeeJoinUrl } from "@/lib/meet-link";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
-import { PublicContainer, PublicSkeleton } from "../../container";
+import { PublicContainer } from "../../container";
 import { eq, schema } from "@bookly/db";
 import { db } from "@/lib/db";
 import { formatPhone } from "@/lib/phone";
@@ -283,7 +284,7 @@ async function BookingPage({ params, searchParams }: PageProps<"/booking/[token]
 
 export default function BookingPageBoundary(props: PageProps<"/booking/[token]">) {
   return (
-    <Suspense fallback={<PublicSkeleton width="max-w-lg" />}>
+    <Suspense fallback={<ManageBookingSkeleton />}>
       <BookingPage {...props} />
     </Suspense>
   );

@@ -1,3 +1,4 @@
+import { ConferencingSkeleton } from "@/components/skeletons/pages";
 import Link from "next/link";
 import { Suspense } from "react";
 import { Badge } from "@/components/ui/badge";
@@ -9,7 +10,6 @@ import { getCurrentWorkspace } from "@/server/workspace";
 import { ConnectButton } from "@/components/connect-button";
 import { disconnect } from "../integrations-actions";
 import { IntegrationError } from "../integration-errors";
-import { PageSkeleton } from "@/components/page-skeleton";
 
 export const metadata = { title: "Conferencing" };
 
@@ -140,13 +140,7 @@ async function ConferencingPage({ searchParams }: PageProps<"/admin/conferencing
 
 export default function ConferencingPageBoundary(props: PageProps<"/admin/conferencing">) {
   return (
-    <Suspense
-      fallback={
-        <div className="max-w-2xl">
-          <PageSkeleton />
-        </div>
-      }
-    >
+    <Suspense fallback={<ConferencingSkeleton />}>
       <ConferencingPage {...props} />
     </Suspense>
   );

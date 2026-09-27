@@ -1,3 +1,4 @@
+import { AvailabilitySkeleton } from "@/components/skeletons/pages";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import { SubmitButton } from "@/components/submit-button";
@@ -22,7 +23,6 @@ import {
 } from "../scheduling-actions";
 import { OverrideForm } from "./override-form";
 import { ScheduleForm } from "./schedule-form";
-import { PageSkeleton } from "@/components/page-skeleton";
 
 export const metadata = { title: "Availability" };
 
@@ -166,13 +166,7 @@ async function AvailabilityPage({ searchParams }: PageProps<"/admin/availability
 
 export default function AvailabilityPageBoundary(props: PageProps<"/admin/availability">) {
   return (
-    <Suspense
-      fallback={
-        <div className="max-w-2xl">
-          <PageSkeleton />
-        </div>
-      }
-    >
+    <Suspense fallback={<AvailabilitySkeleton />}>
       <AvailabilityPage {...props} />
     </Suspense>
   );

@@ -1,7 +1,8 @@
+import { RoutingPublicSkeleton } from "@/components/skeletons/pages";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
-import { PublicContainer, PublicSkeleton } from "../../container";
+import { PublicContainer } from "../../container";
 import { getRoutingForm } from "@/server/routing";
 import { getCurrentWorkspace } from "@/server/workspace";
 import { publicBaseUrl } from "@/server/urls";
@@ -55,7 +56,7 @@ async function RoutingPage({ params, searchParams }: PageProps<"/r/[slug]">) {
 
 export default function RoutingPageBoundary(props: PageProps<"/r/[slug]">) {
   return (
-    <Suspense fallback={<PublicSkeleton width="max-w-lg" />}>
+    <Suspense fallback={<RoutingPublicSkeleton />}>
       <RoutingPage {...props} />
     </Suspense>
   );

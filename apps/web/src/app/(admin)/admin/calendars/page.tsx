@@ -1,10 +1,10 @@
+import { CalendarsSkeleton } from "@/components/skeletons/pages";
 import { Suspense } from "react";
 import type { Integration } from "@bookly/db/schema";
 import { listIntegrations, providerConfigured } from "@/server/integrations";
 import { requireStaff } from "@/server/session";
 import { CalendarCard } from "./calendar-card";
 import { IntegrationError } from "../integration-errors";
-import { PageSkeleton } from "@/components/page-skeleton";
 
 export const metadata = { title: "Calendars" };
 
@@ -48,13 +48,7 @@ async function CalendarsPage({ searchParams }: PageProps<"/admin/calendars">) {
 
 export default function CalendarsPageBoundary(props: PageProps<"/admin/calendars">) {
   return (
-    <Suspense
-      fallback={
-        <div className="max-w-2xl">
-          <PageSkeleton />
-        </div>
-      }
-    >
+    <Suspense fallback={<CalendarsSkeleton />}>
       <CalendarsPage {...props} />
     </Suspense>
   );

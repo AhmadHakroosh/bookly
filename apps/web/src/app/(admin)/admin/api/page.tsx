@@ -1,4 +1,4 @@
-import { PageSkeleton } from "@/components/page-skeleton";
+import { ApiSkeleton } from "@/components/skeletons/pages";
 import { Suspense } from "react";
 import { desc, eq, inArray, schema } from "@bookly/db";
 import { loadEnv } from "@bookly/config";
@@ -219,7 +219,7 @@ async function ApiPage() {
 
 export default function ApiPageBoundary() {
   return (
-    <Suspense fallback={<PageSkeleton />}>
+    <Suspense fallback={<ApiSkeleton />}>
       <ApiPage />
     </Suspense>
   );

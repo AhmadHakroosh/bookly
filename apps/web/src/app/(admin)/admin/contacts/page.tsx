@@ -1,3 +1,4 @@
+import { ContactsSkeleton } from "@/components/skeletons/pages";
 import Link from "next/link";
 import { Suspense } from "react";
 import { CONTACT_STAGES, type ContactStage } from "@bookly/db/schema";
@@ -7,7 +8,6 @@ import { listContacts } from "@/server/contacts";
 import { getProfileByUser } from "@/server/scheduling";
 import { requireStaff } from "@/server/session";
 import { getCurrentWorkspace } from "@/server/workspace";
-import { PageSkeleton } from "@/components/page-skeleton";
 
 export const metadata = { title: "Contacts" };
 
@@ -123,7 +123,7 @@ async function ContactsPage({ searchParams }: PageProps<"/admin/contacts">) {
 
 export default function ContactsPageBoundary(props: PageProps<"/admin/contacts">) {
   return (
-    <Suspense fallback={<PageSkeleton />}>
+    <Suspense fallback={<ContactsSkeleton />}>
       <ContactsPage {...props} />
     </Suspense>
   );

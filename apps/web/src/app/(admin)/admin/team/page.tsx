@@ -1,3 +1,4 @@
+import { TeamSkeleton } from "@/components/skeletons/pages";
 import { Suspense } from "react";
 import { and, eq, schema } from "@bookly/db";
 import { Badge } from "@/components/ui/badge";
@@ -8,7 +9,6 @@ import { requireStaff } from "@/server/session";
 import { getCurrentWorkspace } from "@/server/workspace";
 import { cancelInvite, removeMember, setRole } from "./actions";
 import { InviteForm } from "./invite-form";
-import { PageSkeleton } from "@/components/page-skeleton";
 
 export const metadata = { title: "Team" };
 
@@ -110,13 +110,7 @@ async function TeamPage() {
 
 export default function TeamPageBoundary() {
   return (
-    <Suspense
-      fallback={
-        <div className="max-w-3xl">
-          <PageSkeleton />
-        </div>
-      }
-    >
+    <Suspense fallback={<TeamSkeleton />}>
       <TeamPage />
     </Suspense>
   );

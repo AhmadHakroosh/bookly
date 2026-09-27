@@ -1,3 +1,4 @@
+import { AuthFormSkeleton } from "@/components/skeletons/pages";
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { loadEnv } from "@bookly/config";
@@ -5,7 +6,6 @@ import { configuredSocialProviders, socialErrorMessage } from "@/lib/social-prov
 import { getSession } from "@/server/session";
 import { pageMetadata, SITE } from "../site";
 import { SignupForm } from "./signup-form";
-import { FormSkeleton } from "@/components/form-skeleton";
 
 export const metadata: Metadata = pageMetadata({
   title: "Get started",
@@ -48,7 +48,11 @@ export default function SignupPageBoundary(props: PageProps<"/platform/signup">)
     <Suspense
       fallback={
         <div className="mx-auto max-w-md px-4 py-14 md:py-20">
-          <FormSkeleton fields={4} />
+          <AuthFormSkeleton
+            fields={4}
+            width="max-w-md"
+            buttons={configuredSocialProviders(loadEnv()).length}
+          />
         </div>
       }
     >

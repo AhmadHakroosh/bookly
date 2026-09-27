@@ -1,9 +1,9 @@
+import { ConsoleInstallsSkeleton } from "@/components/skeletons/pages";
 import { connection } from "next/server";
 import { Suspense } from "react";
 import { Badge } from "@/components/ui/badge";
 import { fmtDateTime } from "@/lib/time";
 import { installSummary } from "@/server/telemetry";
-import { PageSkeleton } from "@/components/page-skeleton";
 
 export const metadata = { title: "Installs", robots: { index: false } };
 
@@ -108,7 +108,7 @@ async function InstallsPage() {
 
 export default function InstallsPageBoundary() {
   return (
-    <Suspense fallback={<PageSkeleton />}>
+    <Suspense fallback={<ConsoleInstallsSkeleton />}>
       <InstallsPage />
     </Suspense>
   );

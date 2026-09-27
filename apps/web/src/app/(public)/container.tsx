@@ -1,4 +1,4 @@
-import { PageSkeleton } from "@/components/page-skeleton";
+import { CardList, Heading, Shell } from "@/components/skeletons/primitives";
 
 /**
  * One container for every guest-facing page, its loading state, and the shell's header and
@@ -22,9 +22,10 @@ export function PublicContainer({
 export function PublicSkeleton({ width = "" }: { width?: string }) {
   return (
     <PublicContainer className="py-12">
-      <div className={`mx-auto ${width}`}>
-        <PageSkeleton />
-      </div>
+      <Shell className={`mx-auto space-y-8 ${width}`}>
+        <Heading width="w-56" />
+        <CardList rows={3} height="h-20" />
+      </Shell>
     </PublicContainer>
   );
 }

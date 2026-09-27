@@ -1,3 +1,4 @@
+import { RoutingFormsSkeleton } from "@/components/skeletons/pages";
 import Link from "next/link";
 import { Suspense } from "react";
 import { Badge } from "@/components/ui/badge";
@@ -6,7 +7,6 @@ import { listRoutingForms } from "@/server/routing";
 import { requireStaff } from "@/server/session";
 import { getCurrentWorkspace } from "@/server/workspace";
 import { createRoutingForm } from "./actions";
-import { PageSkeleton } from "@/components/page-skeleton";
 
 export const metadata = { title: "Routing forms" };
 
@@ -56,7 +56,7 @@ async function RoutingListPage() {
 
 export default function RoutingListPageBoundary() {
   return (
-    <Suspense fallback={<PageSkeleton />}>
+    <Suspense fallback={<RoutingFormsSkeleton />}>
       <RoutingListPage />
     </Suspense>
   );

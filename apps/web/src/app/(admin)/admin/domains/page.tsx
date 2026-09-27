@@ -1,4 +1,4 @@
-import { PageSkeleton } from "@/components/page-skeleton";
+import { DomainsSkeleton } from "@/components/skeletons/pages";
 import { loadEnv } from "@bookly/config";
 import { Suspense } from "react";
 import { Badge } from "@/components/ui/badge";
@@ -115,13 +115,7 @@ async function DomainsPage() {
 /** Suspense boundary for Cache Components: the page reads request data and streams in. */
 export default function DomainsPageBoundary() {
   return (
-    <Suspense
-      fallback={
-        <div className="max-w-3xl">
-          <PageSkeleton />
-        </div>
-      }
-    >
+    <Suspense fallback={<DomainsSkeleton />}>
       <DomainsPage />
     </Suspense>
   );

@@ -1,3 +1,4 @@
+import { BillingSkeleton } from "@/components/skeletons/pages";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import {
@@ -15,7 +16,6 @@ import { requireStaff } from "@/server/session";
 import { getCurrentWorkspace } from "@/server/workspace";
 import { manageBilling, toggleCaptureOverage } from "./actions";
 import { UpgradeCards } from "./upgrade-cards";
-import { PageSkeleton } from "@/components/page-skeleton";
 
 export const metadata = { title: "Billing" };
 
@@ -134,13 +134,7 @@ async function BillingPage({ searchParams }: PageProps<"/admin/billing">) {
 
 export default function BillingPageBoundary(props: PageProps<"/admin/billing">) {
   return (
-    <Suspense
-      fallback={
-        <div className="max-w-3xl">
-          <PageSkeleton />
-        </div>
-      }
-    >
+    <Suspense fallback={<BillingSkeleton />}>
       <BillingPage {...props} />
     </Suspense>
   );
