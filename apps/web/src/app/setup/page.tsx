@@ -1,10 +1,10 @@
+import { AuthFormSkeleton } from "@/components/skeletons/pages";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import { getSession } from "@/server/session";
 import { needsSetup } from "@/server/workspace";
 import { SetupForm } from "./setup-form";
-import { FormSkeleton } from "@/components/form-skeleton";
 
 export const metadata = { title: "Set up Bookly", robots: { index: false } };
 
@@ -43,9 +43,7 @@ export default function SetupPageBoundary() {
     <Suspense
       fallback={
         <main className="flex flex-1 items-center justify-center px-4 py-16">
-          <div className="w-full max-w-md">
-            <FormSkeleton fields={4} />
-          </div>
+          <AuthFormSkeleton fields={4} width="max-w-md" />
         </main>
       }
     >

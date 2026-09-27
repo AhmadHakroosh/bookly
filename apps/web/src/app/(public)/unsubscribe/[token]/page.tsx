@@ -1,6 +1,7 @@
+import { UnsubscribeSkeleton } from "@/components/skeletons/pages";
 import type { Metadata } from "next";
 import { Suspense } from "react";
-import { PublicContainer, PublicSkeleton } from "../../container";
+import { PublicContainer } from "../../container";
 import { getContactById } from "@/server/contacts";
 import { readUnsubscribeToken } from "@/server/unsubscribe";
 import { UnsubscribeForm } from "./form";
@@ -39,7 +40,7 @@ async function UnsubscribePage({ params }: PageProps<"/unsubscribe/[token]">) {
 
 export default function UnsubscribePageBoundary(props: PageProps<"/unsubscribe/[token]">) {
   return (
-    <Suspense fallback={<PublicSkeleton />}>
+    <Suspense fallback={<UnsubscribeSkeleton />}>
       <UnsubscribePage {...props} />
     </Suspense>
   );

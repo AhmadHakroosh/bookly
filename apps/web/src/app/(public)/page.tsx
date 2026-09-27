@@ -1,7 +1,8 @@
+import { WorkspaceHomeSkeleton } from "@/components/skeletons/pages";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
-import { PublicContainer, PublicSkeleton } from "./container";
+import { PublicContainer } from "./container";
 import { listProfiles } from "@/server/scheduling";
 import { getCurrentWorkspace } from "@/server/workspace";
 import { publicBaseUrl } from "@/server/urls";
@@ -63,7 +64,7 @@ async function HomePage() {
 
 export default function HomePageBoundary() {
   return (
-    <Suspense fallback={<PublicSkeleton width="max-w-2xl" />}>
+    <Suspense fallback={<WorkspaceHomeSkeleton />}>
       <HomePage />
     </Suspense>
   );

@@ -1,3 +1,4 @@
+import { ConsoleSkeleton } from "@/components/skeletons/pages";
 import Link from "next/link";
 import { connection } from "next/server";
 import { Suspense } from "react";
@@ -7,7 +8,6 @@ import { planName } from "@/server/billing";
 import { listWorkspacesForConsole, platformStats } from "@/server/ops";
 import { ExternalLink } from "@/components/links";
 import { tenantUrl } from "@/server/platform";
-import { PageSkeleton } from "@/components/page-skeleton";
 import { Dropdown } from "@/components/dropdown";
 
 export const metadata = { title: "Console", robots: { index: false } };
@@ -150,7 +150,7 @@ async function ConsoleHome({ searchParams }: PageProps<"/platform/console">) {
 
 export default function ConsoleHomeBoundary(props: PageProps<"/platform/console">) {
   return (
-    <Suspense fallback={<PageSkeleton />}>
+    <Suspense fallback={<ConsoleSkeleton />}>
       <ConsoleHome {...props} />
     </Suspense>
   );

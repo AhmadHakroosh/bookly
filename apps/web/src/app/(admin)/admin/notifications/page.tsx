@@ -1,3 +1,4 @@
+import { NotificationsSkeleton } from "@/components/skeletons/pages";
 import { Suspense } from "react";
 import { Badge } from "@/components/ui/badge";
 import { dailyConfigured } from "@/server/integrations";
@@ -7,7 +8,6 @@ import { requireStaff } from "@/server/session";
 import { getCurrentWorkspace } from "@/server/workspace";
 import { JoinToggle } from "./join-toggle";
 import { PrefsForm } from "./prefs-form";
-import { PageSkeleton } from "@/components/page-skeleton";
 
 export const metadata = { title: "Notifications" };
 
@@ -63,13 +63,7 @@ async function NotificationsPage() {
 
 export default function NotificationsPageBoundary() {
   return (
-    <Suspense
-      fallback={
-        <div className="max-w-2xl">
-          <PageSkeleton />
-        </div>
-      }
-    >
+    <Suspense fallback={<NotificationsSkeleton />}>
       <NotificationsPage />
     </Suspense>
   );

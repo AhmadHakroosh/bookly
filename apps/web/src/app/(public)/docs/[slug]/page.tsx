@@ -1,3 +1,4 @@
+import { DocsPageSkeleton } from "@/components/skeletons/pages";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -5,7 +6,6 @@ import { Suspense } from "react";
 import { ArrowLeftIcon, ArrowRightIcon } from "lucide-react";
 import { ExternalLink } from "@/components/links";
 import { DOCS_REPO_URL, renderDoc } from "@/server/docs";
-import { PageSkeleton } from "@/components/page-skeleton";
 import { pageMetadata } from "@/app/(platform)/platform/site";
 
 export async function generateMetadata({ params }: PageProps<"/docs/[slug]">): Promise<Metadata> {
@@ -107,7 +107,7 @@ async function DocPage({ params }: PageProps<"/docs/[slug]">) {
 
 export default function DocPageBoundary(props: PageProps<"/docs/[slug]">) {
   return (
-    <Suspense fallback={<PageSkeleton />}>
+    <Suspense fallback={<DocsPageSkeleton />}>
       <DocPage {...props} />
     </Suspense>
   );

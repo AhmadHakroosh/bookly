@@ -1,3 +1,4 @@
+import { BookingBriefSkeleton } from "@/components/skeletons/pages";
 import Link from "next/link";
 import { BackLink, ExternalLink } from "@/components/links";
 import { notFound } from "next/navigation";
@@ -23,7 +24,6 @@ import { getProfileByUser, locationLabel } from "@/server/scheduling";
 import { requireStaff } from "@/server/session";
 import { getCurrentWorkspace } from "@/server/workspace";
 import { regenerateBrief } from "../../scheduling-actions";
-import { PageSkeleton } from "@/components/page-skeleton";
 import { sessionSummary } from "@/server/sessions";
 import { CheckIcon, ClockIcon, UsersIcon } from "lucide-react";
 
@@ -243,13 +243,7 @@ async function BookingBriefPage({ params }: PageProps<"/admin/bookings/[id]">) {
 
 export default function BookingBriefPageBoundary(props: PageProps<"/admin/bookings/[id]">) {
   return (
-    <Suspense
-      fallback={
-        <div className="max-w-2xl">
-          <PageSkeleton />
-        </div>
-      }
-    >
+    <Suspense fallback={<BookingBriefSkeleton />}>
       <BookingBriefPage {...props} />
     </Suspense>
   );

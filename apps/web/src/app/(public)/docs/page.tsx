@@ -1,10 +1,10 @@
+import { DocsIndexSkeleton } from "@/components/skeletons/pages";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
 import { ArrowRightIcon } from "lucide-react";
 import { ExternalLink } from "@/components/links";
 import { DOCS_REPO_URL, listDocs } from "@/server/docs";
-import { PageSkeleton } from "@/components/page-skeleton";
 import { pageMetadata } from "@/app/(platform)/platform/site";
 
 export const metadata: Metadata = pageMetadata({
@@ -59,7 +59,7 @@ async function DocsIndex() {
 
 export default function DocsIndexBoundary() {
   return (
-    <Suspense fallback={<PageSkeleton />}>
+    <Suspense fallback={<DocsIndexSkeleton />}>
       <DocsIndex />
     </Suspense>
   );

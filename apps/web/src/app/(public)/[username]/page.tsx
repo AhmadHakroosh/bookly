@@ -1,3 +1,4 @@
+import { ProfilePublicSkeleton } from "@/components/skeletons/pages";
 import { hasFeature } from "@/server/limits";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -5,7 +6,7 @@ import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { Badge } from "@/components/ui/badge";
 import { recurrenceOf } from "@/server/recurrence";
-import { PublicContainer, PublicSkeleton } from "../container";
+import { PublicContainer } from "../container";
 import { formatPrice, paymentsReady } from "@/server/payments";
 import {
   eventLocations,
@@ -110,7 +111,7 @@ async function ProfilePage({ params }: PageProps<"/[username]">) {
 
 export default function ProfilePageBoundary(props: PageProps<"/[username]">) {
   return (
-    <Suspense fallback={<PublicSkeleton width="max-w-2xl" />}>
+    <Suspense fallback={<ProfilePublicSkeleton />}>
       <ProfilePage {...props} />
     </Suspense>
   );

@@ -1,3 +1,4 @@
+import { ConsolePaymentsSkeleton } from "@/components/skeletons/pages";
 import Link from "next/link";
 import { connection } from "next/server";
 import { Suspense } from "react";
@@ -5,7 +6,6 @@ import { loadEnv } from "@bookly/config";
 import { Badge } from "@/components/ui/badge";
 import { ExternalLink } from "@/components/links";
 import { SubmitButton } from "@/components/submit-button";
-import { PageSkeleton } from "@/components/page-skeleton";
 import { billingConfigured, planName } from "@/server/billing";
 import { effectivePlan, PLANS, type PlanId } from "@bookly/cloud";
 import { listConnectedWorkspaces, planFeeOverrides, planFees } from "@/server/connect";
@@ -195,7 +195,7 @@ async function PaymentsPage() {
 
 export default function PaymentsPageBoundary() {
   return (
-    <Suspense fallback={<PageSkeleton />}>
+    <Suspense fallback={<ConsolePaymentsSkeleton />}>
       <PaymentsPage />
     </Suspense>
   );

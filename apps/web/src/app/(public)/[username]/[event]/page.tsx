@@ -1,10 +1,11 @@
+import { EventPublicSkeleton } from "@/components/skeletons/pages";
 import type { Metadata } from "next";
 import type { EventType } from "@bookly/db/schema";
 import Link from "next/link";
 import { BackLink } from "@/components/links";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
-import { PublicContainer, PublicSkeleton } from "../../container";
+import { PublicContainer } from "../../container";
 import { Skeleton } from "@/components/ui/skeleton";
 import { MonthCalendar } from "@/components/booking/month-calendar";
 import { TzDetect } from "@/components/booking/tz-detect";
@@ -402,7 +403,7 @@ function PickerSkeleton() {
 
 export default function EventPageBoundary(props: PageProps<"/[username]/[event]">) {
   return (
-    <Suspense fallback={<PublicSkeleton />}>
+    <Suspense fallback={<EventPublicSkeleton />}>
       <EventPage {...props} />
     </Suspense>
   );

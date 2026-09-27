@@ -1,4 +1,4 @@
-import { PageSkeleton } from "@/components/page-skeleton";
+import { ContactSkeleton } from "@/components/skeletons/pages";
 import Link from "next/link";
 import {
   ArrowRightIcon,
@@ -226,7 +226,7 @@ async function ContactPage({ params, searchParams }: PageProps<"/admin/contacts/
 
 export default function ContactPageBoundary(props: PageProps<"/admin/contacts/[id]">) {
   return (
-    <Suspense fallback={<PageSkeleton />}>
+    <Suspense fallback={<ContactSkeleton />}>
       <ContactPage {...props} />
     </Suspense>
   );

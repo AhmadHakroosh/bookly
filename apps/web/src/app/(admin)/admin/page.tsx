@@ -1,4 +1,4 @@
-import { PageSkeleton } from "@/components/page-skeleton";
+import { InboxSkeleton } from "@/components/skeletons/pages";
 import Link from "next/link";
 import { ExternalLink } from "@/components/links";
 import { CheckIcon, SparklesIcon } from "lucide-react";
@@ -352,7 +352,7 @@ async function AdminInbox() {
 
 export default function AdminInboxBoundary() {
   return (
-    <Suspense fallback={<PageSkeleton />}>
+    <Suspense fallback={<InboxSkeleton />}>
       <AdminInbox />
     </Suspense>
   );

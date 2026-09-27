@@ -1,10 +1,6 @@
-import { PageSkeleton } from "@/components/page-skeleton";
+import { ConsoleSkeleton } from "@/components/skeletons/pages";
 
-/** Shown while the route segment below streams in. */
+/** Route-level placeholder for the operator console while a page streams in. */
 export default function Loading() {
-  return (
-    <div className="mx-auto w-full max-w-6xl px-4 py-8">
-      <PageSkeleton />
-    </div>
-  );
+  return <ConsoleSkeleton />;
 }

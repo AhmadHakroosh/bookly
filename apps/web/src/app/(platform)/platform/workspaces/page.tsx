@@ -1,3 +1,4 @@
+import { WorkspacesSkeleton } from "@/components/skeletons/pages";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
@@ -7,7 +8,6 @@ import { ExternalLink } from "@/components/links";
 import { planName } from "@/server/billing";
 import { listUserWorkspaces } from "@/server/platform";
 import { getSession } from "@/server/session";
-import { PageSkeleton } from "@/components/page-skeleton";
 
 export const metadata = { title: "Your workspaces", robots: { index: false } };
 
@@ -58,13 +58,7 @@ async function WorkspacesPage() {
 
 export default function WorkspacesPageBoundary() {
   return (
-    <Suspense
-      fallback={
-        <div className="mx-auto max-w-2xl px-4 py-14 md:py-20">
-          <PageSkeleton />
-        </div>
-      }
-    >
+    <Suspense fallback={<WorkspacesSkeleton />}>
       <WorkspacesPage />
     </Suspense>
   );

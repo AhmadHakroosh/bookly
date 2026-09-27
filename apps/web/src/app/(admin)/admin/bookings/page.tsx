@@ -1,3 +1,4 @@
+import { BookingsSkeleton } from "@/components/skeletons/pages";
 import Link from "next/link";
 import { Suspense } from "react";
 import { CheckIcon, ClockIcon, UsersIcon } from "lucide-react";
@@ -11,7 +12,6 @@ import { requireStaff } from "@/server/session";
 import { listWaitlist } from "@/server/waitlist";
 import { getCurrentWorkspace } from "@/server/workspace";
 import { hostCancel, hostConfirm, hostMark, hostRemoveWaitlist } from "../scheduling-actions";
-import { PageSkeleton } from "@/components/page-skeleton";
 
 export const metadata = { title: "Bookings" };
 
@@ -313,7 +313,7 @@ async function BookingsPage({ searchParams }: PageProps<"/admin/bookings">) {
 
 export default function BookingsPageBoundary(props: PageProps<"/admin/bookings">) {
   return (
-    <Suspense fallback={<PageSkeleton />}>
+    <Suspense fallback={<BookingsSkeleton />}>
       <BookingsPage {...props} />
     </Suspense>
   );

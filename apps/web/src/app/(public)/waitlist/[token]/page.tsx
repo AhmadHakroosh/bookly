@@ -1,6 +1,7 @@
+import { WaitlistPublicSkeleton } from "@/components/skeletons/pages";
 import type { Metadata } from "next";
 import { Suspense } from "react";
-import { PublicContainer, PublicSkeleton } from "../../container";
+import { PublicContainer } from "../../container";
 import { leaveWaitlist } from "@/server/waitlist";
 
 export const metadata: Metadata = { title: "Waitlist", robots: { index: false } };
@@ -26,7 +27,7 @@ async function LeavePage({ params }: PageProps<"/waitlist/[token]">) {
 
 export default function LeavePageBoundary(props: PageProps<"/waitlist/[token]">) {
   return (
-    <Suspense fallback={<PublicSkeleton width="max-w-lg" />}>
+    <Suspense fallback={<WaitlistPublicSkeleton />}>
       <LeavePage {...props} />
     </Suspense>
   );

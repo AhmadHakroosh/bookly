@@ -1,3 +1,4 @@
+import { AuthFormSkeleton } from "@/components/skeletons/pages";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import { loadEnv } from "@bookly/config";
@@ -5,7 +6,6 @@ import { configuredSocialProviders, socialErrorMessage } from "@/lib/social-prov
 import { isCloud, onPlatformHost } from "@/server/platform";
 import { getSession } from "@/server/session";
 import { LoginForm } from "./login-form";
-import { FormSkeleton } from "@/components/form-skeleton";
 
 export const metadata = { title: "Sign in", robots: { index: false } };
 
@@ -48,9 +48,7 @@ export default function LoginPageBoundary(props: PageProps<"/login">) {
     <Suspense
       fallback={
         <main className="flex flex-1 items-center justify-center px-4 py-16">
-          <div className="w-full max-w-sm">
-            <FormSkeleton fields={2} tabs />
-          </div>
+          <AuthFormSkeleton fields={2} tabs buttons={configuredSocialProviders(loadEnv()).length} />
         </main>
       }
     >

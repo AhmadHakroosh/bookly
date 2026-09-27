@@ -1,10 +1,10 @@
+import { ConsoleUsersSkeleton } from "@/components/skeletons/pages";
 import { connection } from "next/server";
 import { Suspense } from "react";
 import { Badge } from "@/components/ui/badge";
 import { SubmitButton } from "@/components/submit-button";
 import { listUsersForConsole } from "@/server/ops";
 import { banUser, unbanUser } from "../actions";
-import { PageSkeleton } from "@/components/page-skeleton";
 
 export const metadata = { title: "Users", robots: { index: false } };
 
@@ -74,7 +74,7 @@ async function UsersPage({ searchParams }: PageProps<"/platform/console/users">)
 
 export default function UsersPageBoundary(props: PageProps<"/platform/console/users">) {
   return (
-    <Suspense fallback={<PageSkeleton />}>
+    <Suspense fallback={<ConsoleUsersSkeleton />}>
       <UsersPage {...props} />
     </Suspense>
   );

@@ -1,3 +1,4 @@
+import { SettingsSkeleton } from "@/components/skeletons/pages";
 import { refreshConnectStatus } from "@/server/connect";
 import { hasFeature } from "@/server/limits";
 import { paymentsConfigured } from "@/server/payments";
@@ -9,7 +10,6 @@ import { requireStaff } from "@/server/session";
 import { DangerZone } from "./danger-zone";
 import { PaymentsCard } from "./payments-card";
 import { SettingsForm } from "./settings-form";
-import { PageSkeleton } from "@/components/page-skeleton";
 
 export const metadata = { title: "Settings" };
 
@@ -78,13 +78,7 @@ async function SettingsPage({ searchParams }: PageProps<"/admin/settings">) {
 /** Suspense boundary for Cache Components: the page reads request data and streams in. */
 export default function SettingsPageBoundary(props: PageProps<"/admin/settings">) {
   return (
-    <Suspense
-      fallback={
-        <div className="max-w-xl">
-          <PageSkeleton />
-        </div>
-      }
-    >
+    <Suspense fallback={<SettingsSkeleton />}>
       <SettingsPage {...props} />
     </Suspense>
   );

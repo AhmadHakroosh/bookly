@@ -1,3 +1,4 @@
+import { ProfileSkeleton } from "@/components/skeletons/pages";
 import { headers } from "next/headers";
 import { Suspense } from "react";
 import { loadEnv } from "@bookly/config";
@@ -13,7 +14,6 @@ import { PasswordForm } from "./password-form";
 import { ProfileForm } from "./profile-form";
 import { SetPasswordForm } from "./set-password-form";
 import { SignInMethods } from "./sign-in-methods";
-import { PageSkeleton } from "@/components/page-skeleton";
 
 export const metadata = { title: "Booking page" };
 
@@ -86,13 +86,7 @@ async function ProfilePage({ searchParams }: PageProps<"/admin/profile">) {
 
 export default function ProfilePageBoundary(props: PageProps<"/admin/profile">) {
   return (
-    <Suspense
-      fallback={
-        <div className="max-w-xl">
-          <PageSkeleton />
-        </div>
-      }
-    >
+    <Suspense fallback={<ProfileSkeleton />}>
       <ProfilePage {...props} />
     </Suspense>
   );
