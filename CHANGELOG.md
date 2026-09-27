@@ -8,7 +8,7 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 ### Changed
 
-- Environments for the hosted service: production deploys from the `release` branch, which the Release workflow fast-forwards on every `vX.Y.Z` tag; `main` is staging (staging.bookly-app.io); every pull request gets a single-tenant preview seeded with the demo workspace. Preview builds run migrations and the seed themselves, and `APP_URL` falls back to the deployment's own URL on Vercel when unset (`docs/cloud.md`, "Environments")
+- Environments for the hosted service: production deploys from the `release` branch, which the Release workflow fast-forwards on every `vX.Y.Z` tag; `main` is staging (staging.bookly-app.io, a Vercel custom environment); every pull request gets a single-tenant preview seeded with the demo workspace. Staging builds run migrations and PR builds migrations plus the seed, and `APP_URL` falls back to the deployment's own URL on Vercel when unset (`docs/cloud.md`, "Environments")
 
 ## [0.4.3] - 2026-09-27
 

@@ -144,21 +144,21 @@ business associate agreements; the terms say so.
 | Environment | Deploys on                                                                        | Host                                                 | Mode                     | Database              |
 | ----------- | --------------------------------------------------------------------------------- | ---------------------------------------------------- | ------------------------ | --------------------- |
 | Production  | a push to the `release` branch, which the Release workflow does on a `vX.Y.Z` tag | bookly-app.io, `*.bookly-app.io`, meet.bookly-app.io | multi-tenant             | Neon `main`           |
-| Staging     | every merge to `main`                                                             | staging.bookly-app.io, `*.staging.bookly-app.io`     | multi-tenant             | Neon `staging` branch |
+| Staging     | every merge to `main`, into the Vercel custom environment `staging`               | staging.bookly-app.io, `*.staging.bookly-app.io`     | multi-tenant             | Neon `staging` branch |
 | PR preview  | every push to a pull request                                                      | the preview's own `vercel.app` URL                   | single-tenant, demo seed | Neon `preview` branch |
 
 Tagging is deploying: the Release workflow builds the image, publishes the GitHub release and
 fast-forwards `release`, which Vercel has as its production branch. Production migrations stay a
-manual step before the tag. Preview builds (staging and PR previews) run migrations and the demo
-seed themselves before `next build` (`apps/web/vercel.json`), so both Neon branches are always
-current. Previews have their own branch because single-tenant mode takes the first workspace it
+manual step before the tag. Staging and PR builds run migrations themselves before `next build`,
+and PR builds the demo seed too (`apps/web/vercel.json`, keyed on `VERCEL_TARGET_ENV`: `staging`
+for the custom environment, `preview` for pull requests), so both Neon branches are always current. Previews have their own branch because single-tenant mode takes the first workspace it
 finds and seeds the deployment's host as that workspace's domain. A pull request's preview has no fixed address: `APP_URL` is unset there and the
 app uses Vercel's own URL for it (`withPlatformDefaults` in `packages/config`), running as a
 one-workspace install with `demo@example.com`. Cloud-only features (platform pages, tenants,
 billing) are exercised on staging; everything else on the PR itself.
 
-Variables: `.env.cloud` (production), `.env.cloud.staging` (Preview environment, scoped to the
-`main` branch) and `.env.cloud.preview` (Preview environment, all other branches) at the
+Variables: `.env.cloud` (production), `.env.cloud.staging` (the `staging` custom environment)
+and `.env.cloud.preview` (Preview environment) at the
 repository root list every value, with the staging webhook and callback URLs to register on
 Stripe (test mode), Google, Entra, GitHub and Zoom. Staging has its own `AUTH_SECRET`, Upstash
 database and Stripe test keys; it shares the QStash, Daily, Anthropic and OAuth credentials.
@@ -173,8 +173,9 @@ video `https://meet.bookly-app.io`, `www` redirected to the apex by the proxy.
    `meet.bookly-app.io`. Vercel issues the wildcard certificate.
 2. **Project.** Root Directory `apps/web`, Node 24, install with pnpm, Production Branch
    `release` (see "Environments"). `apps/web/vercel.json` keeps a daily `/api/cron/tick` as the
-   safety net behind QStash; add `staging.bookly-app.io` and `*.staging.bookly-app.io` as domains
-   assigned to the `main` branch for staging.
+   safety net behind QStash. Create a custom environment `staging` (Settings → Environments)
+   tracking the `main` branch, with `staging.bookly-app.io` and `*.staging.bookly-app.io` as its
+   domains.
 3. **Environment.** Import `.env.cloud` from the repository root (it is git-ignored and carries
    the fixed values: hosts, drivers, `JOBS_WORKER=false`, `TELEMETRY_URL`) and fill in each
    `SET:` line: Neon, `AUTH_SECRET`, Resend (verify `bookly-app.io` there first),
