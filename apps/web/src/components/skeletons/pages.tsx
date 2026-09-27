@@ -481,9 +481,11 @@ export function AuthFormSkeleton({
       <div className="space-y-4">
         {buttons > 0 && (
           <div className="space-y-2">
-            {Array.from({ length: buttons }, (_, i) => (
-              <Button key={i} full />
-            ))}
+            <div className="grid auto-cols-fr grid-flow-col gap-3">
+              {Array.from({ length: buttons }, (_, i) => (
+                <Skeleton key={i} className="h-12 w-full rounded-lg" />
+              ))}
+            </div>
             <div className="flex items-center gap-3 py-2">
               <Skeleton className="h-px flex-1" />
               <Skeleton className="h-3 w-4" />

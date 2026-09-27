@@ -4,6 +4,12 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 ## [Unreleased]
 
+## [0.4.5] - 2026-09-27
+
+### Changed
+
+- Social sign-in is a row of icon squares (Google, Microsoft, GitHub) instead of three stacked "Continue with…" buttons, on sign-in, sign-up and invitation pages; the provider name stays as the accessible label and tooltip, and the loading skeleton matches
+
 ## [0.4.4] - 2026-09-27
 
 ### Changed
@@ -201,7 +207,8 @@ First public release: the self-hostable scheduling platform with contacts, brief
 
 - The unused storage layer (`packages/storage`, `STORAGE_*` and `S3_*` variables, the MinIO service in Compose): nothing in Bookly uploads files; profile photos and logos are URLs
 
-[Unreleased]: https://github.com/AhmadHakroosh/bookly/compare/v0.4.4...HEAD
+[Unreleased]: https://github.com/AhmadHakroosh/bookly/compare/v0.4.5...HEAD
+[0.4.5]: https://github.com/AhmadHakroosh/bookly/compare/v0.4.4...v0.4.5
 [0.4.4]: https://github.com/AhmadHakroosh/bookly/compare/v0.4.3...v0.4.4
 [0.4.3]: https://github.com/AhmadHakroosh/bookly/compare/v0.4.2...v0.4.3
 [0.4.2]: https://github.com/AhmadHakroosh/bookly/compare/v0.4.1...v0.4.2
