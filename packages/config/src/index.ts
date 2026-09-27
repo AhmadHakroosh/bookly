@@ -135,8 +135,20 @@ export type Env = z.infer<typeof envSchema>;
 
 let cached: Env | undefined;
 
+/**
+ * Platform-provided defaults: a Vercel preview deployment has no fixed address, so when APP_URL
+ * is not set the deployment's own URL is used. That is what lets a pull request's preview sign
+ * people in and build links on a host nobody knew in advance.
+ */
+export function withPlatformDefaults(source: NodeJS.ProcessEnv): NodeJS.ProcessEnv {
+  if (!source.APP_URL && source.VERCEL_URL)
+    return { ...source, APP_URL: `https://${source.VERCEL_URL}` };
+  return source;
+}
+
 export function loadEnv(source: NodeJS.ProcessEnv = process.env): Env {
   if (cached) return cached;
+  source = withPlatformDefaults(source);
   if (source.SKIP_ENV_VALIDATION) {
     cached = envSchema.partial().parse(source) as Env;
     return cached;
