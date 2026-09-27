@@ -145,13 +145,14 @@ business associate agreements; the terms say so.
 | ----------- | --------------------------------------------------------------------------------- | ---------------------------------------------------- | ------------------------ | --------------------- |
 | Production  | a push to the `release` branch, which the Release workflow does on a `vX.Y.Z` tag | bookly-app.io, `*.bookly-app.io`, meet.bookly-app.io | multi-tenant             | Neon `main`           |
 | Staging     | every merge to `main`                                                             | staging.bookly-app.io, `*.staging.bookly-app.io`     | multi-tenant             | Neon `staging` branch |
-| PR preview  | every push to a pull request                                                      | the preview's own `vercel.app` URL                   | single-tenant, demo seed | Neon `staging` branch |
+| PR preview  | every push to a pull request                                                      | the preview's own `vercel.app` URL                   | single-tenant, demo seed | Neon `preview` branch |
 
 Tagging is deploying: the Release workflow builds the image, publishes the GitHub release and
 fast-forwards `release`, which Vercel has as its production branch. Production migrations stay a
 manual step before the tag. Preview builds (staging and PR previews) run migrations and the demo
-seed themselves before `next build` (`apps/web/vercel.json`), so the Neon `staging` branch is
-always current. A pull request's preview has no fixed address: `APP_URL` is unset there and the
+seed themselves before `next build` (`apps/web/vercel.json`), so both Neon branches are always
+current. Previews have their own branch because single-tenant mode takes the first workspace it
+finds and seeds the deployment's host as that workspace's domain. A pull request's preview has no fixed address: `APP_URL` is unset there and the
 app uses Vercel's own URL for it (`withPlatformDefaults` in `packages/config`), running as a
 one-workspace install with `demo@example.com`. Cloud-only features (platform pages, tenants,
 billing) are exercised on staging; everything else on the PR itself.
