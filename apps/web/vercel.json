@@ -1,5 +1,5 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "crons": [{ "path": "/api/cron/tick", "schedule": "0 3 * * *" }],
-  "ignoreCommand": "[ \"$VERCEL_ENV\" = \"production\" ] && exit 1 || exit 0"
+  "buildCommand": "if [ \"$VERCEL_TARGET_ENV\" = \"preview\" ]; then pnpm -w db:migrate && pnpm -w demo; elif [ \"$VERCEL_TARGET_ENV\" = \"staging\" ]; then pnpm -w db:migrate; fi && next build"
 }
