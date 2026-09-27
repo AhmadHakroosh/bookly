@@ -4,6 +4,12 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 ## [Unreleased]
 
+## [0.4.4] - 2026-09-27
+
+### Changed
+
+- Environments for the hosted service: production deploys from the `release` branch, which the Release workflow fast-forwards on every `vX.Y.Z` tag; `main` is staging (staging.bookly-app.io); every pull request gets a single-tenant preview seeded with the demo workspace. Preview builds run migrations and the seed themselves, and `APP_URL` falls back to the deployment's own URL on Vercel when unset (`docs/cloud.md`, "Environments")
+
 ## [0.4.3] - 2026-09-27
 
 ### Changed
@@ -195,7 +201,8 @@ First public release: the self-hostable scheduling platform with contacts, brief
 
 - The unused storage layer (`packages/storage`, `STORAGE_*` and `S3_*` variables, the MinIO service in Compose): nothing in Bookly uploads files; profile photos and logos are URLs
 
-[Unreleased]: https://github.com/AhmadHakroosh/bookly/compare/v0.4.3...HEAD
+[Unreleased]: https://github.com/AhmadHakroosh/bookly/compare/v0.4.4...HEAD
+[0.4.4]: https://github.com/AhmadHakroosh/bookly/compare/v0.4.3...v0.4.4
 [0.4.3]: https://github.com/AhmadHakroosh/bookly/compare/v0.4.2...v0.4.3
 [0.4.2]: https://github.com/AhmadHakroosh/bookly/compare/v0.4.1...v0.4.2
 [0.4.1]: https://github.com/AhmadHakroosh/bookly/compare/v0.4.0...v0.4.1
