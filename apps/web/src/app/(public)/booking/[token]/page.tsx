@@ -119,17 +119,15 @@ async function BookingPage({ params, searchParams }: PageProps<"/booking/[token]
                   : b.paymentStatus === "pending"
                     ? " · payment pending"
                     : ""}
-                {b.paymentRef?.receiptUrl && (
+                {(b.paymentStatus === "paid" || b.paymentStatus === "refunded") && (
                   <>
                     {" · "}
-                    <a
-                      href={b.paymentRef.receiptUrl}
-                      target="_blank"
-                      rel="noreferrer"
+                    <Link
+                      href={`/booking/${token}/receipt`}
                       className="underline underline-offset-4"
                     >
                       Receipt
-                    </a>
+                    </Link>
                   </>
                 )}
               </dd>

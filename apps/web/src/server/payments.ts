@@ -198,6 +198,7 @@ export async function recordPayment(bookingId: string, paymentIntentId: string |
       paymentRef: {
         ...(b.paymentRef ?? {}),
         paymentIntentId: paymentIntentId ?? undefined,
+        paidAt: new Date().toISOString(),
         ...(receiptUrl ? { receiptUrl } : {}),
       },
     })

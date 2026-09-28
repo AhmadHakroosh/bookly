@@ -145,7 +145,7 @@ export async function attendeeConfirmation(ctx: BookingMailCtx): Promise<Mail> {
         ...(ctx.booking.guests.length
           ? ([["Guests", ctx.booking.guests.join(", ")]] as [string, string][])
           : []),
-        ...paidRow(ctx.booking),
+        ...paidRow(ctx),
       ]}
       cta={{ href: manageUrl(ctx), label: "Reschedule or cancel" }}
       note={
@@ -158,24 +158,19 @@ export async function attendeeConfirmation(ctx: BookingMailCtx): Promise<Mail> {
   return { subject, text, html };
 }
 
-/** "Paid $10.00 · View receipt" for a paid booking; nothing for a free one. */
-function paidRow(b: BookingMailCtx["booking"]): [string, ReactNode][] {
+/** "Paid $10.00 · View receipt" (the workspace's receipt page) for a paid booking. */
+function paidRow(ctx: BookingMailCtx): [string, ReactNode][] {
+  const b = ctx.booking;
   if (b.paymentStatus !== "paid" || b.amountCents == null) return [];
-  const amount = formatPrice(b.amountCents, b.currency);
-  const receipt = b.paymentRef?.receiptUrl;
   return [
     [
       "Paid",
-      receipt ? (
-        <>
-          {amount} ·{" "}
-          <Link href={receipt} style={{ color: "#18181b" }}>
-            View receipt
-          </Link>
-        </>
-      ) : (
-        amount
-      ),
+      <>
+        {formatPrice(b.amountCents, b.currency)} ·{" "}
+        <Link href={`${manageUrl(ctx)}/receipt`} style={{ color: "#18181b" }}>
+          View receipt
+        </Link>
+      </>,
     ],
   ];
 }
