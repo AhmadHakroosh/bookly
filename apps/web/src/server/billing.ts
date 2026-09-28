@@ -97,11 +97,13 @@ export async function startUpgrade(
   if (!price) throw new Error("This plan is not available");
   const customer = await customerFor(ws, email);
   const back = tenantUrl(ws.slug, "/admin/billing");
+  const quantity = plan === "team" ? billedSeats(PLANS.team, await memberCount(ws)) : 1;
+  if (await changePlanInPlace(ws, price, quantity, plan, interval)) return `${back}?upgraded=1`;
   const session = await stripe().checkout.sessions.create({
     mode: "subscription",
     customer,
     line_items: [
-      { price, quantity: plan === "team" ? billedSeats(PLANS.team, await memberCount(ws)) : 1 },
+      { price, quantity },
       // Metered overage rides on the same subscription when it bills on the same interval
       // (Stripe allows one interval per subscription); a yearly plan gets a monthly companion
       // subscription for it the first time usage is reported (`ensureOverageItem`).
@@ -127,6 +129,44 @@ export async function startUpgrade(
   return session.url!;
 }
 
+/**
+ * Moves a live subscription to `price` instead of starting a second one: Stripe prorates the
+ * remaining time and invoices the difference right away (a credit when moving down). Also
+ * undoes a pending cancellation and keeps the overage price on the interval it bills on.
+ * Returns false when there is nothing to change in place (no subscription, or one that ended).
+ */
+async function changePlanInPlace(
+  ws: Workspace,
+  price: string,
+  quantity: number,
+  plan: PlanId,
+  interval: BillingInterval,
+): Promise<boolean> {
+  if (!ws.stripeSubscriptionId) return false;
+  const sub = await stripe().subscriptions.retrieve(ws.stripeSubscriptionId);
+  if (!["active", "trialing", "past_due"].includes(sub.status)) return false;
+  const item = planItem(sub);
+  if (!item) return false;
+  const overage = loadEnv().STRIPE_PRICE_CAPTURE_OVERAGE;
+  const overageItem = overage ? sub.items.data.find((i) => i.price.id === overage) : undefined;
+  const overageFits = !!overage && (await overageIntervalOf()) === interval;
+  const updated = await stripe().subscriptions.update(sub.id, {
+    items: [
+      { id: item.id, price, quantity },
+      ...(overageItem && !overageFits ? [{ id: overageItem.id, deleted: true as const }] : []),
+      ...(!overageItem && overageFits ? [{ price: overage! }] : []),
+    ],
+    proration_behavior: "always_invoice",
+    cancel_at_period_end: false,
+    metadata: { workspaceId: ws.id, plan, interval },
+  });
+  const customer = typeof updated.customer === "string" ? updated.customer : updated.customer.id;
+  // The overage now bills on the plan subscription; a companion from a yearly period is redundant.
+  if (overageFits) await cancelOverageCompanion(customer);
+  await syncSubscription(updated);
+  return true;
+}
+
 /** Stripe customer portal for changing card, cancelling, invoices. */
 export async function billingPortal(ws: Workspace) {
   if (!ws.stripeCustomerId) throw new Error("No billing account yet");
@@ -145,8 +185,12 @@ async function memberCount(ws: Workspace) {
   return rows.length;
 }
 
-/** Mirrors a Stripe subscription onto the workspace (webhook + checkout completion). */
-export async function syncSubscription(sub: Stripe.Subscription) {
+/**
+ * Mirrors a Stripe subscription onto the workspace (webhook + checkout completion). Events for
+ * a subscription the workspace no longer follows (an earlier one still winding down) are
+ * ignored; `adopt` is for a subscription that just came out of Checkout and becomes the one.
+ */
+export async function syncSubscription(sub: Stripe.Subscription, { adopt = false } = {}) {
   const wsId = sub.metadata?.workspaceId;
   const customer = typeof sub.customer === "string" ? sub.customer : sub.customer.id;
   const ws =
@@ -157,6 +201,7 @@ export async function syncSubscription(sub: Stripe.Subscription) {
   if (!ws) return;
   // The overage companion of a yearly plan carries no plan of its own.
   if (isOverageCompanion(sub)) return;
+  if (!adopt && ws.stripeSubscriptionId && ws.stripeSubscriptionId !== sub.id) return;
   // An operator-managed plan (comp, trial) is not touched by Stripe events.
   if (ws.planManagedBy === "operator") return;
   const item = planItem(sub);
