@@ -392,6 +392,8 @@ export const bookings = pgTable(
       destination?: string;
       /** Platform fee kept from this payment, in the booking's currency. */
       feeCents?: number;
+      /** Stripe's hosted receipt for the payment (charge.receipt_url), shown to guest and host. */
+      receiptUrl?: string;
     }>(),
     ...timestamps,
   },

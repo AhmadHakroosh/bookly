@@ -168,15 +168,38 @@ export async function createCheckout(
   return session.url!;
 }
 
+/** Stripe's hosted receipt for a payment (best effort; the page and emails link to it). */
+async function receiptFor(paymentIntentId: string, account: string | null) {
+  try {
+    const pi = await stripe().paymentIntents.retrieve(
+      paymentIntentId,
+      { expand: ["latest_charge"] },
+      onAccount(account),
+    );
+    const charge = pi.latest_charge;
+    return charge && typeof charge !== "string" ? (charge.receipt_url ?? undefined) : undefined;
+  } catch (e) {
+    console.error("[payments] receipt lookup failed", e);
+    return undefined;
+  }
+}
+
 /** Records a successful payment; returns the booking (or null if unknown/already paid). */
 export async function recordPayment(bookingId: string, paymentIntentId: string | null) {
   const b = await db().query.bookings.findFirst({ where: eq(schema.bookings.id, bookingId) });
   if (!b || b.paymentStatus === "paid") return null;
+  const receiptUrl = paymentIntentId
+    ? await receiptFor(paymentIntentId, b.paymentRef?.stripeAccount ?? null)
+    : undefined;
   const [updated] = await db()
     .update(schema.bookings)
     .set({
       paymentStatus: "paid",
-      paymentRef: { ...(b.paymentRef ?? {}), paymentIntentId: paymentIntentId ?? undefined },
+      paymentRef: {
+        ...(b.paymentRef ?? {}),
+        paymentIntentId: paymentIntentId ?? undefined,
+        ...(receiptUrl ? { receiptUrl } : {}),
+      },
     })
     .where(eq(schema.bookings.id, b.id))
     .returning();

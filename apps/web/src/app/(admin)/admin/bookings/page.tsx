@@ -182,6 +182,16 @@ async function BookingsPage({ searchParams }: PageProps<"/admin/bookings">) {
                             : " unpaid"}
                       </Badge>
                     )}
+                    {b.paymentRef?.receiptUrl && (
+                      <a
+                        href={b.paymentRef.receiptUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-xs underline underline-offset-4"
+                      >
+                        Receipt
+                      </a>
+                    )}
                     <StatusBadge status={b.status} />
                   </div>
                 </div>
@@ -227,7 +237,20 @@ async function BookingsPage({ searchParams }: PageProps<"/admin/bookings">) {
                               ? " refunded"
                               : b.paymentStatus === "paid"
                                 ? " paid"
-                                : " unpaid"}{" "}
+                                : " unpaid"}
+                            {b.paymentRef?.receiptUrl && (
+                              <>
+                                {" · "}
+                                <a
+                                  href={b.paymentRef.receiptUrl}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="underline underline-offset-4"
+                                >
+                                  Receipt
+                                </a>
+                              </>
+                            )}{" "}
                             ·
                           </span>
                         )}
