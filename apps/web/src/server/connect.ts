@@ -145,7 +145,7 @@ export async function syncConnectBranding(ws: Workspace): Promise<void> {
     const branding: Stripe.AccountUpdateParams.Settings.Branding = {};
     if (brand.accent) branding.secondary_color = brand.accent;
     if (brand.logoUrl) {
-      const icon = await uploadIcon(stripe, ws.stripeAccountId, brand.logoUrl);
+      const icon = await uploadIcon(stripe, brand.logoUrl);
       if (icon) branding.icon = icon;
     }
     await stripe.accounts.update(ws.stripeAccountId, {
@@ -168,20 +168,19 @@ export async function syncConnectBranding(ws: Workspace): Promise<void> {
 }
 
 /** Uploads the workspace logo as the connected account's icon; null when it cannot be used. */
-async function uploadIcon(stripe: Stripe, account: string, url: string): Promise<string | null> {
+async function uploadIcon(stripe: Stripe, url: string): Promise<string | null> {
   try {
     const res = await fetch(url, { signal: AbortSignal.timeout(8000) });
     const type = res.headers.get("content-type") ?? "";
     if (!res.ok || !/^image\/(png|jpeg)/.test(type)) return null;
     const data = Buffer.from(await res.arrayBuffer());
     if (data.byteLength > 512 * 1024) return null;
-    const file = await stripe.files.create(
-      {
-        purpose: "business_icon",
-        file: { data, name: type.includes("png") ? "icon.png" : "icon.jpg", type },
-      },
-      { stripeAccount: account },
-    );
+    // Uploaded on the platform: the account update that references the file runs there too,
+    // and Stripe rejects a file that lives on the connected account ("No such file upload").
+    const file = await stripe.files.create({
+      purpose: "business_icon",
+      file: { data, name: type.includes("png") ? "icon.png" : "icon.jpg", type },
+    });
     return file.id;
   } catch (e) {
     console.error("[connect] icon upload failed", e);
