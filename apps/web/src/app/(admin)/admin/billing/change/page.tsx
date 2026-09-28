@@ -50,13 +50,14 @@ async function ChangePage({ searchParams }: PageProps<"/admin/billing/change">) 
           <dd>
             {preview.dueNow > 0 ? (
               <>
-                <strong>{formatPrice(preview.dueNow, preview.currency)}</strong>, prorated for the
-                rest of the current period
+                <strong>{formatPrice(preview.dueNow, preview.currency)}</strong>
+                {preview.from ? ", prorated for the rest of the current period" : ""}
               </>
-            ) : preview.dueNow < 0 ? (
+            ) : preview.credit > 0 ? (
               <>
-                Nothing. A credit of {formatPrice(-preview.dueNow, preview.currency)} for unused
-                time is applied to your next invoices.
+                Nothing. The unused part of what you already paid,{" "}
+                {formatPrice(preview.credit, preview.currency)}, becomes a credit on your next
+                invoices.
               </>
             ) : (
               "Nothing"
@@ -68,7 +69,9 @@ async function ChangePage({ searchParams }: PageProps<"/admin/billing/change">) 
           <dd>
             {formatPrice(preview.recurring, preview.currency)} per {per}
             {seats}
-            {preview.periodEnd ? `, from ${fmtDate(preview.periodEnd, ws.timezone)}` : ""}
+            {preview.from
+              ? `, from ${fmtDate(preview.from, ws.timezone)}`
+              : ", starting today (the billing cycle restarts with the new interval)"}
           </dd>
         </div>
         <div className="flex gap-4">
@@ -92,8 +95,8 @@ async function ChangePage({ searchParams }: PageProps<"/admin/billing/change">) 
         </Link>
       </div>
       <p className="text-xs text-muted-foreground">
-        Stripe issues the prorated invoice right away and the plan changes as soon as it is paid.
-        Your next renewal keeps its date.
+        Stripe issues the invoice right away and the plan changes as soon as it is paid.
+        {preview.from ? " Your next renewal keeps its date." : ""}
       </p>
     </div>
   );
