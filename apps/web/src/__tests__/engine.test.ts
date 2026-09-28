@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { computeSlots, isSlotAvailable, windowsForDate } from "@/server/availability/engine";
+import {
+  computeSlots,
+  isSlotAvailable,
+  unavailableOutside,
+  windowsForDate,
+} from "@/server/availability/engine";
 import { utcToZoned, zonedToUtc } from "@/lib/time";
 
 const tz = "Asia/Jerusalem"; // UTC+3 in September 2026
@@ -195,5 +200,38 @@ describe("priority-aware availability", () => {
       to: "2026-09-23",
     });
     expect(vip[0]!.slots.length).toBeGreaterThan(0);
+  });
+});
+
+describe("unavailableOutside", () => {
+  it("returns the gaps between a schedule's windows, so a co-host's off hours count as busy", () => {
+    // Mon–Fri 09:00–17:00 UTC; range covers Tue 2026-09-29 whole day.
+    const rules = [1, 2, 3, 4, 5].map((weekday) => ({ weekday, startMin: 540, endMin: 1020 }));
+    const rangeStart = new Date("2026-09-29T00:00:00Z");
+    const rangeEnd = new Date("2026-09-29T23:59:59Z");
+    const busy = unavailableOutside(
+      rules,
+      [],
+      "UTC",
+      "2026-09-28",
+      "2026-09-30",
+      rangeStart,
+      rangeEnd,
+    );
+    expect(busy).toEqual([
+      { start: rangeStart, end: new Date("2026-09-29T09:00:00Z") },
+      { start: new Date("2026-09-29T17:00:00Z"), end: rangeEnd },
+    ]);
+    // A day-off override blocks the whole day.
+    const off = unavailableOutside(
+      rules,
+      [{ date: "2026-09-29", startMin: null, endMin: null }],
+      "UTC",
+      "2026-09-28",
+      "2026-09-30",
+      rangeStart,
+      rangeEnd,
+    );
+    expect(off).toEqual([{ start: rangeStart, end: rangeEnd }]);
   });
 });
