@@ -1,3 +1,4 @@
+import { createHash, randomBytes } from "node:crypto";
 import { loadEnv } from "@bookly/config";
 import type { IntegrationProvider } from "@bookly/db/schema";
 import type { OAuthTokens } from "./types";
@@ -13,6 +14,8 @@ type OAuthConfig = {
   authorizeParams?: Record<string, string>;
   /** Zoom wants HTTP basic auth on the token endpoint. */
   basicAuth?: boolean;
+  /** PKCE (S256) on top of the client secret; Google's app checkup expects it. */
+  pkce?: boolean;
 };
 
 const e = () => loadEnv();
@@ -30,6 +33,7 @@ export const OAUTH: Record<IntegrationProvider, OAuthConfig> = {
     clientId: () => e().GOOGLE_CLIENT_ID,
     clientSecret: () => e().GOOGLE_CLIENT_SECRET,
     authorizeParams: { access_type: "offline", prompt: "consent", include_granted_scopes: "true" },
+    pkce: true,
   },
   microsoft: {
     authorizeUrl: `https://login.microsoftonline.com/${process.env.MICROSOFT_TENANT || "common"}/oauth2/v2.0/authorize`,
@@ -45,6 +49,7 @@ export const OAUTH: Record<IntegrationProvider, OAuthConfig> = {
     clientId: () => e().MICROSOFT_CLIENT_ID,
     clientSecret: () => e().MICROSOFT_CLIENT_SECRET,
     authorizeParams: { response_mode: "query", prompt: "select_account" },
+    pkce: true,
   },
   zoom: {
     authorizeUrl: "https://zoom.us/oauth/authorize",
@@ -71,7 +76,16 @@ export function redirectUri(p: IntegrationProvider) {
   return `${e().APP_URL.replace(/\/$/, "")}/api/integrations/${p}/callback`;
 }
 
-export function authorizeUrl(p: IntegrationProvider, state: string) {
+/** A fresh PKCE verifier for providers that take one; null for the others. */
+export function pkceVerifier(p: IntegrationProvider): string | null {
+  return OAUTH[p].pkce ? randomBytes(48).toString("base64url") : null;
+}
+
+export function authorizeUrl(
+  p: IntegrationProvider,
+  state: string,
+  verifier: string | null = null,
+) {
   const c = OAUTH[p];
   const u = new URL(c.authorizeUrl);
   u.searchParams.set("client_id", c.clientId() ?? "");
@@ -80,6 +94,10 @@ export function authorizeUrl(p: IntegrationProvider, state: string) {
   u.searchParams.set("state", state);
   if (c.scopes.length) u.searchParams.set("scope", c.scopes.join(" "));
   for (const [k, v] of Object.entries(c.authorizeParams ?? {})) u.searchParams.set(k, v);
+  if (verifier) {
+    u.searchParams.set("code_challenge", createHash("sha256").update(verifier).digest("base64url"));
+    u.searchParams.set("code_challenge_method", "S256");
+  }
   return u.toString();
 }
 
@@ -123,9 +141,18 @@ export function toTokens(json: TokenResponse): OAuthTokens {
   };
 }
 
-export async function exchangeCode(p: IntegrationProvider, code: string): Promise<OAuthTokens> {
+export async function exchangeCode(
+  p: IntegrationProvider,
+  code: string,
+  verifier: string | null = null,
+): Promise<OAuthTokens> {
   return toTokens(
-    await tokenRequest(p, { grant_type: "authorization_code", code, redirect_uri: redirectUri(p) }),
+    await tokenRequest(p, {
+      grant_type: "authorization_code",
+      code,
+      redirect_uri: redirectUri(p),
+      ...(verifier ? { code_verifier: verifier } : {}),
+    }),
   );
 }
 

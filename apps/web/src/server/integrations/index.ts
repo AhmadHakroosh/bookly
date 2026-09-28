@@ -29,7 +29,7 @@ import { ProviderError } from "./types";
 import { ensureWatches, stopWatches } from "./watch";
 import { zoom, zoomAccount } from "./zoom";
 
-export { authorizeUrl, isProvider, providerConfigured, redirectUri } from "./oauth";
+export { authorizeUrl, isProvider, pkceVerifier, providerConfigured, redirectUri } from "./oauth";
 export { pushSupported, verifyNotification } from "./watch";
 export {
   createMeetingToken,
@@ -66,8 +66,9 @@ export async function connectIntegration(
   userId: string,
   provider: IntegrationProvider,
   code: string,
+  verifier: string | null = null,
 ) {
-  const tokens = await exchangeCode(provider, code);
+  const tokens = await exchangeCode(provider, code, verifier);
   const account =
     provider === "google"
       ? await googleAccount(tokens.accessToken)

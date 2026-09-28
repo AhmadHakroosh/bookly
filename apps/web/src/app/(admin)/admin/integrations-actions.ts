@@ -2,11 +2,12 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { signState } from "@/lib/crypto";
+import { encrypt, signState } from "@/lib/crypto";
 import { z } from "zod";
 import type { IntegrationProvider } from "@bookly/db/schema";
 import {
   authorizeUrl,
+  pkceVerifier,
   disconnectIntegration,
   providerConfigured,
   invalidateBusy,
@@ -36,7 +37,16 @@ export async function startConnect(provider: string, back: string) {
     if (e instanceof LimitError) redirect(`${dest}?error=limit`);
     throw e;
   }
-  redirect(authorizeUrl(provider, signState({ u: session.user.id, w: ws.id, back: dest })));
+  // The PKCE verifier travels inside the signed state, encrypted: the callback may land on the
+  // platform host (no shared cookie), and whoever sees the URL must not learn the verifier.
+  const verifier = pkceVerifier(provider);
+  const state = signState({
+    u: session.user.id,
+    w: ws.id,
+    back: dest,
+    ...(verifier ? { v: encrypt(verifier) } : {}),
+  });
+  redirect(authorizeUrl(provider, state, verifier));
 }
 
 export async function disconnect(provider: string) {
