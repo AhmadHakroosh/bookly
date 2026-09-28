@@ -1,5 +1,6 @@
 "use server";
 
+import { checkHandle, type HandleCheck } from "@/lib/handles";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { and, eq, inArray, isNull, schema } from "@bookly/db";
@@ -62,17 +63,26 @@ const slugify = (s: string) =>
 /* ---------------- Profile ---------------- */
 
 const profileSchema = z.object({
-  username: z
-    .string()
-    .trim()
-    .min(2)
-    .max(40)
-    .regex(/^[a-z0-9-]+$/i, "Letters, numbers and dashes only"),
+  username: z.string().trim().max(60),
   displayName: z.string().trim().min(1).max(80),
   bio: z.string().trim().max(300).default(""),
   timezone: z.string().refine(isValidTimezone, "Unknown timezone"),
   avatarUrl: z.string().max(2000).default(""),
 });
+
+/** A member's username, validated as typed (see lib/handles) and free in this workspace. */
+export async function checkUsername(raw: string): Promise<HandleCheck> {
+  const { session, ws } = await ctx();
+  const r = checkHandle(raw, "username");
+  if (!r.ok) return r;
+  const taken = await db().query.profiles.findFirst({
+    where: and(eq(schema.profiles.workspaceId, ws.id), eq(schema.profiles.username, r.value)),
+    columns: { userId: true },
+  });
+  return taken && taken.userId !== session.user.id
+    ? { ok: false, error: "That username is taken." }
+    : r;
+}
 
 export async function saveProfile(_prev: { ok?: boolean; error?: string }, formData: FormData) {
   const { session, ws } = await ctx();
@@ -80,11 +90,9 @@ export async function saveProfile(_prev: { ok?: boolean; error?: string }, formD
   if (!parsed.success)
     return { error: parsed.error.issues[0]?.message ?? "Please check the form." };
   const d = parsed.data;
-  const username = d.username.toLowerCase();
-  const taken = await db().query.profiles.findFirst({
-    where: and(eq(schema.profiles.workspaceId, ws.id), eq(schema.profiles.username, username)),
-  });
-  if (taken && taken.userId !== session.user.id) return { error: "That username is taken." };
+  const checked = await checkUsername(d.username);
+  if (!checked.ok) return { error: checked.error };
+  const username = checked.value;
   await db()
     .insert(schema.profiles)
     .values({

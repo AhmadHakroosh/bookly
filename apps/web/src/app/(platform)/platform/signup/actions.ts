@@ -8,28 +8,18 @@ import { db } from "@/lib/db";
 import { isCloud, tenantUrl } from "@/server/platform";
 import { getSession } from "@/server/session";
 import { invalidateHostCache } from "@/server/tenancy";
+import { checkHandle, slugify, type HandleCheck } from "@/lib/handles";
 
-const slugify = (s: string) =>
-  s
-    .toLowerCase()
-    .normalize("NFKD")
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "")
-    .slice(0, 40);
-
-const RESERVED = new Set([
-  "www",
-  "app",
-  "api",
-  "admin",
-  "mail",
-  "meet",
-  "book",
-  "console",
-  "help",
-  "docs",
-  "status",
-]);
+/** The workspace's subdomain, validated as typed (see lib/handles) and unused by any other workspace. */
+export async function checkAddress(raw: string): Promise<HandleCheck> {
+  const r = checkHandle(raw, "address");
+  if (!r.ok) return r;
+  const taken = await db().query.workspaces.findFirst({
+    where: eq(schema.workspaces.slug, r.value),
+    columns: { id: true },
+  });
+  return taken ? { ok: false, error: "That address is taken. Pick another." } : r;
+}
 
 export type CreateState = { error?: string };
 
@@ -46,14 +36,10 @@ export async function createWorkspace(
     .safeParse({ name: formData.get("name"), slug: formData.get("slug") });
   if (!parsed.success) return { error: "Give your workspace a name (2–60 characters)." };
   const name = parsed.data.name;
-  const slug = slugify(parsed.data.slug || name);
-  if (slug.length < 3) return { error: "The address needs at least 3 characters." };
-  if (RESERVED.has(slug)) return { error: "That address is reserved. Pick another." };
-  const taken = await db().query.workspaces.findFirst({
-    where: eq(schema.workspaces.slug, slug),
-    columns: { id: true },
-  });
-  if (taken) return { error: "That address is taken. Pick another." };
+  // An empty address falls back to the name; a typed one is checked as typed, never rewritten.
+  const checked = await checkAddress(parsed.data.slug || slugify(name));
+  if (!checked.ok) return { error: checked.error };
+  const slug = checked.value;
 
   const env = loadEnv();
   const host = `${slug}.${env.ROOT_DOMAIN}`.toLowerCase();

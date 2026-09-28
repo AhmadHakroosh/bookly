@@ -4,6 +4,12 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-09-28
+
+### Added
+
+- Workspace addresses and usernames are validated as typed, with the exact problem shown under the field while typing and the button held until the name passes and is free: lowercase letters, numbers and single hyphens only, 3–40 characters for an address (2 for a username), no reserved names (platform hosts and environments such as `www`, `api`, `staging`, `dev`, `preview`, mail and DNS hosts, and app routes for usernames), no look-alikes of Bookly or well-known services (leetspeak such as `b00kly` and `paypa1` counts), and no addresses built from sign-in or payment words (`acme-login`, `secure-pay`). The server applies the same rules on save, so nothing the form lets through is trusted on its own
+
 ## [0.4.9] - 2026-09-28
 
 ### Added
@@ -264,7 +270,8 @@ First public release: the self-hostable scheduling platform with contacts, brief
 
 - The unused storage layer (`packages/storage`, `STORAGE_*` and `S3_*` variables, the MinIO service in Compose): nothing in Bookly uploads files; profile photos and logos are URLs
 
-[Unreleased]: https://github.com/AhmadHakroosh/bookly/compare/v0.4.9...HEAD
+[Unreleased]: https://github.com/AhmadHakroosh/bookly/compare/v0.5.0...HEAD
+[0.5.0]: https://github.com/AhmadHakroosh/bookly/compare/v0.4.9...v0.5.0
 [0.4.9]: https://github.com/AhmadHakroosh/bookly/compare/v0.4.8...v0.4.9
 [0.4.8]: https://github.com/AhmadHakroosh/bookly/compare/v0.4.7...v0.4.8
 [0.4.7]: https://github.com/AhmadHakroosh/bookly/compare/v0.4.6...v0.4.7

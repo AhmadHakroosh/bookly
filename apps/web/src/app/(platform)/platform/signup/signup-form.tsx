@@ -11,7 +11,9 @@ import { Input } from "@/components/ui/input";
 import { OrDivider, SocialButtons } from "@/components/social-buttons";
 import type { SocialProvider } from "@/lib/social-providers";
 import { rememberConsentAction } from "@/server/consent-actions";
-import { createWorkspace, type CreateState } from "./actions";
+import { HandleHint, useHandleCheck } from "@/components/handle-field";
+import { slugify } from "@/lib/handles";
+import { checkAddress, createWorkspace, type CreateState } from "./actions";
 
 /** Two steps on one page: create the account (client, Better Auth), then the workspace (server action). */
 export function SignupForm({
@@ -37,14 +39,8 @@ export function SignupForm({
   const [privacy, setPrivacy] = useState(false);
   const [state, action, creating] = useActionState(createWorkspace, {} as CreateState);
   const [slug, setSlug] = useState("");
+  const address = useHandleCheck(slug, "address", checkAddress);
   const router = useRouter();
-  const slugify = (s: string) =>
-    s
-      .toLowerCase()
-      .normalize("NFKD")
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/^-+|-+$/g, "")
-      .slice(0, 40);
 
   async function createAccount(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -202,15 +198,7 @@ export function SignupForm({
             name="name"
             required
             placeholder="Jane Doe"
-            onChange={(e) =>
-              setSlug(
-                e.target.value
-                  .toLowerCase()
-                  .replace(/[^a-z0-9]+/g, "-")
-                  .replace(/^-+|-+$/g, "")
-                  .slice(0, 40),
-              )
-            }
+            onChange={(e) => setSlug(slugify(e.target.value))}
           />
           <FieldDescription>Shown to people who book with you.</FieldDescription>
         </Field>
@@ -223,13 +211,20 @@ export function SignupForm({
               value={slug}
               onChange={(e) => setSlug(e.target.value)}
               className="max-w-48"
+              autoCapitalize="none"
+              autoCorrect="off"
+              spellCheck={false}
+              aria-invalid={address.status.state === "error" || undefined}
             />
             <span className="text-muted-foreground">.{rootDomain}</span>
           </div>
-          <FieldDescription>You can add your own domain later.</FieldDescription>
+          <HandleHint
+            status={address.status}
+            fallback="Lowercase letters, numbers and hyphens. You can add your own domain later."
+          />
         </Field>
         {state.error && <p className="text-sm text-destructive">{state.error}</p>}
-        <Button type="submit" disabled={creating}>
+        <Button type="submit" disabled={creating || !address.ok}>
           {creating ? "Creating workspace…" : "Create workspace"}
         </Button>
       </FieldGroup>
