@@ -50,7 +50,6 @@ async function ReceiptPage({ params }: PageProps<"/booking/[token]/receipt">) {
   return (
     <PublicContainer className="py-12">
       <div className="mx-auto max-w-lg">
-        <p className="text-sm text-muted-foreground">{ws.name}</p>
         <h1 className="text-2xl font-semibold tracking-tight">
           {refunded ? "Refund receipt" : "Receipt"}
         </h1>
