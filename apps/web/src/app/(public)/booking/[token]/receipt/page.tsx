@@ -15,8 +15,8 @@ export const metadata: Metadata = { title: "Receipt", robots: { index: false } }
 
 /**
  * The workspace's own receipt for a paid booking, in its name and branding: what was paid,
- * to whom, by whom, when, with the Stripe receipt as the underlying payment record. Stripe's
- * receipt itself carries the platform's name, since the charge runs on the platform account.
+ * to whom, by whom, when. Stripe's own receipt carries the platform's name (the charge runs on
+ * the platform account), so guests are not sent to it; hosts keep a link to it in the admin.
  */
 async function ReceiptPage({ params }: PageProps<"/booking/[token]/receipt">) {
   const { token } = await params;
@@ -63,16 +63,6 @@ async function ReceiptPage({ params }: PageProps<"/booking/[token]/receipt">) {
         </dl>
         <div className="mt-6 flex flex-wrap items-center gap-3 text-sm">
           <PrintButton />
-          {ref.receiptUrl && (
-            <a
-              href={ref.receiptUrl}
-              target="_blank"
-              rel="noreferrer"
-              className="underline underline-offset-4"
-            >
-              Card receipt from Stripe
-            </a>
-          )}
           <Link href={`/booking/${token}`} className="underline underline-offset-4 print:hidden">
             Back to the booking
           </Link>
