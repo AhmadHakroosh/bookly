@@ -60,9 +60,10 @@ invalidates all connections.
 3. Credentials → Create OAuth client ID → Web application. Authorized redirect URI:
    `https://<your-host>/api/integrations/google/callback`. To offer "Continue with Google" on
    the sign-in page, also add `https://<your-host>/api/auth/callback/google`
-   (`docs/self-hosting.md`, "Accounts"). Keep `localhost` redirects off this client: Google's
-   app checkup flags production clients that allow loopback redirects ("Use secure flows");
-   make a second client for development (see "Local development").
+   (`docs/self-hosting.md`, "Accounts"). Keep `localhost` redirects out of this project:
+   Google's app checkup flags every web client of a published app that allows loopback
+   redirects ("Use secure flows"), so development gets its own project (see "Local
+   development").
 4. Set `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`.
 
 Meet links are created through the Calendar API (`conferenceData`), so Google Meet works for any
@@ -160,8 +161,9 @@ is capped at the remaining minutes. Cancelling or rescheduling a booking cancels
 
 ## Local development
 
-Use `APP_URL=http://localhost:3002` and register the localhost redirect URIs in each provider,
-on a separate OAuth client per provider that only your `.env.local` uses, so the production
-client never allows loopback redirects. Google and Microsoft accept `http://localhost`
-redirects; Zoom requires HTTPS, so use a tunnel (e.g.
+Use `APP_URL=http://localhost:3002` and register the localhost redirect URIs in each provider
+on credentials that only your `.env.local` uses. For Google that means a separate Cloud
+project (its own consent screen in Testing status, with you as a test user, and its own
+client), because the checkup looks at every web client in a published project. Google and
+Microsoft accept `http://localhost` redirects; Zoom requires HTTPS, so use a tunnel (e.g.
 `cloudflared tunnel --url http://localhost:3002`) and set `APP_URL` to the tunnel URL.
