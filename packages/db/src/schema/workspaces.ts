@@ -49,6 +49,8 @@ export type WorkspaceSettings = {
     feePercent?: number | null;
     /** What was last pushed to the connected account's Checkout branding (logo URL + accent). */
     brandingSynced?: string;
+    /** Send a Stripe invoice, issued by the connected account, with every paid booking. */
+    invoices?: boolean;
   } | null;
   /**
    * Postal address printed in the footer of outreach emails (proposals, payment requests,

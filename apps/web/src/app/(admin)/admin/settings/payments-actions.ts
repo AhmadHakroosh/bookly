@@ -8,6 +8,9 @@ import {
   disconnectStripe,
   refreshConnectStatus,
 } from "@/server/connect";
+import { eq, schema } from "@bookly/db";
+import { db } from "@/lib/db";
+import { refreshWorkspace } from "@/server/cache";
 import { hasFeature } from "@/server/limits";
 import { paymentsConfigured } from "@/server/payments";
 import { isCloud } from "@/server/platform";
@@ -26,6 +29,20 @@ export async function connectStripeAction() {
   const { session, ws } = await owner();
   if (!hasFeature(ws, "payments")) redirect("/admin/billing");
   redirect(await connectOnboardingUrl(ws, session.user.email));
+}
+
+/** Stripe invoices in the host's name with every paid booking (Pro and up). */
+export async function setInvoicesAction(on: boolean) {
+  const { ws } = await owner();
+  if (!hasFeature(ws, "invoices")) redirect("/admin/billing");
+  await db()
+    .update(schema.workspaces)
+    .set({
+      settings: { ...ws.settings, payments: { ...(ws.settings.payments ?? {}), invoices: on } },
+    })
+    .where(eq(schema.workspaces.id, ws.id));
+  refreshWorkspace(ws.id);
+  revalidatePath("/admin/settings");
 }
 
 export async function refreshStripeAction() {

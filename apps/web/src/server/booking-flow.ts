@@ -443,8 +443,12 @@ export async function createBooking(
  * Stripe said a Checkout was paid: records the payment on the booking and, for a series, on
  * every occurrence the session covered, then finalises them (people are emailed once).
  */
-export async function finalizePaidBooking(bookingId: string, paymentIntentId: string | null) {
-  const paid = await recordPayment(bookingId, paymentIntentId);
+export async function finalizePaidBooking(
+  bookingId: string,
+  paymentIntentId: string | null,
+  invoiceId: string | null = null,
+) {
+  const paid = await recordPayment(bookingId, paymentIntentId, invoiceId);
   if (!paid || paid.status !== "awaiting_payment") return null;
   const [ws, et] = await Promise.all([
     db().query.workspaces.findFirst({ where: eq(schema.workspaces.id, paid.workspaceId) }),

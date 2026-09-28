@@ -412,6 +412,9 @@ export const bookings = pgTable(
       receiptUrl?: string;
       /** When the payment was recorded (ISO); printed on the workspace's receipt page. */
       paidAt?: string;
+      /** Stripe invoice issued in the host's name, when the workspace turned invoices on. */
+      invoiceUrl?: string;
+      invoicePdf?: string;
     }>(),
     ...timestamps,
   },

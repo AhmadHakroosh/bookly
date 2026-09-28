@@ -224,8 +224,13 @@ async function BookingPage({ params, searchParams }: PageProps<"/booking/[token]
             </div>
           )}
         {b.status !== "cancelled" && b.status !== "rescheduled" && upcoming && (
-          <details className="mt-8 rounded-xl border p-4">
-            <summary className="cursor-pointer text-sm font-medium">Cancel this booking</summary>
+          <section className="mt-8 rounded-xl border p-4">
+            <h2 className="text-sm font-medium">Need to cancel?</h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {b.paymentStatus === "paid" && b.amountCents != null
+                ? `Cancelling refunds your ${formatPrice(b.amountCents, b.currency)} payment to the card you paid with.`
+                : "You can also reschedule instead, using the button above."}
+            </p>
             <form action={cancelByAttendee.bind(null, token)} className="mt-3 space-y-2">
               <input
                 name="reason"
@@ -239,7 +244,7 @@ async function BookingPage({ params, searchParams }: PageProps<"/booking/[token]
                 Cancel booking
               </button>
             </form>
-          </details>
+          </section>
         )}
         {b.status === "cancelled" && b.cancelReason && (
           <p className="mt-4 text-sm text-muted-foreground">Reason: {b.cancelReason}</p>

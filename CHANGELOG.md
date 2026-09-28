@@ -4,6 +4,16 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 ## [Unreleased]
 
+## [0.4.9] - 2026-09-28
+
+### Added
+
+- Cloud: Stripe invoices in the host's name, Pro and up, as a switch under Settings → Payments: every paid booking also gets an invoice issued by the host's connected account, with the PDF linked from the guest's receipt page. Off by default because Stripe charges a fee per invoice
+
+### Changed
+
+- The guest booking page shows the cancellation form in the open, with the refund amount for a paid booking, instead of hiding the button behind "Cancel this booking"
+
 ## [0.4.8] - 2026-09-28
 
 ### Added
@@ -253,7 +263,8 @@ First public release: the self-hostable scheduling platform with contacts, brief
 
 - The unused storage layer (`packages/storage`, `STORAGE_*` and `S3_*` variables, the MinIO service in Compose): nothing in Bookly uploads files; profile photos and logos are URLs
 
-[Unreleased]: https://github.com/AhmadHakroosh/bookly/compare/v0.4.8...HEAD
+[Unreleased]: https://github.com/AhmadHakroosh/bookly/compare/v0.4.9...HEAD
+[0.4.9]: https://github.com/AhmadHakroosh/bookly/compare/v0.4.8...v0.4.9
 [0.4.8]: https://github.com/AhmadHakroosh/bookly/compare/v0.4.7...v0.4.8
 [0.4.7]: https://github.com/AhmadHakroosh/bookly/compare/v0.4.6...v0.4.7
 [0.4.6]: https://github.com/AhmadHakroosh/bookly/compare/v0.4.5...v0.4.6
