@@ -57,8 +57,23 @@ export function paymentsHint(ws: Workspace): string {
   }
 }
 
-/** Per-request options that put a call on the host's connected account. */
+/** Per-request options that put a call on the host's connected account (legacy direct charges). */
 const onAccount = (account: string | null) => (account ? { stripeAccount: account } : undefined);
+
+/**
+ * Destination charge: the checkout runs on the platform account and the money is transferred
+ * to the host's connected account, which is also the merchant of record (`on_behalf_of`), so
+ * Stripe's fees and the statement descriptor are the host's. Stripe no longer lets new
+ * platforms create direct charges on Express accounts.
+ */
+export function destinationCharge(account: string | null, feeCents: number) {
+  if (!account) return {};
+  return {
+    on_behalf_of: account,
+    transfer_data: { destination: account },
+    ...(feeCents > 0 ? { application_fee_amount: feeCents } : {}),
+  };
+}
 
 /** Unpaid bookings are released after this long so the slot frees up. */
 export const PAYMENT_WINDOW_MIN = 30;
@@ -103,38 +118,35 @@ export async function createCheckout(
   const members = await unpaidMembers(booking);
   const total = eventType.priceCents! * members.length;
   const fee = route.account ? platformFeeCents(total, await platformFeePercent(workspace)) : 0;
-  const session = await stripe().checkout.sessions.create(
-    {
-      mode: "payment",
-      customer_email: booking.attendeeEmail,
-      line_items: [
-        {
-          quantity: members.length,
-          price_data: {
-            currency: (eventType.currency ?? "usd").toLowerCase(),
-            unit_amount: eventType.priceCents!,
-            product_data: {
-              name: `${eventType.title} (${eventType.durationMin} min)`,
-              description: `with ${workspace.name}`,
-            },
+  const session = await stripe().checkout.sessions.create({
+    mode: "payment",
+    customer_email: booking.attendeeEmail,
+    line_items: [
+      {
+        quantity: members.length,
+        price_data: {
+          currency: (eventType.currency ?? "usd").toLowerCase(),
+          unit_amount: eventType.priceCents!,
+          product_data: {
+            name: `${eventType.title} (${eventType.durationMin} min)`,
+            description: `with ${workspace.name}`,
           },
         },
-      ],
-      metadata: {
-        bookingId: members[0]!.id,
-        workspaceId: workspace.id,
-        ...(booking.seriesId ? { seriesId: booking.seriesId } : {}),
       },
-      payment_intent_data: {
-        metadata: { bookingId: members[0]!.id, workspaceId: workspace.id },
-        ...(fee > 0 ? { application_fee_amount: fee } : {}),
-      },
-      success_url: `${manage}?paid=1`,
-      cancel_url: manage,
-      expires_at: Math.floor(Date.now() / 1000) + PAYMENT_WINDOW_MIN * 60,
+    ],
+    metadata: {
+      bookingId: members[0]!.id,
+      workspaceId: workspace.id,
+      ...(booking.seriesId ? { seriesId: booking.seriesId } : {}),
     },
-    onAccount(route.account),
-  );
+    payment_intent_data: {
+      metadata: { bookingId: members[0]!.id, workspaceId: workspace.id },
+      ...destinationCharge(route.account, fee),
+    },
+    success_url: `${manage}?paid=1`,
+    cancel_url: manage,
+    expires_at: Math.floor(Date.now() / 1000) + PAYMENT_WINDOW_MIN * 60,
+  });
   await db()
     .update(schema.bookings)
     .set({
@@ -144,7 +156,7 @@ export async function createCheckout(
       paymentRef: {
         ...(booking.paymentRef ?? {}),
         sessionId: session.id,
-        ...(route.account ? { stripeAccount: route.account, feeCents: fee } : {}),
+        ...(route.account ? { destination: route.account, feeCents: fee } : {}),
       },
     })
     .where(
@@ -179,12 +191,16 @@ export async function refundBooking(b: Booking) {
   if (b.paymentStatus !== "paid" || !b.paymentRef?.paymentIntentId || !paymentsConfigured())
     return false;
   try {
-    // A charge on the host's account is refunded there; the platform fee goes back with it.
+    // A destination charge is refunded on the platform, pulling the transfer back from the host
+    // and returning the platform fee; a legacy direct charge is refunded on the host's account.
     const r = await stripe().refunds.create(
       {
         payment_intent: b.paymentRef.paymentIntentId,
         ...(b.seriesId && b.amountCents ? { amount: b.amountCents } : {}),
         ...(b.paymentRef.stripeAccount ? { refund_application_fee: true } : {}),
+        ...(b.paymentRef.destination
+          ? { refund_application_fee: true, reverse_transfer: true }
+          : {}),
       },
       onAccount(b.paymentRef.stripeAccount ?? null),
     );

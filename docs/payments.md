@@ -32,9 +32,12 @@ Stripe account through Stripe Connect (Express onboarding, hosted by Stripe):
    Stripe reports (`charges_enabled`, `payouts_enabled`, `details_submitted`).
 2. Once Stripe enables charges, prices on event types apply. Until then, and on Free, prices are
    ignored and the event type form says why.
-3. Checkouts run on the host's account (direct charges) with an `application_fee_amount` for the
-   platform; Stripe pays the host out on their own schedule. Refunds come out of the host's
-   balance and return the platform fee.
+3. Checkouts are destination charges: they run on the platform account, the money is
+   transferred to the host's account, which is the merchant of record (`on_behalf_of`, so
+   Stripe's fees and the statement descriptor are the host's), and the platform keeps an
+   `application_fee_amount`. Stripe pays the host out on their own schedule. A refund reverses
+   the transfer and returns the platform fee. (Stripe no longer allows new platforms to create
+   direct charges on Express accounts.)
 
 Operator setup, on top of the keys above:
 
