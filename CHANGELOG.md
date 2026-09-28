@@ -9,6 +9,7 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 ### Added
 
 - Phone verification for host notifications: texts (SMS/WhatsApp) go only to a number the host has proved with a six-digit code sent over the chosen channel; a changed number has to be verified again (migration 0026)
+- Releases migrate the production database themselves: the Release workflow applies pending migrations (`PRODUCTION_DATABASE_URL` secret) after publishing the release and before moving `release`, so a failed migration stops the deploy
 - "Send a test message" for the Slack incoming webhook on Notifications, reporting Slack's answer instead of failing silently
 
 ## [0.4.7] - 2026-09-28
