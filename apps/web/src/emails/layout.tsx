@@ -56,7 +56,21 @@ export const styles = {
     textTransform: "uppercase" as const,
     letterSpacing: "0.04em",
   },
-  value: { margin: 0, fontSize: "15px", lineHeight: "22px", color: "#18181b" },
+  value: {
+    margin: 0,
+    fontSize: "15px",
+    lineHeight: "22px",
+    color: "#18181b",
+    // Long tokens (links, ids) wrap instead of widening the table past the card on desktop.
+    wordBreak: "break-word" as const,
+    overflowWrap: "anywhere" as const,
+  },
+  /** A raw URL shown for copying: breaks anywhere so it never widens the layout. */
+  rawLink: {
+    color: "#71717a",
+    wordBreak: "break-all" as const,
+    overflowWrap: "anywhere" as const,
+  },
   hr: { borderColor: "#e4e4e7", margin: "20px 0" },
 };
 
@@ -162,7 +176,7 @@ export function Details({ rows }: { rows: [string, ReactNode][] }) {
       }}
     >
       {rows.map(([label, value], i) => (
-        <Row key={label} style={{ marginTop: i ? "10px" : 0 }}>
+        <Row key={label} style={{ marginTop: i ? "10px" : 0, width: "100%", tableLayout: "fixed" }}>
           <Column style={{ width: "96px", verticalAlign: "top" }}>
             <Text style={styles.label}>{label}</Text>
           </Column>

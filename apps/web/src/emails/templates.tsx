@@ -144,7 +144,7 @@ export function AccountEmail({
       <Cta href={cta.href} label={cta.label} accent={brand.accent} />
       <Text style={{ ...styles.muted, marginTop: "18px" }}>
         Or paste this link into your browser:{" "}
-        <Link href={cta.href} style={{ color: "#71717a" }}>
+        <Link href={cta.href} style={styles.rawLink}>
           {cta.href}
         </Link>
       </Text>
