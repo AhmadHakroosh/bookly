@@ -18,6 +18,7 @@ import {
   listSchedules,
   locationLabel,
 } from "@/server/scheduling";
+import { formatPrice } from "@/server/payments";
 import { requireStaff } from "@/server/session";
 import { listWaitlist } from "@/server/waitlist";
 import { getCurrentWorkspace } from "@/server/workspace";
@@ -236,6 +237,30 @@ async function AdminInbox() {
                   </p>
                   <p className="text-muted-foreground">
                     {b.meetingUrl ?? locationLabel(b.location)}
+                    {b.paymentStatus && b.amountCents != null && (
+                      <>
+                        {" · "}
+                        {formatPrice(b.amountCents, b.currency)}
+                        {b.paymentStatus === "refunded"
+                          ? " refunded"
+                          : b.paymentStatus === "paid"
+                            ? " paid"
+                            : " unpaid"}
+                        {b.paymentRef?.receiptUrl && (
+                          <>
+                            {" · "}
+                            <a
+                              href={b.paymentRef.receiptUrl}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="underline underline-offset-4"
+                            >
+                              Receipt
+                            </a>
+                          </>
+                        )}
+                      </>
+                    )}
                   </p>
                   {b.brief && (
                     <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">

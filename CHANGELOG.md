@@ -6,6 +6,10 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 ## [0.4.7] - 2026-09-28
 
+### Added
+
+- Paid bookings link to Stripe's receipt: on the guest's booking page and confirmation email, and for the host on the Inbox, the Bookings list and the booking view, next to the amount and its paid/refunded state. Stripe emails the receipt itself when the platform account's "Successful payments" customer email is on (live mode)
+
 ### Fixed
 
 - Collective event types offered times outside a co-host's working hours: only co-hosts' bookings and calendars were folded in. The time outside each co-host's schedule (and their day-off overrides) now counts as busy, so slots appear only when every host is actually working and free

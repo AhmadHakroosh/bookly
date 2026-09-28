@@ -1,3 +1,4 @@
+import { formatPrice } from "@/server/payments";
 import type { Booking, EventType, Profile } from "@bookly/db/schema";
 import { Text } from "@react-email/components";
 import { formatPhone } from "@/lib/phone";
@@ -143,6 +144,7 @@ export async function attendeeConfirmation(ctx: BookingMailCtx): Promise<Mail> {
         ...(ctx.booking.guests.length
           ? ([["Guests", ctx.booking.guests.join(", ")]] as [string, string][])
           : []),
+        ...paidRow(ctx.booking),
       ]}
       cta={{ href: manageUrl(ctx), label: "Reschedule or cancel" }}
       note={
@@ -153,6 +155,14 @@ export async function attendeeConfirmation(ctx: BookingMailCtx): Promise<Mail> {
     />,
   );
   return { subject, text, html };
+}
+
+/** "Paid $10.00 · receipt: <url>" for a paid booking; nothing for a free one. */
+function paidRow(b: BookingMailCtx["booking"]): [string, string][] {
+  if (b.paymentStatus !== "paid" || b.amountCents == null) return [];
+  const amount = formatPrice(b.amountCents, b.currency);
+  const receipt = b.paymentRef?.receiptUrl;
+  return [["Paid", receipt ? `${amount} · receipt: ${receipt}` : amount]];
 }
 
 /** For a colleague the attendee brought along: the invitation without the booker's manage link. */
