@@ -8,6 +8,7 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 ### Fixed
 
+- Cloud: upgrading to a yearly plan failed at Stripe Checkout ("Checkout does not support multiple prices with different billing intervals"), because the monthly metered capture-overage price was added to the yearly subscription. The overage now rides on the plan only when both bill on the same interval; a yearly plan gets a monthly companion subscription for it the first time overage is reported, which is cancelled with the plan
 - Cloud: auth cookies are named after the root domain (`bookly-app-io.session_token`), so a production session no longer shadows a staging one on `staging.bookly-app.io`, where the browser sent both. Existing sessions are signed out once by this release
 
 ## [0.4.5] - 2026-09-27
