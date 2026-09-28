@@ -48,13 +48,15 @@ export const styles = {
   h1: { margin: "0 0 12px", fontSize: "22px", lineHeight: "30px", fontWeight: 600 },
   p: { margin: "0 0 14px", fontSize: "15px", lineHeight: "24px", color: "#27272a" },
   muted: { margin: "0", fontSize: "13px", lineHeight: "20px", color: "#71717a" },
+  // Same line height as `value`, so a label and its value share a baseline in the details box.
   label: {
     margin: 0,
     fontSize: "12px",
-    lineHeight: "18px",
+    lineHeight: "22px",
     color: "#71717a",
     textTransform: "uppercase" as const,
     letterSpacing: "0.04em",
+    whiteSpace: "nowrap" as const,
   },
   value: {
     margin: 0,
@@ -177,7 +179,7 @@ export function Details({ rows }: { rows: [string, ReactNode][] }) {
     >
       {rows.map(([label, value], i) => (
         <Row key={label} style={{ marginTop: i ? "10px" : 0, width: "100%", tableLayout: "fixed" }}>
-          <Column style={{ width: "96px", verticalAlign: "top" }}>
+          <Column style={{ width: "120px", verticalAlign: "top", paddingRight: "12px" }}>
             <Text style={styles.label}>{label}</Text>
           </Column>
           <Column style={{ verticalAlign: "top" }}>
