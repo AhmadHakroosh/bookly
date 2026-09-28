@@ -60,6 +60,7 @@ async function ProfilePage({ searchParams }: PageProps<"/admin/profile">) {
           timezone: p?.timezone ?? ws.timezone,
           avatarUrl: p?.avatarUrl ?? session.user.image ?? "",
         }}
+        saved={!!p}
         zones={timezoneList()}
       />
       {linkError && (

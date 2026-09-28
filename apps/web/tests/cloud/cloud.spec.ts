@@ -166,8 +166,16 @@ test.describe("sign-up and tenants", () => {
       `${platformUrl}/api/auth/verify-email?token=${token}&callbackURL=${encodeURIComponent("/signup")}`,
     );
     await page.locator('input[name="name"]').fill("CI Workspace");
+    // Reserved and look-alike addresses are refused inline and keep the button disabled.
+    const create = page.getByRole("button", { name: "Create workspace" });
+    await page.locator('input[name="slug"]').fill("staging");
+    await expect(page.getByRole("alert").filter({ hasText: "reserved" })).toBeVisible();
+    await expect(create).toBeDisabled();
+    await page.locator('input[name="slug"]').fill("b00kly-login");
+    await expect(page.getByRole("alert").filter({ hasText: "imitates" })).toBeVisible();
     await page.locator('input[name="slug"]').fill(slug);
-    await page.getByRole("button", { name: "Create workspace" }).click();
+    await expect(page.getByText("Available")).toBeVisible();
+    await create.click();
     await expect(page).toHaveURL(new RegExp(`^${escapeRegExp(tenantUrl(slug))}/admin`));
     await expect(page.getByRole("heading", { name: "Your booking page" })).toBeVisible();
   });

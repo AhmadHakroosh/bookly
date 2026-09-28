@@ -1,13 +1,14 @@
 "use client";
 
-import { useActionState, useEffect } from "react";
+import { useActionState, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Field, FieldDescription, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { TimezoneField } from "@/components/timezone-field";
-import { saveProfile } from "../scheduling-actions";
+import { HandleHint, useHandleCheck } from "@/components/handle-field";
+import { checkUsername, saveProfile } from "../scheduling-actions";
 
 type Values = {
   username: string;
@@ -17,11 +18,24 @@ type Values = {
   avatarUrl: string;
 };
 
-export function ProfileForm({ initial, zones }: { initial: Values; zones: string[] }) {
+export function ProfileForm({
+  initial,
+  saved,
+  zones,
+}: {
+  initial: Values;
+  /** A profile exists, so the initial username is its own and needs no availability check. */
+  saved: boolean;
+  zones: string[];
+}) {
   const [state, action, pending] = useActionState(
     saveProfile,
     {} as { ok?: boolean; error?: string },
   );
+  const [username, setUsername] = useState(initial.username);
+  const handle = useHandleCheck(username, "username", checkUsername, {
+    initial: saved || state.ok ? initial.username : undefined,
+  });
   useEffect(() => {
     if (state.ok) toast.success("Saved");
     else if (state.error) toast.error(state.error);
@@ -31,8 +45,21 @@ export function ProfileForm({ initial, zones }: { initial: Values; zones: string
       <FieldGroup>
         <Field>
           <FieldLabel htmlFor="username">Username</FieldLabel>
-          <Input id="username" name="username" defaultValue={initial.username} required />
-          <FieldDescription>Your page lives at /{initial.username || "username"}</FieldDescription>
+          <Input
+            id="username"
+            name="username"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            required
+            autoCapitalize="none"
+            autoCorrect="off"
+            spellCheck={false}
+            aria-invalid={handle.status.state === "error" || undefined}
+          />
+          <HandleHint
+            status={handle.status}
+            fallback={`Your page lives at /${username || "username"}. Lowercase letters, numbers and hyphens.`}
+          />
         </Field>
         <Field>
           <FieldLabel htmlFor="displayName">Display name</FieldLabel>
@@ -63,7 +90,7 @@ export function ProfileForm({ initial, zones }: { initial: Values; zones: string
           />
           <FieldDescription>Link to a square image, ideally at least 256×256.</FieldDescription>
         </Field>
-        <Button type="submit" disabled={pending}>
+        <Button type="submit" disabled={pending || !handle.ok}>
           {pending ? "Saving…" : "Save"}
         </Button>
       </FieldGroup>

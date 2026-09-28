@@ -122,6 +122,8 @@ path on the platform host is a 404. Tenant hosts stay out of search engines.
 
 ## Accounts
 
+The workspace address (the subdomain) and every member's username follow the rules in `apps/web/src/lib/handles.ts`, shared by the forms (live feedback, submit held until the name passes and is free) and the server actions: lowercase letters, digits and single hyphens, 3–40 characters (2 for usernames), and none of the reserved names (platform hosts and environments, mail and DNS hosts, app routes for usernames), no look-alikes of Bookly or well-known services (leetspeak folded, so `b00kly` counts), and no address built from sign-in or payment words. To give a brand its own address, the operator creates the workspace; the lists are plain arrays in that file.
+
 Sign-up creates the account, sends a verification link (valid one hour) and waits: the workspace step opens once the link is used, which also signs the person in. Password sign-in before that answers "confirm your email first" and sends a fresh link. Invited members skip the step (the invitation went to their address), and social sign-ins are verified by the provider. Magic links sign in existing accounts only; they never create one.
 
 ## Legal pages and compliance
