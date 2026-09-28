@@ -34,6 +34,8 @@ export type WorkspaceSettings = {
   telemetryStats?: boolean;
   /** How the current paid plan is billed, mirrored from the Stripe subscription. */
   billingInterval?: "month" | "year";
+  /** ISO date the plan ends after a cancellation (Stripe `cancel_at`); absent while it renews. */
+  billingEndsAt?: string;
   /**
    * Stripe Connect (cloud mode): the state of the workspace's own Stripe account, refreshed from
    * `account.updated` events and on return from onboarding. `feePercent` is an operator override

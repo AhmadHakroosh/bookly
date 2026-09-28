@@ -47,8 +47,19 @@ async function BillingPage({ searchParams }: PageProps<"/admin/billing">) {
             ? ` (${ws.planStatus.replace("_", " ")})`
             : ""}
           {ws.settings.billingInterval === "year" ? ", billed yearly" : ""}
-          {ws.planRenewsAt ? ` · renews ${ws.planRenewsAt.toLocaleDateString()}` : ""}.
+          {ws.settings.billingEndsAt
+            ? ` · cancelled, ends ${new Date(ws.settings.billingEndsAt).toLocaleDateString()}`
+            : ws.planRenewsAt
+              ? ` · renews ${ws.planRenewsAt.toLocaleDateString()}`
+              : ""}
+          .
         </p>
+        {ws.settings.billingEndsAt && ws.stripeCustomerId && (
+          <p className="mt-2 text-sm text-muted-foreground">
+            You keep {planName(ws.plan)} until then. To resume the subscription, use the billing
+            portal below.
+          </p>
+        )}
         {sp.upgraded === "1" && (
           <p className="mt-2 rounded-md border p-3 text-sm">
             Thanks! Your plan updates as soon as Stripe confirms the payment.
