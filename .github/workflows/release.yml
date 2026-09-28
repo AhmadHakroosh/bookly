@@ -52,10 +52,34 @@ jobs:
           body_path: notes.md
           generate_release_notes: true
 
+  migrate:
+    # Production migrations run here, before the deploy, so a failed migration stops the release
+    # before production is touched. Bookly's migrations are additive, so the previous version
+    # keeps serving while they run. Needs the PRODUCTION_DATABASE_URL repository secret.
+    runs-on: ubuntu-latest
+    needs: release
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Apply migrations to the production database
+        env:
+          DATABASE_URL: ${{ secrets.PRODUCTION_DATABASE_URL }}
+        run: |
+          if [ -z "$DATABASE_URL" ]; then
+            echo "::error::PRODUCTION_DATABASE_URL secret is not set; add it under Settings → Secrets and variables → Actions, then re-run this job."
+            exit 1
+          fi
+          pnpm --filter @bookly/db migrate
+
   deploy:
     # Production on Vercel deploys from the `release` branch: moving it to the tag is the deploy.
     runs-on: ubuntu-latest
-    needs: release
+    needs: migrate
     steps:
       - uses: actions/checkout@v7
         with:

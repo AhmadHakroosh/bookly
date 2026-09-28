@@ -147,9 +147,10 @@ business associate agreements; the terms say so.
 | Staging     | every merge to `main`, into the Vercel custom environment `staging`               | staging.bookly-app.io, `*.staging.bookly-app.io`     | multi-tenant             | Neon `staging` branch |
 | PR preview  | every push to a pull request                                                      | the preview's own `vercel.app` URL                   | single-tenant, demo seed | Neon `preview` branch |
 
-Tagging is deploying: the Release workflow builds the image, publishes the GitHub release and
-fast-forwards `release`, which Vercel has as its production branch. Production migrations stay a
-manual step before the tag. Staging and PR builds run migrations themselves before `next build`,
+Tagging is deploying: the Release workflow builds the image, publishes the GitHub release,
+applies pending migrations to the production database (the `PRODUCTION_DATABASE_URL` repository
+secret, a Neon pooled URL) and only then fast-forwards `release`, which Vercel has as its
+production branch. A failed migration stops the release before production is touched. Staging and PR builds run migrations themselves before `next build`,
 and PR builds the demo seed too (`apps/web/vercel.json`, keyed on `VERCEL_TARGET_ENV`: `staging`
 for the custom environment, `preview` for pull requests), so both Neon branches are always current. Previews have their own branch because single-tenant mode takes the first workspace it
 finds and seeds the deployment's host as that workspace's domain. A pull request's preview has no fixed address: `APP_URL` is unset there and the
@@ -182,7 +183,10 @@ video `https://meet.bookly-app.io`, `www` redirected to the apex by the proxy.
    Upstash Redis and QStash, Anthropic, Daily, the OAuth apps (Google, Microsoft, Zoom, and a
    GitHub OAuth app for sign-in) and Stripe. `APP_URL` is read at build time too, so set it
    before the first build.
-4. **Database.** From your machine: `DATABASE_URL='<neon pooled url>' pnpm db:migrate`.
+4. **Database.** For the first deploy, from your machine:
+   `DATABASE_URL='<neon pooled url>' pnpm db:migrate`. After that, releases migrate production
+   themselves: add the same URL as the `PRODUCTION_DATABASE_URL` secret under the repository's
+   Settings → Secrets and variables → Actions.
 5. **Stripe.** Two webhook endpoints: `https://bookly-app.io/api/webhooks/stripe` on your
    account (subscriptions and Checkout) and `https://bookly-app.io/api/webhooks/stripe/connect`
    of type _Connected accounts_ (`docs/payments.md`, "Cloud mode"). Enable Connect Express and
