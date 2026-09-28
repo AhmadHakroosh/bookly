@@ -123,7 +123,8 @@ export async function connectOnboardingUrl(ws: Workspace, email: string): Promis
     account,
     type: "account_onboarding",
     refresh_url: tenantUrl(ws.slug, "/admin/settings?stripe=refresh"),
-    return_url: tenantUrl(ws.slug, "/admin/settings?stripe=return"),
+    // A route handler refreshes the account flags first (a page render may not revalidate).
+    return_url: tenantUrl(ws.slug, "/api/admin/stripe/return"),
   });
   return link.url;
 }
