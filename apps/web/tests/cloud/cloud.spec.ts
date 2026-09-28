@@ -221,3 +221,61 @@ test.describe("sign-up and tenants", () => {
     await expect(page.getByRole("heading", { name: "Self-hosted installs" })).toBeVisible();
   });
 });
+
+test.describe("team invitations", () => {
+  test("an invitee creates an account from the invitation and lands in the workspace", async ({
+    page,
+    browser,
+  }) => {
+    // The owner is also the platform operator: comp the demo workspace onto Team so it may
+    // have more than one member.
+    await page.goto(`${tenantUrl(DEMO.username)}/login?next=%2Fadmin`);
+    await page.locator('input[name="email"]').fill(DEMO.email);
+    await page.locator('input[name="password"]').fill(DEMO.password);
+    await page.getByRole("button", { name: "Sign in" }).click();
+    await expect(page.getByRole("heading", { name: "Inbox" })).toBeVisible({ timeout: 15_000 });
+    await page.goto(`${platformUrl}/console`);
+    await page.getByRole("link", { name: "Demo Workspace" }).first().click();
+    await expect(page).toHaveURL(/\/console\/[0-9a-f-]+$/);
+    await page.getByRole("combobox", { name: "Plan" }).click();
+    await page.getByRole("option", { name: "Team" }).click();
+    await page.getByRole("button", { name: "Set plan" }).click();
+    await expect(page.getByRole("button", { name: "Release to Stripe" })).toBeVisible();
+
+    const email = `invitee-${Date.now().toString(36)}@example.com`;
+    await page.goto(`${tenantUrl(DEMO.username)}/admin/team`);
+    await page.locator('input[name="email"]').fill(email);
+    await page.getByRole("button", { name: /Invite/ }).click();
+    await expect(page.getByText(email)).toBeVisible();
+    const orgs = JSON.parse((await api(page, "/api/auth/organization/list")).text) as {
+      id: string;
+    }[];
+    const invites = JSON.parse(
+      (await api(page, `/api/auth/organization/list-invitations?organizationId=${orgs[0]!.id}`))
+        .text,
+    ) as { id: string; email: string; status: string }[];
+    const invite = invites.find((i) => i.email === email && i.status === "pending");
+    expect(invite).toBeTruthy();
+
+    // A fresh browser: the invitee has no account and no session yet.
+    const invitee = await (await browser.newContext()).newPage();
+    await invitee.goto(`${platformUrl}/accept-invitation/${invite!.id}`);
+    await expect(invitee.getByRole("heading", { name: /Join Demo Workspace/ })).toBeVisible();
+    await invitee.locator('input[name="name"]').fill("Invited Member");
+    await invitee.locator('input[name="password"]').fill("invitee-password-1");
+    for (const box of await invitee.getByRole("checkbox").all()) await box.check();
+    await invitee.getByRole("button", { name: "Create account and join" }).click();
+    // Accepted on the platform host, the invitee lands on the workspace's own admin.
+    await expect(invitee).toHaveURL(
+      new RegExp(`^${escapeRegExp(tenantUrl(DEMO.username))}/admin/profile`),
+    );
+    await expect(invitee.getByRole("heading", { name: "Your booking page" })).toBeVisible();
+    await invitee.context().close();
+
+    // Leave the demo workspace as it was found: back on Free, under Stripe's control.
+    await page.goto(`${platformUrl}/console`);
+    await page.getByRole("link", { name: "Demo Workspace" }).first().click();
+    await page.getByRole("button", { name: "Release to Stripe" }).click();
+    await expect(page.getByRole("button", { name: "Release to Stripe" })).toHaveCount(0);
+  });
+});

@@ -8,6 +8,7 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 ### Fixed
 
+- Cloud: accepting a team invitation by creating an account failed with "Unauthorized". Sign-up returns no session while email verification is required, even though invitees are verified on creation; the form now signs the new account in before accepting, and the invitee lands on the workspace's own admin instead of the platform host. Covered by the cloud end-to-end suite
 - Cloud: changing plan or billing interval with a live subscription now updates that subscription in place, so Stripe prorates the remaining time and charges (or credits) only the difference; before, a second subscription was created and the full new price charged. A pending cancellation is undone by the change, and the workspace ignores Stripe events for subscriptions it no longer follows
 - Cloud: cancelling a subscription in the Stripe portal now shows on Admin → Billing as "cancelled, ends <date>" instead of a renewal date; the plan stays until then
 
