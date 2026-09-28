@@ -135,6 +135,107 @@ export async function startUpgrade(
  * undoes a pending cancellation and keeps the overage price on the interval it bills on.
  * Returns false when there is nothing to change in place (no subscription, or one that ended).
  */
+/** The workspace's subscription when it is live (active, trialing or past due), else null. */
+export async function liveSubscription(ws: Workspace): Promise<Stripe.Subscription | null> {
+  if (!ws.stripeSubscriptionId) return null;
+  const sub = await stripe().subscriptions.retrieve(ws.stripeSubscriptionId);
+  return ["active", "trialing", "past_due"].includes(sub.status) ? sub : null;
+}
+
+/** The item changes that move `sub` to `price`, keeping the overage on its own interval. */
+async function planChangeItems(
+  sub: Stripe.Subscription,
+  price: string,
+  quantity: number,
+  interval: BillingInterval,
+) {
+  const item = planItem(sub);
+  if (!item) return null;
+  const overage = loadEnv().STRIPE_PRICE_CAPTURE_OVERAGE;
+  const overageItem = overage ? sub.items.data.find((i) => i.price.id === overage) : undefined;
+  const overageFits = !!overage && (await overageIntervalOf()) === interval;
+  return {
+    overageFits,
+    items: [
+      { id: item.id, price, quantity },
+      ...(overageItem && !overageFits ? [{ id: overageItem.id, deleted: true as const }] : []),
+      ...(!overageItem && overageFits ? [{ price: overage! }] : []),
+    ],
+  };
+}
+
+export type PlanChangePreview = {
+  plan: PlanId;
+  interval: BillingInterval;
+  quantity: number;
+  currency: string;
+  /** What Stripe will charge right away (negative = credit for unused time), in cents. */
+  dueNow: number;
+  /** The new price per period for all seats, in cents. */
+  recurring: number;
+  /** When the current period ends: the new recurring price applies in full from then. */
+  periodEnd: Date | null;
+  /** "Visa ···· 4242", or null when no card is on file. */
+  paymentMethod: string | null;
+};
+
+/**
+ * What an in-place plan change would cost, straight from Stripe's invoice preview, so the
+ * customer can see the prorated amount and the card before agreeing. Null without a live
+ * subscription (a first purchase goes through Checkout, which shows all of this itself).
+ */
+export async function previewPlanChange(
+  ws: Workspace,
+  plan: PlanId,
+  interval: BillingInterval,
+): Promise<PlanChangePreview | null> {
+  const price = priceFor(plan, interval);
+  const sub = await liveSubscription(ws);
+  if (!price || !sub) return null;
+  const quantity = plan === "team" ? billedSeats(PLANS.team, await memberCount(ws)) : 1;
+  const change = await planChangeItems(sub, price, quantity, interval);
+  if (!change) return null;
+  const customer = typeof sub.customer === "string" ? sub.customer : sub.customer.id;
+  const [invoice, priceObj, method] = await Promise.all([
+    stripe().invoices.createPreview({
+      customer,
+      subscription: sub.id,
+      subscription_details: { items: change.items, proration_behavior: "always_invoice" },
+    }),
+    stripe().prices.retrieve(price),
+    paymentMethodLabel(sub, customer),
+  ]);
+  const periodEnd = planItem(sub)?.current_period_end;
+  return {
+    plan,
+    interval,
+    quantity,
+    currency: invoice.currency,
+    dueNow: invoice.amount_due,
+    recurring: (priceObj.unit_amount ?? 0) * quantity,
+    periodEnd: periodEnd ? new Date(periodEnd * 1000) : null,
+    paymentMethod: method,
+  };
+}
+
+async function paymentMethodLabel(sub: Stripe.Subscription, customer: string) {
+  let id = typeof sub.default_payment_method === "string" ? sub.default_payment_method : null;
+  if (!id) {
+    const c = await stripe().customers.retrieve(customer);
+    if (!c.deleted) {
+      const d = c.invoice_settings.default_payment_method;
+      id = typeof d === "string" ? d : (d?.id ?? null);
+    }
+  }
+  if (!id) return null;
+  const pm = await stripe().paymentMethods.retrieve(id);
+  if (pm.card) {
+    const brand = pm.card.brand.charAt(0).toUpperCase() + pm.card.brand.slice(1);
+    return `${brand} ···· ${pm.card.last4}`;
+  }
+  return pm.type.replace(/_/g, " ");
+}
+
 async function changePlanInPlace(
   ws: Workspace,
   price: string,
@@ -142,20 +243,13 @@ async function changePlanInPlace(
   plan: PlanId,
   interval: BillingInterval,
 ): Promise<boolean> {
-  if (!ws.stripeSubscriptionId) return false;
-  const sub = await stripe().subscriptions.retrieve(ws.stripeSubscriptionId);
-  if (!["active", "trialing", "past_due"].includes(sub.status)) return false;
-  const item = planItem(sub);
-  if (!item) return false;
-  const overage = loadEnv().STRIPE_PRICE_CAPTURE_OVERAGE;
-  const overageItem = overage ? sub.items.data.find((i) => i.price.id === overage) : undefined;
-  const overageFits = !!overage && (await overageIntervalOf()) === interval;
+  const sub = await liveSubscription(ws);
+  if (!sub) return false;
+  const change = await planChangeItems(sub, price, quantity, interval);
+  if (!change) return false;
+  const { items, overageFits } = change;
   const updated = await stripe().subscriptions.update(sub.id, {
-    items: [
-      { id: item.id, price, quantity },
-      ...(overageItem && !overageFits ? [{ id: overageItem.id, deleted: true as const }] : []),
-      ...(!overageItem && overageFits ? [{ price: overage! }] : []),
-    ],
+    items,
     proration_behavior: "always_invoice",
     cancel_at_period_end: false,
     metadata: { workspaceId: ws.id, plan, interval },
@@ -259,15 +353,25 @@ export async function syncSeats(ws: Workspace): Promise<boolean> {
     const item = planItem(sub);
     const n = billedSeats(PLANS.team, await memberCount(ws));
     if (!item || item.quantity === n) return false;
+    // Invoiced right away: the added seat is charged for the rest of the period now (a removed
+    // one credited), instead of waiting for the next renewal, which on a yearly plan is far off.
     await stripe().subscriptionItems.update(item.id, {
       quantity: n,
-      proration_behavior: "create_prorations",
+      proration_behavior: "always_invoice",
     });
     return true;
   } catch (e) {
     console.error("[billing] seat sync failed", e);
     return false;
   }
+}
+
+/** Seat sync by organization id, for the auth plugin's membership hooks. */
+export async function syncSeatsForOrganization(organizationId: string): Promise<void> {
+  const ws = await db().query.workspaces.findFirst({
+    where: eq(schema.workspaces.organizationId, organizationId),
+  });
+  if (ws) await syncSeats(ws);
 }
 
 const SEATS_STATE = "billing.seats";

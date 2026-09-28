@@ -20,13 +20,13 @@ export function InviteForm() {
         type="email"
         placeholder="teammate@example.com"
         required
-        className="flex-1"
+        className="min-w-0 flex-1 basis-56"
       />
       <Dropdown
         name="role"
         defaultValue="member"
         ariaLabel="Role"
-        className="w-64"
+        className="w-full sm:w-64"
         options={[
           { value: "member", label: "Member (own booking page)" },
           { value: "admin", label: "Admin (manages everything)" },

@@ -12,8 +12,14 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 - Cloud: the workspace's name, logo and accent are pushed to its connected Stripe account, so the Checkout page a guest pays on shows the host's brand (on connect, and whenever Settings are saved)
 - Paid bookings link to Stripe's receipt: on the guest's booking page and confirmation email, and for the host on the Inbox, the Bookings list and the booking view, next to the amount and its paid/refunded state. Stripe emails the receipt itself when the platform account's "Successful payments" customer email is on (live mode)
 
+### Changed
+
+- Cloud: changing plan or interval with a live subscription now shows what Stripe will charge first: the prorated amount due now (or the credit for unused time), the new price per period from the current period's end, and the card on file, with a confirm button, a way to change the payment method, and a way out. The change is applied only after confirming; a first purchase still goes through Stripe Checkout, which shows the same
+
 ### Fixed
 
+- Cloud: Team seats now follow the member count when an invitation is accepted from the browser or a member is removed (the auth plugin's membership hooks), and the added or removed seat is invoiced right away, prorated for the rest of the period, instead of at the next renewal
+- Team: the invitation email field no longer gets cut off on narrow screens
 - Console: "Sign in as owner" failed with "You are not allowed to impersonate users"; operators (PLATFORM_ADMIN_EMAILS) are granted the admin role Better Auth requires on first use
 - Emails on desktop clients no longer grow wider than their card: long links and ids wrap inside the details table (the label column keeps its width), the raw "paste this link" URL breaks anywhere, and the paid row links "View receipt" instead of printing the receipt URL
 - A QStash publish that times out is retried once before the job is given up on (reminder scheduling on staging showed occasional 8-second stalls)

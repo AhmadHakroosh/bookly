@@ -5,6 +5,7 @@ import { isInterval, isPlanId } from "@bookly/cloud";
 import {
   billingConfigured,
   billingPortal,
+  liveSubscription,
   setCaptureOverage,
   startUpgrade,
   yearlyConfigured,
@@ -21,6 +22,17 @@ async function owner() {
 }
 
 export async function upgrade(plan: string, interval = "month") {
+  if (!isPlanId(plan) || plan === "free" || !billingConfigured()) return;
+  const period = isInterval(interval) && yearlyConfigured() ? interval : "month";
+  const { session, ws } = await owner();
+  // With a live subscription the change is made in place, so the customer first sees what
+  // Stripe will charge and agrees to it; a first purchase goes through Checkout, which does.
+  if (await liveSubscription(ws)) redirect(`/admin/billing/change?plan=${plan}&interval=${period}`);
+  redirect(await startUpgrade(ws, plan, session.user.email, period));
+}
+
+/** The customer agreed to the previewed charge: apply the plan change in place. */
+export async function confirmPlanChange(plan: string, interval: string) {
   if (!isPlanId(plan) || plan === "free" || !billingConfigured()) return;
   const period = isInterval(interval) && yearlyConfigured() ? interval : "month";
   const { session, ws } = await owner();

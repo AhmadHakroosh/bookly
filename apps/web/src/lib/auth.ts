@@ -231,6 +231,18 @@ export const auth = betterAuth({
     organization({
       allowUserToCreateOrganization: async () => env.TENANCY === "multi",
       creatorRole: "owner",
+      // Team seats follow the member count however the membership changed (an invitation
+      // accepted from the browser included); lazy import keeps the auth module light.
+      organizationHooks: {
+        afterAcceptInvitation: async ({ organization }) => {
+          const { syncSeatsForOrganization } = await import("@/server/billing");
+          await syncSeatsForOrganization(organization.id);
+        },
+        afterRemoveMember: async ({ organization }) => {
+          const { syncSeatsForOrganization } = await import("@/server/billing");
+          await syncSeatsForOrganization(organization.id);
+        },
+      },
       sendInvitationEmail: async ({ email, organization: org, inviter, id }) => {
         const { accountMail } = await import("@/emails/account");
         await sendEmail({
