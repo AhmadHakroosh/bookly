@@ -4,6 +4,12 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 ## [Unreleased]
 
+## [0.4.6] - 2026-09-28
+
+### Fixed
+
+- Cloud: auth cookies are named after the root domain (`bookly-app-io.session_token`), so a production session no longer shadows a staging one on `staging.bookly-app.io`, where the browser sent both. Existing sessions are signed out once by this release
+
 ## [0.4.5] - 2026-09-27
 
 ### Changed
@@ -207,7 +213,8 @@ First public release: the self-hostable scheduling platform with contacts, brief
 
 - The unused storage layer (`packages/storage`, `STORAGE_*` and `S3_*` variables, the MinIO service in Compose): nothing in Bookly uploads files; profile photos and logos are URLs
 
-[Unreleased]: https://github.com/AhmadHakroosh/bookly/compare/v0.4.5...HEAD
+[Unreleased]: https://github.com/AhmadHakroosh/bookly/compare/v0.4.6...HEAD
+[0.4.6]: https://github.com/AhmadHakroosh/bookly/compare/v0.4.5...v0.4.6
 [0.4.5]: https://github.com/AhmadHakroosh/bookly/compare/v0.4.4...v0.4.5
 [0.4.4]: https://github.com/AhmadHakroosh/bookly/compare/v0.4.3...v0.4.4
 [0.4.3]: https://github.com/AhmadHakroosh/bookly/compare/v0.4.2...v0.4.3

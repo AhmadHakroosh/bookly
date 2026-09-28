@@ -66,6 +66,12 @@ async function hasPendingInvitation(email: string): Promise<boolean> {
  * - organizations = the ownership/membership layer for workspaces (one workspace per org)
  * - admin plugin = platform operator tools (cloud mode)
  */
+/** Shared cookie domain for the platform and its tenant subdomains (cloud mode only). */
+const cookieDomain =
+  env.ROOT_DOMAIN && env.TENANCY === "multi" && env.ROOT_DOMAIN.split(":")[0]!.includes(".")
+    ? `.${env.ROOT_DOMAIN.split(":")[0]}`
+    : undefined;
+
 export const auth = betterAuth({
   appName: "Bookly",
   baseURL: env.APP_URL,
@@ -197,10 +203,11 @@ export const auth = betterAuth({
   advanced: {
     // Browsers reject a cookie domain without a dot (e.g. "localhost"), so local cloud-mode
     // runs on plain localhost fall back to host-only cookies: sign in on the host you use.
-    crossSubDomainCookies:
-      env.ROOT_DOMAIN && env.TENANCY === "multi" && env.ROOT_DOMAIN.split(":")[0]!.includes(".")
-        ? { enabled: true, domain: `.${env.ROOT_DOMAIN.split(":")[0]}` }
-        : undefined,
+    crossSubDomainCookies: cookieDomain ? { enabled: true, domain: cookieDomain } : undefined,
+    // Cookies scoped to `.bookly-app.io` also reach `staging.bookly-app.io`, and a browser sends
+    // both same-named cookies there, so each root domain names its cookies after itself
+    // (`bookly-app-io.session_token`, `staging-bookly-app-io.session_token`).
+    cookiePrefix: cookieDomain ? cookieDomain.slice(1).replace(/[^a-z0-9]+/gi, "-") : undefined,
   },
   plugins: [
     magicLink({
