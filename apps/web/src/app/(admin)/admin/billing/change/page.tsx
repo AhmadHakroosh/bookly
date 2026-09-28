@@ -79,14 +79,24 @@ async function ChangePage({ searchParams }: PageProps<"/admin/billing/change">) 
           <dd>{preview.paymentMethod ?? "No card on file"}</dd>
         </div>
       </dl>
+      {preview.blockers.map((b) => (
+        <p key={b} className="rounded-xl border border-destructive/40 p-4 text-sm">
+          {b}{" "}
+          <Link href="/admin/team" className="underline underline-offset-4">
+            Open Team
+          </Link>
+        </p>
+      ))}
       <div className="flex flex-wrap items-center gap-3">
-        <form action={confirmPlanChange.bind(null, plan, interval)}>
-          <SubmitButton>
-            {preview.dueNow > 0
-              ? `Confirm and pay ${formatPrice(preview.dueNow, preview.currency)}`
-              : "Confirm change"}
-          </SubmitButton>
-        </form>
+        {preview.blockers.length === 0 && (
+          <form action={confirmPlanChange.bind(null, plan, interval)}>
+            <SubmitButton>
+              {preview.dueNow > 0
+                ? `Confirm and pay ${formatPrice(preview.dueNow, preview.currency)}`
+                : "Confirm change"}
+            </SubmitButton>
+          </form>
+        )}
         <form action={manageBilling}>
           <SubmitButton variant="outline">Change payment method</SubmitButton>
         </form>

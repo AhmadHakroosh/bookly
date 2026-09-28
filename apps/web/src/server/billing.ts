@@ -182,7 +182,20 @@ export type PlanChangePreview = {
   from: Date | null;
   /** "Visa ···· 4242", or null when no card is on file. */
   paymentMethod: string | null;
+  /** Why the change cannot be made yet (e.g. more members than the plan allows); empty = ok. */
+  blockers: string[];
 };
+
+/** What stands in the way of moving the workspace to `plan`: today, only the member count. */
+export async function planChangeBlockers(ws: Workspace, plan: PlanId): Promise<string[]> {
+  const limit = PLANS[plan].limits.members;
+  const members = await memberCount(ws);
+  if (limit !== null && members > limit)
+    return [
+      `${PLANS[plan].name} includes ${limit === 1 ? "one member" : `${limit} members`} and this workspace has ${members}. Remove members under Team first; their booking pages and bookings stay with the workspace.`,
+    ];
+  return [];
+}
 
 /**
  * What an in-place plan change would cost, straight from Stripe's invoice preview, so the
@@ -223,6 +236,53 @@ export async function previewPlanChange(
     recurring: (priceObj.unit_amount ?? 0) * quantity,
     from: sameInterval && periodEnd ? new Date(periodEnd * 1000) : null,
     paymentMethod: method,
+    blockers: await planChangeBlockers(ws, plan),
+  };
+}
+
+export type SeatPreview = {
+  currency: string;
+  /** Charged when the invitation is accepted, prorated for the rest of the period, in cents. */
+  dueOnAccept: number;
+  /** The plan's price per period for all seats once the new one is billed, in cents. */
+  recurring: number;
+  /** Seats billed after the new member joins. */
+  quantity: number;
+  interval: BillingInterval;
+  paymentMethod: string | null;
+};
+
+/**
+ * What one more member would cost on a Team subscription, from Stripe's invoice preview, so the
+ * owner can agree before inviting. Null when the invitation adds no cost: not on Team, no live
+ * subscription, or the plan's minimum seats already cover the new member.
+ */
+export async function previewSeatAdd(ws: Workspace): Promise<SeatPreview | null> {
+  if (ws.plan !== "team") return null;
+  const sub = await liveSubscription(ws);
+  const item = sub && planItem(sub);
+  if (!sub || !item) return null;
+  const quantity = billedSeats(PLANS.team, (await memberCount(ws)) + 1);
+  if (quantity <= (item.quantity ?? 0)) return null;
+  const customer = typeof sub.customer === "string" ? sub.customer : sub.customer.id;
+  const [invoice, method] = await Promise.all([
+    stripe().invoices.createPreview({
+      customer,
+      subscription: sub.id,
+      subscription_details: {
+        items: [{ id: item.id, quantity }],
+        proration_behavior: "always_invoice",
+      },
+    }),
+    paymentMethodLabel(sub, customer),
+  ]);
+  return {
+    currency: invoice.currency,
+    dueOnAccept: Math.max(invoice.amount_due, 0),
+    recurring: (item.price.unit_amount ?? 0) * quantity,
+    quantity,
+    interval: item.price.recurring?.interval === "year" ? "year" : "month",
+    paymentMethod: method,
   };
 }
 
@@ -253,6 +313,8 @@ async function changePlanInPlace(
 ): Promise<boolean> {
   const sub = await liveSubscription(ws);
   if (!sub) return false;
+  const blockers = await planChangeBlockers(ws, plan);
+  if (blockers.length) throw new Error(blockers[0]);
   const change = await planChangeItems(sub, price, quantity, interval);
   if (!change) return false;
   const { items, overageFits } = change;

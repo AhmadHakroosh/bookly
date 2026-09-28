@@ -14,6 +14,8 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 ### Changed
 
+- Cloud: inviting a member who would add a billed seat on Team first shows what Stripe charges when they accept (prorated) and the plan's price from then on, with the card on file; the invitation is sent only after agreeing. Invitations within the seats already billed go straight through
+- Cloud: moving to a plan with fewer members than the workspace has (Team → Pro with several members) is refused on the review page with the reason and a link to Team, instead of switching and leaving the workspace over its limit
 - Cloud: changing plan or interval with a live subscription now shows what Stripe will charge first: the prorated amount due now (or the credit for unused time), the new price per period from the current period's end, and the card on file, with a confirm button, a way to change the payment method, and a way out. The change is applied only after confirming; a first purchase still goes through Stripe Checkout, which shows the same
 
 ### Fixed

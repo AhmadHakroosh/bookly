@@ -12,7 +12,8 @@ import { InviteForm } from "./invite-form";
 
 export const metadata = { title: "Team" };
 
-async function TeamPage() {
+async function TeamPage({ searchParams }: PageProps<"/admin/team">) {
+  const sp = await searchParams;
   const [{ session, role }, ws] = await Promise.all([requireStaff(), getCurrentWorkspace()]);
   if (!ws) return null;
   const canManage = role === "owner" || role === "admin";
@@ -49,6 +50,10 @@ async function TeamPage() {
           collective event types spread bookings across members.
         </p>
       </div>
+      {sp.invited === "1" && <p className="rounded-xl border p-3 text-sm">Invitation sent.</p>}
+      {typeof sp.error === "string" && sp.error && (
+        <p className="rounded-xl border border-destructive/40 p-3 text-sm">{sp.error}</p>
+      )}
       {canManage && <InviteForm />}
       <ul className="divide-y rounded-xl border">
         {members.map((m) => (
@@ -108,10 +113,10 @@ async function TeamPage() {
   );
 }
 
-export default function TeamPageBoundary() {
+export default function TeamPageBoundary(props: PageProps<"/admin/team">) {
   return (
     <Suspense fallback={<TeamSkeleton />}>
-      <TeamPage />
+      <TeamPage {...props} />
     </Suspense>
   );
 }
