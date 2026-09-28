@@ -12,6 +12,7 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 ### Fixed
 
+- A QStash publish that times out is retried once before the job is given up on (reminder scheduling on staging showed occasional 8-second stalls)
 - Collective event types offered times outside a co-host's working hours: only co-hosts' bookings and calendars were folded in. The time outside each co-host's schedule (and their day-off overrides) now counts as busy, so slots appear only when every host is actually working and free
 - Cloud: paid bookings and payment requests failed at Stripe with "Creating direct charges with type=express … is not supported for new platforms". Checkouts are now destination charges on the platform account, transferred to the host's connected account as merchant of record, with the platform fee as before; refunds reverse the transfer. Legacy direct charges still refund on the host's account
 - Cloud: returning from Stripe Connect onboarding crashed Settings ("revalidateTag … during render which is unsupported"); the return now goes through a route handler that refreshes the account's flags before landing on Settings

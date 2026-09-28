@@ -13,12 +13,22 @@ export type PublishOptions = {
   retries?: number;
 };
 
-async function call(cfg: QstashConfig, path: string, init: RequestInit = {}) {
-  const res = await (cfg.fetchImpl ?? fetch)(`${cfg.url.replace(/\/$/, "")}${path}`, {
-    ...init,
-    headers: { authorization: `Bearer ${cfg.token}`, ...(init.headers as Record<string, string>) },
-    signal: AbortSignal.timeout(8000),
-  });
+/** One request to QStash; a timeout is retried once, since a stalled call is the common failure. */
+async function call(cfg: QstashConfig, path: string, init: RequestInit = {}, attempt = 1) {
+  let res: Response;
+  try {
+    res = await (cfg.fetchImpl ?? fetch)(`${cfg.url.replace(/\/$/, "")}${path}`, {
+      ...init,
+      headers: {
+        authorization: `Bearer ${cfg.token}`,
+        ...(init.headers as Record<string, string>),
+      },
+      signal: AbortSignal.timeout(8000),
+    });
+  } catch (e) {
+    if (attempt === 1 && (e as Error).name === "TimeoutError") return call(cfg, path, init, 2);
+    throw e;
+  }
   if (!res.ok) throw new Error(`qstash ${res.status}: ${(await res.text()).slice(0, 200)}`);
   return res;
 }
