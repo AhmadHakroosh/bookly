@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { and, eq, schema } from "@bookly/db";
-import { verifyState } from "@/lib/crypto";
+import { decrypt, verifyState } from "@/lib/crypto";
 import { db } from "@/lib/db";
 import { connectIntegration, isProvider } from "@/server/integrations";
 import { isCloud, tenantUrl } from "@/server/platform";
@@ -42,8 +42,14 @@ export async function GET(
     columns: { role: true },
   });
   if (!member) return fail("mismatch");
+  let verifier: string | null = null;
   try {
-    await connectIntegration(ws.id, session.user.id, provider, code);
+    verifier = state.v ? decrypt(state.v) : null;
+  } catch {
+    return fail("state");
+  }
+  try {
+    await connectIntegration(ws.id, session.user.id, provider, code, verifier);
   } catch (e) {
     console.error("[integrations] connect failed", e);
     return fail("exchange");
