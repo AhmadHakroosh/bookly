@@ -169,12 +169,17 @@ export type PlanChangePreview = {
   interval: BillingInterval;
   quantity: number;
   currency: string;
-  /** What Stripe will charge right away (negative = credit for unused time), in cents. */
+  /** What Stripe will charge right away, in cents (0 when the credit covers it). */
   dueNow: number;
+  /** Credit for unused time that goes to the customer's balance, in cents (0 when none). */
+  credit: number;
   /** The new price per period for all seats, in cents. */
   recurring: number;
-  /** When the current period ends: the new recurring price applies in full from then. */
-  periodEnd: Date | null;
+  /**
+   * When the new price starts to be billed in full: the current period's end when the interval
+   * stays the same, or now when it changes (Stripe restarts the billing cycle).
+   */
+  from: Date | null;
   /** "Visa ···· 4242", or null when no card is on file. */
   paymentMethod: string | null;
 };
@@ -205,15 +210,18 @@ export async function previewPlanChange(
     stripe().prices.retrieve(price),
     paymentMethodLabel(sub, customer),
   ]);
-  const periodEnd = planItem(sub)?.current_period_end;
+  const current = planItem(sub);
+  const sameInterval = current?.price.recurring?.interval === interval;
+  const periodEnd = current?.current_period_end;
   return {
     plan,
     interval,
     quantity,
     currency: invoice.currency,
-    dueNow: invoice.amount_due,
+    dueNow: Math.max(invoice.amount_due, 0),
+    credit: invoice.total < 0 ? -invoice.total : 0,
     recurring: (priceObj.unit_amount ?? 0) * quantity,
-    periodEnd: periodEnd ? new Date(periodEnd * 1000) : null,
+    from: sameInterval && periodEnd ? new Date(periodEnd * 1000) : null,
     paymentMethod: method,
   };
 }
