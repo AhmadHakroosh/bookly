@@ -190,6 +190,16 @@ async function BookingsPage({ searchParams }: PageProps<"/admin/bookings">) {
                         Receipt
                       </Link>
                     )}
+                    {b.paymentRef?.receiptUrl && (
+                      <a
+                        href={b.paymentRef.receiptUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-xs underline underline-offset-4"
+                      >
+                        Stripe receipt
+                      </a>
+                    )}
                     <StatusBadge status={b.status} />
                   </div>
                 </div>
@@ -245,6 +255,19 @@ async function BookingsPage({ searchParams }: PageProps<"/admin/bookings">) {
                                 >
                                   Receipt
                                 </Link>
+                                {b.paymentRef?.receiptUrl && (
+                                  <>
+                                    {" · "}
+                                    <a
+                                      href={b.paymentRef.receiptUrl}
+                                      target="_blank"
+                                      rel="noreferrer"
+                                      className="underline underline-offset-4"
+                                    >
+                                      Stripe
+                                    </a>
+                                  </>
+                                )}
                               </>
                             )}{" "}
                             ·
