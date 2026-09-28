@@ -41,10 +41,15 @@ async function InvitePage({ searchParams }: PageProps<"/admin/team/invite">) {
         <div className="flex gap-4">
           <dt className="w-32 shrink-0 text-muted-foreground">When they join</dt>
           <dd>
-            {preview.dueOnAccept > 0 ? (
+            {preview.seatCost > 0 ? (
               <>
-                <strong>{formatPrice(preview.dueOnAccept, preview.currency)}</strong>, prorated for
-                the rest of the current period
+                <strong>{formatPrice(preview.seatCost, preview.currency)}</strong>, prorated for the
+                rest of the current period
+                {preview.dueOnAccept < preview.seatCost
+                  ? preview.dueOnAccept > 0
+                    ? `; ${formatPrice(preview.seatCost - preview.dueOnAccept, preview.currency)} of it comes from your credit balance and ${formatPrice(preview.dueOnAccept, preview.currency)} goes on the card`
+                    : ", fully covered by your credit balance, so nothing goes on the card"
+                  : ""}
               </>
             ) : (
               "Nothing now"
