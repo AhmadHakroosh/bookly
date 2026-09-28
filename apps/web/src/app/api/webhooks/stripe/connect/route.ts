@@ -6,9 +6,10 @@ import { syncConnectAccount } from "@/server/connect";
 import { stripe } from "@/server/payments";
 
 /**
- * Stripe → Bookly, for events on hosts' connected accounts (cloud mode). A paid Checkout on a
- * host's account confirms its booking; `account.updated` keeps the onboarding flags current so
- * paid bookings switch on the moment Stripe enables charges.
+ * Stripe → Bookly, for events on hosts' connected accounts (cloud mode). `account.updated`
+ * keeps the onboarding flags current so paid bookings switch on the moment Stripe enables
+ * charges. Checkouts are destination charges on the platform account, so their completion
+ * arrives on the platform webhook; the Checkout branch below only serves legacy direct charges.
  */
 export async function POST(req: Request) {
   const secret = loadEnv().STRIPE_CONNECT_WEBHOOK_SECRET;

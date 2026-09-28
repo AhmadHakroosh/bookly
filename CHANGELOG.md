@@ -8,6 +8,7 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 ### Fixed
 
+- Cloud: paid bookings and payment requests failed at Stripe with "Creating direct charges with type=express … is not supported for new platforms". Checkouts are now destination charges on the platform account, transferred to the host's connected account as merchant of record, with the platform fee as before; refunds reverse the transfer. Legacy direct charges still refund on the host's account
 - Cloud: returning from Stripe Connect onboarding crashed Settings ("revalidateTag … during render which is unsupported"); the return now goes through a route handler that refreshes the account's flags before landing on Settings
 - Cloud: accepting a team invitation by creating an account failed with "Unauthorized". Sign-up returns no session while email verification is required, even though invitees are verified on creation; the form now signs the new account in before accepting, and the invitee lands on the workspace's own admin instead of the platform host. Covered by the cloud end-to-end suite
 - Cloud: changing plan or billing interval with a live subscription now updates that subscription in place, so Stripe prorates the remaining time and charges (or credits) only the difference; before, a second subscription was created and the full new price charged. A pending cancellation is undone by the change, and the workspace ignores Stripe events for subscriptions it no longer follows

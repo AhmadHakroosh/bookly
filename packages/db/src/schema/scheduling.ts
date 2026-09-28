@@ -386,8 +386,10 @@ export const bookings = pgTable(
       sessionId?: string;
       paymentIntentId?: string;
       refundId?: string;
-      /** Connected Stripe account the charge lives on (cloud mode); absent = platform account. */
+      /** Legacy direct charge: the connected account the charge lives on (refunded there). */
       stripeAccount?: string;
+      /** Destination charge (cloud mode): the connected account the money was transferred to. */
+      destination?: string;
       /** Platform fee kept from this payment, in the booking's currency. */
       feeCents?: number;
     }>(),
