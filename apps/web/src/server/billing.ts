@@ -171,6 +171,8 @@ export async function syncSubscription(sub: Stripe.Subscription) {
       : "month");
   const ended = ["canceled", "incomplete_expired", "unpaid"].includes(sub.status);
   const periodEnd = item?.current_period_end;
+  // "Cancel at period end" keeps the plan until then; the page shows an end date, not a renewal.
+  const endsAt = !ended && sub.cancel_at ? new Date(sub.cancel_at * 1000).toISOString() : undefined;
   await db()
     .update(schema.workspaces)
     .set({
@@ -179,7 +181,11 @@ export async function syncSubscription(sub: Stripe.Subscription) {
       planRenewsAt: periodEnd ? new Date(periodEnd * 1000) : null,
       stripeCustomerId: customer,
       stripeSubscriptionId: ended ? null : sub.id,
-      settings: { ...ws.settings, billingInterval: ended || !plan ? undefined : interval },
+      settings: {
+        ...ws.settings,
+        billingInterval: ended || !plan ? undefined : interval,
+        billingEndsAt: ended || !plan ? undefined : endsAt,
+      },
     })
     .where(eq(schema.workspaces.id, ws.id));
   refreshWorkspace(ws.id);
