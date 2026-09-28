@@ -173,6 +173,8 @@ export type PlanChangePreview = {
   dueNow: number;
   /** Credit for unused time that goes to the customer's balance, in cents (0 when none). */
   credit: number;
+  /** Part of the charge paid from the customer's existing credit balance, in cents. */
+  coveredByBalance: number;
   /** The new price per period for all seats, in cents. */
   recurring: number;
   /**
@@ -233,6 +235,7 @@ export async function previewPlanChange(
     currency: invoice.currency,
     dueNow: Math.max(invoice.amount_due, 0),
     credit: invoice.total < 0 ? -invoice.total : 0,
+    coveredByBalance: coveredByBalance(invoice),
     recurring: (priceObj.unit_amount ?? 0) * quantity,
     from: sameInterval && periodEnd ? new Date(periodEnd * 1000) : null,
     paymentMethod: method,
@@ -240,9 +243,17 @@ export async function previewPlanChange(
   };
 }
 
+/** How much of a preview's positive total the customer's credit balance pays for. */
+function coveredByBalance(invoice: Stripe.Invoice): number {
+  if (invoice.total <= 0) return 0;
+  return Math.max(0, invoice.total - Math.max(invoice.amount_due, 0));
+}
+
 export type SeatPreview = {
   currency: string;
-  /** Charged when the invitation is accepted, prorated for the rest of the period, in cents. */
+  /** The prorated seat cost when the invitation is accepted, in cents. */
+  seatCost: number;
+  /** Of that, what goes on the card; the rest comes from the customer's credit balance. */
   dueOnAccept: number;
   /** The plan's price per period for all seats once the new one is billed, in cents. */
   recurring: number;
@@ -278,6 +289,7 @@ export async function previewSeatAdd(ws: Workspace): Promise<SeatPreview | null>
   ]);
   return {
     currency: invoice.currency,
+    seatCost: Math.max(invoice.total, 0),
     dueOnAccept: Math.max(invoice.amount_due, 0),
     recurring: (item.price.unit_amount ?? 0) * quantity,
     quantity,

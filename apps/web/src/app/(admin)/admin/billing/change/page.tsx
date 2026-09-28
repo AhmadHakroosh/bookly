@@ -48,10 +48,17 @@ async function ChangePage({ searchParams }: PageProps<"/admin/billing/change">) 
         <div className="flex gap-4">
           <dt className="w-32 shrink-0 text-muted-foreground">Charged now</dt>
           <dd>
-            {preview.dueNow > 0 ? (
+            {preview.dueNow > 0 || preview.coveredByBalance > 0 ? (
               <>
-                <strong>{formatPrice(preview.dueNow, preview.currency)}</strong>
+                <strong>
+                  {formatPrice(preview.dueNow + preview.coveredByBalance, preview.currency)}
+                </strong>
                 {preview.from ? ", prorated for the rest of the current period" : ""}
+                {preview.coveredByBalance > 0
+                  ? preview.dueNow > 0
+                    ? `; ${formatPrice(preview.coveredByBalance, preview.currency)} of it comes from your credit balance and ${formatPrice(preview.dueNow, preview.currency)} goes on the card`
+                    : ", fully covered by your credit balance, so nothing goes on the card"
+                  : ""}
               </>
             ) : preview.credit > 0 ? (
               <>
