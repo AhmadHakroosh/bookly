@@ -14,6 +14,7 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 ### Fixed
 
+- Console: "Sign in as owner" failed with "You are not allowed to impersonate users"; operators (PLATFORM_ADMIN_EMAILS) are granted the admin role Better Auth requires on first use
 - Emails on desktop clients no longer grow wider than their card: long links and ids wrap inside the details table (the label column keeps its width), the raw "paste this link" URL breaks anywhere, and the paid row links "View receipt" instead of printing the receipt URL
 - A QStash publish that times out is retried once before the job is given up on (reminder scheduling on staging showed occasional 8-second stalls)
 - Collective event types offered times outside a co-host's working hours: only co-hosts' bookings and calendars were folded in. The time outside each co-host's schedule (and their day-off overrides) now counts as busy, so slots appear only when every host is actually working and free
