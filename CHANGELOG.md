@@ -21,6 +21,7 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 ### Fixed
 
+- Emails: labels and values in the details box now share a baseline, and long labels such as "Cancelled by" fit their column instead of running into the value
 - Connecting a Google or Microsoft calendar uses PKCE (S256) on top of the client secret, as Google's app checkup expects; the verifier travels encrypted inside the signed state, so the round trip still works when the callback lands on the platform host
 - Cloud: Team seats now follow the member count when an invitation is accepted from the browser or a member is removed (the auth plugin's membership hooks), and the added or removed seat is invoiced right away, prorated for the rest of the period, instead of at the next renewal
 - Team: the invitation email field no longer gets cut off on narrow screens
