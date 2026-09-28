@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { connection } from "next/server";
-import { refreshConnectStatus } from "@/server/connect";
+import { refreshConnectStatus, syncConnectBranding } from "@/server/connect";
 import { getSession, getStaffRole } from "@/server/session";
 import { getCurrentWorkspace } from "@/server/workspace";
 
@@ -18,6 +18,9 @@ export async function GET(request: Request) {
   ]);
   const settings = new URL("/admin/settings", request.url);
   if (!session || !ws || !role) return NextResponse.redirect(new URL("/login", request.url));
-  if (ws.stripeAccountId) await refreshConnectStatus(ws).catch(() => null);
+  if (ws.stripeAccountId) {
+    await refreshConnectStatus(ws).catch(() => null);
+    await syncConnectBranding(ws);
+  }
   return NextResponse.redirect(settings);
 }

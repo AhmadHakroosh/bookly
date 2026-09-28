@@ -246,17 +246,15 @@ async function AdminInbox() {
                           : b.paymentStatus === "paid"
                             ? " paid"
                             : " unpaid"}
-                        {b.paymentRef?.receiptUrl && (
+                        {(b.paymentStatus === "paid" || b.paymentStatus === "refunded") && (
                           <>
                             {" · "}
-                            <a
-                              href={b.paymentRef.receiptUrl}
-                              target="_blank"
-                              rel="noreferrer"
+                            <Link
+                              href={`/booking/${b.manageToken}/receipt`}
                               className="underline underline-offset-4"
                             >
                               Receipt
-                            </a>
+                            </Link>
                           </>
                         )}
                       </>

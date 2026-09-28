@@ -129,6 +129,66 @@ export async function connectOnboardingUrl(ws: Workspace, email: string): Promis
   return link.url;
 }
 
+/**
+ * Pushes the workspace's branding onto its connected account, so the Stripe Checkout page a
+ * guest pays on carries the host's name, icon and accent (destination charges with
+ * `on_behalf_of` take the connected account's branding). Idempotent: skipped when nothing
+ * changed since the last push. Best effort; a failure is logged and never blocks the caller.
+ */
+export async function syncConnectBranding(ws: Workspace): Promise<void> {
+  if (!ws.stripeAccountId) return;
+  const brand = ws.settings.branding ?? {};
+  const key = JSON.stringify([ws.name, brand.logoUrl ?? null, brand.accent ?? null]);
+  if (ws.settings.payments?.brandingSynced === key) return;
+  try {
+    const stripe = await stripeClient();
+    const branding: Stripe.AccountUpdateParams.Settings.Branding = {};
+    if (brand.accent) branding.secondary_color = brand.accent;
+    if (brand.logoUrl) {
+      const icon = await uploadIcon(stripe, ws.stripeAccountId, brand.logoUrl);
+      if (icon) branding.icon = icon;
+    }
+    await stripe.accounts.update(ws.stripeAccountId, {
+      business_profile: { name: ws.name },
+      ...(Object.keys(branding).length ? { settings: { branding } } : {}),
+    });
+    await db()
+      .update(schema.workspaces)
+      .set({
+        settings: {
+          ...ws.settings,
+          payments: { ...(ws.settings.payments ?? {}), brandingSynced: key },
+        },
+      })
+      .where(eq(schema.workspaces.id, ws.id));
+    refreshWorkspace(ws.id);
+  } catch (e) {
+    console.error("[connect] branding sync failed", e);
+  }
+}
+
+/** Uploads the workspace logo as the connected account's icon; null when it cannot be used. */
+async function uploadIcon(stripe: Stripe, account: string, url: string): Promise<string | null> {
+  try {
+    const res = await fetch(url, { signal: AbortSignal.timeout(8000) });
+    const type = res.headers.get("content-type") ?? "";
+    if (!res.ok || !/^image\/(png|jpeg)/.test(type)) return null;
+    const data = Buffer.from(await res.arrayBuffer());
+    if (data.byteLength > 512 * 1024) return null;
+    const file = await stripe.files.create(
+      {
+        purpose: "business_icon",
+        file: { data, name: type.includes("png") ? "icon.png" : "icon.jpg", type },
+      },
+      { stripeAccount: account },
+    );
+    return file.id;
+  } catch (e) {
+    console.error("[connect] icon upload failed", e);
+    return null;
+  }
+}
+
 /** Pulls the account's current flags from Stripe (after onboarding, or from the console). */
 export async function refreshConnectStatus(ws: Workspace): Promise<ConnectStatus | null> {
   if (!ws.stripeAccountId) return null;

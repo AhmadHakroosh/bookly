@@ -6,6 +6,7 @@ import { eq, schema } from "@bookly/db";
 import { encrypt } from "@/lib/crypto";
 import { parseBlocklist } from "@/server/abuse";
 import { refreshWorkspace } from "@/server/cache";
+import { syncConnectBranding } from "@/server/connect";
 import { hasFeature } from "@/server/limits";
 import { deleteWorkspace } from "@/server/data-rights";
 import { isCloud, platformUrl } from "@/server/platform";
@@ -135,6 +136,9 @@ export async function updateWorkspaceSettings(
     })
     .where(eq(schema.workspaces.id, workspace.id));
   refreshWorkspace(workspace.id);
+  // The Stripe Checkout page follows the workspace's name and branding.
+  const fresh = await getCurrentWorkspace();
+  if (fresh) await syncConnectBranding(fresh);
   return { ok: true };
 }
 

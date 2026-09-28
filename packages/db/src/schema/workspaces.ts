@@ -47,6 +47,8 @@ export type WorkspaceSettings = {
     detailsSubmitted?: boolean;
     connectedAt?: string;
     feePercent?: number | null;
+    /** What was last pushed to the connected account's Checkout branding (logo URL + accent). */
+    brandingSynced?: string;
   } | null;
   /**
    * Postal address printed in the footer of outreach emails (proposals, payment requests,

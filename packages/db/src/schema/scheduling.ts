@@ -394,6 +394,8 @@ export const bookings = pgTable(
       feeCents?: number;
       /** Stripe's hosted receipt for the payment (charge.receipt_url), shown to guest and host. */
       receiptUrl?: string;
+      /** When the payment was recorded (ISO); printed on the workspace's receipt page. */
+      paidAt?: string;
     }>(),
     ...timestamps,
   },
