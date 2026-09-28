@@ -38,7 +38,7 @@ export async function POST(req: Request) {
     const session = event.data.object;
     if (session.mode === "subscription" && session.subscription) {
       const sub = await stripe().subscriptions.retrieve(String(session.subscription));
-      await syncSubscription(sub);
+      await syncSubscription(sub, { adopt: true });
       return NextResponse.json({ received: true });
     }
     const bookingId = session.metadata?.bookingId;
