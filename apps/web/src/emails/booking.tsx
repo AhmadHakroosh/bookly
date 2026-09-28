@@ -1,6 +1,7 @@
 import { formatPrice } from "@/server/payments";
 import type { Booking, EventType, Profile } from "@bookly/db/schema";
-import { Text } from "@react-email/components";
+import { Link, Text } from "@react-email/components";
+import type { ReactNode } from "react";
 import { formatPhone } from "@/lib/phone";
 import { attendeeJoinUrl } from "@/lib/meet-link";
 import { fmtDateTime } from "@/lib/time";
@@ -157,12 +158,26 @@ export async function attendeeConfirmation(ctx: BookingMailCtx): Promise<Mail> {
   return { subject, text, html };
 }
 
-/** "Paid $10.00 · receipt: <url>" for a paid booking; nothing for a free one. */
-function paidRow(b: BookingMailCtx["booking"]): [string, string][] {
+/** "Paid $10.00 · View receipt" for a paid booking; nothing for a free one. */
+function paidRow(b: BookingMailCtx["booking"]): [string, ReactNode][] {
   if (b.paymentStatus !== "paid" || b.amountCents == null) return [];
   const amount = formatPrice(b.amountCents, b.currency);
   const receipt = b.paymentRef?.receiptUrl;
-  return [["Paid", receipt ? `${amount} · receipt: ${receipt}` : amount]];
+  return [
+    [
+      "Paid",
+      receipt ? (
+        <>
+          {amount} ·{" "}
+          <Link href={receipt} style={{ color: "#18181b" }}>
+            View receipt
+          </Link>
+        </>
+      ) : (
+        amount
+      ),
+    ],
+  ];
 }
 
 /** For a colleague the attendee brought along: the invitation without the booker's manage link. */
