@@ -93,6 +93,36 @@ export function windowsForDate(
     .map((r) => ({ start: zonedToUtc(date, r.startMin, tz), end: zonedToUtc(date, r.endMin, tz) }));
 }
 
+/**
+ * The time a schedule does NOT cover between `rangeStart` and `rangeEnd`, as busy intervals:
+ * the complement of its windows over the schedule-tz dates `from`..`to`. Used to fold a
+ * co-host's working hours into a collective event type as if they were busy elsewhere.
+ */
+export function unavailableOutside(
+  rules: Rule[],
+  overrides: Override[],
+  tz: string,
+  from: string,
+  to: string,
+  rangeStart: Date,
+  rangeEnd: Date,
+): Interval[] {
+  const windows: Interval[] = [];
+  for (let d = from; d <= to; d = addDays(d, 1))
+    windows.push(...windowsForDate(d, rules, overrides, tz, true));
+  windows.sort((a, b) => a.start.getTime() - b.start.getTime());
+  const busy: Interval[] = [];
+  let cursor = rangeStart;
+  for (const w of windows) {
+    if (cursor >= rangeEnd) break;
+    if (w.start > cursor)
+      busy.push({ start: cursor, end: w.start < rangeEnd ? w.start : rangeEnd });
+    if (w.end > cursor) cursor = w.end;
+  }
+  if (cursor < rangeEnd) busy.push({ start: cursor, end: rangeEnd });
+  return busy.filter((b) => b.end > b.start);
+}
+
 export function computeSlots(input: EngineInput): DaySlots[] {
   const now = input.now ?? new Date();
   const step = Math.max(5, input.slotIntervalMin ?? input.durationMin);

@@ -19,6 +19,7 @@ import {
   computeSlots,
   isSlotAvailable,
   seatsLeft,
+  unavailableOutside,
   withoutSessionEchoes,
   type Interval,
   type Occupied,
@@ -307,8 +308,9 @@ async function allBusy(
 export type SlotOptions = { horizon?: boolean; priority?: boolean };
 
 /**
- * Engine input for one host. Collective event types fold every host's busy time into the
- * owner's schedule so only times when the whole team is free remain.
+ * Engine input for one host. Collective event types fold every co-host's busy time and the
+ * time outside their working hours into the owner's schedule, so only times when the whole
+ * team is free remain.
  */
 async function engineInput(
   eventType: EventType,
@@ -333,7 +335,23 @@ async function engineInput(
         )
       : Promise.resolve([] as Occupied[]),
   ]);
-  const busyAll = busyByHost.flatMap((b) => b.all);
+  const coHostsOff = await Promise.all(
+    hosts
+      .filter((h) => h !== hostUserId)
+      .map(async (h) => {
+        const s = await hostSchedule(eventType, h);
+        return unavailableOutside(
+          s.rules,
+          s.overrides,
+          s.timezone,
+          addDays(from, -3),
+          addDays(to, 3),
+          rangeStart,
+          rangeEnd,
+        );
+      }),
+  );
+  const busyAll = [...busyByHost.flatMap((b) => b.all), ...coHostsOff.flat()];
   return {
     scheduleTz: fallback.timezone,
     rules: fallback.rules,
