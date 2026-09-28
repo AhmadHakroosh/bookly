@@ -13,6 +13,7 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 ### Changed
 
 - The guest booking page shows the cancellation form in the open, with the refund amount for a paid booking, instead of hiding the button behind "Cancel this booking"
+- Paid bookings use one Stripe customer per guest email, named as the guest booked, so the invoice and receipt are addressed to the guest's name rather than to the cardholder name typed on the payment form
 
 ## [0.4.8] - 2026-09-28
 

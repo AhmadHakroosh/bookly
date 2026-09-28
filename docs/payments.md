@@ -42,7 +42,10 @@ Stripe account through Stripe Connect (Express onboarding, hosted by Stripe):
    booking then also creates a Stripe invoice issued by the host's connected account, with a
    PDF linked from the guest's receipt page and stored on the booking (`paymentRef.invoiceUrl`,
    `invoicePdf`). Stripe charges its post-payment invoice fee per invoice on top of the
-   payment fee, which is why it is off by default.
+   payment fee, which is why it is off by default. The invoice is addressed to the guest as
+   booked: every Checkout runs against one platform-side Stripe customer per guest email
+   (`metadata.kind = guest`, never a workspace's billing customer), created or renamed from the
+   booking form, so the cardholder name typed at payment does not become the invoice's "To".
 
 Operator setup, on top of the keys above:
 
