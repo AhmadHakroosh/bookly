@@ -74,6 +74,10 @@ export async function impersonateOwner(workspaceId: string) {
     { type: "workspace", id: workspaceId },
     { userId: owner.userId },
   );
+  // Better Auth's admin plugin allows impersonation only for users whose `role` is "admin";
+  // operators are defined by PLATFORM_ADMIN_EMAILS, so grant the role on first use.
+  if (s.user.role !== "admin")
+    await db().update(schema.users).set({ role: "admin" }).where(eq(schema.users.id, s.user.id));
   await auth.api.impersonateUser({ headers: await headers(), body: { userId: owner.userId } });
   redirect(tenantUrl(ws.slug));
 }
