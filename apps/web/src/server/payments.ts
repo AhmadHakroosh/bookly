@@ -124,6 +124,40 @@ async function unpaidMembers(booking: Booking): Promise<Booking[]> {
   return rows.length ? rows : [booking];
 }
 
+/** The slice of the Stripe client `guestCustomer` needs, so tests can hand it a fake. */
+export type GuestCustomerClient = {
+  customers: {
+    list(params: { email: string; limit: number }): Promise<{ data: Stripe.Customer[] }>;
+    create(params: Stripe.CustomerCreateParams): Promise<Stripe.Customer>;
+    update(id: string, params: Stripe.CustomerUpdateParams): Promise<Stripe.Customer>;
+  };
+};
+
+/**
+ * One Stripe customer per guest email, named as the guest booked. Checkout would otherwise
+ * create the customer from the cardholder name typed on the payment form, and that name is
+ * what the invoice's "To" line shows. Guests are tagged so a workspace's own billing customer
+ * (same email when a host books their own event) is never reused for a booking.
+ */
+export async function guestCustomer(
+  client: GuestCustomerClient,
+  name: string,
+  email: string,
+): Promise<string> {
+  const { data } = await client.customers.list({ email, limit: 10 });
+  const existing = data.find((c) => c.metadata?.kind === "guest");
+  if (existing) {
+    if (name && existing.name !== name) await client.customers.update(existing.id, { name });
+    return existing.id;
+  }
+  const created = await client.customers.create({
+    email,
+    ...(name ? { name } : {}),
+    metadata: { kind: "guest" },
+  });
+  return created.id;
+}
+
 /**
  * Starts a Stripe Checkout session for an unpaid booking and returns the URL to redirect to.
  * A recurring series is paid in one go: one line item with the number of sessions as quantity.
@@ -139,9 +173,10 @@ export async function createCheckout(
   const members = await unpaidMembers(booking);
   const total = eventType.priceCents! * members.length;
   const fee = route.account ? platformFeeCents(total, await platformFeePercent(workspace)) : 0;
+  const customer = await guestCustomer(stripe(), booking.attendeeName, booking.attendeeEmail);
   const session = await stripe().checkout.sessions.create({
     mode: "payment",
-    customer_email: booking.attendeeEmail,
+    customer,
     line_items: [
       {
         quantity: members.length,
