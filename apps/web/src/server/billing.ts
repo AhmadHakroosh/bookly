@@ -25,6 +25,27 @@ export const billingConfigured = () =>
 /** Transcription past the included minutes is billed only when the metered price exists. */
 export const overageConfigured = () => !!loadEnv().STRIPE_PRICE_CAPTURE_OVERAGE;
 
+/** Marks the subscription that carries only the metered overage price next to a yearly plan. */
+const OVERAGE_COMPANION = "capture-overage";
+
+let overageInterval: Promise<Stripe.Price.Recurring.Interval | null> | undefined;
+/** The billing interval of the overage price (cached per process; Stripe prices are immutable). */
+function overageIntervalOf() {
+  const price = loadEnv().STRIPE_PRICE_CAPTURE_OVERAGE;
+  if (!price) return Promise.resolve(null);
+  overageInterval ??= stripe()
+    .prices.retrieve(price)
+    .then((p) => p.recurring?.interval ?? null);
+  return overageInterval;
+}
+
+/** True when the subscription is the overage companion, not a plan. */
+const isOverageCompanion = (sub: Stripe.Subscription) =>
+  sub.metadata?.kind === OVERAGE_COMPANION ||
+  (!!loadEnv().STRIPE_PRICE_CAPTURE_OVERAGE &&
+    sub.items.data.length > 0 &&
+    sub.items.data.every((i) => i.price.id === loadEnv().STRIPE_PRICE_CAPTURE_OVERAGE));
+
 /** The subscription item that carries the plan (not the metered overage item). */
 const planItem = (sub: Stripe.Subscription) =>
   sub.items.data.find((i) => planFromPrice(i.price.id)) ?? sub.items.data[0];
@@ -81,8 +102,12 @@ export async function startUpgrade(
     customer,
     line_items: [
       { price, quantity: plan === "team" ? billedSeats(PLANS.team, await memberCount(ws)) : 1 },
-      // Metered overage rides on the same subscription; usage is reported per transcript.
-      ...(overageConfigured() ? [{ price: loadEnv().STRIPE_PRICE_CAPTURE_OVERAGE! }] : []),
+      // Metered overage rides on the same subscription when it bills on the same interval
+      // (Stripe allows one interval per subscription); a yearly plan gets a monthly companion
+      // subscription for it the first time usage is reported (`ensureOverageItem`).
+      ...(overageConfigured() && (await overageIntervalOf()) === interval
+        ? [{ price: loadEnv().STRIPE_PRICE_CAPTURE_OVERAGE! }]
+        : []),
     ],
     subscription_data: { metadata: { workspaceId: ws.id, plan, interval } },
     metadata: { workspaceId: ws.id, plan, interval },
@@ -130,6 +155,8 @@ export async function syncSubscription(sub: Stripe.Subscription) {
       where: eq(schema.workspaces.stripeCustomerId, customer),
     }));
   if (!ws) return;
+  // The overage companion of a yearly plan carries no plan of its own.
+  if (isOverageCompanion(sub)) return;
   // An operator-managed plan (comp, trial) is not touched by Stripe events.
   if (ws.planManagedBy === "operator") return;
   const item = planItem(sub);
@@ -156,6 +183,17 @@ export async function syncSubscription(sub: Stripe.Subscription) {
     })
     .where(eq(schema.workspaces.id, ws.id));
   refreshWorkspace(ws.id);
+  if (ended) await cancelOverageCompanion(customer);
+}
+
+/** Cancels the overage companion subscription(s) of a customer whose plan has ended. */
+async function cancelOverageCompanion(customer: string) {
+  const price = loadEnv().STRIPE_PRICE_CAPTURE_OVERAGE;
+  if (!price) return;
+  const subs = await stripe().subscriptions.list({ customer, price, status: "active", limit: 10 });
+  for (const s of subs.data) {
+    if (isOverageCompanion(s)) await stripe().subscriptions.cancel(s.id);
+  }
 }
 
 /**
@@ -209,13 +247,34 @@ export async function reconcileSeats(now = new Date(), force = false) {
 
 export const planName = (plan: string) => (isPlanId(plan) ? PLANS[plan].name : "Self-hosted");
 
-/** Adds the metered overage price to a subscription that predates it (idempotent). */
+/**
+ * Makes sure the customer has the metered overage price somewhere (idempotent): on the plan's
+ * subscription when both bill on the same interval, otherwise on a companion subscription of
+ * its own, since Stripe allows one interval per subscription (yearly plan, monthly overage).
+ */
 async function ensureOverageItem(ws: Workspace): Promise<boolean> {
   const price = loadEnv().STRIPE_PRICE_CAPTURE_OVERAGE;
   if (!price || !ws.stripeSubscriptionId) return false;
   const sub = await stripe().subscriptions.retrieve(ws.stripeSubscriptionId);
   if (sub.items.data.some((i) => i.price.id === price)) return true;
-  await stripe().subscriptionItems.create({ subscription: sub.id, price });
+  const customer = typeof sub.customer === "string" ? sub.customer : sub.customer.id;
+  const planInterval = planItem(sub)?.price.recurring?.interval;
+  if (!planInterval || planInterval === (await overageIntervalOf())) {
+    await stripe().subscriptionItems.create({ subscription: sub.id, price });
+    return true;
+  }
+  const existing = await stripe().subscriptions.list({
+    customer,
+    price,
+    status: "active",
+    limit: 1,
+  });
+  if (existing.data.length > 0) return true;
+  await stripe().subscriptions.create({
+    customer,
+    items: [{ price }],
+    metadata: { workspaceId: ws.id, kind: OVERAGE_COMPANION },
+  });
   return true;
 }
 
