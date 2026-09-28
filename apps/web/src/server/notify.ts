@@ -99,7 +99,9 @@ export async function notifyHost(
       );
   }
   const channel = prefs.channel ?? "none";
-  if (channel !== "none" && profile?.phone) jobs.push(sendText(channel, profile.phone, msg.text));
+  // Texts go only to a number the host has proved is theirs (Admin → Notifications).
+  if (channel !== "none" && profile?.phone && profile.phoneVerifiedAt)
+    jobs.push(sendText(channel, profile.phone, msg.text));
   if (prefs.slackWebhookUrl) jobs.push(slack(prefs.slackWebhookUrl, msg.text));
   await Promise.all(jobs);
 }

@@ -9,6 +9,11 @@ Events: someone books, an attendee cancels, an attendee joins the Bookly video r
 starts in one hour. Channels: email (always available), WhatsApp or SMS via Twilio, and a Slack
 incoming webhook. Each host sets their own phone, channel and toggles.
 
+Texts go only to a verified number: after saving a phone and a channel, the host presses
+**Send code**, a six-digit code arrives over that channel (valid 10 minutes, 5 wrong guesses,
+3 codes per 10 minutes), and **Confirm** marks the number verified. Changing the number resets
+that. **Send a test message** posts a line to the saved Slack webhook and reports Slack's answer.
+
 ## Attendee joined (Bookly video)
 
 On by default; owners can mute it for the workspace under Admin → Notifications

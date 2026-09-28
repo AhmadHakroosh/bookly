@@ -183,6 +183,13 @@
       "when": 1790436305305,
       "tag": "0025_nice_venus",
       "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1790610349588,
+      "tag": "0026_public_bedlam",
+      "breakpoints": true
     }
   ]
 }

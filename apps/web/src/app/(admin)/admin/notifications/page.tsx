@@ -8,6 +8,7 @@ import { requireStaff } from "@/server/session";
 import { getCurrentWorkspace } from "@/server/workspace";
 import { JoinToggle } from "./join-toggle";
 import { PrefsForm } from "./prefs-form";
+import { VerifyPanel } from "./verify-panel";
 
 export const metadata = { title: "Notifications" };
 
@@ -27,11 +28,24 @@ async function NotificationsPage() {
         </p>
       </div>
       {profile ? (
-        <PrefsForm
-          phone={profile.phone ?? ""}
-          prefs={profile.notifications}
-          channels={{ sms: channelAvailable("sms"), whatsapp: channelAvailable("whatsapp") }}
-        />
+        <>
+          <PrefsForm
+            phone={profile.phone ?? ""}
+            prefs={profile.notifications}
+            channels={{ sms: channelAvailable("sms"), whatsapp: channelAvailable("whatsapp") }}
+          />
+          <VerifyPanel
+            phone={profile.phone ?? ""}
+            verified={!!profile.phoneVerifiedAt}
+            codePending={
+              !!profile.phoneVerification &&
+              new Date(profile.phoneVerification.expiresAt) > new Date() &&
+              profile.phoneVerification.phone === profile.phone
+            }
+            channelOn={(profile.notifications.channel ?? "none") !== "none"}
+            slackUrl={profile.notifications.slackWebhookUrl ?? ""}
+          />
+        </>
       ) : (
         <p className="text-sm">Set up your booking page first.</p>
       )}

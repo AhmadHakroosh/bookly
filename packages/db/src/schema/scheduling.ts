@@ -44,6 +44,10 @@ export const profiles = pgTable(
     timezone: text("timezone").notNull().default("UTC"),
     /** E.164 phone for SMS / WhatsApp notifications to the host. */
     phone: text("phone"),
+    /** When the host proved they own `phone` (a code texted to it); texts go only to verified numbers. */
+    phoneVerifiedAt: timestamp("phone_verified_at", { withTimezone: true }),
+    /** The code currently out for `phone`, hashed; cleared once verified or replaced. */
+    phoneVerification: jsonb("phone_verification").$type<PhoneVerification>(),
     notifications: jsonb("notifications").$type<HostNotifications>().notNull().default({}),
     ...timestamps,
   },
@@ -52,6 +56,18 @@ export const profiles = pgTable(
     uniqueIndex("profiles_ws_user_idx").on(t.workspaceId, t.userId),
   ],
 );
+
+/** A verification code in flight for a host's phone. */
+export type PhoneVerification = {
+  /** The number the code was sent to; a changed number invalidates it. */
+  phone: string;
+  /** SHA-256 of secret + code. */
+  hash: string;
+  expiresAt: string;
+  sentAt: string;
+  /** Wrong guesses so far; the code dies after a few. */
+  attempts: number;
+};
 
 /** How and when a host wants to be pinged (email is always on). */
 export type HostNotifications = {

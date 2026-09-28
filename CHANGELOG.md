@@ -4,6 +4,13 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 ## [Unreleased]
 
+## [0.4.8] - 2026-09-28
+
+### Added
+
+- Phone verification for host notifications: texts (SMS/WhatsApp) go only to a number the host has proved with a six-digit code sent over the chosen channel; a changed number has to be verified again (migration 0026)
+- "Send a test message" for the Slack incoming webhook on Notifications, reporting Slack's answer instead of failing silently
+
 ## [0.4.7] - 2026-09-28
 
 ### Added
@@ -245,7 +252,8 @@ First public release: the self-hostable scheduling platform with contacts, brief
 
 - The unused storage layer (`packages/storage`, `STORAGE_*` and `S3_*` variables, the MinIO service in Compose): nothing in Bookly uploads files; profile photos and logos are URLs
 
-[Unreleased]: https://github.com/AhmadHakroosh/bookly/compare/v0.4.7...HEAD
+[Unreleased]: https://github.com/AhmadHakroosh/bookly/compare/v0.4.8...HEAD
+[0.4.8]: https://github.com/AhmadHakroosh/bookly/compare/v0.4.7...v0.4.8
 [0.4.7]: https://github.com/AhmadHakroosh/bookly/compare/v0.4.6...v0.4.7
 [0.4.6]: https://github.com/AhmadHakroosh/bookly/compare/v0.4.5...v0.4.6
 [0.4.5]: https://github.com/AhmadHakroosh/bookly/compare/v0.4.4...v0.4.5
