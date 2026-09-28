@@ -6,6 +6,7 @@ import { Suspense } from "react";
 import { loadEnv } from "@bookly/config";
 import { eq, schema } from "@bookly/db";
 import { db } from "@/lib/db";
+import { tenantUrl } from "@/server/platform";
 import { configuredSocialProviders, socialErrorMessage } from "@/lib/social-providers";
 import { isCloud } from "@/server/platform";
 import { getSession } from "@/server/session";
@@ -27,15 +28,17 @@ async function AcceptPage({ params, searchParams }: PageProps<"/accept-invitatio
       </div>
     );
   }
+  const ws = await db().query.workspaces.findFirst({
+    where: eq(schema.workspaces.organizationId, inv.organizationId),
+  });
+  // This page lives on the platform host in cloud mode; the workspace's admin is on its own host.
+  const next = ws ? tenantUrl(ws.slug, "/admin/profile?setup=1") : "/workspaces";
   const session = await getSession();
   if (session && session.user.email.toLowerCase() === inv.email.toLowerCase()) {
     const { auth } = await import("@/lib/auth");
     await auth.api.acceptInvitation({ headers: await headers(), body: { invitationId: id } });
-    const ws = await db().query.workspaces.findFirst({
-      where: eq(schema.workspaces.organizationId, inv.organizationId),
-    });
     if (ws) await (await import("@/server/billing")).syncSeats(ws);
-    redirect("/admin/profile?setup=1");
+    redirect(next);
   }
   const org = await db().query.organizations.findFirst({
     where: eq(schema.organizations.id, inv.organizationId),
@@ -61,6 +64,7 @@ async function AcceptPage({ params, searchParams }: PageProps<"/accept-invitatio
       )}
       {!session && (
         <AcceptForm
+          next={next}
           invitationId={id}
           email={inv.email}
           providers={configuredSocialProviders(loadEnv())}

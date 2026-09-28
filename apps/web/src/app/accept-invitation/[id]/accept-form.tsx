@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { authClient } from "@/lib/auth-client";
 import { Button } from "@/components/ui/button";
@@ -17,14 +16,16 @@ export function AcceptForm({
   email,
   providers,
   consent,
+  next,
 }: {
   invitationId: string;
   email: string;
+  /** Where to land once the invitation is accepted (the workspace's admin, on its own host). */
+  next: string;
   providers: readonly SocialProvider[];
   /** Cloud: the legal revision the person must accept (null on a self-hosted install). */
   consent: string | null;
 }) {
-  const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
   const [accepted, setAccepted] = useState(false);
@@ -45,13 +46,24 @@ export function AcceptForm({
       setPending(false);
       return;
     }
+    // Cloud requires a verified address before a password sign-in, so sign-up hands back no
+    // session; invitees are marked verified on creation (the invitation proved the address),
+    // and signing in with the same credentials gets the session the acceptance needs.
+    if (!res.data?.token) {
+      const login = await authClient.signIn.email({ email, password: String(fd.get("password")) });
+      if (login.error) {
+        setError(login.error.message ?? "Could not sign in");
+        setPending(false);
+        return;
+      }
+    }
     const acc = await authClient.organization.acceptInvitation({ invitationId });
     if (acc.error) {
       setError(acc.error.message ?? "Could not accept the invitation");
       setPending(false);
       return;
     }
-    router.push("/admin/profile?setup=1");
+    window.location.assign(next);
   }
   return (
     <form onSubmit={onSubmit} className="mt-6">
