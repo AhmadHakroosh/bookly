@@ -1,5 +1,4 @@
 import { SettingsSkeleton } from "@/components/skeletons/pages";
-import { refreshConnectStatus } from "@/server/connect";
 import { hasFeature } from "@/server/limits";
 import { paymentsConfigured } from "@/server/payments";
 import { isCloud } from "@/server/platform";
@@ -13,15 +12,10 @@ import { SettingsForm } from "./settings-form";
 
 export const metadata = { title: "Settings" };
 
-async function SettingsPage({ searchParams }: PageProps<"/admin/settings">) {
-  let workspace = await getCurrentWorkspace();
+async function SettingsPage() {
+  const workspace = await getCurrentWorkspace();
   if (!workspace) return null;
-  const [{ role }, sp] = await Promise.all([requireStaff(), searchParams]);
-  // Back from Stripe onboarding: pull the account's flags before rendering the card.
-  if (sp.stripe === "return" && workspace.stripeAccountId) {
-    const payments = await refreshConnectStatus(workspace);
-    if (payments) workspace = { ...workspace, settings: { ...workspace.settings, payments } };
-  }
+  const { role } = await requireStaff();
   const payments = isCloud() && paymentsConfigured();
   return (
     <div className="max-w-xl space-y-6">
@@ -76,10 +70,10 @@ async function SettingsPage({ searchParams }: PageProps<"/admin/settings">) {
 }
 
 /** Suspense boundary for Cache Components: the page reads request data and streams in. */
-export default function SettingsPageBoundary(props: PageProps<"/admin/settings">) {
+export default function SettingsPageBoundary() {
   return (
     <Suspense fallback={<SettingsSkeleton />}>
-      <SettingsPage {...props} />
+      <SettingsPage />
     </Suspense>
   );
 }
