@@ -63,6 +63,26 @@ async function ReceiptPage({ params }: PageProps<"/booking/[token]/receipt">) {
         </dl>
         <div className="mt-6 flex flex-wrap items-center gap-3 text-sm">
           <PrintButton />
+          {ref.invoicePdf && (
+            <a
+              href={ref.invoicePdf}
+              target="_blank"
+              rel="noreferrer"
+              className="underline underline-offset-4"
+            >
+              Invoice (PDF)
+            </a>
+          )}
+          {ref.invoiceUrl && !ref.invoicePdf && (
+            <a
+              href={ref.invoiceUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="underline underline-offset-4"
+            >
+              Invoice
+            </a>
+          )}
           <Link href={`/booking/${token}`} className="underline underline-offset-4 print:hidden">
             Back to the booking
           </Link>

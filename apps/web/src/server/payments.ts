@@ -66,6 +66,27 @@ const onAccount = (account: string | null) => (account ? { stripeAccount: accoun
  * Stripe's fees and the statement descriptor are the host's. Stripe no longer lets new
  * platforms create direct charges on Express accounts.
  */
+/**
+ * A Stripe invoice issued by the host's connected account for a one-time Checkout, when the
+ * workspace turned invoices on (Pro and up): the guest gets a formal document in the host's
+ * name, with PDF, and Stripe's per-invoice fee applies to the host.
+ */
+export function invoiceCreation(ws: Workspace, account: string | null, description: string) {
+  if (!account || !ws.settings.payments?.invoices || !hasFeature(ws, "invoices")) return {};
+  return {
+    invoice_creation: {
+      enabled: true,
+      invoice_data: {
+        issuer: { type: "account" as const, account },
+        description,
+        ...(ws.settings.postalAddress
+          ? { footer: `${ws.name} · ${ws.settings.postalAddress}` }
+          : {}),
+      },
+    },
+  };
+}
+
 export function destinationCharge(account: string | null, feeCents: number) {
   if (!account) return {};
   return {
@@ -143,6 +164,11 @@ export async function createCheckout(
       metadata: { bookingId: members[0]!.id, workspaceId: workspace.id },
       ...destinationCharge(route.account, fee),
     },
+    ...invoiceCreation(
+      workspace,
+      route.account,
+      `${eventType.title} (${eventType.durationMin} min) with ${workspace.name}`,
+    ),
     success_url: `${manage}?paid=1`,
     cancel_url: manage,
     expires_at: Math.floor(Date.now() / 1000) + PAYMENT_WINDOW_MIN * 60,
@@ -184,13 +210,34 @@ async function receiptFor(paymentIntentId: string, account: string | null) {
   }
 }
 
+/** The hosted page and PDF of a Stripe invoice (best effort). */
+async function invoiceLinks(invoiceId: string) {
+  try {
+    const inv = await stripe().invoices.retrieve(invoiceId);
+    return {
+      ...(inv.hosted_invoice_url ? { invoiceUrl: inv.hosted_invoice_url } : {}),
+      ...(inv.invoice_pdf ? { invoicePdf: inv.invoice_pdf } : {}),
+    };
+  } catch (e) {
+    console.error("[payments] invoice lookup failed", e);
+    return undefined;
+  }
+}
+
 /** Records a successful payment; returns the booking (or null if unknown/already paid). */
-export async function recordPayment(bookingId: string, paymentIntentId: string | null) {
+export async function recordPayment(
+  bookingId: string,
+  paymentIntentId: string | null,
+  invoiceId: string | null = null,
+) {
   const b = await db().query.bookings.findFirst({ where: eq(schema.bookings.id, bookingId) });
   if (!b || b.paymentStatus === "paid") return null;
-  const receiptUrl = paymentIntentId
-    ? await receiptFor(paymentIntentId, b.paymentRef?.stripeAccount ?? null)
-    : undefined;
+  const [receiptUrl, invoice] = await Promise.all([
+    paymentIntentId
+      ? receiptFor(paymentIntentId, b.paymentRef?.stripeAccount ?? null)
+      : Promise.resolve(undefined),
+    invoiceId ? invoiceLinks(invoiceId) : Promise.resolve(undefined),
+  ]);
   const [updated] = await db()
     .update(schema.bookings)
     .set({
@@ -200,6 +247,7 @@ export async function recordPayment(bookingId: string, paymentIntentId: string |
         paymentIntentId: paymentIntentId ?? undefined,
         paidAt: new Date().toISOString(),
         ...(receiptUrl ? { receiptUrl } : {}),
+        ...(invoice ?? {}),
       },
     })
     .where(eq(schema.bookings.id, b.id))

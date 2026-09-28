@@ -38,6 +38,11 @@ Stripe account through Stripe Connect (Express onboarding, hosted by Stripe):
    `application_fee_amount`. Stripe pays the host out on their own schedule. A refund reverses
    the transfer and returns the platform fee. (Stripe no longer allows new platforms to create
    direct charges on Express accounts.)
+4. **Invoices (Pro and up).** Settings → Payments → "Stripe invoices in your name": every paid
+   booking then also creates a Stripe invoice issued by the host's connected account, with a
+   PDF linked from the guest's receipt page and stored on the booking (`paymentRef.invoiceUrl`,
+   `invoicePdf`). Stripe charges its post-payment invoice fee per invoice on top of the
+   payment fee, which is why it is off by default.
 
 Operator setup, on top of the keys above:
 

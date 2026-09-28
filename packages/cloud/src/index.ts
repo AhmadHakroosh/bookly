@@ -30,6 +30,8 @@ export type Limits = {
   teamScheduling: boolean;
   api: boolean;
   removeBranding: boolean;
+  /** Stripe invoices in the host's name with every paid booking (Stripe's per-invoice fee applies). */
+  invoices: boolean;
 };
 
 export type Plan = {
@@ -77,6 +79,7 @@ export const PLANS: Record<PlanId, Plan> = {
       teamScheduling: false,
       api: false,
       removeBranding: false,
+      invoices: false,
     },
     highlights: [
       "Contacts, briefings and the Meeting Inbox",
@@ -110,6 +113,7 @@ export const PLANS: Record<PlanId, Plan> = {
       teamScheduling: false,
       api: true,
       removeBranding: true,
+      invoices: true,
     },
     highlights: [
       "Auto-capture: transcripts, AI recaps, tasks (5 hours a month, then $3 an hour)",
@@ -149,6 +153,7 @@ export const PLANS: Record<PlanId, Plan> = {
       teamScheduling: true,
       api: true,
       removeBranding: true,
+      invoices: true,
     },
     highlights: [
       "Everything in Pro",
@@ -180,6 +185,7 @@ export const UNLIMITED: Limits = {
   teamScheduling: true,
   api: true,
   removeBranding: true,
+  invoices: true,
 };
 
 /** USD per transcribed minute beyond the plan's included minutes (Stripe metered price). */
@@ -251,7 +257,13 @@ export function limitsFor(plan: string, status?: string | null): Limits {
 export type CountableLimit = "eventTypes" | "members" | "integrations" | "domains";
 export type RateLimitKey = "bookingsPerMonth" | "apiRequestsPerMinute";
 export type FeatureLimit =
-  "booklyVideo" | "payments" | "workflows" | "teamScheduling" | "api" | "removeBranding";
+  | "booklyVideo"
+  | "payments"
+  | "workflows"
+  | "teamScheduling"
+  | "api"
+  | "removeBranding"
+  | "invoices";
 
 /** True when adding one more of `what` stays within the limit. */
 export function withinLimit(limits: Limits, what: CountableLimit, current: number): boolean {
@@ -273,6 +285,7 @@ export const FEATURE_LABELS: Record<FeatureLimit, string> = {
   teamScheduling: "Round-robin and collective event types",
   api: "API and webhooks",
   removeBranding: "Your own branding",
+  invoices: "Stripe invoices in your name",
 };
 
 /** First plan (cheapest) that allows `what`. */

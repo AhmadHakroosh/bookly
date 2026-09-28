@@ -48,6 +48,7 @@ export async function POST(req: Request) {
         typeof session.payment_intent === "string"
           ? session.payment_intent
           : (session.payment_intent?.id ?? null),
+        typeof session.invoice === "string" ? session.invoice : (session.invoice?.id ?? null),
       );
     }
   }

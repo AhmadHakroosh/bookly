@@ -19,7 +19,8 @@ test.describe("public booking", () => {
     });
     expect(url).toMatch(/\/booking\/[A-Za-z0-9_-]+/);
     await expect(page.getByText("E2E Visitor · e2e-visitor@example.com")).toBeVisible();
-    await page.getByText("Cancel this booking").click();
+    // The cancel form sits in the open on the page; no disclosure to expand first.
+    await expect(page.getByRole("heading", { name: "Need to cancel?" })).toBeVisible();
     await page.getByRole("button", { name: "Cancel booking" }).click();
     await expect(page.getByRole("heading", { name: "Booking cancelled" })).toBeVisible();
   });

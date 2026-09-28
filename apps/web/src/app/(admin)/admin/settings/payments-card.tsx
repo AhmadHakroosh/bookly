@@ -11,6 +11,7 @@ import {
   disconnectStripeAction,
   openStripeDashboardAction,
   refreshStripeAction,
+  setInvoicesAction,
 } from "./payments-actions";
 
 /**
@@ -90,6 +91,33 @@ export async function PaymentsCard({ ws, canManage }: { ws: Workspace; canManage
             <p className="text-xs text-muted-foreground">
               Prices on your event types are ignored until Stripe enables charges on the account.
             </p>
+          )}
+          {route.ok && (
+            <div className="flex flex-wrap items-center gap-3 border-t pt-3">
+              <div className="min-w-0 flex-1">
+                <p className="font-medium">
+                  Stripe invoices in your name{" "}
+                  {st?.invoices ? <Badge>On</Badge> : <Badge variant="outline">Off</Badge>}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  Every paid booking also gets a Stripe invoice issued by your account, with a PDF
+                  the guest can download from their receipt page. Stripe charges a small fee per
+                  invoice on top of the payment fee.
+                  {!hasFeature(ws, "invoices") && " Included from the Pro plan."}
+                </p>
+              </div>
+              {hasFeature(ws, "invoices") ? (
+                <form action={setInvoicesAction.bind(null, !st?.invoices)}>
+                  <SubmitButton variant="outline" disabled={!canManage}>
+                    {st?.invoices ? "Turn off" : "Turn on"}
+                  </SubmitButton>
+                </form>
+              ) : (
+                <Link href="/admin/billing" className="text-sm underline underline-offset-4">
+                  See plans
+                </Link>
+              )}
+            </div>
           )}
         </div>
       )}
