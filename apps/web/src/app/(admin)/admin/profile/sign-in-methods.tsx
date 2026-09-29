@@ -17,17 +17,20 @@ export function SignInMethods({
   providers,
   linked,
   hasPassword,
+  passkeyCount = 0,
   email,
 }: {
   providers: readonly SocialProvider[];
   linked: LinkedAccount[];
   hasPassword: boolean;
+  /** Registered passkeys; each one is another way in when deciding whether a provider can go. */
+  passkeyCount?: number;
   /** The account's email; a provider account must use the same address to be connected. */
   email: string;
 }) {
   const router = useRouter();
   const [busy, setBusy] = useState<string | null>(null);
-  const methods = (hasPassword ? 1 : 0) + linked.length;
+  const methods = (hasPassword ? 1 : 0) + linked.length + passkeyCount;
 
   async function connect(provider: SocialProviderId) {
     setBusy(provider);

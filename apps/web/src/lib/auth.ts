@@ -2,6 +2,7 @@ import { APIError, betterAuth } from "better-auth";
 import { drizzleAdapter } from "@better-auth/drizzle-adapter";
 import { nextCookies } from "better-auth/next-js";
 import { admin, magicLink, organization } from "better-auth/plugins";
+import { passkey } from "@better-auth/passkey";
 import { loadEnv } from "@bookly/config";
 import { schema } from "@bookly/db";
 import { sendEmail } from "@bookly/email";
@@ -9,6 +10,7 @@ import { db } from "./db";
 import { authStorage, getLimiter } from "@/server/ratelimit";
 import { CONSENT_COOKIE, consentCookieOptions } from "@/server/consent";
 import { configuredSocialProviders, TRUSTED_SOCIAL_PROVIDERS } from "@/lib/social-providers";
+import { passkeyRpId } from "@/lib/passkey-rp";
 
 const env = loadEnv();
 
@@ -257,6 +259,9 @@ export const auth = betterAuth({
       },
     }),
     admin(),
+    // Passkeys (WebAuthn). The expected origin is taken from each request, so a workspace
+    // subdomain and the platform host both work; the rp id ties them together.
+    passkey({ rpID: passkeyRpId(env), rpName: "Bookly" }),
     nextCookies(),
   ],
 });

@@ -1,6 +1,6 @@
 {
   "name": "@bookly/web",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "private": true,
   "license": "AGPL-3.0-only",
   "scripts": {
@@ -21,6 +21,7 @@
     "@ai-sdk/anthropic": "^4.0.58",
     "@base-ui/react": "^1.8.0",
     "@better-auth/drizzle-adapter": "catalog:",
+    "@better-auth/passkey": "catalog:",
     "@bookly/cloud": "workspace:*",
     "@bookly/config": "workspace:*",
     "@bookly/db": "workspace:*",

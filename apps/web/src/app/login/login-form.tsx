@@ -2,13 +2,14 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { authClient } from "@/lib/auth-client";
+import { dismissed } from "@/lib/passkey-rp";
 import type { SocialProvider } from "@/lib/social-providers";
 import { OrDivider, SocialButtons } from "@/components/social-buttons";
 
@@ -21,6 +22,34 @@ export function LoginForm({
 }) {
   const router = useRouter();
   const [pending, setPending] = useState(false);
+
+  // Browsers that support conditional mediation offer saved passkeys in the email field's
+  // autofill; picking one signs in without touching the password. Harmless elsewhere.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const available = await window.PublicKeyCredential?.isConditionalMediationAvailable?.();
+      if (!available || cancelled) return;
+      const { error } = await authClient.signIn.passkey({ autoFill: true });
+      if (cancelled || error) return;
+      router.push(next);
+      router.refresh();
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [next, router]);
+
+  async function onPasskey() {
+    await withPending(async () => {
+      const { error } = await authClient.signIn.passkey();
+      // Closing the browser's prompt is not an error worth reporting.
+      if (error)
+        return void (!dismissed(error) && toast.error(error.message ?? "No passkey signed in"));
+      router.push(next);
+      router.refresh();
+    });
+  }
 
   async function withPending(fn: () => Promise<void>) {
     setPending(true);
@@ -88,7 +117,13 @@ export function LoginForm({
             <FieldGroup>
               <Field>
                 <FieldLabel htmlFor="email">Email</FieldLabel>
-                <Input id="email" name="email" type="email" autoComplete="email" required />
+                <Input
+                  id="email"
+                  name="email"
+                  type="email"
+                  autoComplete="email webauthn"
+                  required
+                />
               </Field>
               <Field>
                 <FieldLabel htmlFor="password">Password</FieldLabel>
@@ -128,6 +163,15 @@ export function LoginForm({
           </form>
         </TabsContent>
       </Tabs>
+      <Button
+        type="button"
+        variant="outline"
+        className="mt-4 w-full"
+        disabled={pending}
+        onClick={onPasskey}
+      >
+        Sign in with a passkey
+      </Button>
     </>
   );
 }

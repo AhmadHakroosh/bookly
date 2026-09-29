@@ -101,6 +101,7 @@ Google and Microsoft reuse the OAuth clients from `docs/integrations.md`: add th
 Rules that apply on every install:
 
 - A provider button never creates an account on its own. New accounts come from the sign-up page (cloud) or an invitation link (self-hosted, where sign-up is closed once the workspace exists), where the button is offered explicitly.
+- Passkeys (WebAuthn) work out of the box: the relying-party id is the app's host (`APP_URL`), or the root domain on a multi-tenant install so one passkey covers every workspace subdomain. Hosts add them under Admin → Booking page → Passkeys and sign in with "Sign in with a passkey" or the email field's autofill. HTTPS is required except on `localhost`.
 - Google and Microsoft sign-ins attach to an existing account with the same email address, provided that account's own email is verified (signing in once with an emailed link verifies it). Otherwise, or for GitHub, sign in with the password or an email link and connect the provider under Admin → Booking page → Sign-in methods.
 - An account created through a provider can set a password there too; the last remaining sign-in method cannot be disconnected.
 
