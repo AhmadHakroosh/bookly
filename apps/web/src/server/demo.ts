@@ -81,6 +81,12 @@ export async function seedDemo() {
       });
     user = (await db().query.users.findFirst({ where: eq(schema.users.id, id) }))!;
   }
+  // The demo host's password is part of the seed's contract (tests and docs rely on it), so a
+  // reset or a change made while poking at a local install is undone on the next seed run.
+  await db()
+    .update(schema.accounts)
+    .set({ password: await hashPassword(DEMO_PASSWORD) })
+    .where(and(eq(schema.accounts.userId, user.id), eq(schema.accounts.providerId, "credential")));
   // In cloud mode the demo tenant is an ordinary Free workspace (Bookly branding and all);
   // elsewhere it is the install's own, unlimited workspace.
   const plan = env.TENANCY === "multi" ? "free" : "self-hosted";

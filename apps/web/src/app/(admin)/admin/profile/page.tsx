@@ -14,6 +14,7 @@ import { PasswordForm } from "./password-form";
 import { ProfileForm } from "./profile-form";
 import { SetPasswordForm } from "./set-password-form";
 import { SignInMethods } from "./sign-in-methods";
+import { Passkeys } from "./passkeys";
 
 export const metadata = { title: "Booking page" };
 
@@ -24,9 +25,11 @@ async function ProfilePage({ searchParams }: PageProps<"/admin/profile">) {
     searchParams,
   ]);
   if (!ws) return null;
-  const [p, accounts] = await Promise.all([
+  const h = await headers();
+  const [p, accounts, passkeys] = await Promise.all([
     getProfileByUser(ws.id, session.user.id),
-    auth.api.listUserAccounts({ headers: await headers() }),
+    auth.api.listUserAccounts({ headers: h }),
+    auth.api.listPasskeys({ headers: h }),
   ]);
   const hasPassword = accounts.some((a) => a.providerId === "credential");
   const providers = configuredSocialProviders(loadEnv());
@@ -73,9 +76,19 @@ async function ProfilePage({ searchParams }: PageProps<"/admin/profile">) {
           providers={providers}
           linked={linked}
           hasPassword={hasPassword}
+          passkeyCount={passkeys.length}
           email={session.user.email}
         />
       )}
+      <Passkeys
+        passkeys={passkeys.map((k) => ({
+          id: k.id,
+          name: k.name ?? null,
+          createdAt: k.createdAt ? new Date(k.createdAt).toISOString() : null,
+        }))}
+        timezone={p?.timezone ?? ws.timezone}
+        supported
+      />
       {hasPassword ? <PasswordForm /> : <SetPasswordForm />}
       <DeleteAccount
         email={session.user.email}

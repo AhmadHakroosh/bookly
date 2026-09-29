@@ -17,8 +17,9 @@ catalog:
   zod: ^4.6.5
   drizzle-orm: ^0.45.2
   pg: ^8.23.0
-  better-auth: ^1.7.5
-  "@better-auth/drizzle-adapter": ^1.7.5
+  better-auth: ^1.7.6
+  "@better-auth/drizzle-adapter": ^1.7.6
+  "@better-auth/passkey": ^1.7.6
   pg-boss: ^12.33.2
   pino: ^10.3.1
   resend: ^6.28.1

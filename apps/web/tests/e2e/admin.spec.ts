@@ -6,7 +6,7 @@ test.describe("admin", () => {
     await page.goto("/login");
     await page.locator('input[name="email"]').fill("demo@example.com");
     await page.locator('input[name="password"]').fill("not-the-password");
-    await page.getByRole("button", { name: "Sign in" }).click();
+    await page.getByRole("button", { name: "Sign in", exact: true }).click();
     await expect(page.getByRole("heading", { name: "Sign in" })).toBeVisible();
   });
 

@@ -211,7 +211,7 @@ test.describe("sign-up and tenants", () => {
     await page.goto(`${tenantUrl(DEMO.username)}/login?next=%2Fadmin`);
     await page.locator('input[name="email"]').fill(DEMO.email);
     await page.locator('input[name="password"]').fill(DEMO.password);
-    await page.getByRole("button", { name: "Sign in" }).click();
+    await page.getByRole("button", { name: "Sign in", exact: true }).click();
     await expect(page.getByRole("heading", { name: "Inbox" })).toBeVisible();
     await expect(page.getByRole("button", { name: /Demo Workspace/ })).toBeVisible();
     // Cookies span the root domain, so the platform host sees the same session.
@@ -240,7 +240,7 @@ test.describe("team invitations", () => {
     await page.goto(`${tenantUrl(DEMO.username)}/login?next=%2Fadmin`);
     await page.locator('input[name="email"]').fill(DEMO.email);
     await page.locator('input[name="password"]').fill(DEMO.password);
-    await page.getByRole("button", { name: "Sign in" }).click();
+    await page.getByRole("button", { name: "Sign in", exact: true }).click();
     await expect(page.getByRole("heading", { name: "Inbox" })).toBeVisible({ timeout: 15_000 });
     await page.goto(`${platformUrl}/console`);
     await page.getByRole("link", { name: "Demo Workspace" }).first().click();

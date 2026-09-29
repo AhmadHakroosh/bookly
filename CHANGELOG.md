@@ -4,6 +4,12 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-09-29
+
+### Added
+
+- Passkeys: sign in with Touch ID, Windows Hello, a security key or a password manager instead of a password. "Sign in with a passkey" on the login page, plus browser autofill of saved passkeys in the email field; add and remove passkeys under Admin → Booking page → Passkeys. A passkey is bound to the site, so it cannot be phished to a look-alike host; on Bookly Cloud one passkey works on the platform host and every workspace subdomain (migration 0027, Better Auth 1.7.6)
+
 ## [0.5.0] - 2026-09-28
 
 ### Added
@@ -270,7 +276,8 @@ First public release: the self-hostable scheduling platform with contacts, brief
 
 - The unused storage layer (`packages/storage`, `STORAGE_*` and `S3_*` variables, the MinIO service in Compose): nothing in Bookly uploads files; profile photos and logos are URLs
 
-[Unreleased]: https://github.com/AhmadHakroosh/bookly/compare/v0.5.0...HEAD
+[Unreleased]: https://github.com/AhmadHakroosh/bookly/compare/v0.6.0...HEAD
+[0.6.0]: https://github.com/AhmadHakroosh/bookly/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/AhmadHakroosh/bookly/compare/v0.4.9...v0.5.0
 [0.4.9]: https://github.com/AhmadHakroosh/bookly/compare/v0.4.8...v0.4.9
 [0.4.8]: https://github.com/AhmadHakroosh/bookly/compare/v0.4.7...v0.4.8
