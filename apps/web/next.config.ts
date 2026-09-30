@@ -1,5 +1,5 @@
 import type { NextConfig } from "next";
-import { withSentryConfig } from "@sentry/nextjs";
+import { withSentryConfig } from "@sentry/nextjs/config";
 import { config } from "dotenv";
 
 // Env lives at the monorepo root; Next only auto-loads from the app directory.
@@ -97,6 +97,6 @@ export default process.env.SENTRY_DSN
       org: process.env.SENTRY_ORG,
       project: process.env.SENTRY_PROJECT,
       widenClientFileUpload: true,
-      disableLogger: true,
+      webpack: { treeshake: { removeDebugLogging: true } },
     })
   : nextConfig;
