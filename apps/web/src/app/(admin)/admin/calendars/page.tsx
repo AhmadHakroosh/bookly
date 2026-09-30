@@ -1,7 +1,15 @@
 import { CalendarsSkeleton } from "@/components/skeletons/pages";
 import { Suspense } from "react";
 import type { Integration } from "@bookly/db/schema";
-import { listIntegrations, providerConfigured } from "@/server/integrations";
+import {
+  listFeeds,
+  listIntegrations,
+  MAX_FEEDS_PER_USER,
+  providerConfigured,
+} from "@/server/integrations";
+import { getProfileByUser } from "@/server/scheduling";
+import { getCurrentWorkspace } from "@/server/workspace";
+import { FeedsCard } from "./feeds-card";
 import { requireStaff } from "@/server/session";
 import { CalendarCard } from "./calendar-card";
 import { IntegrationError } from "../integration-errors";
@@ -9,8 +17,16 @@ import { IntegrationError } from "../integration-errors";
 export const metadata = { title: "Calendars" };
 
 async function CalendarsPage({ searchParams }: PageProps<"/admin/calendars">) {
-  const [{ session }, sp] = await Promise.all([requireStaff(), searchParams]);
-  const conns = await listIntegrations(session.user.id);
+  const [{ session }, sp, ws] = await Promise.all([
+    requireStaff(),
+    searchParams,
+    getCurrentWorkspace(),
+  ]);
+  const [conns, feeds, profile] = await Promise.all([
+    listIntegrations(session.user.id),
+    listFeeds(session.user.id),
+    ws ? getProfileByUser(ws.id, session.user.id) : null,
+  ]);
   const find = <P extends "google" | "microsoft">(p: P) =>
     (conns.find((c) => c.provider === p) as (Integration & { provider: P }) | undefined) ?? null;
   return (
@@ -41,6 +57,18 @@ async function CalendarsPage({ searchParams }: PageProps<"/admin/calendars">) {
         integration={find("microsoft")}
         provider="microsoft"
         configured={providerConfigured("microsoft")}
+      />
+      <FeedsCard
+        feeds={feeds.map((f) => ({
+          id: f.id,
+          label: f.label,
+          eventCount: f.eventCount,
+          status: f.status,
+          lastError: f.lastError,
+          lastSyncedAt: f.lastSyncedAt ? f.lastSyncedAt.toISOString() : null,
+        }))}
+        timezone={profile?.timezone ?? ws?.timezone ?? "UTC"}
+        max={MAX_FEEDS_PER_USER}
       />
     </div>
   );

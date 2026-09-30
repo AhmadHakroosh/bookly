@@ -4,6 +4,12 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-09-30
+
+### Added
+
+- Calendar feeds: subscribe to any calendar by its private ICS address (Google's secret iCal address, a published Outlook calendar, iCloud, Fastmail, Nextcloud, Proton) under Admin → Calendars, up to five per host. Busy time from the feed is hidden from the host's availability; nothing is written back. Feeds are refreshed every 15 minutes by the `feeds.sync` job, or on demand from the card, and the busy blocks for the next 400 days are kept on the row so availability never waits on a remote calendar. Recurring events are expanded with their exceptions; transparent, cancelled and Outlook-free events are ignored. Addresses are stored encrypted and fetched with private-network, redirect, size and time limits (table `calendar_feeds`, migration 0028)
+
 ### Changed
 
 - Docker image build: the app is built directly on top of the dependency stage instead of copying `node_modules` into a second stage, dependencies are fetched from the lockfile before the package manifests are copied (a version bump no longer re-downloads them), the build context leaves out tests, CI files and generated output, and CI exports the build cache only on pushes to `main`, which was the single longest part of the pull-request image job
@@ -287,7 +293,8 @@ First public release: the self-hostable scheduling platform with contacts, brief
 
 - The unused storage layer (`packages/storage`, `STORAGE_*` and `S3_*` variables, the MinIO service in Compose): nothing in Bookly uploads files; profile photos and logos are URLs
 
-[Unreleased]: https://github.com/AhmadHakroosh/bookly/compare/v0.6.1...HEAD
+[Unreleased]: https://github.com/AhmadHakroosh/bookly/compare/v0.7.0...HEAD
+[0.7.0]: https://github.com/AhmadHakroosh/bookly/compare/v0.6.1...v0.7.0
 [0.6.1]: https://github.com/AhmadHakroosh/bookly/compare/v0.6.0...v0.6.1
 [0.6.0]: https://github.com/AhmadHakroosh/bookly/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/AhmadHakroosh/bookly/compare/v0.4.9...v0.5.0

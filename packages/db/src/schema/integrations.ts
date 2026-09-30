@@ -1,4 +1,13 @@
-import { index, jsonb, pgEnum, pgTable, text, timestamp, uniqueIndex } from "drizzle-orm/pg-core";
+import {
+  index,
+  integer,
+  jsonb,
+  pgEnum,
+  pgTable,
+  text,
+  timestamp,
+  uniqueIndex,
+} from "drizzle-orm/pg-core";
 import { users } from "./auth";
 import { workspaces } from "./workspaces";
 
@@ -73,3 +82,45 @@ export const integrations = pgTable(
 
 export type Integration = typeof integrations.$inferSelect;
 export type IntegrationProvider = (typeof integrationProvider.enumValues)[number];
+
+/** A busy block from a subscribed feed, as ISO instants (`s` start, `e` end). */
+export type FeedBusy = { s: string; e: string };
+
+/**
+ * Read-only calendar subscriptions by URL (the "secret address" of a Google calendar, a
+ * published Outlook calendar, a shared iCloud or Fastmail calendar). Bookly fetches the feed
+ * on a schedule, keeps the busy blocks for the booking window, and subtracts them from the
+ * host's availability. Nothing is written back; invites still go out by email.
+ */
+export const calendarFeeds = pgTable(
+  "calendar_feeds",
+  {
+    id: id(),
+    workspaceId: text("workspace_id")
+      .notNull()
+      .references(() => workspaces.id, { onDelete: "cascade" }),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    /** Shown in the admin; defaults to the feed's X-WR-CALNAME or its host. */
+    label: text("label").notNull(),
+    /** AES-GCM encrypted: a private feed URL grants read access to the whole calendar. */
+    url: text("url").notNull(),
+    busy: jsonb("busy").$type<FeedBusy[]>().notNull().default([]),
+    eventCount: integer("event_count").notNull().default(0),
+    status: text("status").notNull().default("ok"), // ok | error
+    lastError: text("last_error"),
+    lastSyncedAt: timestamp("last_synced_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow()
+      .$onUpdate(() => new Date()),
+  },
+  (t) => [
+    index("calendar_feeds_user_idx").on(t.userId),
+    index("calendar_feeds_ws_idx").on(t.workspaceId),
+  ],
+);
+
+export type CalendarFeed = typeof calendarFeeds.$inferSelect;

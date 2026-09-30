@@ -41,8 +41,8 @@ Going public with the hosted service needs each provider's review, done once by 
    Outlook calendar event with a Meet / Teams link.
 2. The booking is then added to every other connected calendar (the "Add new bookings to" calendar).
 3. Cancelling or rescheduling deletes the meeting and the calendar events.
-4. Availability subtracts busy time from the calendars ticked under "Check for conflicts in".
-   Results are cached for one minute.
+4. Availability subtracts busy time from the calendars ticked under "Check for conflicts in"
+   and from every subscribed calendar feed (below). Results are cached for one minute.
 
 Everything is best-effort. If a provider fails, the booking still goes through: Bookly tries
 Bookly video next, then leaves the location as the event type's text. A permanently broken
@@ -83,6 +83,30 @@ normal calendar invitation (`sendUpdates=all`), in addition to Bookly's confirma
 
 Teams links come from creating the Outlook event with `isOnlineMeeting`; personal Microsoft
 accounts get Skype/Teams-for-personal links.
+
+## Calendar feeds (ICS subscriptions)
+
+Any calendar that can publish a private ICS address works without OAuth: Google Calendar
+("Settings → Integrate calendar → Secret address in iCal format"), Outlook.com and Microsoft 365
+("Calendar settings → Shared calendars → Publish a calendar", the ICS link), iCloud (share the
+calendar as public, use the `webcal://` link), Fastmail, Nextcloud, Proton (calendar link). Hosts
+add them under Admin → Calendars → Calendar feeds, up to five each.
+
+- **Read-only.** Feeds hide busy time; bookings are not written to them, and the host's own
+  bookings still reach any OAuth-connected calendar as before. Invites go out by email as usual.
+- **Busy means** every event that is not `TRANSP:TRANSPARENT`, not `STATUS:CANCELLED` and not
+  marked free by Outlook (`X-MICROSOFT-CDO-BUSYSTATUS:FREE`). Recurring events are expanded with
+  their exceptions; all-day events count as busy for the whole day unless the calendar marks them
+  free (Google does by default). Zones come from the feed's `VTIMEZONE` blocks, with the IANA zone
+  of the same name as the fallback.
+- **Refresh.** A feed is fetched when it is added and then by the `feeds.sync` job every 15
+  minutes (the cron tick does the same on serverless); "Refresh" on the card fetches it now. The
+  busy blocks for the next 400 days are stored on the feed row, so availability never waits on a
+  remote calendar. A fetch that fails keeps the last good blocks and shows the error on the card.
+- **Safety.** The address is stored encrypted like OAuth tokens (a private feed URL grants read
+  access to the whole calendar). Fetches allow `https://`, `http://` and `webcal://` only, refuse
+  credentials in the URL, localhost and private or link-local ranges (also after redirects, which
+  are followed at most three times), time out after 15 seconds and stop at 5 MB.
 
 ## Push notifications (instant conflict updates)
 

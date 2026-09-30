@@ -15,6 +15,8 @@ export type Jobs = {
   "webhooks.retry": Record<string, never>;
   /** Scheduled: renew Google / Microsoft push channels. */
   "calendar.sync": { workspaceId: string; connectionId?: string };
+  /** Scheduled: re-fetch subscribed ICS calendar feeds that have gone stale. */
+  "feeds.sync": Record<string, never>;
   /** Precise: one booking's reminder or follow-up at its exact time. */
   "booking.remind": { bookingId: string };
   /** One webhook delivery attempt (first try or a retry after backoff). */
@@ -31,6 +33,7 @@ export const JOB_NAMES = [
   "booking.reminders",
   "webhooks.retry",
   "calendar.sync",
+  "feeds.sync",
   "booking.remind",
   "webhook.deliver",
   "capture.process",
