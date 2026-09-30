@@ -1,7 +1,7 @@
 import * as Sentry from "@sentry/nextjs";
 import { NextResponse } from "next/server";
 import { sendDueReminders } from "@/server/reminders";
-import { renewCalendarWatches } from "@/server/integrations";
+import { renewCalendarWatches, syncStaleFeeds } from "@/server/integrations";
 import { retryDueDeliveries } from "@/server/webhooks";
 
 /**
@@ -23,9 +23,13 @@ export async function GET(req: Request) {
     Sentry.captureException(e);
     throw e;
   }
+  const feeds = await syncStaleFeeds().catch((e) => {
+    console.error("[feeds] sync failed", e);
+    return 0;
+  });
   const watches = await renewCalendarWatches().catch((e) => {
     console.error("[calendar] renew failed", e);
     return 0;
   });
-  return NextResponse.json({ ok: true, reminders, retried, watches });
+  return NextResponse.json({ ok: true, reminders, retried, feeds, watches });
 }

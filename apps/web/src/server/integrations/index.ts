@@ -1,3 +1,4 @@
+import { feedBusy } from "./ics";
 import "server-only";
 import { and, eq, schema } from "@bookly/db";
 import type {
@@ -31,6 +32,14 @@ import { zoom, zoomAccount } from "./zoom";
 
 export { authorizeUrl, isProvider, pkceVerifier, providerConfigured, redirectUri } from "./oauth";
 export { pushSupported, verifyNotification } from "./watch";
+export {
+  addFeed,
+  listFeeds,
+  MAX_FEEDS_PER_USER,
+  removeFeed,
+  syncFeed,
+  syncStaleFeeds,
+} from "./ics";
 export {
   createMeetingToken,
   dailyConfigured,
@@ -263,7 +272,7 @@ export async function externalBusy(userId: string, from: Date, to: Date): Promis
       }
     }),
   );
-  const value = results.flat();
+  const value = [...results.flat(), ...(await feedBusy(userId, from, to))];
   busyCache.set(key, { at: Date.now(), value });
   return value;
 }

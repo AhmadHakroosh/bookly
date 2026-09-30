@@ -61,6 +61,9 @@ async function handlers(): Promise<{ [N in JobName]: Handler<N> }> {
     "calendar.sync": async () => {
       await integrations.renewCalendarWatches();
     },
+    "feeds.sync": async () => {
+      await integrations.syncStaleFeeds();
+    },
     "booking.remind": async ({ bookingId }) => {
       await reminders.sendDueReminders(new Date(), { bookingId });
     },
@@ -130,6 +133,7 @@ export const SCHEDULES: { name: JobName; cron: string }[] = [
   { name: "booking.reminders", cron: "*/5 * * * *" },
   { name: "webhooks.retry", cron: "*/5 * * * *" },
   { name: "calendar.sync", cron: "17 */6 * * *" },
+  { name: "feeds.sync", cron: "*/15 * * * *" },
 ];
 
 const scheduleId = (name: JobName) => `bookly-${name.replace(".", "-")}`;
