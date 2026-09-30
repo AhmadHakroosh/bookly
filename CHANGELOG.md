@@ -4,6 +4,10 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 ## [Unreleased]
 
+### Changed
+
+- Docker image build: the app is built directly on top of the dependency stage instead of copying `node_modules` into a second stage, dependencies are fetched from the lockfile before the package manifests are copied (a version bump no longer re-downloads them), the build context leaves out tests, CI files and generated output, and CI exports the build cache only on pushes to `main`, which was the single longest part of the pull-request image job
+
 ## [0.6.1] - 2026-09-30
 
 ### Changed

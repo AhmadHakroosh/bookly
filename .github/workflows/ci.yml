@@ -127,8 +127,11 @@ jobs:
           push: false
           load: true
           tags: bookly:ci
+          provenance: false
           cache-from: type=gha
-          cache-to: type=gha,mode=max
+          # Exporting the cache costs more than a minute; pull requests only read it, and
+          # pushes to main keep it warm for everyone.
+          cache-to: ${{ github.ref == 'refs/heads/main' && 'type=gha,mode=max' || '' }}
       # Smoke test the self-host path: Postgres + the image, migrations on boot, health, setup wizard.
       - name: Boot with Compose and check health
         run: |
