@@ -5,9 +5,20 @@ updates:
     schedule: { interval: weekly }
     groups:
       all: { patterns: ["*"] }
+    ignore:
+      # Node stays on the 24 LTS line (engines.node, .nvmrc, Vercel); the types follow it.
+      - dependency-name: "@types/node"
+        update-types: ["version-update:semver-major"]
+      # eslint-plugin-react does not load on ESLint 10 yet (react/display-name crashes).
+      - dependency-name: eslint
+        update-types: ["version-update:semver-major"]
   - package-ecosystem: github-actions
     directory: /
     schedule: { interval: weekly }
   - package-ecosystem: docker
     directory: /
     schedule: { interval: weekly }
+    ignore:
+      # Same reason: the image tracks the Node line the app is built and tested on.
+      - dependency-name: node
+        update-types: ["version-update:semver-major"]

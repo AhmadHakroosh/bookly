@@ -1,5 +1,6 @@
 import * as Sentry from "@sentry/nextjs";
 import { scrubDeep } from "@/lib/scrub";
+import { sentryDataCollection } from "@/lib/sentry";
 
 /** Server-side render and route errors go to Sentry when configured. */
 export const onRequestError = Sentry.captureRequestError;
@@ -18,7 +19,7 @@ export async function register() {
       dsn: process.env.SENTRY_DSN,
       environment: process.env.SENTRY_ENVIRONMENT ?? process.env.NODE_ENV,
       tracesSampleRate: 0.05,
-      sendDefaultPii: false,
+      dataCollection: sentryDataCollection,
       // Guest emails and phone numbers stay out of error reports (privacy policy: Sentry sees
       // error context only).
       beforeSend: (event) => scrubDeep(event),

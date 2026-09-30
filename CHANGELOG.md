@@ -4,6 +4,13 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 ## [Unreleased]
 
+## [0.6.1] - 2026-09-30
+
+### Changed
+
+- Dependencies: Sentry SDK 11 (`withSentryConfig` now comes from `@sentry/nextjs/config`; the old `sendDefaultPii: false` baseline is spelled out as an explicit `dataCollection` block, since Sentry 11 collects request headers, cookies, bodies, query data and user info by default), Next.js 16.3.6, AI SDK, drizzle, pg-boss, resend, lucide, marked, turbo, vitest, tsx, dotenv and the rest of the weekly Dependabot group
+- Node stays on the 24 LTS line: `@types/node` and the Docker base image no longer take major bumps from Dependabot (engines, `.nvmrc`, CI and Vercel all run 24), and ESLint stays on 9 until `eslint-plugin-react` loads on ESLint 10
+
 ## [0.6.0] - 2026-09-29
 
 ### Added
@@ -276,7 +283,8 @@ First public release: the self-hostable scheduling platform with contacts, brief
 
 - The unused storage layer (`packages/storage`, `STORAGE_*` and `S3_*` variables, the MinIO service in Compose): nothing in Bookly uploads files; profile photos and logos are URLs
 
-[Unreleased]: https://github.com/AhmadHakroosh/bookly/compare/v0.6.0...HEAD
+[Unreleased]: https://github.com/AhmadHakroosh/bookly/compare/v0.6.1...HEAD
+[0.6.1]: https://github.com/AhmadHakroosh/bookly/compare/v0.6.0...v0.6.1
 [0.6.0]: https://github.com/AhmadHakroosh/bookly/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/AhmadHakroosh/bookly/compare/v0.4.9...v0.5.0
 [0.4.9]: https://github.com/AhmadHakroosh/bookly/compare/v0.4.8...v0.4.9
