@@ -122,7 +122,13 @@ export const envSchema = z.object({
   UPSTASH_REDIS_REST_TOKEN: z.string().optional(),
   TELEMETRY_URL: z.url().default("https://bookly-app.io/api/telemetry"),
 
-  // ---- Text messages (Twilio) for SMS / WhatsApp reminders and host pings ----
+  // ---- Text messages (SMS / WhatsApp reminders and host pings): Twilio or Sent.dm ----
+  /** Which provider sends texts; unset = Sent.dm when its key is present, else Twilio. */
+  TEXT_PROVIDER: z.enum(["twilio", "sentdm"]).optional(),
+  /** Sent.dm API key (https://sent.dm): one key, both channels, registration handled there. */
+  SENTDM_API_KEY: z.string().optional(),
+  /** Dry-run every Sent.dm request (their `sandbox: true`): validated, nothing delivered. */
+  SENTDM_SANDBOX: z.stringbool().default(false),
   TWILIO_ACCOUNT_SID: z.string().optional(),
   TWILIO_AUTH_TOKEN: z.string().optional(),
   /** E.164 sender for SMS, e.g. +15551234567 */

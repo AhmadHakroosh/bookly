@@ -7,6 +7,7 @@ import { getProfileByUser } from "@/server/scheduling";
 import { requireStaff } from "@/server/session";
 import { getCurrentWorkspace } from "@/server/workspace";
 import { JoinToggle } from "./join-toggle";
+import { isCloud } from "@/server/platform";
 import { PrefsForm } from "./prefs-form";
 import { VerifyPanel } from "./verify-panel";
 
@@ -33,6 +34,7 @@ async function NotificationsPage() {
             phone={profile.phone ?? ""}
             prefs={profile.notifications}
             channels={{ sms: channelAvailable("sms"), whatsapp: channelAvailable("whatsapp") }}
+            selfHosted={!isCloud()}
           />
           <VerifyPanel
             phone={profile.phone ?? ""}

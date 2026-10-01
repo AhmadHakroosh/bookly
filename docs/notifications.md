@@ -6,7 +6,7 @@ cancellation. Hosts choose how they hear about things under **Admin → Notifica
 ## Host pings
 
 Events: someone books, an attendee cancels, an attendee joins the Bookly video room, a call
-starts in one hour. Channels: email (always available), WhatsApp or SMS via Twilio, and a Slack
+starts in one hour. Channels: email (always available), WhatsApp or SMS via Sent.dm or Twilio, and a Slack
 incoming webhook. Each host sets their own phone, channel and toggles.
 
 Texts go only to a verified number: after saving a phone and a channel, the host presses
@@ -23,19 +23,32 @@ token (`owner: true` on the `participant.joined` event); a host who opens the ra
 elsewhere is still matched by display name as a fallback. The Daily webhook itself is registered
 once for the whole install (`docs/integrations.md` → Daily.co), not per workspace.
 
-## Text messages (Twilio)
+## Text messages (Sent.dm or Twilio)
 
-Env: `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_FROM_SMS` (an E.164 number you own),
-`TWILIO_FROM_WHATSAPP` (the sandbox number `+14155238886` for testing, or your approved WhatsApp
-sender). Either sender may be omitted; the admin shows which channels are available.
+Texts go through one of two providers, chosen by `TEXT_PROVIDER` (`sentdm` | `twilio`); unset,
+Bookly uses Sent.dm when `SENTDM_API_KEY` is present and Twilio otherwise. The admin shows which
+channels are available, and the operator health page names the provider in use.
 
-- **Hosts** receive texts on the channel they pick.
+- **Sent.dm** (`SENTDM_API_KEY`): one key for SMS and WhatsApp. Sent.dm owns the sender
+  identities and does the US A2P registration and WhatsApp onboarding on its side, so there is
+  nothing to verify in Bookly's name. `SENTDM_SANDBOX=true` dry-runs every request (validated,
+  nothing delivered), useful on staging. Requests go to `https://api.sent.dm/v3/messages` with
+  the channel as an ordered list; Bookly sends one channel per call so its own fallback order
+  (SMS, then WhatsApp for attendee reminders) stays in charge.
+- **Twilio** (`TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_FROM_SMS` as an E.164 number
+  you own, `TWILIO_FROM_WHATSAPP` as the sandbox number `+14155238886` or your approved sender).
+  Either sender may be omitted. WhatsApp business messaging needs an approved sender and, outside
+  a 24-hour conversation window, an approved message template; the sandbox is enough to test,
+  production needs Twilio's WhatsApp onboarding and a business profile in the operator's name.
+
+In both cases:
+
+- **Hosts** receive texts on the channel they pick, after verifying their number with a code.
 - **Attendees** receive text reminders only for event types with "Text reminders" enabled and only
   when they typed a phone number. Bookly tries SMS first and falls back to WhatsApp.
 
-WhatsApp business messaging needs an approved sender and, outside a 24-hour conversation window, an
-approved message template. The sandbox is enough to test; production needs the Twilio WhatsApp
-onboarding.
+Self-hosters can use either; the cloud runs Sent.dm. Adding a third provider means one object
+in `apps/web/src/server/texting.ts`.
 
 ## Who the guest sees as the sender
 
