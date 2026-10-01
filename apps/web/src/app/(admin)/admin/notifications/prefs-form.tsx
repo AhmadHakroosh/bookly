@@ -13,10 +13,13 @@ export function PrefsForm({
   phone,
   prefs,
   channels,
+  selfHosted,
 }: {
   phone: string;
   prefs: HostNotifications;
   channels: { sms: boolean; whatsapp: boolean };
+  /** Self-hosted installs get told what to configure; cloud hosts only that texts are off. */
+  selfHosted: boolean;
 }) {
   const [state, action, pending] = useActionState(saveNotificationPrefs, {} as PrefsState);
   useEffect(() => {
@@ -24,6 +27,7 @@ export function PrefsForm({
     else if (state.error) toast.error(state.error);
   }, [state]);
   const textAvailable = channels.sms || channels.whatsapp;
+  const off = selfHosted ? " (not set up on this server)" : " (not available yet)";
   return (
     <form action={action}>
       <FieldGroup>
@@ -46,20 +50,21 @@ export function PrefsForm({
                 { value: "none", label: "Email only" },
                 {
                   value: "whatsapp",
-                  label: `WhatsApp${channels.whatsapp ? "" : " (not set up on this server)"}`,
+                  label: `WhatsApp${channels.whatsapp ? "" : off}`,
                   disabled: !channels.whatsapp,
                 },
                 {
                   value: "sms",
-                  label: `SMS${channels.sms ? "" : " (not set up on this server)"}`,
+                  label: `SMS${channels.sms ? "" : off}`,
                   disabled: !channels.sms,
                 },
               ]}
             />
             {!textAvailable && (
               <FieldDescription>
-                Text messages need a provider on the server, Sent.dm or Twilio
-                (docs/notifications.md).
+                {selfHosted
+                  ? "Text messages need a provider on the server, Sent.dm or Twilio (docs/notifications.md)."
+                  : "Text messages are not available on Bookly Cloud yet; email and Slack work today."}
               </FieldDescription>
             )}
           </Field>
