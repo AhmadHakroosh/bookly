@@ -112,6 +112,7 @@ const INTEGRATIONS = [
   "Pipedrive",
   "Slack",
   "Twilio",
+  "Sent.dm",
   "WhatsApp",
   "Resend",
   "Anthropic",

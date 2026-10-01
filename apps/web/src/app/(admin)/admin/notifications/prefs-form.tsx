@@ -58,7 +58,8 @@ export function PrefsForm({
             />
             {!textAvailable && (
               <FieldDescription>
-                Text messages need Twilio keys on the server (docs/notifications.md).
+                Text messages need a provider on the server, Sent.dm or Twilio
+                (docs/notifications.md).
               </FieldDescription>
             )}
           </Field>

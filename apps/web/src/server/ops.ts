@@ -25,6 +25,7 @@ import { paymentsConfigured } from "./payments";
 import { isCloud } from "./platform";
 import { assistantConfigured } from "./brief";
 import { textConfigured } from "./notify";
+import { textProvider } from "./texting";
 
 /* ---------------- Audit ---------------- */
 
@@ -205,9 +206,11 @@ export async function healthReport(now = new Date()): Promise<HealthCheck[]> {
         : "not configured: capture on Bookly video only",
     },
     {
-      name: "Text messages (Twilio)",
+      name: `Text messages (${textProvider().label})`,
       ok: textConfigured(),
-      detail: textConfigured() ? "configured" : "not configured",
+      detail: textConfigured()
+        ? "configured"
+        : "not configured: set SENTDM_API_KEY or the Twilio keys",
     },
     {
       name: "Assistant (Anthropic)",
