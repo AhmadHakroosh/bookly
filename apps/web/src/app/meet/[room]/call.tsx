@@ -3,7 +3,16 @@
 import DailyIframe, { type DailyCall } from "@daily-co/daily-js";
 import { useEffect, useRef, useState } from "react";
 
-type Line = { t: number; speaker: string; text: string };
+type Line = { t: number; speaker: string; text: string; lang?: string };
+
+/** The language Deepgram detected for a line, when the call is transcribed multilingually. */
+function detectedLang(raw: Record<string, unknown> | undefined): string | undefined {
+  const alt = (raw as { channel?: { alternatives?: { languages?: unknown }[] } } | undefined)
+    ?.channel?.alternatives?.[0];
+  const langs = Array.isArray(alt?.languages) ? alt.languages : [];
+  const first = langs.find((l): l is string => typeof l === "string" && l.length > 0);
+  return first;
+}
 
 /**
  * Daily Prebuilt in a frame. When auto-capture is on, live transcription lines are labelled
@@ -79,10 +88,12 @@ export function Call({
         if (!ev.text?.trim()) return;
         const at = ev.timestamp ? new Date(ev.timestamp).getTime() : Date.now();
         if (startedAt === null) startedAt = at;
-        const line = {
+        const lang = detectedLang(ev.rawResponse);
+        const line: Line = {
           t: Math.max(0, (at - startedAt) / 1000),
           speaker: labelFor(ev.participantId),
           text: ev.text,
+          ...(lang ? { lang } : {}),
         };
         queue.push(line);
         setCaptions((prev) => [...prev, line].slice(-6));

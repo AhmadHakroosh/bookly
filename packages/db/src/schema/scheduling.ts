@@ -479,6 +479,8 @@ export type TranscriptSegment = {
   /** "host" | "attendee" | a display name for other participants. */
   speaker: string;
   text: string;
+  /** Language Deepgram detected for this line (BCP-47, e.g. "es"), on multilingual calls. */
+  lang?: string;
 };
 
 export const meetingTranscripts = pgTable(

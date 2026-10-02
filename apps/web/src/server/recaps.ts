@@ -16,8 +16,8 @@ import { logContactEvent, setStage, trackBooking, noteToCrm } from "./contacts";
 import { notifyHost } from "./notify";
 import { parseRecap, RECAP_SYSTEM, type Recap } from "./recap-text";
 import { getProfileByUser } from "./scheduling";
-import { renderTranscript } from "./transcript-text";
-import { getTranscript } from "./transcripts";
+import { languageNames, renderTranscript } from "./transcript-text";
+import { detectedLanguages, getTranscript } from "./transcripts";
 import { emitEvent } from "./webhooks";
 
 export async function getRecap(bookingId: string): Promise<MeetingRecap | null> {
@@ -46,6 +46,7 @@ export async function generateRecap(
     ? await db().query.contacts.findFirst({ where: eq(schema.contacts.id, booking.contactId) })
     : null;
   const host = await getProfileByUser(ws.id, booking.hostUserId);
+  const languages = detectedLanguages(transcript.segments);
   const asked = (eventType?.questions ?? [])
     .map((q) => ({ label: q.label, answer: (booking.answers[q.id] ?? "").trim() }))
     .filter((q) => q.answer);
@@ -59,6 +60,11 @@ export async function generateRecap(
       ? `What the client asked for when booking:\n${asked.map((a) => `- ${a.label}: ${a.answer}`).join("\n")}`
       : "Nothing specific was asked for when booking.",
     booking.brief ? `Pre-meeting briefing:\n${booking.brief}` : "",
+    languages.length > 1
+      ? `The call switched between ${languageNames(languages)} (each line is tagged with its language). Write the recap, follow-up and attendee recap in the language the consultant spoke most.`
+      : languages.length === 1
+        ? `The call was in ${languageNames(languages)}; write the recap, follow-up and attendee recap in that language.`
+        : "",
     `Transcript:\n${renderTranscript(transcript.segments, { host: host?.displayName ?? "Host", attendee: booking.attendeeName }).slice(0, 60000)}`,
   ]
     .filter(Boolean)

@@ -10,6 +10,8 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 - Text messages can go through Sent.dm as well as Twilio: `SENTDM_API_KEY` is the whole setup (one key for SMS and WhatsApp; Sent.dm handles sender registration and WhatsApp onboarding on its side), `SENTDM_SANDBOX=true` dry-runs requests, and `TEXT_PROVIDER` picks explicitly when both are configured. Twilio keeps working unchanged. The operator health page names the provider in use
 
+- Multilingual transcription: Bookly video calls are transcribed with Deepgram Nova-3 in multilingual mode unless the workspace fixes a language, so speakers can switch languages mid-call. Each transcript line records the language it was spoken in, the booking page lists the languages spoken, and the recap, follow-up and attendee recap are written in the language the host spoke most
+
 ### Security
 
 - End-to-end encrypted Bookly video: a per-event-type option on the Bookly video location that creates the room peer-to-peer, so audio and video travel directly between the two browsers and no server (Daily's included) can decrypt them. Such calls are one-to-one (one seat, no guests, a single host), are never transcribed, are labelled "Bookly video (end-to-end encrypted)" on the booking page and in emails, and the meeting page reports whether the media path really is peer-to-peer

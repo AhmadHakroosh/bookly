@@ -69,6 +69,33 @@ async function ensureTranscript(ws: Workspace, booking: Booking): Promise<Meetin
   return t ?? (await getTranscript(booking.id))!;
 }
 
+/**
+ * Deepgram options for Daily's transcription. Without a fixed language the call is transcribed
+ * multilingually: Nova-3 with `language: "multi"` follows speakers switching languages
+ * mid-call (Deepgram recommends `endpointing: 100` with it) and reports the language of each
+ * line, which the meeting page reads from the raw response. A fixed language keeps Nova-2.
+ */
+export function transcriptionOptions(language: string | null | undefined) {
+  const multilingual = !language || language === "auto";
+  return multilingual
+    ? {
+        model: "nova-3",
+        language: "multi",
+        endpointing: 100,
+        punctuate: true,
+        includeRawResponse: true,
+        extra: { diarize: true },
+      }
+    : { model: "nova-2", language, punctuate: true, extra: { diarize: true } };
+}
+
+/** Distinct languages the lines were detected in, in order of first appearance. */
+export function detectedLanguages(segments: Pick<TranscriptSegment, "lang">[]): string[] {
+  const out: string[] = [];
+  for (const s of segments) if (s.lang && !out.includes(s.lang)) out.push(s.lang);
+  return out;
+}
+
 /** Starts Daily's transcription for the booking's room (idempotent per booking). */
 export async function startTranscription(ws: Workspace, booking: Booking): Promise<boolean> {
   const room = (booking.meetingRef as { room?: string } | null)?.room;
@@ -80,17 +107,11 @@ export async function startTranscription(ws: Workspace, booking: Booking): Promi
     console.warn(`[capture] not started for ${booking.id}: ${allowed.reason}`);
     return false;
   }
-  const language = ws.settings.capture?.language;
   try {
     await api(`${DAILY}/rooms/${encodeURIComponent(room)}/transcription/start`, {
       method: "POST",
       token: key,
-      body: JSON.stringify({
-        model: "nova-2",
-        punctuate: true,
-        ...(language && language !== "auto" ? { language } : {}),
-        extra: { diarize: true },
-      }),
+      body: JSON.stringify(transcriptionOptions(ws.settings.capture?.language)),
     });
   } catch (e) {
     console.error("[capture] start transcription failed", e);
@@ -144,6 +165,9 @@ export async function appendLiveSegments(
       t: Math.max(0, Number(s.t) || 0),
       speaker: String(s.speaker).slice(0, 60),
       text: s.text.trim().slice(0, 2000),
+      ...(typeof s.lang === "string" && /^[a-z]{2,3}(-[A-Za-z0-9]{2,8})?$/.test(s.lang)
+        ? { lang: s.lang }
+        : {}),
     }))
     .slice(0, 200);
   const merged = [...t.segments, ...clean].slice(-5000);
@@ -199,12 +223,15 @@ export async function completeTranscript(
   const stored: TranscriptSegment[] = await storedSegments(booking, transcriptId);
   const t = await ensureTranscript(ws, booking);
   const segments = mergeSegments(t.segments, stored);
+  const languages = detectedLanguages(segments);
   await db()
     .update(schema.meetingTranscripts)
     .set({
       segments,
       providerRef: transcriptId,
       source: t.segments.length && stored.length ? "merged" : stored.length ? "stored" : "live",
+      // The languages actually spoken replace the "auto" setting the row was opened with.
+      ...(languages.length ? { language: languages.join(",") } : {}),
       endedAt: new Date(),
     })
     .where(eq(schema.meetingTranscripts.id, t.id));
