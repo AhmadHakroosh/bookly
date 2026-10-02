@@ -167,9 +167,19 @@ auto-capture (Daily's transcription runs on the SFU), chat and signalling still 
 over TLS, and the connection depends on the two networks reaching each other directly (Daily's
 TURN relay forwards the encrypted packets without decrypting them when they cannot). The booking
 page and emails call the location "Bookly video (end-to-end encrypted)", and the meeting page shows
-whether the media path really is peer-to-peer, from Daily's `network-connection` event. The `/meet/<room>` page shows the meeting title and embeds Daily Prebuilt with chat, emoji
-reactions, hand raising, picture-in-picture, background effects and noise cancellation enabled.
-Background effects need a browser with insertable-streams support (Chrome, Edge, recent Safari).
+whether the media path really is peer-to-peer, from Daily's `network-connection` event.
+
+The `/meet/<room>` page is Bookly's own call UI on Daily's call object (`@daily-co/daily-react`;
+Daily Prebuilt is no longer used): a prejoin screen with camera preview, device pickers and mute
+toggles (and a name field for visitors without a token, who then knock); in the call a fitted
+tile grid with the active speaker outlined, screen sharing with a tile strip, in-call chat and
+emoji reactions over Daily app messages (`messages.ts` is the protocol; nothing is stored), hand
+raising via participant `userData`, a People panel where hosts admit or turn away people who are
+knocking, device switching, background blur and noise cancellation (Daily's WebAssembly
+processors, hence `'wasm-unsafe-eval'` in the CSP), picture-in-picture, full screen, a network
+indicator, a room-closing countdown and ⌘/Ctrl+D / ⌘/Ctrl+E for mic and camera. The page is
+always dark and uses Bookly's theme tokens. Background effects need a browser with
+insertable-streams support (Chrome, Edge, recent Safari).
 
 ## Notetaker (Recall.ai): capture on Meet, Teams and Zoom
 

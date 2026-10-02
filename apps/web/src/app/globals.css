@@ -35,6 +35,7 @@
   --color-secondary-foreground: var(--secondary-foreground);
   --color-secondary: var(--secondary);
   --color-primary-foreground: var(--primary-foreground);
+  --color-brand: var(--brand);
   --color-primary: var(--primary);
   --color-popover-foreground: var(--popover-foreground);
   --color-popover: var(--popover);
@@ -363,4 +364,19 @@
     animation: none;
     transform: scaleX(0.9);
   }
+}
+
+/* Bookly video: emoji reactions float up from the tray and fade. */
+@keyframes meet-float {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-180px);
+  }
+}
+.meet-float {
+  animation: meet-float 2.5s ease-out forwards;
 }

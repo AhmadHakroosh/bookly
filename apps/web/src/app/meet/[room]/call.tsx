@@ -1,173 +1,227 @@
 "use client";
 
-import DailyIframe, { type DailyCall } from "@daily-co/daily-js";
-import { useEffect, useRef, useState } from "react";
+import {
+  DailyProvider,
+  useCallObject,
+  useDaily,
+  useDailyEvent,
+  useNetwork,
+} from "@daily-co/daily-react";
+import { useCallback, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Spinner } from "@/components/ui/spinner";
+import { Captions, useLiveTranscript } from "./captions";
+import { Prejoin } from "./prejoin";
+import { Room } from "./room";
 
-type Line = { t: number; speaker: string; text: string; lang?: string };
-
-/** The language Deepgram detected for a line, when the call is transcribed multilingually. */
-function detectedLang(raw: Record<string, unknown> | undefined): string | undefined {
-  const alt = (raw as { channel?: { alternatives?: { languages?: unknown }[] } } | undefined)
-    ?.channel?.alternatives?.[0];
-  const langs = Array.isArray(alt?.languages) ? alt.languages : [];
-  const first = langs.find((l): l is string => typeof l === "string" && l.length > 0);
-  return first;
-}
-
-/**
- * Daily Prebuilt in a frame. When auto-capture is on, live transcription lines are labelled
- * with the speaker (host / attendee / name) and posted to Bookly in small batches.
- */
-export function Call({
-  url,
-  token,
-  room,
-  capture,
-  encrypted = false,
-  hostName,
-  attendeeName,
-}: {
+export type CallProps = {
+  /** Daily room URL. */
   url: string;
   /** Daily meeting token naming the participant (and marking the host as owner), if known. */
   token?: string | null;
   room: string;
+  /** Auto-capture is on: live lines are posted to Bookly and a notice is shown. */
   capture: boolean;
-  /** The room is peer-to-peer: the banner reports whether media really is going direct. */
+  /** Peer-to-peer room: the page asks Daily for the peer topology and reports what it got. */
   encrypted?: boolean;
   hostName: string;
   attendeeName: string;
-}) {
-  const container = useRef<HTMLDivElement>(null);
-  /** The last few transcribed lines, shown under the call while capture is on. */
-  const [captions, setCaptions] = useState<{ t: number; speaker: string; text: string }[]>([]);
-  /** Media path Daily reports for this call; only meaningful on encrypted rooms. */
-  const [topology, setTopology] = useState<"peer-to-peer" | "sfu" | null>(null);
-  useEffect(() => {
-    if (!container.current) return;
-    const call: DailyCall = DailyIframe.createFrame(container.current, {
-      url,
-      ...(token ? { token } : {}),
-      showLeaveButton: true,
-      // Absolute inside the relative container: fills it whatever the flex layout decides,
-      // instead of the iframe's default 150px when a percentage height cannot resolve.
-      iframeStyle: {
-        position: "absolute",
-        inset: "0",
-        width: "100%",
-        height: "100%",
-        border: "0",
-      },
-    });
-    let queue: Line[] = [];
-    let startedAt: number | null = null;
-    let timer: ReturnType<typeof setInterval> | null = null;
-    const flush = () => {
-      if (!queue.length) return;
-      const batch = queue;
-      queue = [];
-      void fetch(`/api/meet/${room}/transcript`, {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ segments: batch }),
-        keepalive: true,
-      }).catch(() => {});
-    };
-    if (capture) {
-      const labelFor = (participantId: string) => {
-        const p = Object.values(call.participants()).find((x) => x.session_id === participantId);
-        const name = (p?.user_name ?? "").trim();
-        if (!name) return p?.local ? "attendee" : "unknown";
-        if (name.toLowerCase() === hostName.toLowerCase()) return "host";
-        if (name.toLowerCase() === attendeeName.toLowerCase()) return "attendee";
-        return name;
-      };
-      call.on("transcription-started", () => {
-        startedAt = Date.now();
-      });
-      call.on("transcription-message", (ev) => {
-        if (!ev.text?.trim()) return;
-        const at = ev.timestamp ? new Date(ev.timestamp).getTime() : Date.now();
-        if (startedAt === null) startedAt = at;
-        const lang = detectedLang(ev.rawResponse);
-        const line: Line = {
-          t: Math.max(0, (at - startedAt) / 1000),
-          speaker: labelFor(ev.participantId),
-          text: ev.text,
-          ...(lang ? { lang } : {}),
-        };
-        queue.push(line);
-        setCaptions((prev) => [...prev, line].slice(-6));
-        if (queue.length >= 10) flush();
-      });
-      timer = setInterval(flush, 5000);
-      window.addEventListener("pagehide", flush);
-    }
-    if (encrypted) {
-      call.on("network-connection", (ev) => {
-        if (ev.type === "peer-to-peer" || ev.type === "sfu") setTopology(ev.type);
-      });
-      // Daily's room-level `sfu_switchover` is not honoured on mesh-SFU domains (two people
-      // still land on the SFU), so the page asks for the peer topology itself once joined. One
-      // side asking is enough: both participants switch and report `peer-to-peer`.
-      call.on("joined-meeting", () => {
+  /** Name to pre-fill: the host's or the booked attendee's; empty for anyone else. */
+  initialName: string;
+  /** No token: the visitor types a name and knocks. */
+  needsName: boolean;
+};
+
+/**
+ * Bookly video: Bookly's own call UI on Daily's call object (no Prebuilt). The call object is
+ * created once per page; the UI moves through prejoin → (knocking) → in call → left.
+ */
+export function Call(props: CallProps) {
+  const callObject = useCallObject({
+    options: { url: props.url, ...(props.token ? { token: props.token } : {}) },
+  });
+  if (!callObject)
+    return (
+      <div className="flex flex-1 items-center justify-center" aria-busy aria-label="Loading">
+        <Spinner />
+      </div>
+    );
+  return (
+    <DailyProvider callObject={callObject}>
+      <CallUi {...props} />
+    </DailyProvider>
+  );
+}
+
+type Stage = "prejoin" | "joining" | "knocking" | "in" | "denied" | "left" | "error";
+
+function CallUi(props: CallProps) {
+  const call = useDaily();
+  const [stage, setStage] = useState<Stage>("prejoin");
+  const [name, setName] = useState(props.initialName);
+  const [error, setError] = useState<string | null>(null);
+  const [lastMedia, setLastMedia] = useState({ cam: true, mic: true });
+  const { topology } = useNetwork();
+  const captions = useLiveTranscript({
+    room: props.room,
+    capture: props.capture,
+    hostName: props.hostName,
+    attendeeName: props.attendeeName,
+  });
+
+  useDailyEvent(
+    "joined-meeting",
+    useCallback(() => {
+      if (!call) return;
+      // Daily's room-level `sfu_switchover` is not honoured on mesh-SFU domains, so the page asks
+      // for the peer topology itself; one side asking switches both participants.
+      if (props.encrypted)
         void call
           .setNetworkTopology({ topology: "peer" })
           .then((r) => {
             if (r?.error) console.warn("[meet] peer topology", r.error);
           })
           .catch((e) => console.warn("[meet] peer topology", e));
+      const access = call.accessState().access;
+      if (access !== "unknown" && access.level === "lobby") {
+        setStage("knocking");
+        call
+          .requestAccess({ name: name || "Guest", access: { level: "full" } })
+          .then(({ granted }) => setStage(granted ? "in" : "denied"))
+          .catch(() => setStage("denied"));
+      } else setStage("in");
+    }, [call, name, props.encrypted]),
+  );
+  useDailyEvent(
+    "left-meeting",
+    useCallback(() => setStage((s) => (s === "denied" || s === "error" ? s : "left")), []),
+  );
+  useDailyEvent(
+    "error",
+    useCallback((ev) => {
+      setError(ev.errorMsg || "The call could not be joined.");
+      setStage("error");
+    }, []),
+  );
+
+  const join = async (media: { cam: boolean; mic: boolean }) => {
+    if (!call) return;
+    setLastMedia(media);
+    setStage("joining");
+    try {
+      await call.join({
+        userName: name.trim() || "Guest",
+        startVideoOff: !media.cam,
+        startAudioOff: !media.mic,
       });
-      call.on("left-meeting", () => setTopology(null));
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+      setStage("error");
     }
-    void call.join();
-    return () => {
-      if (timer) clearInterval(timer);
-      window.removeEventListener("pagehide", flush);
-      flush();
-      void call.destroy();
-    };
-  }, [url, token, room, capture, encrypted, hostName, attendeeName]);
+  };
+
+  if (stage === "prejoin")
+    return (
+      <Prejoin
+        name={name}
+        setName={setName}
+        needsName={props.needsName}
+        hostName={props.hostName}
+        onJoin={join}
+      />
+    );
+  if (stage === "joining" || stage === "knocking")
+    return (
+      <Notice
+        title={stage === "joining" ? "Joining…" : "Waiting for the host"}
+        body={
+          stage === "joining"
+            ? "Connecting you to the room."
+            : "The host has been asked to let you in. Keep this page open."
+        }
+        spinner
+        action={
+          stage === "knocking" ? (
+            <Button variant="outline" onClick={() => void call?.leave()}>
+              Cancel request
+            </Button>
+          ) : null
+        }
+      />
+    );
+  if (stage === "denied")
+    return (
+      <Notice
+        title="Not let in"
+        body="The host did not admit you to this call. If you believe this is a mistake, contact them directly."
+        action={<Button onClick={() => setStage("prejoin")}>Try again</Button>}
+      />
+    );
+  if (stage === "error")
+    return (
+      <Notice
+        title="Something went wrong"
+        body={error ?? "The call could not be joined."}
+        action={<Button onClick={() => setStage("prejoin")}>Back</Button>}
+      />
+    );
+  if (stage === "left")
+    return (
+      <Notice
+        title="You left the call"
+        body="Thanks for meeting on Bookly. You can close this page or rejoin."
+        action={<Button onClick={() => void join(lastMedia)}>Rejoin</Button>}
+      />
+    );
   return (
-    <div className="flex min-h-0 w-full flex-1 flex-col">
-      {encrypted && (
+    <>
+      {props.encrypted && (
         <p
-          className={`px-4 py-1.5 text-center text-xs ${topology === "sfu" ? "bg-red-500/20 text-red-200" : "bg-emerald-500/15 text-emerald-200"}`}
+          className={`px-4 py-1.5 text-center text-xs ${
+            topology === "peer"
+              ? "bg-emerald-500/15 text-emerald-200"
+              : topology === "sfu"
+                ? "bg-red-500/20 text-red-200"
+                : "bg-muted text-muted-foreground"
+          }`}
           role="status"
         >
-          {topology === "peer-to-peer"
+          {topology === "peer"
             ? "End-to-end encrypted: audio and video go directly between the two of you and are never transcribed."
             : topology === "sfu"
               ? "Not peer-to-peer right now: audio and video are being relayed through Daily's servers."
               : "End-to-end encrypted call: audio and video go directly between the two of you once connected."}
         </p>
       )}
-      <div ref={container} className="relative min-h-0 w-full flex-1" />
-      {capture && (
-        <div
-          className="border-t border-white/10 bg-neutral-950 px-4 py-2 font-mono text-xs text-white/85"
-          aria-live="polite"
-          aria-label="Live transcript"
-        >
-          {captions.length === 0 ? (
-            <p className="text-white/50">Live transcript: lines appear here as people speak.</p>
-          ) : (
-            <ol className="space-y-0.5">
-              {captions.map((c, i) => (
-                <li key={`${c.t}-${i}`}>
-                  <span className="text-white/40">[{formatClock(c.t)}]</span>{" "}
-                  <span className="text-amber-300">{c.speaker}:</span> {c.text}
-                </li>
-              ))}
-            </ol>
-          )}
-        </div>
-      )}
-    </div>
+      <Room hostName={props.hostName} onLeave={() => void call?.leave()} />
+      {props.capture && <Captions lines={captions} />}
+    </>
   );
 }
 
-function formatClock(seconds: number) {
-  const m = Math.floor(seconds / 60);
-  const sec = Math.floor(seconds % 60);
-  return `${String(m).padStart(2, "0")}:${String(sec).padStart(2, "0")}`;
+function Notice({
+  title,
+  body,
+  action,
+  spinner = false,
+}: {
+  title: string;
+  body: string;
+  action?: React.ReactNode;
+  spinner?: boolean;
+}) {
+  return (
+    <div className="flex flex-1 items-center justify-center p-6">
+      <div className="w-full max-w-sm rounded-2xl border bg-card p-6 text-center shadow-sm">
+        {spinner && (
+          <div className="mb-3 flex justify-center">
+            <Spinner />
+          </div>
+        )}
+        <h2 className="text-lg font-semibold tracking-tight">{title}</h2>
+        <p className="mt-2 text-sm text-muted-foreground">{body}</p>
+        {action && <div className="mt-5 flex justify-center">{action}</div>}
+      </div>
+    </div>
+  );
 }
