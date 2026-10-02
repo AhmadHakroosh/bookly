@@ -156,9 +156,11 @@ admits them (a host who opens the link signed out is offered a sign-in link inst
 Rooms can be opened any time and expire two hours after the end.
 
 **End-to-end encrypted calls.** A Bookly video location can be marked _End-to-end encrypted_ in the
-event type's location editor. Its rooms are created peer-to-peer (`sfu_switchover` above the room's
-two-person limit), so audio and video travel directly between the two browsers and no server,
-Daily's included, can decrypt them; the regular rooms relay media through Daily's SFU, which
+event type's location editor. Its rooms are limited to two people and, once a participant has
+joined, the meeting page switches the call to Daily's peer topology (`setNetworkTopology`; the
+room-level `sfu_switchover` alone is not honoured on mesh-SFU domains, so the page asks
+explicitly and one side asking switches both), so audio and video travel directly between the
+two browsers and no server, Daily's included, can decrypt them; the regular rooms relay media through Daily's SFU, which
 decrypts it to forward it. The trade-offs: the call is one-to-one (the event type must have one
 seat, no guests and a single host, which the save action checks), there is no transcription or
 auto-capture (Daily's transcription runs on the SFU), chat and signalling still pass through Daily
