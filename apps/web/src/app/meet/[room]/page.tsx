@@ -53,7 +53,8 @@ async function MeetPage({ params, searchParams }: PageProps<"/meet/[room]">) {
   const capture = captureEnabled(b, et ?? null);
   // Who is opening the page: a signed-in member of the workspace joins as the room owner (so the
   // webhook sees `owner: true` and capture starts once an attendee is in); the attendee's link
-  // carries their manage token, which pre-fills their name. Anyone else picks a name on join.
+  // carries their manage token, which pre-fills their name. Rooms are private, so anyone else
+  // picks a name, knocks, and waits for the host to let them in.
   const [session, sp] = await Promise.all([getSession(), searchParams]);
   let token: string | null = null;
   try {
@@ -103,6 +104,24 @@ async function MeetPage({ params, searchParams }: PageProps<"/meet/[room]">) {
       {capture && (
         <p className="bg-amber-500/15 px-4 py-1.5 text-center text-xs text-amber-200">
           This call is transcribed so both sides get notes and action items afterwards.
+        </p>
+      )}
+      {!token && (
+        <p className="bg-white/10 px-4 py-1.5 text-center text-xs text-white/80">
+          This room is private: ask to join and the host will let you in.
+          {!session && (
+            <>
+              {" "}
+              Hosting this call?{" "}
+              <a
+                className="underline underline-offset-2"
+                href={`/login?next=${encodeURIComponent(`/meet/${room}`)}`}
+              >
+                Sign in
+              </a>{" "}
+              to open it.
+            </>
+          )}
         </p>
       )}
       <Call
