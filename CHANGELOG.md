@@ -6,6 +6,10 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 ## [0.9.0] - 2026-10-02
 
+### Fixed
+
+- The production Content Security Policy blocked Daily's call-machine bundle (served from the dailywebrtc CDNs and run through `eval()`), so the call page could not load devices or join outside development. The call object now uses Daily's `avoidEval` loading and the CSP allows the Daily CDN hosts, `blob:` scripts and the Banuba/pluot media hosts; empty device lists say "No camera found" instead of opening a blank menu
+
 ### Changed
 
 - Bookly video has Bookly's own call UI instead of Daily Prebuilt: a prejoin screen with camera preview, device pickers and mute toggles (visitors without a link type their name and knock), a fitted tile grid with the active speaker outlined, screen sharing, in-call chat and emoji reactions, hand raising, a People panel where the host lets knocking visitors in, device switching, background blur and noise cancellation, picture-in-picture, full screen, a connection indicator, a room-closing countdown and keyboard shortcuts for mic and camera. Dark, in Bookly's theme, with the live transcript and the end-to-end-encryption banner as before. Built on `@daily-co/daily-react`
