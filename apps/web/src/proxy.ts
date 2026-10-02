@@ -116,13 +116,17 @@ export async function proxy(request: NextRequest) {
     // workspace host, so send people to the chooser instead of a 404.
     if (pathname.startsWith("/admin"))
       return NextResponse.redirect(new URL("/workspaces", request.url));
+    // Meeting pages work on any host (the room is looked up across workspaces and the session
+    // cookie is root-scoped), so links built from APP_URL when MEET_URL is unset open here too.
     if (
       pathname.startsWith("/api/") ||
       pathname.startsWith("/login") ||
       pathname.startsWith("/forgot-password") ||
       pathname.startsWith("/reset-password") ||
       pathname.startsWith("/docs") ||
-      pathname.startsWith("/accept-invitation")
+      pathname.startsWith("/accept-invitation") ||
+      pathname === "/meet" ||
+      pathname.startsWith("/meet/")
     )
       return NextResponse.next();
     const url = request.nextUrl.clone();

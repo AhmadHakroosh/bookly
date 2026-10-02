@@ -12,6 +12,10 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 - Multilingual transcription: Bookly video calls are transcribed with Deepgram Nova-3 in multilingual mode unless the workspace fixes a language, so speakers can switch languages mid-call. Each transcript line records the language it was spoken in, the booking page lists the languages spoken, and the recap, follow-up and attendee recap are written in the language the host spoke most
 
+### Fixed
+
+- Meeting pages open on the platform host as well, so Bookly video links built from `APP_URL` (no `MEET_URL`, as on staging) no longer 404, and the "Sign in" link offered to a host who opens a room signed out points at the app host's login, which a dedicated meeting host would otherwise rewrite into a room path
+
 ### Security
 
 - End-to-end encrypted Bookly video: a per-event-type option on the Bookly video location that limits the room to two people and switches the call to Daily's peer topology once joined, so audio and video travel directly between the two browsers and no server (Daily's included) can decrypt them. Such calls are one-to-one (one seat, no guests, a single host), are never transcribed, are labelled "Bookly video (end-to-end encrypted)" on the booking page and in emails, and the meeting page reports whether the media path really is peer-to-peer
