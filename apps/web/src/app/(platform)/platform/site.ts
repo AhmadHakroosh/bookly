@@ -21,9 +21,9 @@ export const SITE = {
   maker: "Ahmad Hakroosh",
   supportEmail: process.env.SUPPORT_EMAIL ?? "support@bookly-app.io",
   /** Date the legal pages were last revised. */
-  legalUpdated: "September 23, 2026",
+  legalUpdated: "October 2, 2026",
   /** Last meaningful change to the marketing pages (sitemap lastmod). */
-  updated: "2026-09-22",
+  updated: "2026-10-02",
 } as const;
 
 export const siteUrl = () => loadEnv().APP_URL.replace(/\/$/, "");

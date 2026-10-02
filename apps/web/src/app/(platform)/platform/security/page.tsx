@@ -7,7 +7,7 @@ import { pageMetadata, SITE } from "../site";
 export const metadata: Metadata = pageMetadata({
   title: "Security",
   description:
-    "How Bookly protects client conversations: HTTPS, encryption at rest, scoped tokens, consent-based transcription with retention, open code, disclosure process.",
+    "How Bookly protects client conversations: HTTPS, encryption at rest, scoped tokens, private video rooms with an end-to-end encrypted option, consent-based transcription with retention, open code, disclosure process.",
   path: "/security",
 });
 
@@ -52,6 +52,34 @@ export default function SecurityPage() {
         <li>
           Operator access to the hosted service is limited to named staff, and every operator action
           is written to an audit log.
+        </li>
+      </ul>
+      <h2>Video calls</h2>
+      <p>
+        Bookly video runs on Daily.co, a SOC 2 Type II audited provider. What that means for a call:
+      </p>
+      <ul>
+        <li>
+          Audio and video are encrypted in transit with DTLS-SRTP (AES), as in every WebRTC call. On
+          a regular call the media is relayed by Daily&apos;s media server, which decrypts it to
+          forward it to the other participants and to transcribe when that is on. It is not stored
+          and Bookly never sees it. This is the same model as Zoom, Meet and Teams by default.
+        </li>
+        <li>
+          An event type can be set to <strong>end-to-end encrypted</strong>. Its calls are
+          peer-to-peer: audio and video travel directly between the two browsers and no server,
+          Daily&apos;s included, can decrypt them. Such calls are one-to-one, are never transcribed,
+          and the meeting page shows whether the connection really is peer-to-peer. Chat and the
+          connection setup still pass through Daily over TLS.
+        </li>
+        <li>
+          Rooms are private: the host and the booked attendee hold signed meeting tokens, anyone
+          else with the link has to knock and be let in by the host, rooms are named after the
+          booking (not guessable) and expire two hours after it ends.
+        </li>
+        <li>
+          When transcription is on, the audio is streamed to Deepgram for speech-to-text through
+          Daily; nothing is sent when it is off or on an end-to-end encrypted call.
         </li>
       </ul>
       <h2>Transcripts and consent</h2>

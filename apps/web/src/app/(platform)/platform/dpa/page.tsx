@@ -16,7 +16,12 @@ const SUBPROCESSORS: [name: string, purpose: string, location: string][] = [
   ["Neon", "PostgreSQL database and backups", "United States"],
   ["Upstash", "Job queue, rate limiting", "United States"],
   ["Resend", "Transactional and host email delivery", "United States"],
-  ["Daily.co", "Bookly video calls and their transcription", "United States"],
+  [
+    "Daily.co",
+    "Bookly video calls (media relay, except end-to-end encrypted calls) and their transcription",
+    "United States",
+  ],
+  ["Deepgram", "Speech-to-text for transcribed calls, streamed through Daily.co", "United States"],
   ["Recall.ai", "Notetaker for Google Meet, Teams and Zoom calls", "United States"],
   ["Stripe", "Subscriptions, paid bookings, payouts to hosts", "United States"],
   ["Anthropic", "AI briefings, recaps and drafts (no training on your data)", "United States"],
@@ -65,8 +70,9 @@ export default function DpaPage() {
       <p>
         The measures on the <Link href="/security">security page</Link> apply: encryption in transit
         and at rest, encrypted integration tokens, scoped API keys, rate limiting, signed webhooks,
-        daily backups kept for 30 days, and dependency audits in CI. The software is open source, so
-        the customer can inspect exactly how data is handled.
+        private video rooms with an end-to-end encrypted option, daily backups kept for 30 days, and
+        dependency audits in CI. The software is open source, so the customer can inspect exactly
+        how data is handled.
       </p>
       <h2>6. Sub-processors</h2>
       <p>
