@@ -8,7 +8,7 @@ import { createMeetingToken, dailyConfigured, dailyRoomUrl } from "@/server/inte
 import { getSession } from "@/server/session";
 import { and, eq as eqq } from "@bookly/db";
 import { getProfileByUser } from "@/server/scheduling";
-import { captureEnabled } from "@/server/transcripts";
+import { captureEnabled, encryptedLocation } from "@/server/transcripts";
 import { Call } from "./call";
 
 export const metadata: Metadata = { title: "Meeting", robots: { index: false, follow: false } };
@@ -36,6 +36,7 @@ async function MeetPage({ params, searchParams }: PageProps<"/meet/[room]">) {
       eventTypeId: true,
       timezone: true,
       meetingProvider: true,
+      location: true,
       captureConsent: true,
       attendeeName: true,
       manageToken: true,
@@ -51,6 +52,7 @@ async function MeetPage({ params, searchParams }: PageProps<"/meet/[room]">) {
       })
     : null;
   const capture = captureEnabled(b, et ?? null);
+  const encrypted = encryptedLocation(b.location);
   // Who is opening the page: a signed-in member of the workspace joins as the room owner (so the
   // webhook sees `owner: true` and capture starts once an attendee is in); the attendee's link
   // carries their manage token, which pre-fills their name. Rooms are private, so anyone else
@@ -129,6 +131,7 @@ async function MeetPage({ params, searchParams }: PageProps<"/meet/[room]">) {
         token={token}
         room={room}
         capture={capture}
+        encrypted={encrypted}
         hostName={host?.displayName ?? ""}
         attendeeName={b.attendeeName}
       />

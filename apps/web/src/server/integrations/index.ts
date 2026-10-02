@@ -368,8 +368,10 @@ export async function provisionBooking(
     attendee: { name: booking.attendeeName, email: booking.attendeeEmail },
     guests: booking.guests.map((email) => ({ name: email, email })),
     meetingUrl: null,
+    encrypted: booking.location.type === "daily" && booking.location.encrypted === true,
     transcription:
       !!eventType &&
+      !(booking.location.type === "daily" && booking.location.encrypted === true) &&
       (eventType.autoCapture === "always" ||
         (eventType.autoCapture === "ask" && booking.captureConsent === true)),
   };

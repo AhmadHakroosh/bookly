@@ -17,6 +17,8 @@ export type MeetingSpec = {
   guests?: { name: string; email: string }[];
   /** Existing meeting link to put in the calendar event's location, if any. */
   meetingUrl?: string | null;
+  /** Bookly video: peer-to-peer (end-to-end encrypted) two-person room; never transcribed. */
+  encrypted?: boolean;
   /** Bookly video: persist a transcript of the call (auto-capture). */
   transcription?: boolean;
 };

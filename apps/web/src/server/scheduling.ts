@@ -566,12 +566,17 @@ export function parseLocations(
       ? [{ type: legacyType, value: legacyValue || undefined }]
       : [];
   const out: EventType["location"][] = [];
-  for (const item of list as { type?: unknown; value?: unknown }[]) {
+  for (const item of list as { type?: unknown; value?: unknown; encrypted?: unknown }[]) {
     const type = String(item?.type ?? "");
     if (!(LOCATION_TYPES as readonly string[]).includes(type) || out.some((l) => l.type === type))
       continue;
     const value = typeof item.value === "string" ? item.value.trim().slice(0, 300) : "";
-    out.push({ type: type as EventType["location"]["type"], ...(value ? { value } : {}) });
+    const encrypted = type === "daily" && item.encrypted === true;
+    out.push({
+      type: type as EventType["location"]["type"],
+      ...(value ? { value } : {}),
+      ...(encrypted ? { encrypted } : {}),
+    });
   }
   return out.slice(0, 7);
 }
@@ -615,7 +620,7 @@ export function locationsLabel(locs: EventType["location"][]): string {
 export function locationLabel(loc: EventType["location"]): string {
   switch (loc.type) {
     case "daily":
-      return "Bookly video";
+      return loc.encrypted ? "Bookly video (end-to-end encrypted)" : "Bookly video";
     case "google_meet":
       return "Google Meet";
     case "zoom":

@@ -153,7 +153,19 @@ participant are in the room.
 Rooms are private and named after the booking: the host and the booked attendee join with their
 tokens, anyone else who opens the link asks to join and waits in Daily's lobby until the host
 admits them (a host who opens the link signed out is offered a sign-in link instead of knocking).
-Rooms can be opened any time and expire two hours after the end. The `/meet/<room>` page shows the meeting title and embeds Daily Prebuilt with chat, emoji
+Rooms can be opened any time and expire two hours after the end.
+
+**End-to-end encrypted calls.** A Bookly video location can be marked _End-to-end encrypted_ in the
+event type's location editor. Its rooms are created peer-to-peer (`sfu_switchover` above the room's
+two-person limit), so audio and video travel directly between the two browsers and no server,
+Daily's included, can decrypt them; the regular rooms relay media through Daily's SFU, which
+decrypts it to forward it. The trade-offs: the call is one-to-one (the event type must have one
+seat, no guests and a single host, which the save action checks), there is no transcription or
+auto-capture (Daily's transcription runs on the SFU), chat and signalling still pass through Daily
+over TLS, and the connection depends on the two networks reaching each other directly (Daily's
+TURN relay forwards the encrypted packets without decrypting them when they cannot). The booking
+page and emails call the location "Bookly video (end-to-end encrypted)", and the meeting page shows
+whether the media path really is peer-to-peer, from Daily's `network-connection` event. The `/meet/<room>` page shows the meeting title and embeds Daily Prebuilt with chat, emoji
 reactions, hand raising, picture-in-picture, background effects and noise cancellation enabled.
 Background effects need a browser with insertable-streams support (Chrome, Edge, recent Safari).
 

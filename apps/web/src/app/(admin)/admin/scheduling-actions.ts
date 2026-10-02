@@ -465,7 +465,15 @@ export async function saveEventType(_prev: EventTypeSaveState, formData: FormDat
   const locations = parseLocations(d.locationsJson, d.locationType, d.locationValue);
   if (!locations.length) return { error: "Choose at least one way to meet." };
   const location: EventLocation = locations[0]!;
-  const captureable = locations.some((l) => captureSupportsLocation(l.type));
+  const captureable = locations.some((l) => captureSupportsLocation(l.type) && !l.encrypted);
+  if (
+    locations.some((l) => l.encrypted) &&
+    (d.seats > 1 || d.maxGuests > 0 || d.assignment === "collective")
+  )
+    return {
+      error:
+        "End-to-end encrypted video is one-to-one: set seats to 1, guests to 0 and a single host.",
+    };
   try {
     if (locations.some((l) => l.type === "daily")) assertFeature(ws, "booklyVideo");
     if (d.price > 0) {

@@ -28,13 +28,19 @@ const DEFAULT_RETENTION_DAYS = 90;
  * Meet / Teams / Zoom through the notetaker), the event type on, consent when asked.
  */
 export function captureEnabled(
-  booking: Pick<Booking, "meetingProvider" | "captureConsent">,
+  booking: Pick<Booking, "meetingProvider" | "captureConsent"> & Partial<Pick<Booking, "location">>,
   eventType: Pick<EventType, "autoCapture"> | null,
 ) {
   if (!eventType || !captureSupportsLocation(booking.meetingProvider)) return false;
+  if (encryptedLocation(booking.location)) return false;
   if (eventType.autoCapture === "always") return true;
   if (eventType.autoCapture === "ask") return booking.captureConsent === true;
   return false;
+}
+
+/** An end-to-end encrypted Bookly video location: peer-to-peer, so nothing to transcribe. */
+export function encryptedLocation(loc: Booking["location"] | null | undefined) {
+  return !!loc && loc.type === "daily" && loc.encrypted === true;
 }
 
 export async function getTranscript(bookingId: string): Promise<MeetingTranscript | null> {

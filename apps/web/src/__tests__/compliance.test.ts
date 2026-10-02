@@ -62,6 +62,21 @@ describe("recording consent", () => {
       captureEnabled({ meetingProvider: "phone", captureConsent: true }, { autoCapture: "always" }),
     ).toBe(false);
   });
+  it("never captures an end-to-end encrypted Bookly video call", () => {
+    const enc = { type: "daily", encrypted: true } as const;
+    expect(
+      captureEnabled(
+        { meetingProvider: "daily", captureConsent: true, location: enc },
+        { autoCapture: "always" },
+      ),
+    ).toBe(false);
+    expect(
+      captureEnabled(
+        { meetingProvider: "daily", captureConsent: true, location: { type: "daily" } },
+        { autoCapture: "always" },
+      ),
+    ).toBe(true);
+  });
 });
 
 describe("outreach email footer", () => {
