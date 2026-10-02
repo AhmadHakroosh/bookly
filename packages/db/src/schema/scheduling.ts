@@ -139,7 +139,11 @@ export const scheduleOverrides = pgTable(
 
 export type LocationType =
   "daily" | "google_meet" | "zoom" | "teams" | "phone" | "in_person" | "custom";
-export type EventLocation = { type: LocationType; value?: string };
+/**
+ * `encrypted` applies to Bookly video only: the call runs peer-to-peer (end-to-end encrypted),
+ * which limits it to two people and rules out transcription.
+ */
+export type EventLocation = { type: LocationType; value?: string; encrypted?: boolean };
 /** single = the owner; round_robin = one of the hosts; collective = all hosts together. */
 export type Assignment = "single" | "round_robin" | "collective";
 export type FollowUp = {

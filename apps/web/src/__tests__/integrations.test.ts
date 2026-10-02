@@ -69,6 +69,17 @@ describe("provider payloads", () => {
     expect(b.properties.enable_pip_ui).toBe(true);
     expect(meetPageUrl(b.name)).toBe(`http://localhost:3002/meet/${b.name}`);
   });
+  it("daily: an encrypted room is peer-to-peer, two people, and never stores a transcript", () => {
+    const b = dailyRoomBody({ ...spec, encrypted: true, transcription: true });
+    expect(b.privacy).toBe("private");
+    expect(b.properties.max_participants).toBe(2);
+    expect(b.properties.sfu_switchover).toBe(10);
+    expect(b.properties).not.toHaveProperty("enable_transcription_storage");
+    const plain = dailyRoomBody({ ...spec, transcription: true });
+    expect(plain.properties.max_participants).toBe(10);
+    expect(plain.properties).not.toHaveProperty("sfu_switchover");
+    expect(plain.properties.enable_transcription_storage).toBe(true);
+  });
 });
 
 describe("oauth", () => {

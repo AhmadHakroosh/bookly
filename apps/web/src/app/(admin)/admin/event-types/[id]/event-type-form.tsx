@@ -72,8 +72,10 @@ export function EventTypeForm({
   const [state, action, pending] = useActionState(saveEventType, {} as EventTypeSaveState);
   const [locs, setLocs] = useState<EventLocation[]>(initial.locations);
   const types = locs.map((l) => l.type);
-  const captureable = types.some(
-    (t) => t === "daily" || (notetaker && ["zoom", "google_meet", "teams"].includes(t)),
+  const captureable = locs.some(
+    (l) =>
+      (l.type === "daily" && !l.encrypted) ||
+      (notetaker && ["zoom", "google_meet", "teams"].includes(l.type)),
   );
   const [assignment, setAssignment] = useState(initial.assignment);
   const [repeats, setRepeats] = useState(!!initial.recurrence.enabled);

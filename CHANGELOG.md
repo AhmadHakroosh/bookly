@@ -12,6 +12,7 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 ### Security
 
+- End-to-end encrypted Bookly video: a per-event-type option on the Bookly video location that creates the room peer-to-peer, so audio and video travel directly between the two browsers and no server (Daily's included) can decrypt them. Such calls are one-to-one (one seat, no guests, a single host), are never transcribed, are labelled "Bookly video (end-to-end encrypted)" on the booking page and in emails, and the meeting page reports whether the media path really is peer-to-peer
 - Bookly video rooms are private with knocking: the host (signed in) and the booked attendee (their `?t=` link) hold meeting tokens and join directly; anyone else who has the room link asks to join and waits until the host lets them in. Rooms created before the upgrade stay public until they expire, two hours after their booking ends
 
 ## [0.7.0] - 2026-09-30

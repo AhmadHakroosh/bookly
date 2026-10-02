@@ -233,8 +233,10 @@ async function EventPage({ params, searchParams }: PageProps<"/[username]/[event
                 locations={eventLocations(et, video).map((l) => ({
                   type: l.type,
                   label: locationLabel(l),
-                  capture: et.autoCapture === "ask" && captureSupportsLocation(l.type),
-                  captureAlways: et.autoCapture === "always" && captureSupportsLocation(l.type),
+                  capture:
+                    et.autoCapture === "ask" && captureSupportsLocation(l.type) && !l.encrypted,
+                  captureAlways:
+                    et.autoCapture === "always" && captureSupportsLocation(l.type) && !l.encrypted,
                   ask:
                     l.type === "phone"
                       ? "phone"

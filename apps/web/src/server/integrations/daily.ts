@@ -33,6 +33,10 @@ export function roomName(bookingId: string) {
  * anyone else who has the link knocks and waits for the host to admit them.
  */
 export function dailyRoomBody(spec: MeetingSpec) {
+  // End-to-end encrypted: audio and video go browser to browser (Daily only switches to its SFU
+  // past `sfu_switchover` participants, and the room admits two), so no server can decrypt the
+  // media; transcription needs the SFU and is never started on these rooms.
+  const e2ee = spec.encrypted === true;
   return {
     name: roomName(spec.bookingId),
     privacy: "private",
@@ -50,8 +54,9 @@ export function dailyRoomBody(spec: MeetingSpec) {
       enable_video_processing_ui: true,
       enable_noise_cancellation_ui: true,
       eject_at_room_exp: true,
-      max_participants: 10,
-      ...(spec.transcription ? { enable_transcription_storage: true } : {}),
+      max_participants: e2ee ? 2 : 10,
+      ...(e2ee ? { sfu_switchover: 10 } : {}),
+      ...(spec.transcription && !e2ee ? { enable_transcription_storage: true } : {}),
     },
   };
 }

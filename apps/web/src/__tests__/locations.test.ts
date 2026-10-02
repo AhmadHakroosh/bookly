@@ -31,6 +31,22 @@ describe("event type locations", () => {
     expect(parseLocations("{not json", "daily")).toEqual([{ type: "daily" }]);
     expect(parseLocations("")).toEqual([]);
   });
+  it("keeps the end-to-end encrypted flag on Bookly video only", () => {
+    expect(
+      parseLocations(
+        JSON.stringify([
+          { type: "daily", encrypted: true },
+          { type: "zoom", encrypted: true },
+        ]),
+      ),
+    ).toEqual([{ type: "daily", encrypted: true }, { type: "zoom" }]);
+    expect(parseLocations(JSON.stringify([{ type: "daily", encrypted: "yes" }]))).toEqual([
+      { type: "daily" },
+    ]);
+    expect(locationsLabel([{ type: "daily", encrypted: true }, { type: "phone" }])).toBe(
+      "Bookly video (end-to-end encrypted) or Phone call",
+    );
+  });
   it("offers the legacy location when the list is empty and labels a list", () => {
     const et = { location: { type: "daily" as const }, locations: [] };
     expect(eventLocations(et)).toEqual([{ type: "daily" }]);

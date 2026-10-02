@@ -117,6 +117,31 @@ export function LocationsEditor({
                 <Trash2Icon />
               </Button>
             </div>
+            {r.type === "daily" && (
+              <label className="flex items-start gap-2 text-xs text-muted-foreground">
+                <input
+                  type="checkbox"
+                  className="mt-0.5 size-3.5 accent-primary"
+                  checked={r.encrypted === true}
+                  onChange={(e) =>
+                    update(
+                      rows.map((x, j) =>
+                        j === i
+                          ? e.target.checked
+                            ? { ...x, encrypted: true }
+                            : { type: x.type, ...(x.value ? { value: x.value } : {}) }
+                          : x,
+                      ),
+                    )
+                  }
+                />
+                <span>
+                  End-to-end encrypted: audio and video go directly between you and the attendee
+                  instead of through a video server. One-to-one only (1 seat, no guests, a single
+                  host) and never transcribed.
+                </span>
+              </label>
+            )}
             {hints.length > 0 && (
               <p className="text-xs text-muted-foreground">{hints.join(" · ")}</p>
             )}
