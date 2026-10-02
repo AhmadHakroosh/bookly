@@ -106,6 +106,17 @@ export function Call({
       call.on("network-connection", (ev) => {
         if (ev.type === "peer-to-peer" || ev.type === "sfu") setTopology(ev.type);
       });
+      // Daily's room-level `sfu_switchover` is not honoured on mesh-SFU domains (two people
+      // still land on the SFU), so the page asks for the peer topology itself once joined. One
+      // side asking is enough: both participants switch and report `peer-to-peer`.
+      call.on("joined-meeting", () => {
+        void call
+          .setNetworkTopology({ topology: "peer" })
+          .then((r) => {
+            if (r?.error) console.warn("[meet] peer topology", r.error);
+          })
+          .catch((e) => console.warn("[meet] peer topology", e));
+      });
       call.on("left-meeting", () => setTopology(null));
     }
     void call.join();
