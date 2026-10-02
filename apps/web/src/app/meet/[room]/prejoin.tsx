@@ -56,6 +56,10 @@ export function Prejoin({
     call?.setLocalAudio(next);
   };
   const canJoin = !needsName || name.trim().length > 0;
+  const deviceOptions = (list: { device: MediaDeviceInfo }[], kind: string) =>
+    list.length
+      ? list.map((d) => ({ value: d.device.deviceId, label: d.device.label || kind }))
+      : [{ value: "", label: `No ${kind.toLowerCase()} found`, disabled: true }];
 
   return (
     <div className="flex flex-1 items-center justify-center p-4 sm:p-6">
@@ -131,20 +135,14 @@ export function Prejoin({
             <Dropdown
               ariaLabel="Camera"
               value={devices.currentCam?.device.deviceId ?? ""}
-              options={devices.cameras.map((d) => ({
-                value: d.device.deviceId,
-                label: d.device.label || "Camera",
-              }))}
+              options={deviceOptions(devices.cameras, "Camera")}
               onValueChange={(v) => void devices.setCamera(v)}
               placeholder="Camera"
             />
             <Dropdown
               ariaLabel="Microphone"
               value={devices.currentMic?.device.deviceId ?? ""}
-              options={devices.microphones.map((d) => ({
-                value: d.device.deviceId,
-                label: d.device.label || "Microphone",
-              }))}
+              options={deviceOptions(devices.microphones, "Microphone")}
               onValueChange={(v) => void devices.setMicrophone(v)}
               placeholder="Microphone"
             />
@@ -152,10 +150,7 @@ export function Prejoin({
               <Dropdown
                 ariaLabel="Speaker"
                 value={devices.currentSpeaker?.device.deviceId ?? ""}
-                options={devices.speakers.map((d) => ({
-                  value: d.device.deviceId,
-                  label: d.device.label || "Speaker",
-                }))}
+                options={deviceOptions(devices.speakers, "Speaker")}
                 onValueChange={(v) => void devices.setSpeaker(v)}
                 placeholder="Speaker"
               />

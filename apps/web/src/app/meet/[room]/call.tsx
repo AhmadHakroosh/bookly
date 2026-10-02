@@ -38,7 +38,13 @@ export type CallProps = {
  */
 export function Call(props: CallProps) {
   const callObject = useCallObject({
-    options: { url: props.url, ...(props.token ? { token: props.token } : {}) },
+    options: {
+      url: props.url,
+      ...(props.token ? { token: props.token } : {}),
+      // Load Daily's call-machine bundle as a script rather than through eval(), so the CSP can
+      // stay without 'unsafe-eval' (see next.config.ts).
+      dailyConfig: { avoidEval: true },
+    },
   });
   if (!callObject)
     return (

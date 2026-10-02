@@ -13,12 +13,14 @@ const dev = process.env.NODE_ENV === "development";
  */
 const csp = [
   "default-src 'self'",
-  // 'wasm-unsafe-eval': Daily's background blur and noise cancellation are WebAssembly workers.
-  `script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'${dev ? " 'unsafe-eval'" : ""} https://js.stripe.com https://*.daily.co`,
+  // Daily's call object fetches its call-machine bundle from the dailywebrtc CDNs and, with
+  // `avoidEval` (set on the call object), runs it as a blob script instead of through eval();
+  // 'wasm-unsafe-eval' is for the background blur and noise cancellation workers.
+  `script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' blob:${dev ? " 'unsafe-eval'" : ""} https://js.stripe.com https://*.daily.co https://*.dailywebrtc.com https://*.dailywebrtc.net`,
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob: https:",
   "font-src 'self' data:",
-  "connect-src 'self' https://*.daily.co wss://*.daily.co https://api.stripe.com https://*.sentry.io https://*.ingest.sentry.io",
+  "connect-src 'self' https://*.daily.co wss://*.daily.co https://*.dailywebrtc.com wss://*.dailywebrtc.com https://*.dailywebrtc.net wss://*.dailywebrtc.net https://*.pluot.blue wss://*.pluot.blue https://*.banuba.cloud https://api.stripe.com https://*.sentry.io https://*.ingest.sentry.io",
   "frame-src https://*.daily.co https://js.stripe.com https://checkout.stripe.com",
   "media-src 'self' blob: https://*.daily.co",
   "worker-src 'self' blob:",
