@@ -2,7 +2,8 @@ import type { MeetingTranscript } from "@bookly/db/schema";
 import { Badge } from "@/components/ui/badge";
 import { SubmitButton } from "@/components/submit-button";
 import { fmtDateTime } from "@/lib/time";
-import { renderTranscript, transcriptWords } from "@/server/transcript-text";
+import { languageNames, renderTranscript, transcriptWords } from "@/server/transcript-text";
+import { detectedLanguages } from "@/server/transcripts";
 import { deleteTranscriptAction } from "../../scheduling-actions";
 
 const LABEL: Record<string, string> = {
@@ -61,6 +62,8 @@ export function TranscriptPanel({
           <p className="mt-2 text-xs text-muted-foreground">
             {transcript.segments.length} lines · about {transcriptWords(transcript.segments)} words
             · {transcript.source} ·
+            {detectedLanguages(transcript.segments).length > 0 &&
+              ` ${languageNames(detectedLanguages(transcript.segments))} ·`}
             {transcript.expiresAt
               ? ` deleted automatically on ${fmtDateTime(transcript.expiresAt, tz)}`
               : " kept until deleted"}

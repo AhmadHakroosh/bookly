@@ -59,14 +59,37 @@ export function mergeSegments(
   return out.sort((a, b) => a.t - b.t);
 }
 
+/** "English, Spanish" from Deepgram's codes; unknown codes are shown as they are. */
+export function languageNames(codes: string[], locale = "en"): string {
+  let names: Intl.DisplayNames | null = null;
+  try {
+    names = new Intl.DisplayNames([locale], { type: "language", fallback: "none" });
+  } catch {
+    names = null;
+  }
+  return codes
+    .map((c) => {
+      try {
+        return names?.of(c) ?? c;
+      } catch {
+        return c;
+      }
+    })
+    .join(", ");
+}
+
 const clock = (t: number) =>
   `${String(Math.floor(t / 60)).padStart(2, "0")}:${String(Math.floor(t % 60)).padStart(2, "0")}`;
 
-/** "[03:12] host: …" lines; speakers replaced with real names when given. */
+/**
+ * "[03:12] host: …" lines; speakers replaced with real names when given. On a call that
+ * switched languages, each line also carries its language code ("[03:12] host (es): …").
+ */
 export function renderTranscript(
   segments: TranscriptSegment[],
   names: { host?: string; attendee?: string } = {},
 ): string {
+  const multilingual = new Set(segments.map((s) => s.lang).filter(Boolean)).size > 1;
   return segments
     .map((s) => {
       const who =
@@ -75,7 +98,8 @@ export function renderTranscript(
           : s.speaker === "attendee"
             ? (names.attendee ?? "Attendee")
             : s.speaker;
-      return `[${clock(s.t)}] ${who}: ${s.text}`;
+      const lang = multilingual && s.lang ? ` (${s.lang})` : "";
+      return `[${clock(s.t)}] ${who}${lang}: ${s.text}`;
     })
     .join("\n");
 }

@@ -9,7 +9,12 @@ import { getCurrentWorkspace } from "@/server/workspace";
 const body = z.object({
   segments: z
     .array(
-      z.object({ t: z.number().min(0), speaker: z.string().max(60), text: z.string().max(2000) }),
+      z.object({
+        t: z.number().min(0),
+        speaker: z.string().max(60),
+        text: z.string().max(2000),
+        lang: z.string().max(16).optional(),
+      }),
     )
     .max(200),
 });
