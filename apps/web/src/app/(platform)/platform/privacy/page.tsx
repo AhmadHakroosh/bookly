@@ -91,14 +91,14 @@ export default function PrivacyPage() {
       <h2>Who else sees it</h2>
       <p>
         Sub-processors that host or deliver the service: the hosting and database providers, the
-        email, SMS and WhatsApp delivery providers, Daily.co for Bookly video and transcription,
-        Recall.ai for the notetaker that transcribes Google Meet, Teams and Zoom calls, Stripe for
-        payments, Anthropic for AI features, and Sentry for error reports (with guest emails and
-        phone numbers removed before anything is sent). Each is bound by a data-processing
-        agreement; the full list with locations and purposes is in our{" "}
-        <Link href="/dpa">data processing agreement</Link>. Data you choose to sync to Google,
-        Microsoft, Zoom, HubSpot or Pipedrive is governed by their policies. We do not sell personal
-        data and do not share it for advertising.
+        email, SMS and WhatsApp delivery providers, Daily.co for Bookly video and transcription
+        (with Deepgram as its speech-to-text engine when a call is transcribed), Recall.ai for the
+        notetaker that transcribes Google Meet, Teams and Zoom calls, Stripe for payments, Anthropic
+        for AI features, and Sentry for error reports (with guest emails and phone numbers removed
+        before anything is sent). Each is bound by a data-processing agreement; the full list with
+        locations and purposes is in our <Link href="/dpa">data processing agreement</Link>. Data
+        you choose to sync to Google, Microsoft, Zoom, HubSpot or Pipedrive is governed by their
+        policies. We do not sell personal data and do not share it for advertising.
       </p>
       <p>
         <strong>Calendar and conferencing accounts you connect.</strong> When a host connects
@@ -201,11 +201,21 @@ export default function PrivacyPage() {
         booking data; we will help either way.
       </p>
       <p>
+        <strong>Video calls.</strong> Audio and video on Bookly video are encrypted in transit. On a
+        regular call Daily.co&apos;s media server relays them, decrypting to forward and, when
+        transcription is on, to transcribe; nothing is recorded or stored by default and Bookly
+        never receives the media. An event type marked end-to-end encrypted runs peer-to-peer: audio
+        and video travel directly between the two browsers and are never transcribed. Rooms are
+        private; people other than the host and the person who booked must be let in by the host.
+        See the <Link href="/security">security page</Link> for details.
+      </p>
+      <p>
         <strong>Recording and transcription.</strong> When a host turns on transcription for a call,
         you are told on the booking page (or asked to agree there), in the confirmation email and in
-        the call itself. Transcripts are kept for the period the host sets, and you can delete yours
-        from your booking page at any time. Meeting notes and recaps are generated with AI from the
-        transcript and are marked as such wherever they are shown.
+        the call itself. The audio is transcribed by Deepgram through Daily.co while the call runs;
+        the transcript records the languages spoken. Transcripts are kept for the period the host
+        sets, and you can delete yours from your booking page at any time. Meeting notes and recaps
+        are generated with AI from the transcript and are marked as such wherever they are shown.
       </p>
       <p>
         <strong>Emails from hosts.</strong> Proposals, payment requests and follow-ups from a host
