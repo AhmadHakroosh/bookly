@@ -10,6 +10,10 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 - Text messages can go through Sent.dm as well as Twilio: `SENTDM_API_KEY` is the whole setup (one key for SMS and WhatsApp; Sent.dm handles sender registration and WhatsApp onboarding on its side), `SENTDM_SANDBOX=true` dry-runs requests, and `TEXT_PROVIDER` picks explicitly when both are configured. Twilio keeps working unchanged. The operator health page names the provider in use
 
+### Security
+
+- Bookly video rooms are private with knocking: the host (signed in) and the booked attendee (their `?t=` link) hold meeting tokens and join directly; anyone else who has the room link asks to join and waits until the host lets them in. Rooms created before the upgrade stay public until they expire, two hours after their booking ends
+
 ## [0.7.0] - 2026-09-30
 
 ### Added

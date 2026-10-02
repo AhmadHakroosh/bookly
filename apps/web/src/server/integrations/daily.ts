@@ -27,13 +27,18 @@ export function roomName(bookingId: string) {
     .toLowerCase()}`;
 }
 
-/** Request body for POST /rooms — exported for tests. */
+/**
+ * Request body for POST /rooms — exported for tests. Rooms are private: the host (signed-in
+ * member) and the booked attendee (manage-token link) get meeting tokens and walk straight in;
+ * anyone else who has the link knocks and waits for the host to admit them.
+ */
 export function dailyRoomBody(spec: MeetingSpec) {
   return {
     name: roomName(spec.bookingId),
-    privacy: "public",
+    privacy: "private",
     properties: {
       exp: Math.floor(spec.end.getTime() / 1000) + 2 * 60 * 60,
+      enable_knocking: true,
       enable_prejoin_ui: true,
       enable_chat: true,
       enable_advanced_chat: true,
