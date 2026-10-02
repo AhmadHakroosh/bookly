@@ -4,6 +4,12 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 ## [Unreleased]
 
+## [0.9.0] - 2026-10-02
+
+### Changed
+
+- Bookly video has Bookly's own call UI instead of Daily Prebuilt: a prejoin screen with camera preview, device pickers and mute toggles (visitors without a link type their name and knock), a fitted tile grid with the active speaker outlined, screen sharing, in-call chat and emoji reactions, hand raising, a People panel where the host lets knocking visitors in, device switching, background blur and noise cancellation, picture-in-picture, full screen, a connection indicator, a room-closing countdown and keyboard shortcuts for mic and camera. Dark, in Bookly's theme, with the live transcript and the end-to-end-encryption banner as before. Built on `@daily-co/daily-react`
+
 ## [0.8.0] - 2026-10-01
 
 ### Added
@@ -311,7 +317,8 @@ First public release: the self-hostable scheduling platform with contacts, brief
 
 - The unused storage layer (`packages/storage`, `STORAGE_*` and `S3_*` variables, the MinIO service in Compose): nothing in Bookly uploads files; profile photos and logos are URLs
 
-[Unreleased]: https://github.com/AhmadHakroosh/bookly/compare/v0.8.0...HEAD
+[Unreleased]: https://github.com/AhmadHakroosh/bookly/compare/v0.9.0...HEAD
+[0.9.0]: https://github.com/AhmadHakroosh/bookly/compare/v0.8.0...v0.9.0
 [0.8.0]: https://github.com/AhmadHakroosh/bookly/compare/v0.7.0...v0.8.0
 [0.7.0]: https://github.com/AhmadHakroosh/bookly/compare/v0.6.1...v0.7.0
 [0.6.1]: https://github.com/AhmadHakroosh/bookly/compare/v0.6.0...v0.6.1

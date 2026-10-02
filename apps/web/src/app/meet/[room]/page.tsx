@@ -10,15 +10,15 @@ import { getSession } from "@/server/session";
 import { and, eq as eqq } from "@bookly/db";
 import { getProfileByUser } from "@/server/scheduling";
 import { captureEnabled, encryptedLocation } from "@/server/transcripts";
+import { Logo } from "@/components/brand/logo";
 import { Call } from "./call";
 
 export const metadata: Metadata = { title: "Meeting", robots: { index: false, follow: false } };
 
 /**
- * Bookly video: wraps Daily Prebuilt for the room created for a booking. Lives outside the
- * public shell (no workspace header or footer) and fills the viewport: the frame's height is a
- * percentage, which only resolves against a definite height, hence `h-dvh` rather than a
- * minimum.
+ * Bookly video: Bookly's own call UI (see call.tsx) on the Daily room created for a booking.
+ * Lives outside the public shell (no workspace header or footer), fills the viewport and is
+ * always dark, like most call surfaces, using Bookly's dark theme tokens.
  */
 async function MeetPage({ params, searchParams }: PageProps<"/meet/[room]">) {
   const { room } = await params;
@@ -62,6 +62,7 @@ async function MeetPage({ params, searchParams }: PageProps<"/meet/[room]">) {
   // Sign-in lives on the app host: on a dedicated meeting host (MEET_URL) every path is a room.
   const signInUrl = `${loadEnv().APP_URL.replace(/\/$/, "")}/login?next=${encodeURIComponent(`/meet/${room}`)}`;
   let token: string | null = null;
+  let initialName = "";
   try {
     if (session) {
       const member = await db().query.members.findFirst({
@@ -82,13 +83,15 @@ async function MeetPage({ params, searchParams }: PageProps<"/meet/[room]">) {
           session.user.id === b.hostUserId
             ? host
             : await getProfileByUser(b.workspaceId, session.user.id);
+        initialName = me?.displayName ?? session.user.name ?? "Host";
         token = await createMeetingToken(room, {
-          userName: me?.displayName ?? session.user.name ?? "Host",
+          userName: initialName,
           isOwner: true,
           expiresAt: new Date(b.endAt.getTime() + 2 * 3600_000),
         });
       }
     } else if (typeof sp.t === "string" && sp.t === b.manageToken) {
+      initialName = b.attendeeName;
       token = await createMeetingToken(room, {
         userName: b.attendeeName,
         isOwner: false,
@@ -99,31 +102,28 @@ async function MeetPage({ params, searchParams }: PageProps<"/meet/[room]">) {
     console.error("[meet] token", e);
   }
   return (
-    <div className="flex h-dvh flex-col bg-black text-white">
-      <header className="flex items-center justify-between px-4 py-3 text-sm">
-        <span className="font-medium">
-          {et?.title ?? "Meeting"} with {host?.displayName ?? "your host"}
+    <div className="dark flex h-dvh flex-col bg-background text-foreground">
+      <header className="flex items-center justify-between gap-3 border-b px-4 py-2.5 text-sm">
+        <span className="flex min-w-0 items-center gap-2.5">
+          <Logo size={22} className="shrink-0" />
+          <span className="truncate font-medium">
+            {et?.title ?? "Meeting"} with {host?.displayName ?? "your host"}
+          </span>
         </span>
-        <span className="text-white/60">{fmtDateTime(b.startAt, b.timezone)}</span>
+        <span className="shrink-0 text-muted-foreground">{fmtDateTime(b.startAt, b.timezone)}</span>
       </header>
       {capture && (
         <p className="bg-amber-500/15 px-4 py-1.5 text-center text-xs text-amber-200">
           This call is transcribed so both sides get notes and action items afterwards.
         </p>
       )}
-      {!token && (
-        <p className="bg-white/10 px-4 py-1.5 text-center text-xs text-white/80">
-          This room is private: ask to join and the host will let you in.
-          {!session && (
-            <>
-              {" "}
-              Hosting this call?{" "}
-              <a className="underline underline-offset-2" href={signInUrl}>
-                Sign in
-              </a>{" "}
-              to open it.
-            </>
-          )}
+      {!token && !session && (
+        <p className="bg-muted px-4 py-1.5 text-center text-xs text-muted-foreground">
+          Hosting this call?{" "}
+          <a className="underline underline-offset-2" href={signInUrl}>
+            Sign in
+          </a>{" "}
+          to open it as the host.
         </p>
       )}
       <Call
@@ -134,6 +134,8 @@ async function MeetPage({ params, searchParams }: PageProps<"/meet/[room]">) {
         encrypted={encrypted}
         hostName={host?.displayName ?? ""}
         attendeeName={b.attendeeName}
+        initialName={initialName}
+        needsName={!token}
       />
     </div>
   );
@@ -141,7 +143,9 @@ async function MeetPage({ params, searchParams }: PageProps<"/meet/[room]">) {
 
 export default function MeetPageBoundary(props: PageProps<"/meet/[room]">) {
   return (
-    <Suspense fallback={<div className="h-dvh bg-black" aria-busy aria-label="Loading" />}>
+    <Suspense
+      fallback={<div className="dark h-dvh bg-background" aria-busy aria-label="Loading" />}
+    >
       <MeetPage {...props} />
     </Suspense>
   );
