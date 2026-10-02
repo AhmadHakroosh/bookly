@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { eq, schema } from "@bookly/db";
 import { db } from "@/lib/db";
+import { loadEnv } from "@bookly/config";
 import { fmtDateTime } from "@/lib/time";
 import { createMeetingToken, dailyConfigured, dailyRoomUrl } from "@/server/integrations";
 import { getSession } from "@/server/session";
@@ -58,6 +59,8 @@ async function MeetPage({ params, searchParams }: PageProps<"/meet/[room]">) {
   // carries their manage token, which pre-fills their name. Rooms are private, so anyone else
   // picks a name, knocks, and waits for the host to let them in.
   const [session, sp] = await Promise.all([getSession(), searchParams]);
+  // Sign-in lives on the app host: on a dedicated meeting host (MEET_URL) every path is a room.
+  const signInUrl = `${loadEnv().APP_URL.replace(/\/$/, "")}/login?next=${encodeURIComponent(`/meet/${room}`)}`;
   let token: string | null = null;
   try {
     if (session) {
@@ -115,10 +118,7 @@ async function MeetPage({ params, searchParams }: PageProps<"/meet/[room]">) {
             <>
               {" "}
               Hosting this call?{" "}
-              <a
-                className="underline underline-offset-2"
-                href={`/login?next=${encodeURIComponent(`/meet/${room}`)}`}
-              >
+              <a className="underline underline-offset-2" href={signInUrl}>
                 Sign in
               </a>{" "}
               to open it.
