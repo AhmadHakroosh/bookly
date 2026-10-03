@@ -10,7 +10,8 @@ import { getSession } from "@/server/session";
 import { and, eq as eqq } from "@bookly/db";
 import { getProfileByUser } from "@/server/scheduling";
 import { captureEnabled, encryptedLocation } from "@/server/transcripts";
-import { Logo } from "@/components/brand/logo";
+import { Logo, LogoMark } from "@/components/brand/logo";
+import { accentVars, workspaceBrand } from "@/server/brand";
 import { Call } from "./call";
 
 export const metadata: Metadata = { title: "Meeting", robots: { index: false, follow: false } };
@@ -45,6 +46,16 @@ async function MeetPage({ params, searchParams }: PageProps<"/meet/[room]">) {
   });
   const b = rows.find((r) => (r.meetingRef as { room?: string } | null)?.room === room);
   if (!b || b.status === "cancelled") notFound();
+  const ws = await db().query.workspaces.findFirst({
+    where: eq(schema.workspaces.id, b.workspaceId),
+  });
+  // Plans with their own branding (and every self-hosted install) put the workspace's logo,
+  // name and accent on the call; everyone else sees Bookly's.
+  const brand = workspaceBrand(ws ?? null);
+  const style = {
+    ...(accentVars(brand) ?? {}),
+    ...(brand.ownAccent ? { "--brand": brand.ownAccent } : {}),
+  } as React.CSSProperties;
   const host = await getProfileByUser(b.workspaceId, b.hostUserId);
   const et = b.eventTypeId
     ? await db().query.eventTypes.findFirst({
@@ -65,19 +76,15 @@ async function MeetPage({ params, searchParams }: PageProps<"/meet/[room]">) {
   let initialName = "";
   try {
     if (session) {
-      const member = await db().query.members.findFirst({
-        where: and(
-          eqq(
-            schema.members.organizationId,
-            (await db().query.workspaces.findFirst({
-              where: eq(schema.workspaces.id, b.workspaceId),
-              columns: { organizationId: true },
-            }))!.organizationId,
-          ),
-          eqq(schema.members.userId, session.user.id),
-        ),
-        columns: { role: true },
-      });
+      const member = ws
+        ? await db().query.members.findFirst({
+            where: and(
+              eqq(schema.members.organizationId, ws.organizationId),
+              eqq(schema.members.userId, session.user.id),
+            ),
+            columns: { role: true },
+          })
+        : null;
       if (member) {
         const me =
           session.user.id === b.hostUserId
@@ -102,10 +109,22 @@ async function MeetPage({ params, searchParams }: PageProps<"/meet/[room]">) {
     console.error("[meet] token", e);
   }
   return (
-    <div className="dark flex h-dvh flex-col bg-background text-foreground">
+    <div className="dark flex h-dvh flex-col bg-background text-foreground" style={style}>
       <header className="flex items-center justify-between gap-3 border-b px-4 py-2.5 text-sm">
         <span className="flex min-w-0 items-center gap-2.5">
-          <Logo size={22} className="shrink-0" />
+          {brand.own ? (
+            <span className="flex shrink-0 items-center gap-2 font-semibold tracking-tight">
+              {brand.logoUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={brand.logoUrl} alt="" className="size-6 rounded-md object-contain" />
+              ) : (
+                <LogoMark className="size-6" accent={brand.accent} />
+              )}
+              <span className="hidden sm:inline">{brand.name}</span>
+            </span>
+          ) : (
+            <Logo size={22} className="shrink-0" />
+          )}
           <span className="truncate font-medium">
             {et?.title ?? "Meeting"} with {host?.displayName ?? "your host"}
           </span>

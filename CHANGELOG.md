@@ -13,6 +13,7 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 ### Changed
 
 - Bookly video has Bookly's own call UI instead of Daily Prebuilt: a prejoin screen with camera preview, device pickers and mute toggles (visitors without a link type their name and knock), a fitted tile grid with the active speaker outlined, screen sharing, in-call chat and emoji reactions, hand raising, a People panel where the host lets knocking visitors in, device switching, background blur and noise cancellation, picture-in-picture, full screen, a connection indicator, a room-closing countdown and keyboard shortcuts for mic and camera. Dark, in Bookly's theme, with the live transcript and the end-to-end-encryption banner as before. Built on `@daily-co/daily-react`
+- Call UI details: a raised hand shows as ✋ in the corner of that person's tile; background effects offer three blur strengths, four bundled scenes and an uploaded picture, remembered per browser; noise cancellation is on by default (switch it off under Settings → Audio and the choice sticks); live captions show people's names, with "(host)" after the host; on plans with their own branding the call carries the workspace's logo, name and accent instead of Bookly's
 
 ## [0.8.0] - 2026-10-01
 

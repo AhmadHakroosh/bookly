@@ -24,6 +24,7 @@ import {
   PictureInPicture2Icon,
   SettingsIcon,
   SmilePlusIcon,
+  SparklesIcon,
   UsersIcon,
   VideoIcon,
   VideoOffIcon,
@@ -47,6 +48,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { EffectsPopover, rememberNoiseCancellation } from "./effects";
 import { REACTIONS } from "./messages";
 
 export type Panel = "chat" | "people" | null;
@@ -81,7 +83,6 @@ export function Tray({
   const { threshold } = useNetwork();
   const [fullscreen, setFullscreen] = useState(false);
   const [support] = useState(() => DailyIframe.supportedBrowser());
-  const blur = inputSettings?.video?.processor?.type === "background-blur";
   const noise = inputSettings?.audio?.processor?.type === "noise-cancellation";
   const canShare = typeof navigator !== "undefined" && !!navigator.mediaDevices?.getDisplayMedia;
   const canPip = typeof document !== "undefined" && "pictureInPictureEnabled" in document;
@@ -177,6 +178,27 @@ export function Tray({
           ))}
         </PopoverContent>
       </Popover>
+      {support.supportsVideoProcessing && (
+        <Popover>
+          <Tooltip>
+            <TooltipTrigger
+              render={
+                <PopoverTrigger
+                  render={
+                    <Button variant="outline" size="icon-lg" aria-label="Background effects" />
+                  }
+                />
+              }
+            >
+              <SparklesIcon />
+            </TooltipTrigger>
+            <TooltipContent>Background effects</TooltipContent>
+          </Tooltip>
+          <PopoverContent className="w-80 p-3" align="center">
+            <EffectsPopover />
+          </PopoverContent>
+        </Popover>
+      )}
       <TrayButton
         label="Chat"
         active={panel === "chat"}
@@ -235,30 +257,16 @@ export function Tray({
           )}
           <DropdownMenuSeparator />
           <DropdownMenuGroup>
-            <DropdownMenuLabel>Effects</DropdownMenuLabel>
-            <DropdownMenuCheckboxItem
-              checked={blur}
-              disabled={!support.supportsVideoProcessing}
-              onCheckedChange={(on) =>
-                void updateInputSettings({
-                  video: {
-                    processor: on
-                      ? { type: "background-blur", config: { strength: 0.5 } }
-                      : { type: "none" },
-                  },
-                })
-              }
-            >
-              Blur my background
-            </DropdownMenuCheckboxItem>
+            <DropdownMenuLabel>Audio</DropdownMenuLabel>
             <DropdownMenuCheckboxItem
               checked={noise}
               disabled={!support.supportsAudioProcessing}
-              onCheckedChange={(on) =>
+              onCheckedChange={(on) => {
+                rememberNoiseCancellation(on);
                 void updateInputSettings({
                   audio: { processor: { type: on ? "noise-cancellation" : "none" } },
-                })
-              }
+                });
+              }}
             >
               Cancel background noise
             </DropdownMenuCheckboxItem>

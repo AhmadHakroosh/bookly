@@ -93,8 +93,26 @@ export function useLiveTranscript({
   return captions;
 }
 
-/** The last few transcribed lines, shown under the call while capture is on. */
-export function Captions({ lines }: { lines: Line[] }) {
+/**
+ * The last few transcribed lines, shown under the call while capture is on. Lines are stored
+ * with the role ("host" / "attendee") so recaps can tell the sides apart; on screen they carry
+ * the person's name, with "(host)" after the host's.
+ */
+export function Captions({
+  lines,
+  hostName,
+  attendeeName,
+}: {
+  lines: Line[];
+  hostName: string;
+  attendeeName: string;
+}) {
+  const label = (speaker: string) =>
+    speaker === "host"
+      ? `${hostName || "Host"} (host)`
+      : speaker === "attendee"
+        ? attendeeName || "Attendee"
+        : speaker;
   return (
     <div
       className="border-t bg-card px-4 py-2 font-mono text-xs text-foreground/85"
@@ -108,7 +126,7 @@ export function Captions({ lines }: { lines: Line[] }) {
           {lines.map((c, i) => (
             <li key={`${c.t}-${i}`}>
               <span className="text-muted-foreground">[{formatClock(c.t)}]</span>{" "}
-              <span className="text-brand">{c.speaker}:</span> {c.text}
+              <span className="text-brand">{label(c.speaker)}:</span> {c.text}
             </li>
           ))}
         </ol>
