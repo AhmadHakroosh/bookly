@@ -15,7 +15,7 @@ import {
   useVideoTrack,
   useWaitingParticipants,
 } from "@daily-co/daily-react";
-import { HandIcon, MicOffIcon } from "lucide-react";
+import { MicOffIcon } from "lucide-react";
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -278,6 +278,18 @@ function Tile({
       ) : (
         <DailyVideo sessionId={id} automirror={local} fit="cover" className="h-full w-full" />
       )}
+      {hand && (
+        <span
+          className={cn(
+            "absolute top-2 left-2 rounded-lg bg-black/55 leading-none shadow",
+            compact ? "px-1 py-0.5 text-base" : "px-1.5 py-1 text-2xl",
+          )}
+          role="img"
+          aria-label="Hand raised"
+        >
+          ✋
+        </span>
+      )}
       <div className="absolute inset-x-0 bottom-0 flex items-center gap-1.5 bg-gradient-to-t from-black/60 to-transparent px-2 py-1.5 text-xs text-white">
         <span className="truncate font-medium">
           {label}
@@ -289,7 +301,6 @@ function Tile({
           </span>
         )}
         <span className="ml-auto flex items-center gap-1">
-          {hand && <HandIcon className="size-3.5 text-brand" aria-label="Hand raised" />}
           {audio.isOff && <MicOffIcon className="size-3.5 text-red-300" aria-label="Muted" />}
         </span>
       </div>

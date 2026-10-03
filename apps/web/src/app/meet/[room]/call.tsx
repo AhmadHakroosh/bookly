@@ -11,6 +11,7 @@ import { useCallback, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { Captions, useLiveTranscript } from "./captions";
+import { applySavedEffect, noiseCancellationWanted } from "./effects";
 import { Prejoin } from "./prejoin";
 import { Room } from "./room";
 
@@ -88,6 +89,13 @@ function CallUi(props: CallProps) {
             if (r?.error) console.warn("[meet] peer topology", r.error);
           })
           .catch((e) => console.warn("[meet] peer topology", e));
+      // Noise cancellation is on unless the person switched it off before; the background effect
+      // they chose last time comes back too. Both are best effort (browser support varies).
+      if (noiseCancellationWanted())
+        void call
+          .updateInputSettings({ audio: { processor: { type: "noise-cancellation" } } })
+          .catch(() => {});
+      void applySavedEffect(call);
       const access = call.accessState().access;
       if (access !== "unknown" && access.level === "lobby") {
         setStage("knocking");
@@ -200,7 +208,9 @@ function CallUi(props: CallProps) {
         </p>
       )}
       <Room hostName={props.hostName} onLeave={() => void call?.leave()} />
-      {props.capture && <Captions lines={captions} />}
+      {props.capture && (
+        <Captions lines={captions} hostName={props.hostName} attendeeName={props.attendeeName} />
+      )}
     </>
   );
 }

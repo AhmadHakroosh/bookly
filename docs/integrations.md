@@ -174,9 +174,12 @@ Daily Prebuilt is no longer used): a prejoin screen with camera preview, device 
 toggles (and a name field for visitors without a token, who then knock); in the call a fitted
 tile grid with the active speaker outlined, screen sharing with a tile strip, in-call chat and
 emoji reactions over Daily app messages (`messages.ts` is the protocol; nothing is stored), hand
-raising via participant `userData`, a People panel where hosts admit or turn away people who are
-knocking, device switching, background blur and noise cancellation (Daily's WebAssembly
-processors, hence `'wasm-unsafe-eval'` in the CSP), picture-in-picture, full screen, a network
+raising via participant `userData` (a ✋ in the tile's corner), a People panel where hosts admit or
+turn away people who are knocking, device switching, background effects (three blur strengths,
+bundled scenes under `public/backgrounds/`, or an uploaded jpg/png kept in memory; the choice is
+remembered per browser) and noise cancellation, on by default (Daily's WebAssembly processors,
+hence `'wasm-unsafe-eval'` in the CSP), live captions that name the speakers ("(host)" after the
+host), the workspace's logo, name and accent on plans with their own branding, picture-in-picture, full screen, a network
 indicator, a room-closing countdown and ⌘/Ctrl+D / ⌘/Ctrl+E for mic and camera. The page is
 always dark and uses Bookly's theme tokens. Background effects need a browser with
 insertable-streams support (Chrome, Edge, recent Safari).

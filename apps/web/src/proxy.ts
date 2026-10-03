@@ -198,5 +198,6 @@ export async function proxy(request: NextRequest) {
 
 export const config = {
   // Every path, including ones with a file extension, so unknown "files" get a real 404.
-  matcher: ["/((?!_next/|uploads/).*)"],
+  // Static folders under public/ that serve files by extension bypass the proxy entirely.
+  matcher: ["/((?!_next/|uploads/|backgrounds/).*)"],
 };
