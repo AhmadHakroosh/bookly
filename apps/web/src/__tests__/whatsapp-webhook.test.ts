@@ -61,6 +61,28 @@ describe("WhatsApp webhook", () => {
       failed: ["wamid.2: 131026 Message undeliverable"],
     });
     expect(summarize({})).toEqual({ statuses: 0, messages: 0, failed: [] });
+    // Strings from the payload are logged, so line breaks and control characters are stripped.
+    expect(
+      summarize({
+        entry: [
+          {
+            changes: [
+              {
+                value: {
+                  statuses: [
+                    {
+                      id: "wamid.3\nfake",
+                      status: "failed",
+                      errors: [{ code: 1, title: "x\u0007y" }],
+                    },
+                  ],
+                },
+              },
+            ],
+          },
+        ],
+      }).failed,
+    ).toEqual(["wamid.3 fake: 1 x y"]);
   });
   it("accepts a signed post, rejects a bad signature and a missing secret", async () => {
     const r = await load({ WHATSAPP_APP_SECRET: "app-secret" });

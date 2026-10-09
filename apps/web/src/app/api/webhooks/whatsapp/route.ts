@@ -14,6 +14,12 @@ type Payload = {
   entry?: { changes?: { value?: { statuses?: Status[]; messages?: unknown[] } }[] }[];
 };
 
+/** Meta's strings go into a log line: one line each, no control characters, bounded length. */
+const clean = (v: unknown) =>
+  String(v ?? "")
+    .replace(/[\u0000-\u001f\u007f]+/g, " ")
+    .slice(0, 200);
+
 /** Pure: counts statuses and collects failures from a webhook payload (tested without I/O). */
 export function summarize(payload: Payload) {
   const statuses: Status[] = [];
@@ -27,8 +33,9 @@ export function summarize(payload: Payload) {
     .filter((s) => s.status === "failed")
     .map(
       (s) =>
-        `${s.id ?? "?"}: ${s.errors?.map((x) => `${x.code} ${x.title}`).join("; ") || "unknown"}`,
+        `${clean(s.id) || "?"}: ${s.errors?.map((x) => clean(`${x.code} ${x.title}`)).join("; ") || "unknown"}`,
     );
+
   return { statuses: statuses.length, messages, failed };
 }
 
