@@ -291,6 +291,37 @@ describe("Sent.dm templates", () => {
     ).toMatchObject({ text: "Your code is 123456" });
   });
 
+  it("fills Sent.dm variables by name: link gets the whole URL, token the suffix, unknown names positionally", async () => {
+    const t = await fresh({});
+    expect(
+      t.sentdmParameters(["attendee", "event", "host", "when", "link", "token"], reminder),
+    ).toEqual({
+      attendee: "Dana",
+      event: "Intro call",
+      host: "Ahmad Hakroosh",
+      when: "in 1 hour",
+      link: "http://localhost:3002/b/tok_abc123",
+      token: "tok_abc123",
+    });
+    expect(
+      t.sentdmParameters(["text", "token"], { kind: "host_ping", text: "Dana booked" }),
+    ).toEqual({
+      text: "Dana booked",
+      token: "admin",
+    });
+    expect(t.sentdmParameters(["code"], { kind: "verification_code", code: "4242" })).toEqual({
+      code: "4242",
+    });
+    // A template authored with other names still gets the values in order.
+    expect(t.sentdmParameters(["1", "2", "3", "4", "5"], reminder)).toEqual({
+      "1": "Dana",
+      "2": "Intro call",
+      "3": "Ahmad Hakroosh",
+      "4": "in 1 hour",
+      "5": "tok_abc123",
+    });
+  });
+
   it("builds the full short link for Sent.dm's link variable", async () => {
     const t = await fresh({});
     expect(t.shortLink(reminder)).toBe("http://localhost:3002/b/tok_abc123");
