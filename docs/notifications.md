@@ -60,13 +60,18 @@ providers in use.
 - **Sent.dm** (`SENTDM_API_KEY`): one key for SMS and WhatsApp. Sent.dm connects your own
   WhatsApp Business Account (Channels → WhatsApp) or supplies senders, and does the carrier
   registration on its side. It blocks free text on both channels, so each message kind needs a
-  Sent.dm template: import the WhatsApp templates above from Meta (Templates → Import from
-  Meta, once approved) and pick one of Sent.dm's sample OTP templates for the code, then put
-  the template ids in `SENTDM_TEMPLATE_CONFIRMATION`, `_REMINDER`, `_CANCELLED`, `_HOST_PING`
-  and `_VERIFY`. Bookly reads each template's declared variables once and fills them in order,
-  body parameters first and the button's URL suffix last, so imported Meta templates need no
-  mapping. A kind without an id is sent as plain text. `SENTDM_SANDBOX=true` dry-runs every
-  request (validated, nothing delivered), useful on staging. Requests go to
+  Sent.dm template whose id goes in `SENTDM_TEMPLATE_CONFIRMATION`, `_REMINDER`, `_CANCELLED`,
+  `_HOST_PING` and `_VERIFY`. Bookly reads each template's declared variables once and fills
+  them by name: `attendee`, `event`, `host`, `when` and `text` take the body values, `link`
+  (or `url`) takes the whole short link, `token` takes just its suffix for a dynamic URL
+  button, and `code` the verification code; any other name is filled positionally. That fits
+  a Meta template imported as is (Templates → Import from Meta) and the recommended
+  hand-made shape: a per-channel body, SMS with an inline `link` variable and WhatsApp with a
+  "View booking" URL button on `https://<platform host>/b/{{token}}` (`/h/{{token}}` for the
+  host ping), both under one id. The code template must be an Authentication template with
+  Sent.dm's OTP copy-code button; its second, unnamed variable is filled with the code too. A
+  kind without an id is sent as plain text. `SENTDM_SANDBOX=true` dry-runs every request
+  (validated, nothing delivered), useful on staging. Requests go to
   `https://api.sent.dm/v3/messages` with the channel as an ordered list; Bookly sends one
   channel per call so its own fallback order (SMS, then WhatsApp for attendee texts) stays in
   charge.
