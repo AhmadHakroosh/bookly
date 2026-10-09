@@ -243,7 +243,7 @@ describe("Sent.dm templates", () => {
         return new Response(
           JSON.stringify({
             success: true,
-            data: { id: tid, variables: ["1", "2", "3", "4", "button_url"] },
+            data: { id: tid, variables: ["attendee", "event", "host", "when", "link"] },
           }),
           { status: 200 },
         );
@@ -259,11 +259,11 @@ describe("Sent.dm templates", () => {
       template: {
         id: tid,
         parameters: {
-          "1": "Dana",
-          "2": "Intro call",
-          "3": "Ahmad Hakroosh",
-          "4": "in 1 hour",
-          button_url: "tok_abc123",
+          attendee: "Dana",
+          event: "Intro call",
+          host: "Ahmad Hakroosh",
+          when: "in 1 hour",
+          link: "http://localhost:3002/b/tok_abc123",
         },
       },
     });
@@ -289,6 +289,16 @@ describe("Sent.dm templates", () => {
         code: "123456",
       }),
     ).toMatchObject({ text: "Your code is 123456" });
+  });
+
+  it("builds the full short link for Sent.dm's link variable", async () => {
+    const t = await fresh({});
+    expect(t.shortLink(reminder)).toBe("http://localhost:3002/b/tok_abc123");
+    expect(t.shortLink({ kind: "host_ping", text: "x", bookingId: "b1" })).toBe(
+      "http://localhost:3002/h/b1",
+    );
+    expect(t.shortLink({ kind: "host_ping", text: "x" })).toBe("http://localhost:3002/h/admin");
+    expect(t.shortLink({ kind: "verification_code", code: "1" })).toBeNull();
   });
 
   it("orders values body-first then button, and a shorter variable list takes the first ones", async () => {

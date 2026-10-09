@@ -141,6 +141,24 @@ export function templateValues(message: TextMessage): string[] {
   }
 }
 
+/**
+ * The full short link for a message, for templates whose link variable takes a whole URL
+ * (Sent.dm's `link` type) rather than the suffix a Meta button appends.
+ */
+export function shortLink(message: TextMessage): string | null {
+  const base = loadEnv().APP_URL.replace(/\/$/, "");
+  switch (message.kind) {
+    case "booking_confirmation":
+    case "booking_reminder":
+    case "booking_cancelled":
+      return `${base}/b/${message.token}`;
+    case "host_ping":
+      return `${base}/h/${message.bookingId ?? "admin"}`;
+    case "verification_code":
+      return null;
+  }
+}
+
 const sentdmVariables = new Map<string, Promise<string[] | null>>();
 
 /**
@@ -194,7 +212,11 @@ export async function sentdmBody(
   const names = id ? await sentdmTemplateVariables(id) : null;
   if (!id || !names) return { ...base, text: body.slice(0, MAX_BODY) };
   const values = templateValues(message!);
-  const parameters = Object.fromEntries(names.map((n, i) => [n, values[i] ?? ""]));
+  const url = shortLink(message!);
+  // A variable named link/url is Sent.dm's link type and takes the whole URL.
+  const parameters = Object.fromEntries(
+    names.map((n, i) => [n, /^(link|url)$/i.test(n) && url ? url : (values[i] ?? "")]),
+  );
   return { ...base, template: { id, parameters } };
 }
 
