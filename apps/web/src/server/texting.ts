@@ -141,6 +141,67 @@ export function templateValues(message: TextMessage): string[] {
   }
 }
 
+/**
+ * The full short link for a message, for templates whose link variable takes a whole URL
+ * (Sent.dm's `link` type) rather than the suffix a Meta button appends.
+ */
+export function shortLink(message: TextMessage): string | null {
+  const base = loadEnv().APP_URL.replace(/\/$/, "");
+  switch (message.kind) {
+    case "booking_confirmation":
+    case "booking_reminder":
+    case "booking_cancelled":
+      return `${base}/b/${message.token}`;
+    case "host_ping":
+      return `${base}/h/${message.bookingId ?? "admin"}`;
+    case "verification_code":
+      return null;
+  }
+}
+
+/**
+ * Values for a Sent.dm template's declared variables. Known names are filled by name, so a
+ * template may declare any subset in any order: the body fields (`attendee`, `event`, `host`,
+ * `when`, `text`, `code`), `link`/`url` for a whole short link (an inline link in the SMS body)
+ * and `token` for its suffix (a dynamic URL button). Unknown names are filled positionally
+ * from `templateValues` so a template authored elsewhere still works.
+ */
+export function sentdmParameters(names: string[], message: TextMessage): Record<string, string> {
+  const url = shortLink(message) ?? "";
+  const byName: Record<string, string> = { link: url, url };
+  switch (message.kind) {
+    case "booking_confirmation":
+    case "booking_reminder":
+    case "booking_cancelled":
+      Object.assign(byName, {
+        attendee: templateText(message.attendeeName),
+        event: templateText(message.eventTitle),
+        host: templateText(message.hostName),
+        when: templateText(message.when),
+        token: message.token,
+      });
+      break;
+    case "host_ping":
+      Object.assign(byName, {
+        text: templateText(message.text),
+        token: message.bookingId ?? "admin",
+      });
+      break;
+    case "verification_code":
+      Object.assign(byName, { code: message.code, token: message.code });
+      break;
+  }
+  const positional = templateValues(message);
+  let next = 0;
+  return Object.fromEntries(
+    names.map((n) => {
+      const key = n.toLowerCase();
+      if (key in byName) return [n, byName[key]!];
+      return [n, positional[next++] ?? ""];
+    }),
+  );
+}
+
 const sentdmVariables = new Map<string, Promise<string[] | null>>();
 
 /**
@@ -193,9 +254,7 @@ export async function sentdmBody(
   const id = message && sentdmTemplateId(message.kind);
   const names = id ? await sentdmTemplateVariables(id) : null;
   if (!id || !names) return { ...base, text: body.slice(0, MAX_BODY) };
-  const values = templateValues(message!);
-  const parameters = Object.fromEntries(names.map((n, i) => [n, values[i] ?? ""]));
-  return { ...base, template: { id, parameters } };
+  return { ...base, template: { id, parameters: sentdmParameters(names, message!) } };
 }
 
 export const sentdm: TextProvider = {
