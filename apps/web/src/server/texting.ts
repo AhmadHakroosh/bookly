@@ -45,6 +45,10 @@ export interface TextProvider {
 const E164 = /^\+\d{7,15}$/;
 const MAX_BODY = 1500;
 
+/** Template parameters may not contain line breaks, tabs or runs of spaces; one line, 1024 max. */
+export const templateText = (s: string, max = 1024) =>
+  s.replace(/\s+/g, " ").trim().slice(0, max) || "-";
+
 /* ---------------- Twilio ---------------- */
 
 /** Twilio message body: WhatsApp numbers carry the `whatsapp:` prefix on both ends. */
@@ -99,16 +103,99 @@ export const twilio: TextProvider = {
 /* ---------------- Sent.dm ---------------- */
 
 export const SENTDM_URL = "https://api.sent.dm/v3/messages";
+export const SENTDM_TEMPLATES_URL = "https://api.sent.dm/v3/templates";
 
-/** The request Sent.dm expects: recipients and an ordered channel list; `sandbox` dry-runs it. */
-export function sentdmBody(channel: TextChannel, to: string, body: string) {
+/** The Sent.dm template id configured for a message kind, if any. */
+export function sentdmTemplateId(kind: TextMessage["kind"]): string | undefined {
   const e = loadEnv();
   return {
-    to: [to],
-    channel: [channel],
-    text: body.slice(0, MAX_BODY),
-    ...(e.SENTDM_SANDBOX ? { sandbox: true } : {}),
-  };
+    booking_confirmation: e.SENTDM_TEMPLATE_CONFIRMATION,
+    booking_reminder: e.SENTDM_TEMPLATE_REMINDER,
+    booking_cancelled: e.SENTDM_TEMPLATE_CANCELLED,
+    host_ping: e.SENTDM_TEMPLATE_HOST_PING,
+    verification_code: e.SENTDM_TEMPLATE_VERIFY,
+  }[kind];
+}
+
+/**
+ * The values a message supplies, in the order the matching template declares its variables:
+ * body parameters first, then the button's URL suffix (Meta templates imported into Sent.dm
+ * keep that order). A template that declares fewer variables simply takes the first ones.
+ */
+export function templateValues(message: TextMessage): string[] {
+  switch (message.kind) {
+    case "booking_confirmation":
+    case "booking_reminder":
+    case "booking_cancelled":
+      return [
+        message.attendeeName,
+        message.eventTitle,
+        message.hostName,
+        message.when,
+        message.token,
+      ].map((v) => templateText(v));
+    case "host_ping":
+      return [templateText(message.text), message.bookingId ?? "admin"];
+    case "verification_code":
+      return [message.code, message.code];
+  }
+}
+
+const sentdmVariables = new Map<string, Promise<string[] | null>>();
+
+/**
+ * The variable names a Sent.dm template declares, from `GET /v3/templates/{id}` (cached for
+ * the process). Null when the lookup fails, in which case the send falls back to plain text.
+ */
+export function sentdmTemplateVariables(id: string): Promise<string[] | null> {
+  const hit = sentdmVariables.get(id);
+  if (hit) return hit;
+  const p = (async () => {
+    try {
+      const res = await fetch(`${SENTDM_TEMPLATES_URL}/${id}`, {
+        headers: { "x-api-key": loadEnv().SENTDM_API_KEY! },
+        signal: AbortSignal.timeout(10_000),
+      });
+      if (!res.ok) {
+        console.error("[notify] sent.dm template", id, res.status);
+        return null;
+      }
+      const json = (await res.json()) as { data?: { variables?: string[] | null } };
+      return json.data?.variables ?? [];
+    } catch (err) {
+      console.error("[notify] sent.dm template lookup failed", err);
+      return null;
+    }
+  })();
+  sentdmVariables.set(id, p);
+  // A failed lookup is retried on the next send rather than cached forever.
+  void p.then((v) => v === null && sentdmVariables.delete(id));
+  return p;
+}
+
+/** Clears the cached variable lists (tests, or after templates change). */
+export const resetSentdmTemplateCache = () => sentdmVariables.clear();
+
+/**
+ * The request Sent.dm expects: recipients and an ordered channel list; `sandbox` dry-runs it.
+ * With a template configured for the message kind, the template is referenced by id and its
+ * declared variables are filled positionally from `templateValues`; otherwise plain text,
+ * which Sent.dm only delivers where free text is allowed.
+ */
+export async function sentdmBody(
+  channel: TextChannel,
+  to: string,
+  body: string,
+  message?: TextMessage,
+) {
+  const e = loadEnv();
+  const base = { to: [to], channel: [channel], ...(e.SENTDM_SANDBOX ? { sandbox: true } : {}) };
+  const id = message && sentdmTemplateId(message.kind);
+  const names = id ? await sentdmTemplateVariables(id) : null;
+  if (!id || !names) return { ...base, text: body.slice(0, MAX_BODY) };
+  const values = templateValues(message!);
+  const parameters = Object.fromEntries(names.map((n, i) => [n, values[i] ?? ""]));
+  return { ...base, template: { id, parameters } };
 }
 
 export const sentdm: TextProvider = {
@@ -121,14 +208,14 @@ export const sentdm: TextProvider = {
     // One key covers both channels; Sent.dm owns the sender identities.
     return !!loadEnv().SENTDM_API_KEY;
   },
-  async send(channel, to, body) {
+  async send(channel, to, body, message) {
     if (!this.channelAvailable(channel) || !E164.test(to)) return false;
     const e = loadEnv();
     try {
       const res = await fetch(SENTDM_URL, {
         method: "POST",
         headers: { "x-api-key": e.SENTDM_API_KEY!, "content-type": "application/json" },
-        body: JSON.stringify(sentdmBody(channel, to, body)),
+        body: JSON.stringify(await sentdmBody(channel, to, body, message)),
         signal: AbortSignal.timeout(10_000),
       });
       if (!res.ok) console.error("[notify] sent.dm", res.status, (await res.text()).slice(0, 200));
@@ -159,10 +246,6 @@ export const META_TEMPLATES = {
 
 /** Meta wants the number without the plus (digits only). */
 export const metaTo = (to: string) => to.replace(/^\+/, "");
-
-/** Template parameters may not contain line breaks, tabs or runs of spaces; one line, 1024 max. */
-export const templateText = (s: string, max = 1024) =>
-  s.replace(/\s+/g, " ").trim().slice(0, max) || "-";
 
 /**
  * The Cloud API request for a message. With a `TextMessage` it is a template send; without one

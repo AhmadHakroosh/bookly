@@ -142,6 +142,16 @@ export const envSchema = z.object({
   SENTDM_API_KEY: z.string().optional(),
   /** Dry-run every Sent.dm request (their `sandbox: true`): validated, nothing delivered. */
   SENTDM_SANDBOX: z.stringbool().default(false),
+  /**
+   * Sent.dm template ids (uuid) per message kind. Sent.dm blocks free text on both channels, so
+   * with these set the matching texts go out as templates; a kind without an id still sends the
+   * plain body. Variables are filled in the template's declared order (see texting.ts).
+   */
+  SENTDM_TEMPLATE_CONFIRMATION: z.string().optional(),
+  SENTDM_TEMPLATE_REMINDER: z.string().optional(),
+  SENTDM_TEMPLATE_CANCELLED: z.string().optional(),
+  SENTDM_TEMPLATE_HOST_PING: z.string().optional(),
+  SENTDM_TEMPLATE_VERIFY: z.string().optional(),
   TWILIO_ACCOUNT_SID: z.string().optional(),
   TWILIO_AUTH_TOKEN: z.string().optional(),
   /** E.164 sender for SMS, e.g. +15551234567 */

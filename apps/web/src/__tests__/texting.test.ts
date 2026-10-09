@@ -16,6 +16,11 @@ const fresh = async (env: Record<string, string | undefined>) => {
     "WHATSAPP_ACCESS_TOKEN",
     "WHATSAPP_PHONE_NUMBER_ID",
     "WHATSAPP_TEMPLATE_LANGUAGE",
+    "SENTDM_TEMPLATE_CONFIRMATION",
+    "SENTDM_TEMPLATE_REMINDER",
+    "SENTDM_TEMPLATE_CANCELLED",
+    "SENTDM_TEMPLATE_HOST_PING",
+    "SENTDM_TEMPLATE_VERIFY",
   ])
     delete process.env[k];
   Object.assign(process.env, env);
@@ -74,7 +79,7 @@ describe("Sent.dm driver", () => {
   });
   it("adds the sandbox flag when SENTDM_SANDBOX is on and refuses non-E.164 numbers", async () => {
     const t = await fresh({ SENTDM_API_KEY: "k", SENTDM_SANDBOX: "true" });
-    expect(t.sentdmBody("sms", "+15550002222", "x")).toMatchObject({ sandbox: true });
+    expect(await t.sentdmBody("sms", "+15550002222", "x")).toMatchObject({ sandbox: true });
     const fetchMock = vi.spyOn(globalThis, "fetch");
     expect(await t.sentdm.send("sms", "0501234567", "x")).toBe(false);
     expect(fetchMock).not.toHaveBeenCalled();
@@ -217,5 +222,85 @@ describe("Meta (WhatsApp Cloud API) driver", () => {
     expect(t.verifyMetaSignature("other", body, sig)).toBe(false);
     expect(t.verifyMetaSignature("app-secret", body, null)).toBe(false);
     expect(t.verifyMetaSignature("app-secret", body, "sha256=zz")).toBe(false);
+  });
+});
+
+describe("Sent.dm templates", () => {
+  const tid = "7ba7b820-9dad-11d1-80b4-00c04fd430c8";
+  const reminder = {
+    kind: "booking_reminder" as const,
+    attendeeName: "Dana",
+    eventTitle: "Intro call",
+    hostName: "Ahmad Hakroosh",
+    when: "in 1 hour",
+    token: "tok_abc123",
+  };
+
+  it("sends a configured template by id with its declared variables filled in order", async () => {
+    const t = await fresh({ SENTDM_API_KEY: "k", SENTDM_TEMPLATE_REMINDER: tid });
+    const fetchMock = vi.spyOn(globalThis, "fetch").mockImplementation(async (url) => {
+      if (String(url).endsWith(`/v3/templates/${tid}`))
+        return new Response(
+          JSON.stringify({
+            success: true,
+            data: { id: tid, variables: ["1", "2", "3", "4", "button_url"] },
+          }),
+          { status: 200 },
+        );
+      return new Response("{}", { status: 202 });
+    });
+    expect(await t.sentdm.send("whatsapp", "+972501234567", "plain", reminder)).toBe(true);
+    const sendCall = fetchMock.mock.calls.find(
+      ([u]) => String(u) === "https://api.sent.dm/v3/messages",
+    )!;
+    expect(JSON.parse(sendCall[1]!.body as string)).toEqual({
+      to: ["+972501234567"],
+      channel: ["whatsapp"],
+      template: {
+        id: tid,
+        parameters: {
+          "1": "Dana",
+          "2": "Intro call",
+          "3": "Ahmad Hakroosh",
+          "4": "in 1 hour",
+          button_url: "tok_abc123",
+        },
+      },
+    });
+    // The variable list is fetched once per template.
+    await t.sentdm.send("sms", "+972501234567", "plain", reminder);
+    expect(fetchMock.mock.calls.filter(([u]) => String(u).includes("/v3/templates/")).length).toBe(
+      1,
+    );
+  });
+
+  it("falls back to plain text when no template is configured or the lookup fails", async () => {
+    const t = await fresh({ SENTDM_API_KEY: "k", SENTDM_TEMPLATE_VERIFY: tid });
+    expect(await t.sentdmBody("sms", "+15550002222", "hi", reminder)).toEqual({
+      to: ["+15550002222"],
+      channel: ["sms"],
+      text: "hi",
+    });
+    vi.spyOn(globalThis, "fetch").mockResolvedValue(new Response("nope", { status: 404 }));
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    expect(
+      await t.sentdmBody("sms", "+15550002222", "Your code is 123456", {
+        kind: "verification_code",
+        code: "123456",
+      }),
+    ).toMatchObject({ text: "Your code is 123456" });
+  });
+
+  it("orders values body-first then button, and a shorter variable list takes the first ones", async () => {
+    const t = await fresh({});
+    expect(t.templateValues(reminder)).toEqual([
+      "Dana",
+      "Intro call",
+      "Ahmad Hakroosh",
+      "in 1 hour",
+      "tok_abc123",
+    ]);
+    expect(t.templateValues({ kind: "host_ping", text: "a\nb" })).toEqual(["a b", "admin"]);
+    expect(t.templateValues({ kind: "verification_code", code: "4242" })).toEqual(["4242", "4242"]);
   });
 });

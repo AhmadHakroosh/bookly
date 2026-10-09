@@ -57,12 +57,19 @@ providers in use.
   failed deliveries are logged. Meta charges per conversation; utility templates are the cheap
   kind.
 
-- **Sent.dm** (`SENTDM_API_KEY`): one key for SMS and WhatsApp. Sent.dm owns the sender
-  identities and does the US A2P registration and WhatsApp onboarding on its side, so there is
-  nothing to verify in Bookly's name. `SENTDM_SANDBOX=true` dry-runs every request (validated,
-  nothing delivered), useful on staging. Requests go to `https://api.sent.dm/v3/messages` with
-  the channel as an ordered list; Bookly sends one channel per call so its own fallback order
-  (SMS, then WhatsApp for attendee texts) stays in charge.
+- **Sent.dm** (`SENTDM_API_KEY`): one key for SMS and WhatsApp. Sent.dm connects your own
+  WhatsApp Business Account (Channels → WhatsApp) or supplies senders, and does the carrier
+  registration on its side. It blocks free text on both channels, so each message kind needs a
+  Sent.dm template: import the WhatsApp templates above from Meta (Templates → Import from
+  Meta, once approved) and pick one of Sent.dm's sample OTP templates for the code, then put
+  the template ids in `SENTDM_TEMPLATE_CONFIRMATION`, `_REMINDER`, `_CANCELLED`, `_HOST_PING`
+  and `_VERIFY`. Bookly reads each template's declared variables once and fills them in order,
+  body parameters first and the button's URL suffix last, so imported Meta templates need no
+  mapping. A kind without an id is sent as plain text. `SENTDM_SANDBOX=true` dry-runs every
+  request (validated, nothing delivered), useful on staging. Requests go to
+  `https://api.sent.dm/v3/messages` with the channel as an ordered list; Bookly sends one
+  channel per call so its own fallback order (SMS, then WhatsApp for attendee texts) stays in
+  charge.
 - **Twilio** (`TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_FROM_SMS` as an E.164 number
   you own, `TWILIO_FROM_WHATSAPP` as the sandbox number `+14155238886` or your approved sender).
   Either sender may be omitted. WhatsApp business messaging needs an approved sender and, outside
