@@ -12,6 +12,9 @@ updates:
       # eslint-plugin-react does not load on ESLint 10 yet (react/display-name crashes).
       - dependency-name: eslint
         update-types: ["version-update:semver-major"]
+      # jotai is only here as @daily-co/daily-react's peer, which wants ^2; move with daily-react.
+      - dependency-name: jotai
+        update-types: ["version-update:semver-major"]
   - package-ecosystem: github-actions
     directory: /
     schedule: { interval: weekly }
