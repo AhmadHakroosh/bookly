@@ -120,6 +120,7 @@ export async function POST(req: Request) {
   await notifyHost(b.hostUserId, "onJoin", {
     subject: `${who} joined your call`,
     text,
+    bookingId: b.id,
     email: { subject: `${who} joined your call`, text },
   });
   return NextResponse.json({ ok: true });

@@ -122,13 +122,36 @@ export const envSchema = z.object({
   UPSTASH_REDIS_REST_TOKEN: z.string().optional(),
   TELEMETRY_URL: z.url().default("https://bookly-app.io/api/telemetry"),
 
-  // ---- Text messages (SMS / WhatsApp reminders and host pings): Twilio or Sent.dm ----
-  /** Which provider sends texts; unset = Sent.dm when its key is present, else Twilio. */
-  TEXT_PROVIDER: z.enum(["twilio", "sentdm"]).optional(),
+  // ---- Text messages (SMS / WhatsApp reminders and host pings): Meta, Sent.dm or Twilio ----
+  /**
+   * Forces one provider for every channel; unset = per channel, WhatsApp via Meta when its keys
+   * are present, then Sent.dm, then Twilio (Meta cannot send SMS).
+   */
+  TEXT_PROVIDER: z.enum(["meta", "sentdm", "twilio"]).optional(),
+  /** WhatsApp Cloud API (Meta): a permanent system-user token with whatsapp_business_messaging. */
+  WHATSAPP_ACCESS_TOKEN: z.string().optional(),
+  /** The registered sender's phone number ID from WhatsApp Manager (not the number itself). */
+  WHATSAPP_PHONE_NUMBER_ID: z.string().optional(),
+  /** Language code of the approved templates (docs/notifications.md lists them). */
+  WHATSAPP_TEMPLATE_LANGUAGE: z.string().default("en"),
+  /** Meta app secret; verifies the X-Hub-Signature-256 header on /api/webhooks/whatsapp. */
+  WHATSAPP_APP_SECRET: z.string().optional(),
+  /** Any string; typed into the webhook configuration so Meta can verify the endpoint. */
+  WHATSAPP_VERIFY_TOKEN: z.string().optional(),
   /** Sent.dm API key (https://sent.dm): one key, both channels, registration handled there. */
   SENTDM_API_KEY: z.string().optional(),
   /** Dry-run every Sent.dm request (their `sandbox: true`): validated, nothing delivered. */
   SENTDM_SANDBOX: z.stringbool().default(false),
+  /**
+   * Sent.dm template ids (uuid) per message kind. Sent.dm blocks free text on both channels, so
+   * with these set the matching texts go out as templates; a kind without an id still sends the
+   * plain body. Variables are filled in the template's declared order (see texting.ts).
+   */
+  SENTDM_TEMPLATE_CONFIRMATION: z.string().optional(),
+  SENTDM_TEMPLATE_REMINDER: z.string().optional(),
+  SENTDM_TEMPLATE_CANCELLED: z.string().optional(),
+  SENTDM_TEMPLATE_HOST_PING: z.string().optional(),
+  SENTDM_TEMPLATE_VERIFY: z.string().optional(),
   TWILIO_ACCOUNT_SID: z.string().optional(),
   TWILIO_AUTH_TOKEN: z.string().optional(),
   /** E.164 sender for SMS, e.g. +15551234567 */

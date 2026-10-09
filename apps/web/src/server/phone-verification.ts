@@ -55,6 +55,7 @@ export async function sendPhoneCode(workspaceId: string, userId: string): Promis
     channel,
     p.phone,
     `Your Bookly verification code is ${code}. It expires in ${CODE_TTL_MIN} minutes.`,
+    { kind: "verification_code", code },
   );
   if (!sent)
     return { ok: false, error: "Could not send the code. Check the number and try again." };

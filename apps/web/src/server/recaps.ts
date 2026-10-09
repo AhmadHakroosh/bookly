@@ -140,7 +140,11 @@ export async function notifyRecapReady(
     ? `Your call with ${booking.attendeeName} (${when}):\n\n${r.summary}\n\n${r.actions.length ? `Action items:\n${r.actions.map((a) => `- ${a.owner === "them" ? `${booking.attendeeName}: ` : ""}${a.title}`).join("\n")}\n\n` : ""}${r.nextStep ? `Next step: ${r.nextStep}\n\n` : ""}Review and act with one click: ${link}`
     : `The transcript of your call with ${booking.attendeeName} (${when}) is ready. Review it and turn it into notes, tasks and a follow-up:\n\n${link}`;
   if (user?.email) await sendEmail({ to: user.email, subject, text }).catch(() => {});
-  void notifyHost(booking.hostUserId, "onBooking", { subject, text: `${subject}. ${link}` });
+  void notifyHost(booking.hostUserId, "onBooking", {
+    subject,
+    text: `${subject}. ${link}`,
+    bookingId: booking.id,
+  });
 }
 
 /* ---------------- One-click actions ---------------- */

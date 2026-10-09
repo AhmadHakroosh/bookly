@@ -118,8 +118,11 @@ export async function proxy(request: NextRequest) {
       return NextResponse.redirect(new URL("/workspaces", request.url));
     // Meeting pages work on any host (the room is looked up across workspaces and the session
     // cookie is root-scoped), so links built from APP_URL when MEET_URL is unset open here too.
+    // Short links (/b/<token>, /h/<id>) look their booking up and redirect to its workspace.
     if (
       pathname.startsWith("/api/") ||
+      pathname.startsWith("/b/") ||
+      pathname.startsWith("/h/") ||
       pathname.startsWith("/login") ||
       pathname.startsWith("/forgot-password") ||
       pathname.startsWith("/reset-password") ||

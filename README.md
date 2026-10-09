@@ -77,7 +77,7 @@ Open `APP_URL` (default http://localhost:3002). The setup wizard creates your ac
 | `EMAIL_DRIVER`, `EMAIL_FROM`, `RESEND_*` / `SMTP_*`                     | Transactional email                                                                   | Yes for production               |
 | `GOOGLE_*`, `MICROSOFT_*`, `ZOOM_*`, `DAILY_*`                          | Calendar sync and video                                                               | Per integration you want         |
 | `STRIPE_*`                                                              | Paid bookings                                                                         | Only for payments                |
-| `TWILIO_*`                                                              | SMS and WhatsApp                                                                      | Only for text messages           |
+| `WHATSAPP_*`, `SENTDM_*`, `TWILIO_*`                                    | WhatsApp (Meta Cloud API) and SMS                                                     | Only for text messages           |
 | `ANTHROPIC_API_KEY`, `ASSISTANT_MODEL`                                  | Briefings, recaps, capture                                                            | Optional; plain fallback if off  |
 | `QSTASH_TOKEN`, `QSTASH_CURRENT_SIGNING_KEY`, `QSTASH_NEXT_SIGNING_KEY` | Job queue and schedules on serverless (precise reminders, retries, dead-letter queue) | Only on serverless               |
 | `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN`                    | Shared rate limits across replicas or serverless instances                            | Only with more than one instance |
