@@ -18,7 +18,7 @@ import { buildIcsCalendar, type IcsEvent } from "./ics";
 import { deprovisionBooking, provisionBooking, syncEventAttendees } from "./integrations";
 import { serializeBooking } from "./api";
 import { adminBaseUrl, publicBaseUrl } from "./urls";
-import { notifyHost } from "./notify";
+import { notifyHost, textAttendee } from "./notify";
 import { isPaid, paymentsReady, recordPayment, refundBooking } from "./payments";
 import { notifyWaitlist } from "./waitlist";
 import { emitEvent } from "./webhooks";
@@ -499,6 +499,7 @@ export async function finalizeBooking(
     void notifyHost(booking.hostUserId, "onBooking", {
       subject: `New booking: ${eventType.title}`,
       text: `${booking.attendeeName} booked ${eventType.title}${series} on ${when}${booking.status === "pending" ? " (needs your confirmation)" : ""}. ${adminBaseUrl(workspace)}/admin/bookings`,
+      bookingId: booking.id,
     });
   }
   const payload = {
@@ -564,6 +565,20 @@ async function notifyCreated(workspace: Workspace, booking: Booking, eventType: 
         })
       : Promise.resolve(),
   ]).catch((e) => console.error("[booking] email failed", e));
+  // Event types with text reminders also confirm by text when the booker gave a number.
+  if (booking.status === "confirmed" && eventType?.remindByText && booking.attendeePhone)
+    void textAttendee(
+      booking.attendeePhone,
+      `${eventType.title} with ${ctx.host.displayName} is confirmed for ${fmtDateTime(booking.startAt, booking.timezone)}. Manage: ${ctx.baseUrl}/booking/${booking.manageToken}`,
+      {
+        kind: "booking_confirmation",
+        attendeeName: booking.attendeeName,
+        eventTitle: eventType.title,
+        hostName: ctx.host.displayName,
+        when: fmtDateTime(booking.startAt, booking.timezone),
+        token: booking.manageToken,
+      },
+    );
 }
 
 export async function confirmBooking(workspace: Workspace, bookingId: string) {
@@ -673,8 +688,22 @@ export async function cancelBooking(
     void notifyHost(b.hostUserId, "onCancel", {
       subject: "Booking cancelled",
       text: `${b.attendeeName} cancelled their booking on ${fmtDateTime(b.startAt, workspace.timezone)}${reason ? `: ${reason}` : ""}.`,
+      bookingId: b.id,
     });
   const ctx = await mailCtx(updated!, et ?? null, workspace);
+  if (et?.remindByText && b.attendeePhone)
+    void textAttendee(
+      b.attendeePhone,
+      `${et.title} with ${ctx.host.displayName} on ${fmtDateTime(b.startAt, b.timezone)} has been cancelled. Book again: ${ctx.baseUrl}/booking/${b.manageToken}`,
+      {
+        kind: "booking_cancelled",
+        attendeeName: b.attendeeName,
+        eventTitle: et.title,
+        hostName: ctx.host.displayName,
+        when: fmtDateTime(b.startAt, b.timezone),
+        token: b.manageToken,
+      },
+    );
   const ics = await icsFor(ctx, "CANCEL", 2);
   const hostTo = await hostEmail(b.hostUserId);
   const a = await cancellationMail(ctx, false);

@@ -122,9 +122,22 @@ export const envSchema = z.object({
   UPSTASH_REDIS_REST_TOKEN: z.string().optional(),
   TELEMETRY_URL: z.url().default("https://bookly-app.io/api/telemetry"),
 
-  // ---- Text messages (SMS / WhatsApp reminders and host pings): Twilio or Sent.dm ----
-  /** Which provider sends texts; unset = Sent.dm when its key is present, else Twilio. */
-  TEXT_PROVIDER: z.enum(["twilio", "sentdm"]).optional(),
+  // ---- Text messages (SMS / WhatsApp reminders and host pings): Meta, Sent.dm or Twilio ----
+  /**
+   * Forces one provider for every channel; unset = per channel, WhatsApp via Meta when its keys
+   * are present, then Sent.dm, then Twilio (Meta cannot send SMS).
+   */
+  TEXT_PROVIDER: z.enum(["meta", "sentdm", "twilio"]).optional(),
+  /** WhatsApp Cloud API (Meta): a permanent system-user token with whatsapp_business_messaging. */
+  WHATSAPP_ACCESS_TOKEN: z.string().optional(),
+  /** The registered sender's phone number ID from WhatsApp Manager (not the number itself). */
+  WHATSAPP_PHONE_NUMBER_ID: z.string().optional(),
+  /** Language code of the approved templates (docs/notifications.md lists them). */
+  WHATSAPP_TEMPLATE_LANGUAGE: z.string().default("en"),
+  /** Meta app secret; verifies the X-Hub-Signature-256 header on /api/webhooks/whatsapp. */
+  WHATSAPP_APP_SECRET: z.string().optional(),
+  /** Any string; typed into the webhook configuration so Meta can verify the endpoint. */
+  WHATSAPP_VERIFY_TOKEN: z.string().optional(),
   /** Sent.dm API key (https://sent.dm): one key, both channels, registration handled there. */
   SENTDM_API_KEY: z.string().optional(),
   /** Dry-run every Sent.dm request (their `sandbox: true`): validated, nothing delivered. */

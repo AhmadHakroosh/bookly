@@ -14,7 +14,7 @@ import { expireManualPlans, setState } from "./ops";
 import { sendTelemetryPing } from "./telemetry";
 import { ensureDailyWebhook } from "./daily-webhook";
 import { trackBooking } from "./contacts";
-import { notifyHost, sendText } from "./notify";
+import { notifyHost, textAttendee } from "./notify";
 import { expireUnpaidBookings } from "./payments";
 import { getProfileByUser } from "./scheduling";
 import { fmtDateTime } from "@/lib/time";
@@ -90,14 +90,20 @@ export async function sendDueReminders(
         ? sendEmail({ to: hostUser.email, subject: h.subject, text: h.text, html: h.html })
         : Promise.resolve(),
       et?.remindByText && b.attendeePhone
-        ? sendText("sms", b.attendeePhone.replace(/[\s()-]/g, ""), line).then((ok) =>
-            ok ? undefined : sendText("whatsapp", b.attendeePhone!.replace(/[\s()-]/g, ""), line),
-          )
+        ? textAttendee(b.attendeePhone, line, {
+            kind: "booking_reminder",
+            attendeeName: b.attendeeName,
+            eventTitle: et?.title ?? "Meeting",
+            hostName: host.displayName,
+            when: `in ${hours === 1 ? "1 hour" : `${hours} hours`} (${fmtDateTime(b.startAt, b.timezone)})`,
+            token: b.manageToken,
+          })
         : Promise.resolve(),
       m <= 60
         ? notifyHost(b.hostUserId, "reminder1h", {
             subject: h.subject,
             text: `${b.attendeeName} · ${et?.title ?? "Meeting"} in ${hours === 1 ? "1 hour" : `${hours} hours`}. ${b.meetingUrl ?? ""}`.trim(),
+            bookingId: b.id,
           })
         : Promise.resolve(),
     ]).catch((e) => console.error("[reminders]", e));
