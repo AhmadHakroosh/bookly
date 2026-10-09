@@ -4,6 +4,8 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 ## [Unreleased]
 
+## [0.10.0] - 2026-10-09
+
 ### Added
 
 - WhatsApp through Meta's Cloud API as a third text provider: messages come from the operator's own registered number under their verified business name, using approved templates for confirmations, reminders, cancellations, host pings and phone-verification codes (`WHATSAPP_ACCESS_TOKEN`, `WHATSAPP_PHONE_NUMBER_ID`; template names and bodies in `docs/notifications.md`). Providers are now chosen per channel: WhatsApp via Meta, then Sent.dm, then Twilio; SMS via Sent.dm, then Twilio. A webhook at `/api/webhooks/whatsapp` verifies Meta's signature and logs failed deliveries
@@ -329,7 +331,8 @@ First public release: the self-hostable scheduling platform with contacts, brief
 
 - The unused storage layer (`packages/storage`, `STORAGE_*` and `S3_*` variables, the MinIO service in Compose): nothing in Bookly uploads files; profile photos and logos are URLs
 
-[Unreleased]: https://github.com/AhmadHakroosh/bookly/compare/v0.9.0...HEAD
+[Unreleased]: https://github.com/AhmadHakroosh/bookly/compare/v0.10.0...HEAD
+[0.10.0]: https://github.com/AhmadHakroosh/bookly/compare/v0.9.0...v0.10.0
 [0.9.0]: https://github.com/AhmadHakroosh/bookly/compare/v0.8.0...v0.9.0
 [0.8.0]: https://github.com/AhmadHakroosh/bookly/compare/v0.7.0...v0.8.0
 [0.7.0]: https://github.com/AhmadHakroosh/bookly/compare/v0.6.1...v0.7.0
