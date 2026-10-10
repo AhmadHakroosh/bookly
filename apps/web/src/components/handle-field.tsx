@@ -1,18 +1,25 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type ComponentProps } from "react";
+import { CheckIcon, XIcon } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Spinner } from "@/components/ui/spinner";
 import { checkHandle, type HandleCheck, type HandleKind } from "@/lib/handles";
+import { cn } from "@/lib/utils";
 
 export type HandleStatus =
   | { state: "idle" }
+  /** The value already saved: nothing to check and nothing to say. */
+  | { state: "own"; value: string }
   | { state: "checking" }
   | { state: "ok"; value: string }
   | { state: "error"; error: string };
 
 /**
  * Live feedback for an address or username: the format rules run on every keystroke, the
- * availability check (a server action) runs once typing pauses. `ok` is true only when the
- * last check passed for the current value, which is what gates the submit button.
+ * availability check (a server action) runs once typing pauses. `ok` is true when the value
+ * is the one already saved or the last check passed for the current value, which is what
+ * gates the submit button.
  */
 export function useHandleCheck(
   value: string,
@@ -41,16 +48,76 @@ export function useHandleCheck(
   let status: HandleStatus;
   if (!local) status = { state: "idle" };
   else if (!local.ok) status = { state: "error", error: local.error };
-  else if (own) status = { state: "ok", value: local.value };
+  else if (own) status = { state: "own", value: local.value };
   else if (remote?.value === local.value)
     status = remote.result.ok
       ? { state: "ok", value: remote.result.value }
       : { state: "error", error: remote.result.error };
   else status = { state: "checking" };
-  return { status, ok: status.state === "ok" };
+  return { status, ok: status.state === "ok" || status.state === "own" };
 }
 
-/** The line under the field: what is wrong, or that the handle is free. */
+/**
+ * The input for a handle, with the check's outcome inside the field: a spinner and
+ * "Checking…" while the server is asked, a tick and "Available" when it is free, a cross when
+ * it is not (the reason goes under the field). `suffix` is fixed text after the value, such as
+ * the root domain of a workspace address.
+ */
+export function HandleField({
+  status,
+  suffix,
+  className,
+  ...input
+}: ComponentProps<typeof Input> & { status: HandleStatus; suffix?: string }) {
+  const invalid = status.state === "error";
+  return (
+    <div
+      className={cn(
+        "flex h-8 items-center rounded-lg border border-input bg-transparent transition-colors focus-within:border-ring focus-within:ring-3 focus-within:ring-ring/50 dark:bg-input/30",
+        invalid && "border-destructive ring-3 ring-destructive/20 dark:border-destructive/50",
+        className,
+      )}
+    >
+      <Input
+        {...input}
+        aria-invalid={invalid || undefined}
+        className="h-full flex-1 rounded-none border-0 bg-transparent shadow-none focus-visible:ring-0 dark:bg-transparent"
+      />
+      {suffix && (
+        <span className="shrink-0 pr-2.5 text-sm whitespace-nowrap text-muted-foreground">
+          {suffix}
+        </span>
+      )}
+      <HandleBadge status={status} />
+    </div>
+  );
+}
+
+function HandleBadge({ status }: { status: HandleStatus }) {
+  if (status.state === "checking")
+    return (
+      <span className="flex shrink-0 items-center gap-1.5 border-l border-input px-2.5 text-xs text-muted-foreground">
+        <Spinner className="size-3.5" aria-hidden />
+        Checking…
+      </span>
+    );
+  if (status.state === "ok")
+    return (
+      <span className="flex shrink-0 items-center gap-1.5 border-l border-input px-2.5 text-xs text-emerald-600 dark:text-emerald-400">
+        <CheckIcon className="size-3.5" aria-hidden />
+        Available
+      </span>
+    );
+  if (status.state === "error")
+    return (
+      <span className="flex shrink-0 items-center border-l border-input px-2.5 text-destructive">
+        <XIcon className="size-3.5" aria-label="Not available" />
+      </span>
+    );
+  return null;
+}
+
+/** The line under the field: the reason when the handle cannot be used, or the fallback help. */
 export function HandleHint({ status, fallback }: { status: HandleStatus; fallback: string }) {
   if (status.state === "error")
     return (
@@ -58,9 +125,5 @@ export function HandleHint({ status, fallback }: { status: HandleStatus; fallbac
         {status.error}
       </p>
     );
-  if (status.state === "checking")
-    return <p className="text-sm text-muted-foreground">Checking…</p>;
-  if (status.state === "ok")
-    return <p className="text-sm text-emerald-600 dark:text-emerald-400">Available</p>;
   return <p className="text-sm text-muted-foreground">{fallback}</p>;
 }

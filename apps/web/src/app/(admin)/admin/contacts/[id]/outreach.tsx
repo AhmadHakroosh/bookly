@@ -1,9 +1,10 @@
 "use client";
 
-import { useRef, useState, useTransition } from "react";
+import { useRef, useState } from "react";
 import { ArrowLeftIcon, SendIcon } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { ActionButton } from "@/components/action-button";
 import {
   Dialog,
   DialogContent,
@@ -12,7 +13,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Spinner } from "@/components/ui/spinner";
 import {
   previewOutreach,
   sendFollowUp,
@@ -59,8 +59,7 @@ export function Outreach({
   const [dialogKind, setDialogKind] = useState<Kind>(initial ?? "proposal");
   const templates: Record<Kind, T> = { proposal, payment, followUp };
   const [preview, setPreview] = useState<OutreachPreview | null>(null);
-  const [pending, start] = useTransition();
-  const [sending, startSend] = useTransition();
+  const [sending, setSending] = useState(false);
   const formRef = useRef<HTMLFormElement>(null);
   const field = "w-full rounded-lg border bg-background px-3 py-2 text-sm";
 
@@ -69,26 +68,26 @@ export function Outreach({
     setOpen(open === kind ? null : kind);
   }
 
-  function showPreview() {
+  async function showPreview() {
     const form = formRef.current;
     if (!form || !open) return;
     if (!form.reportValidity()) return;
-    const fd = new FormData(form);
-    start(async () => {
-      const res = await previewOutreach(contactId, SERVER_KIND[open], fd);
-      if ("error" in res) toast.error(res.error);
-      else {
-        setDialogKind(open);
-        setPreview(res);
-      }
-    });
+    const res = await previewOutreach(contactId, SERVER_KIND[open], new FormData(form));
+    if ("error" in res) toast.error(res.error);
+    else {
+      setDialogKind(open);
+      setPreview(res);
+    }
   }
 
-  function send() {
+  // `sending` is kept as state (not only the button's transition) so the dialog cannot be
+  // closed or edited while the email is going out.
+  async function send() {
     const form = formRef.current;
     if (!form || !open) return;
     const fd = new FormData(form);
-    startSend(async () => {
+    setSending(true);
+    try {
       const res =
         open === "proposal"
           ? await sendProposal(contactId, fd)
@@ -108,7 +107,9 @@ export function Outreach({
       );
       setPreview(null);
       setOpen(null);
-    });
+    } finally {
+      setSending(false);
+    }
   }
 
   return (
@@ -214,10 +215,7 @@ export function Outreach({
               className="w-40"
             />
           </label>
-          <Button type="button" onClick={showPreview} disabled={pending}>
-            {pending && <Spinner data-icon="inline-start" />}
-            Preview email
-          </Button>
+          <ActionButton action={showPreview}>Preview email</ActionButton>
         </form>
       )}
 
@@ -266,18 +264,14 @@ export function Outreach({
               <ArrowLeftIcon data-icon="inline-start" />
               Back to edit
             </Button>
-            <Button type="button" onClick={send} disabled={sending || optedOut}>
-              {sending ? (
-                <Spinner data-icon="inline-start" />
-              ) : (
-                <SendIcon data-icon="inline-start" />
-              )}
+            <ActionButton action={send} disabled={optedOut} pendingText="Sending…">
+              <SendIcon data-icon="inline-start" />
               {dialogKind === "proposal"
                 ? "Send proposal"
                 : dialogKind === "followUp"
                   ? "Send follow-up"
                   : "Send payment request"}
-            </Button>
+            </ActionButton>
           </DialogFooter>
         </DialogContent>
       </Dialog>

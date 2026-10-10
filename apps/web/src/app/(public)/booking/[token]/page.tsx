@@ -15,6 +15,7 @@ import { getCurrentWorkspace } from "@/server/workspace";
 import { formatPrice } from "@/server/payments";
 import { sessionSummary } from "@/server/sessions";
 import { Badge } from "@/components/ui/badge";
+import { SubmitButton } from "@/components/submit-button";
 import { ClockIcon, UsersIcon } from "lucide-react";
 import { cancelByAttendee, cancelRemainingByAttendee, deleteMyTranscript, payNow } from "./actions";
 
@@ -77,9 +78,7 @@ async function BookingPage({ params, searchParams }: PageProps<"/booking/[token]
               to confirm {b.seriesCount ? `all ${b.seriesCount}` : "it"}.
             </p>
             <form action={payNow.bind(null, token)} className="mt-3">
-              <button type="submit" className="rounded-lg bg-foreground px-4 py-2 text-background">
-                Pay now
-              </button>
+              <SubmitButton pendingText="Redirecting…">Pay now</SubmitButton>
             </form>
           </div>
         )}
@@ -195,9 +194,9 @@ async function BookingPage({ params, searchParams }: PageProps<"/booking/[token]
               . You can have it deleted at any time; a short summary may be kept.
             </p>
             <form action={deleteMyTranscript.bind(null, token)} className="mt-2">
-              <button type="submit" className="rounded-lg border px-3 py-1.5 text-sm">
+              <SubmitButton variant="outline" pendingText="Deleting…">
                 Delete the transcript
-              </button>
+              </SubmitButton>
             </form>
           </div>
         )}
@@ -237,12 +236,13 @@ async function BookingPage({ params, searchParams }: PageProps<"/booking/[token]
                 placeholder="Reason (optional)"
                 className="h-9 w-full rounded-lg border bg-background px-3 text-sm"
               />
-              <button
-                type="submit"
-                className="rounded-lg border px-3 py-1.5 text-sm text-destructive"
+              <SubmitButton
+                variant="outline"
+                className="text-destructive"
+                pendingText="Cancelling…"
               >
                 Cancel booking
-              </button>
+              </SubmitButton>
             </form>
           </section>
         )}
@@ -282,12 +282,13 @@ async function BookingPage({ params, searchParams }: PageProps<"/booking/[token]
                     placeholder="Reason (optional)"
                     className="h-9 w-full rounded-lg border bg-background px-3 text-sm"
                   />
-                  <button
-                    type="submit"
-                    className="rounded-lg border px-3 py-1.5 text-sm text-destructive"
+                  <SubmitButton
+                    variant="outline"
+                    className="text-destructive"
+                    pendingText="Cancelling…"
                   >
                     Cancel remaining sessions
-                  </button>
+                  </SubmitButton>
                 </form>
               </details>
             )}

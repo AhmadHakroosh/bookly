@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useRef } from "react";
+import { useState, useTransition } from "react";
 import { ChevronDownIcon, LogOutIcon, UserRoundIcon } from "lucide-react";
+import { BusyOverlay } from "@/components/busy-overlay";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -27,11 +28,12 @@ export function AccountMenu({
   name: string;
   signOut: () => Promise<void>;
 }) {
-  // The sign-out form lives outside the menu; the item submits it so the menu stays a plain list.
-  const form = useRef<HTMLFormElement>(null);
+  // Signing out ends with a redirect; the page stays covered until it lands.
+  const [leaving, setLeaving] = useState(false);
+  const [, start] = useTransition();
   return (
     <>
-      <form ref={form} action={signOut} className="hidden" />
+      <BusyOverlay show={leaving} label="Signing out…" />
       <DropdownMenu>
         <DropdownMenuTrigger
           render={<Button variant="ghost" className="gap-1.5" aria-label={`Account: ${email}`} />}
@@ -53,7 +55,12 @@ export function AccountMenu({
             Account
           </DropdownMenuItem>
           <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={() => form.current?.requestSubmit()}>
+          <DropdownMenuItem
+            onClick={() => {
+              setLeaving(true);
+              start(() => signOut());
+            }}
+          >
             <LogOutIcon className="size-4" aria-hidden />
             Sign out
           </DropdownMenuItem>

@@ -2,7 +2,8 @@
 
 import { useActionState, useState } from "react";
 import { Trash2Icon } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { BusyOverlay } from "@/components/busy-overlay";
+import { SubmitButton } from "@/components/submit-button";
 import { Field, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { deleteAccountAction, type AccountState } from "./account-actions";
@@ -45,14 +46,15 @@ export function DeleteAccount({
             />
           </Field>
           {state.error && <p className="text-sm text-destructive">{state.error}</p>}
-          <Button
-            type="submit"
+          <SubmitButton
             variant="destructive"
-            disabled={pending || confirm.trim().toLowerCase() !== email.toLowerCase()}
+            disabled={confirm.trim().toLowerCase() !== email.toLowerCase()}
+            pendingText="Deleting…"
           >
             <Trash2Icon data-icon="inline-start" />
-            {pending ? "Deleting…" : "Delete my account"}
-          </Button>
+            Delete my account
+          </SubmitButton>
+          <BusyOverlay show={pending} label="Deleting your account…" />
         </form>
       )}
     </section>

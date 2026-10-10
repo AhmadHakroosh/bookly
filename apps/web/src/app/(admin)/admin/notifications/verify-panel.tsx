@@ -1,9 +1,10 @@
 "use client";
 
-import { useActionState, useEffect, useTransition } from "react";
+import { useActionState, useEffect } from "react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { SubmitButton } from "@/components/submit-button";
+import { ActionButton } from "@/components/action-button";
 import { Input } from "@/components/ui/input";
 import {
   confirmPhoneCodeAction,
@@ -30,9 +31,7 @@ export function VerifyPanel({
   channelOn: boolean;
   slackUrl: string;
 }) {
-  const [sending, startSend] = useTransition();
-  const [testing, startTest] = useTransition();
-  const [state, confirm, confirming] = useActionState(confirmPhoneCodeAction, {} as PrefsState);
+  const [state, confirm] = useActionState(confirmPhoneCodeAction, {} as PrefsState);
   useEffect(() => {
     if (state.ok) toast.success("Phone verified");
     else if (state.error) toast.error(state.error);
@@ -53,17 +52,15 @@ export function VerifyPanel({
           <Badge variant="outline">Not verified</Badge>
         )}
         {phone && !verified && (
-          <Button
-            type="button"
+          <ActionButton
             variant="outline"
             size="sm"
-            disabled={sending || !channelOn}
-            onClick={() =>
-              startSend(async () => report(await sendPhoneCodeAction(), `Code sent to ${phone}`))
-            }
+            disabled={!channelOn}
+            pendingText="Sending…"
+            action={async () => report(await sendPhoneCodeAction(), `Code sent to ${phone}`)}
           >
-            {sending ? "Sending…" : codePending ? "Send a new code" : "Send code"}
-          </Button>
+            {codePending ? "Send a new code" : "Send code"}
+          </ActionButton>
         )}
       </div>
       {phone && !verified && !channelOn && (
@@ -79,9 +76,9 @@ export function VerifyPanel({
             className="w-36"
             required
           />
-          <Button type="submit" size="sm" disabled={confirming}>
-            {confirming ? "Checking…" : "Confirm"}
-          </Button>
+          <SubmitButton size="sm" pendingText="Checking…">
+            Confirm
+          </SubmitButton>
         </form>
       )}
       {phone && !verified && (
@@ -92,17 +89,14 @@ export function VerifyPanel({
       <div className="flex flex-wrap items-center gap-2 border-t pt-4">
         <span className="font-medium">Slack</span>
         {slackUrl ? (
-          <Button
-            type="button"
+          <ActionButton
             variant="outline"
             size="sm"
-            disabled={testing}
-            onClick={() =>
-              startTest(async () => report(await testSlackAction(), "Test message posted"))
-            }
+            pendingText="Posting…"
+            action={async () => report(await testSlackAction(), "Test message posted")}
           >
-            {testing ? "Posting…" : "Send a test message"}
-          </Button>
+            Send a test message
+          </ActionButton>
         ) : (
           <span className="text-muted-foreground">No webhook saved.</span>
         )}

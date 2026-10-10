@@ -5,6 +5,7 @@ import type { EventQuestion } from "@bookly/db/schema";
 import { countryOptions } from "@/lib/phone";
 import { book, type BookState } from "./actions";
 import { Dropdown } from "@/components/dropdown";
+import { SubmitButton } from "@/components/submit-button";
 
 type Props = {
   username: string;
@@ -55,7 +56,7 @@ export function BookingForm({
   defaultPhone,
   maxGuests = 0,
 }: Props) {
-  const [state, action, pending] = useActionState(book, {} as BookState);
+  const [state, action] = useActionState(book, {} as BookState);
   const [location, setLocation] = useState(
     locations.find((l) => l.type === defaultLocation)?.type ?? locations[0]?.type ?? "",
   );
@@ -263,21 +264,15 @@ export function BookingForm({
           {state.error}
         </p>
       )}
-      <button
-        type="submit"
-        disabled={pending}
-        className="h-10 w-full rounded-lg bg-primary text-sm font-medium text-primary-foreground disabled:opacity-60"
-      >
-        {pending
-          ? "Booking…"
-          : reschedule
-            ? "Confirm new time"
-            : paid
-              ? "Continue to payment"
-              : sessions > 1
-                ? `Book ${sessions} sessions`
-                : "Confirm booking"}
-      </button>
+      <SubmitButton className="h-10 w-full" pendingText="Booking…">
+        {reschedule
+          ? "Confirm new time"
+          : paid
+            ? "Continue to payment"
+            : sessions > 1
+              ? `Book ${sessions} sessions`
+              : "Confirm booking"}
+      </SubmitButton>
     </form>
   );
 }

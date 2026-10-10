@@ -2,12 +2,12 @@
 
 import { useActionState, useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
+import { SubmitButton } from "@/components/submit-button";
 import { Field, FieldDescription, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { TimezoneField } from "@/components/timezone-field";
-import { HandleHint, useHandleCheck } from "@/components/handle-field";
+import { HandleField, HandleHint, useHandleCheck } from "@/components/handle-field";
 import { checkUsername, saveProfile } from "../scheduling-actions";
 
 type Values = {
@@ -28,10 +28,7 @@ export function ProfileForm({
   saved: boolean;
   zones: string[];
 }) {
-  const [state, action, pending] = useActionState(
-    saveProfile,
-    {} as { ok?: boolean; error?: string },
-  );
+  const [state, action] = useActionState(saveProfile, {} as { ok?: boolean; error?: string });
   const [username, setUsername] = useState(initial.username);
   const handle = useHandleCheck(username, "username", checkUsername, {
     initial: saved || state.ok ? initial.username : undefined,
@@ -45,7 +42,7 @@ export function ProfileForm({
       <FieldGroup>
         <Field>
           <FieldLabel htmlFor="username">Username</FieldLabel>
-          <Input
+          <HandleField
             id="username"
             name="username"
             value={username}
@@ -54,7 +51,7 @@ export function ProfileForm({
             autoCapitalize="none"
             autoCorrect="off"
             spellCheck={false}
-            aria-invalid={handle.status.state === "error" || undefined}
+            status={handle.status}
           />
           <HandleHint
             status={handle.status}
@@ -90,9 +87,9 @@ export function ProfileForm({
           />
           <FieldDescription>Link to a square image, ideally at least 256×256.</FieldDescription>
         </Field>
-        <Button type="submit" disabled={pending || !handle.ok}>
-          {pending ? "Saving…" : "Save"}
-        </Button>
+        <SubmitButton pendingText="Saving…" disabled={!handle.ok}>
+          Save
+        </SubmitButton>
       </FieldGroup>
     </form>
   );

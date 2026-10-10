@@ -1,14 +1,11 @@
 "use client";
 
 import { useActionState } from "react";
-import { Button } from "@/components/ui/button";
+import { SubmitButton } from "@/components/submit-button";
 import { unsubscribe, type UnsubscribeState } from "./actions";
 
 export function UnsubscribeForm({ token, email }: { token: string; email: string }) {
-  const [state, action, pending] = useActionState(
-    unsubscribe.bind(null, token),
-    {} as UnsubscribeState,
-  );
+  const [state, action] = useActionState(unsubscribe.bind(null, token), {} as UnsubscribeState);
   if (state.ok)
     return (
       <p className="mt-3 text-muted-foreground" role="status">
@@ -26,9 +23,7 @@ export function UnsubscribeForm({ token, email }: { token: string; email: string
           {state.error}
         </p>
       )}
-      <Button type="submit" disabled={pending}>
-        {pending ? "Saving…" : "Unsubscribe"}
-      </Button>
+      <SubmitButton pendingText="Saving…">Unsubscribe</SubmitButton>
     </form>
   );
 }

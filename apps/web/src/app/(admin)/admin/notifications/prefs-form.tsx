@@ -3,7 +3,7 @@
 import { useActionState, useEffect } from "react";
 import { toast } from "sonner";
 import type { HostNotifications } from "@bookly/db/schema";
-import { Button } from "@/components/ui/button";
+import { SubmitButton } from "@/components/submit-button";
 import { Field, FieldDescription, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { saveNotificationPrefs, type PrefsState } from "./actions";
@@ -21,7 +21,7 @@ export function PrefsForm({
   /** Self-hosted installs get told what to configure; cloud hosts only that texts are off. */
   selfHosted: boolean;
 }) {
-  const [state, action, pending] = useActionState(saveNotificationPrefs, {} as PrefsState);
+  const [state, action] = useActionState(saveNotificationPrefs, {} as PrefsState);
   useEffect(() => {
     if (state.ok) toast.success("Saved");
     else if (state.error) toast.error(state.error);
@@ -97,9 +97,7 @@ export function PrefsForm({
             </label>
           ))}
         </fieldset>
-        <Button type="submit" disabled={pending}>
-          {pending ? "Saving…" : "Save"}
-        </Button>
+        <SubmitButton pendingText="Saving…">Save</SubmitButton>
       </FieldGroup>
     </form>
   );

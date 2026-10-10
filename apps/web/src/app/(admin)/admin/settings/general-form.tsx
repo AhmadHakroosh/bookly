@@ -2,7 +2,7 @@
 
 import { useActionState, useEffect } from "react";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
+import { SubmitButton } from "@/components/submit-button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
@@ -31,7 +31,7 @@ export function GeneralForm({
   zones: string[];
   selfHosted?: boolean;
 }) {
-  const [state, action, pending] = useActionState(updateWorkspaceSettings, {} as SettingsState);
+  const [state, action] = useActionState(updateWorkspaceSettings, {} as SettingsState);
   useEffect(() => {
     if (state.ok) toast.success("Settings saved");
     else if (state.error && !state.fields) toast.error(state.error);
@@ -129,9 +129,7 @@ export function GeneralForm({
             </FieldDescription>
           </fieldset>
         )}
-        <Button type="submit" disabled={pending}>
-          {pending ? "Saving…" : "Save"}
-        </Button>
+        <SubmitButton pendingText="Saving…">Save</SubmitButton>
       </FieldGroup>
     </form>
   );

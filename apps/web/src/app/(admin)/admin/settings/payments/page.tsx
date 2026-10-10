@@ -16,7 +16,6 @@ async function PaymentsPage() {
   return (
     <div className="max-w-xl space-y-6">
       <div>
-        <h2 className="text-xl font-semibold tracking-tight">Payments</h2>
         <p className="text-sm text-muted-foreground">
           Where the money from paid event types and payment requests goes. Plan and invoices for
           Bookly itself are under Billing.

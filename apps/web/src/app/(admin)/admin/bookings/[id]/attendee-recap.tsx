@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { SubmitButton } from "@/components/submit-button";
 import { sendAttendeeRecapAction } from "../../scheduling-actions";
 
 type Item = { title: string; owner: "me" | "them"; dueInDays: number | null };
@@ -94,9 +95,9 @@ export function AttendeeRecap({
             rows={10}
             className={field}
           />
-          <Button type="submit" disabled={!subject.trim()}>
+          <SubmitButton disabled={!subject.trim()} pendingText="Sending…">
             Send recap to {attendeeName}
-          </Button>
+          </SubmitButton>
         </form>
       )}
     </section>

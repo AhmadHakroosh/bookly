@@ -2,7 +2,7 @@
 
 import { useActionState, useEffect } from "react";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
+import { SubmitButton } from "@/components/submit-button";
 import { Field, FieldDescription, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -20,7 +20,7 @@ type Values = {
 };
 
 export function ContactDetailsForm({ contact }: { contact: Values }) {
-  const [state, action, pending] = useActionState(saveContact, {} as ContactState);
+  const [state, action] = useActionState(saveContact, {} as ContactState);
   useEffect(() => {
     if (state.ok) toast.success("Saved");
     else if (state.error) toast.error(state.error);
@@ -60,9 +60,7 @@ export function ContactDetailsForm({ contact }: { contact: Values }) {
           <FieldLabel htmlFor="notes">Notes</FieldLabel>
           <Textarea id="notes" name="notes" rows={5} defaultValue={contact.notes} />
         </Field>
-        <Button type="submit" disabled={pending}>
-          {pending ? "Saving…" : "Save"}
-        </Button>
+        <SubmitButton pendingText="Saving…">Save</SubmitButton>
       </FieldGroup>
     </form>
   );

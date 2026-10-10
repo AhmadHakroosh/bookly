@@ -3,7 +3,9 @@
 import Link from "next/link";
 import { useState } from "react";
 import { authClient } from "@/lib/auth-client";
+import { BusyOverlay } from "@/components/busy-overlay";
 import { Button } from "@/components/ui/button";
+import { Spinner } from "@/components/ui/spinner";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
@@ -106,9 +108,11 @@ export function AcceptForm({
           </Field>
         )}
         {error && <p className="text-sm text-destructive">{error}</p>}
-        <Button type="submit" disabled={pending}>
+        <Button type="submit" disabled={pending} aria-busy={pending}>
+          {pending && <Spinner data-icon="inline-start" />}
           {pending ? "Creating account…" : "Create account and join"}
         </Button>
+        <BusyOverlay show={pending} label="Creating your account and joining the workspace…" />
       </FieldGroup>
       {providers.length > 0 && (
         <>

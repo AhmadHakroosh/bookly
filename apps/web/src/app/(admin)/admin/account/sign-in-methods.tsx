@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
+import { ActionButton } from "@/components/action-button";
 import { authClient } from "@/lib/auth-client";
 import type { SocialProvider, SocialProviderId } from "@/lib/social-providers";
 
@@ -29,11 +29,11 @@ export function SignInMethods({
   email: string;
 }) {
   const router = useRouter();
-  const [busy, setBusy] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
   const methods = (hasPassword ? 1 : 0) + linked.length + passkeyCount;
 
   async function connect(provider: SocialProviderId) {
-    setBusy(provider);
+    setBusy(true);
     const here = new URL(window.location.href);
     here.searchParams.delete("error");
     here.searchParams.delete("provider");
@@ -44,14 +44,14 @@ export function SignInMethods({
       callbackURL: here.toString(),
       errorCallbackURL: errorURL.toString(),
     });
-    setBusy(null);
+    setBusy(false);
     if (error) toast.error(error.message ?? "Could not connect");
   }
 
   async function disconnect(account: LinkedAccount) {
-    setBusy(account.providerId);
+    setBusy(true);
     const { error } = await authClient.unlinkAccount({ accountId: account.accountId });
-    setBusy(null);
+    setBusy(false);
     if (error) return void toast.error(error.message ?? "Could not disconnect");
     toast.success("Disconnected");
     router.refresh();
@@ -76,26 +76,26 @@ export function SignInMethods({
                 {account && <span className="ml-2 text-xs text-muted-foreground">Connected</span>}
               </span>
               {account ? (
-                <Button
-                  type="button"
+                <ActionButton
                   variant="ghost"
                   size="sm"
-                  disabled={busy !== null || methods <= 1}
+                  disabled={busy || methods <= 1}
                   title={methods <= 1 ? "Add another way to sign in first" : undefined}
-                  onClick={() => disconnect(account)}
+                  pendingText="Disconnecting…"
+                  action={() => disconnect(account)}
                 >
                   Disconnect
-                </Button>
+                </ActionButton>
               ) : (
-                <Button
-                  type="button"
+                <ActionButton
                   variant="outline"
                   size="sm"
-                  disabled={busy !== null}
-                  onClick={() => connect(p.id)}
+                  disabled={busy}
+                  pendingText="Redirecting…"
+                  action={() => connect(p.id)}
                 >
-                  {busy === p.id ? "Redirecting…" : "Connect"}
-                </Button>
+                  Connect
+                </ActionButton>
               )}
             </li>
           );

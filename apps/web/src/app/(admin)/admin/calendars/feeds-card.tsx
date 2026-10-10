@@ -2,7 +2,6 @@
 
 import { useActionState, useEffect, useRef } from "react";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { SubmitButton } from "@/components/submit-button";
 import { fmtDateTime } from "@/lib/time";
@@ -36,7 +35,7 @@ export function FeedsCard({
   timezone: string;
   max: number;
 }) {
-  const [state, action, pending] = useActionState(addFeedAction, {} as FeedState);
+  const [state, action] = useActionState(addFeedAction, {} as FeedState);
   const form = useRef<HTMLFormElement>(null);
   useEffect(() => {
     if (state.ok) {
@@ -106,9 +105,7 @@ export function FeedsCard({
             </label>
             <Input id="feed-label" name="label" placeholder="Work calendar" maxLength={80} />
           </div>
-          <Button type="submit" disabled={pending}>
-            {pending ? "Checking…" : "Add feed"}
-          </Button>
+          <SubmitButton pendingText="Checking…">Add feed</SubmitButton>
         </form>
       ) : (
         <p className="text-xs text-muted-foreground">Up to {max} feeds per person.</p>

@@ -4,14 +4,17 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useActionState, useState } from "react";
 import { authClient } from "@/lib/auth-client";
+import { BusyOverlay } from "@/components/busy-overlay";
 import { Button } from "@/components/ui/button";
+import { Spinner } from "@/components/ui/spinner";
+import { SubmitButton } from "@/components/submit-button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Field, FieldDescription, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { OrDivider, SocialButtons } from "@/components/social-buttons";
 import type { SocialProvider } from "@/lib/social-providers";
 import { rememberConsentAction } from "@/server/consent-actions";
-import { HandleHint, useHandleCheck } from "@/components/handle-field";
+import { HandleField, HandleHint, useHandleCheck } from "@/components/handle-field";
 import { slugify } from "@/lib/handles";
 import { checkAddress, createWorkspace, type CreateState } from "./actions";
 
@@ -87,8 +90,15 @@ export function SignupForm({
         </p>
         {error && <p className="mt-3 text-sm text-destructive">{error}</p>}
         <div className="mt-4 flex items-center gap-3">
-          <Button type="button" variant="outline" onClick={resend} disabled={pending || resent}>
-            {resent ? "Sent again" : "Resend the link"}
+          <Button
+            type="button"
+            variant="outline"
+            onClick={resend}
+            disabled={pending || resent}
+            aria-busy={pending}
+          >
+            {pending && <Spinner data-icon="inline-start" />}
+            {resent ? "Sent again" : pending ? "Sending…" : "Resend the link"}
           </Button>
           <span className="text-xs text-muted-foreground">Wrong address? Sign up again.</span>
         </div>
@@ -156,9 +166,11 @@ export function SignupForm({
             </label>
           </Field>
           {error && <p className="text-sm text-destructive">{error}</p>}
-          <Button type="submit" disabled={pending}>
+          <Button type="submit" disabled={pending} aria-busy={pending}>
+            {pending && <Spinner data-icon="inline-start" />}
             {pending ? "Creating account…" : "Continue"}
           </Button>
+          <BusyOverlay show={pending} label="Creating your account…" />
         </FieldGroup>
         {providers.length > 0 && (
           <>
@@ -204,29 +216,27 @@ export function SignupForm({
         </Field>
         <Field>
           <FieldLabel htmlFor="slug">Address</FieldLabel>
-          <div className="flex items-center gap-1 text-sm">
-            <Input
-              id="slug"
-              name="slug"
-              value={slug}
-              onChange={(e) => setSlug(e.target.value)}
-              className="max-w-48"
-              autoCapitalize="none"
-              autoCorrect="off"
-              spellCheck={false}
-              aria-invalid={address.status.state === "error" || undefined}
-            />
-            <span className="text-muted-foreground">.{rootDomain}</span>
-          </div>
+          <HandleField
+            id="slug"
+            name="slug"
+            value={slug}
+            onChange={(e) => setSlug(e.target.value)}
+            autoCapitalize="none"
+            autoCorrect="off"
+            spellCheck={false}
+            status={address.status}
+            suffix={`.${rootDomain}`}
+          />
           <HandleHint
             status={address.status}
             fallback="Lowercase letters, numbers and hyphens. You can add your own domain later."
           />
         </Field>
         {state.error && <p className="text-sm text-destructive">{state.error}</p>}
-        <Button type="submit" disabled={creating || !address.ok}>
-          {creating ? "Creating workspace…" : "Create workspace"}
-        </Button>
+        <SubmitButton disabled={!address.ok} pendingText="Creating workspace…">
+          Create workspace
+        </SubmitButton>
+        <BusyOverlay show={creating} label="Creating your workspace…" />
       </FieldGroup>
     </form>
   );

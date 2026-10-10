@@ -2,6 +2,7 @@
 
 import { useActionState, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { SubmitButton } from "@/components/submit-button";
 import { captureNotes, sendFollowUpAction, type CaptureState } from "../../scheduling-actions";
 
 export function CaptureForm({
@@ -16,7 +17,7 @@ export function CaptureForm({
   /** Ready transcript text, offered as the source for capture. */
   transcript?: string | null;
 }) {
-  const [state, action, pending] = useActionState(captureNotes, {} as CaptureState);
+  const [state, action] = useActionState(captureNotes, {} as CaptureState);
   const [notes, setNotes] = useState("");
   const [clearedFor, setClearedFor] = useState<CaptureState | null>(null);
   if (state.ok && clearedFor !== state) {
@@ -72,9 +73,9 @@ export function CaptureForm({
             Captured. Tasks and the timeline are updated below.
           </p>
         )}
-        <Button type="submit" className="mt-3" disabled={pending}>
-          {pending ? "Working…" : "Capture"}
-        </Button>
+        <SubmitButton className="mt-3" pendingText="Working…">
+          Capture
+        </SubmitButton>
       </form>
       <form action={sendFollowUpAction.bind(null, bookingId)} className="rounded-xl border p-4">
         <h2 className="text-base font-semibold tracking-tight">Follow-up email</h2>
@@ -96,14 +97,14 @@ export function CaptureForm({
         <p className="mt-1 text-xs text-muted-foreground">
           Sent from Bookly with your address as reply-to; your name is added as the sign-off.
         </p>
-        <Button
-          type="submit"
+        <SubmitButton
           variant="outline"
           className="mt-3"
           disabled={!subject.trim() || !body.trim()}
+          pendingText="Sending…"
         >
           Send follow-up
-        </Button>
+        </SubmitButton>
       </form>
     </div>
   );

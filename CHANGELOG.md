@@ -4,6 +4,16 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 ## [Unreleased]
 
+### Changed
+
+- Every button that reaches the server shows it: submit buttons spin and disable while their form is in flight, click actions (connect, remove, send, toggle) do the same, and actions with a global effect (signing in or out, switching workspace, creating or deleting an account or workspace, accepting an invitation) cover the page until they land
+- Username and workspace-address fields show the availability check inside the field: a spinner and "Checking…" while the server is asked, a tick and "Available" when free, a cross when taken. A value that is already yours shows nothing
+- Settings tabs: the tab strip now has room below it, and the selected tab is the page's title instead of repeating it as a heading
+
+### Removed
+
+- The Booking page's note about where passwords and passkeys moved; there was nobody to tell yet
+
 ## [0.11.0] - 2026-10-10
 
 ### Changed

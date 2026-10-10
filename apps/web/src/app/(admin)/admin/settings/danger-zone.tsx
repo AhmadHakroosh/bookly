@@ -2,7 +2,9 @@
 
 import { useActionState, useState } from "react";
 import { DownloadIcon, Trash2Icon } from "lucide-react";
+import { BusyOverlay } from "@/components/busy-overlay";
 import { Button } from "@/components/ui/button";
+import { SubmitButton } from "@/components/submit-button";
 import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { deleteWorkspaceAction, type SettingsState } from "./actions";
@@ -22,7 +24,7 @@ export function DangerZone({
   return (
     <div className="space-y-4">
       <section className="space-y-3 rounded-lg border p-4">
-        <h3 className="text-base font-semibold tracking-tight">Export your data</h3>
+        <h2 className="text-base font-semibold tracking-tight">Export your data</h2>
         <p className="text-sm text-muted-foreground">
           One JSON file with the workspace, members, event types, availability, bookings, contacts
           and their timeline, tasks, routing forms, transcripts and recaps. Secrets such as
@@ -42,9 +44,9 @@ export function DangerZone({
         )}
       </section>
       <section className="space-y-3 rounded-lg border border-destructive/40 p-4">
-        <h3 className="text-base font-semibold tracking-tight text-destructive">
+        <h2 className="text-base font-semibold tracking-tight text-destructive">
           Delete this workspace
-        </h3>
+        </h2>
         <p className="text-sm text-muted-foreground">
           Removes the workspace, its booking pages, bookings, contacts, transcripts and members from
           the database immediately, and{" "}
@@ -70,10 +72,11 @@ export function DangerZone({
               </FieldDescription>
             </Field>
             {state.error && <p className="text-sm text-destructive">{state.error}</p>}
-            <Button type="submit" variant="destructive" disabled={pending || confirm !== slug}>
+            <SubmitButton variant="destructive" disabled={confirm !== slug} pendingText="Deleting…">
               <Trash2Icon data-icon="inline-start" />
-              {pending ? "Deleting…" : "Delete workspace permanently"}
-            </Button>
+              Delete workspace permanently
+            </SubmitButton>
+            <BusyOverlay show={pending} label="Deleting the workspace…" />
           </form>
         ) : (
           <p className="text-sm text-muted-foreground">Only the workspace owner can delete it.</p>

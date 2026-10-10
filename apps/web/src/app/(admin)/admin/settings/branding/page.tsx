@@ -12,7 +12,6 @@ async function BrandingPage() {
   return (
     <div className="max-w-xl space-y-6">
       <div>
-        <h2 className="text-xl font-semibold tracking-tight">Branding</h2>
         <p className="text-sm text-muted-foreground">
           Shown on your booking pages and in every email guests receive: your logo next to the
           workspace name, and your colour on buttons and selected dates. Leave blank for the Bookly

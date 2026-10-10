@@ -7,6 +7,8 @@ import { Trash2Icon } from "lucide-react";
 import { BackLink, ExternalLink } from "@/components/links";
 import type { RoutingDestination, RoutingForm, RoutingRule } from "@bookly/db/schema";
 import { Button } from "@/components/ui/button";
+import { SubmitButton } from "@/components/submit-button";
+import { ActionButton } from "@/components/action-button";
 import { Field, FieldDescription, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -91,7 +93,7 @@ export function RoutingFormEditor({
   form: RoutingForm;
   eventTypes: EventTypeOption[];
 }) {
-  const [state, action, pending] = useActionState(saveRoutingForm, {} as RoutingSaveState);
+  const [state, action] = useActionState(saveRoutingForm, {} as RoutingSaveState);
   const [rules, setRules] = useState<RoutingRule[]>(form.rules);
   const [fallback, setFallback] = useState<RoutingDestination | null>(form.fallback);
   const [questionIds, setQuestionIds] = useState(form.questions);
@@ -280,16 +282,16 @@ export function RoutingFormEditor({
           /r/{form.slug})
         </label>
         <div className="flex items-center justify-between">
-          <Button type="submit" disabled={pending}>
-            {pending ? "Saving…" : "Save"}
-          </Button>
-          <Button
-            type="button"
+          <SubmitButton pendingText="Saving…">Save</SubmitButton>
+          <ActionButton
             variant="destructive"
-            onClick={() => confirm("Delete this routing form?") && deleteRoutingForm(form.id)}
+            pendingText="Deleting…"
+            action={async () => {
+              if (confirm("Delete this routing form?")) await deleteRoutingForm(form.id);
+            }}
           >
             Delete
-          </Button>
+          </ActionButton>
         </div>
       </FieldGroup>
     </form>
