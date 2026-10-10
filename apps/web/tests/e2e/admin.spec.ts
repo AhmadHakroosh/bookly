@@ -66,9 +66,10 @@ test.describe("admin", () => {
     ] as const) {
       await page.goto(path);
       // The layout heading streams in after the shell; give a cold production server room.
-      await expect(page.getByRole("heading", { name: "Settings", level: 1 })).toBeVisible({
-        timeout: 15_000,
-      });
+      await expect(
+        page.getByRole("heading", { name: "Settings", level: 1 }),
+        `${path} landed on ${page.url()}: ${(await page.locator("body").innerText()).slice(0, 400)}`,
+      ).toBeVisible({ timeout: 15_000 });
       await expect(
         page.getByRole("heading", { name: heading, level: 2, exact: true }),
       ).toBeVisible();
