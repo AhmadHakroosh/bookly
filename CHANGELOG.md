@@ -4,6 +4,8 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 ## [Unreleased]
 
+## [0.11.1] - 2026-10-10
+
 ### Changed
 
 - Every button that reaches the server shows it: submit buttons spin and disable while their form is in flight, click actions (connect, remove, send, toggle) do the same, and actions with a global effect (signing in or out, switching workspace, creating or deleting an account or workspace, accepting an invitation) cover the page until they land
@@ -359,7 +361,8 @@ First public release: the self-hostable scheduling platform with contacts, brief
 
 - The unused storage layer (`packages/storage`, `STORAGE_*` and `S3_*` variables, the MinIO service in Compose): nothing in Bookly uploads files; profile photos and logos are URLs
 
-[Unreleased]: https://github.com/AhmadHakroosh/bookly/compare/v0.11.0...HEAD
+[Unreleased]: https://github.com/AhmadHakroosh/bookly/compare/v0.11.1...HEAD
+[0.11.1]: https://github.com/AhmadHakroosh/bookly/compare/v0.11.0...v0.11.1
 [0.11.0]: https://github.com/AhmadHakroosh/bookly/compare/v0.10.1...v0.11.0
 [0.10.1]: https://github.com/AhmadHakroosh/bookly/compare/v0.10.0...v0.10.1
 [0.10.0]: https://github.com/AhmadHakroosh/bookly/compare/v0.9.0...v0.10.0
