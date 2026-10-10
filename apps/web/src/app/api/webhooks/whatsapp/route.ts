@@ -65,6 +65,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Bad JSON" }, { status: 400 });
   }
   const s = summarize(payload);
-  for (const f of s.failed) console.error("[whatsapp] delivery failed", f);
+  // Serialised, so nothing from the request can forge extra log lines.
+  for (const f of s.failed) console.error("[whatsapp] delivery failed", JSON.stringify(f));
   return NextResponse.json({ ok: true, ...s });
 }

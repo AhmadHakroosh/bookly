@@ -51,3 +51,6 @@ minimumReleaseAgeExclude:
 # drizzle-kit pins @esbuild-kit, which pulls an esbuild with GHSA-67mh-4wv8-2f99 (dev server only).
 overrides:
   "esbuild@<0.25.0": ">=0.25.0"
+  # Dependabot #4 / #3: build-time only (postcss, tailwind typography), patched upstream.
+  "source-map-js@<1.2.2": ">=1.2.2"
+  "postcss-selector-parser@<7.1.6": ">=7.1.6"
