@@ -4,6 +4,8 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 ## [Unreleased]
 
+## [0.11.2] - 2026-10-10
+
 ### Fixed
 
 - The WhatsApp webhook logs failed deliveries as a JSON string, so nothing in Meta's payload can forge extra log lines (CodeQL log-injection finding)
@@ -367,7 +369,8 @@ First public release: the self-hostable scheduling platform with contacts, brief
 
 - The unused storage layer (`packages/storage`, `STORAGE_*` and `S3_*` variables, the MinIO service in Compose): nothing in Bookly uploads files; profile photos and logos are URLs
 
-[Unreleased]: https://github.com/AhmadHakroosh/bookly/compare/v0.11.1...HEAD
+[Unreleased]: https://github.com/AhmadHakroosh/bookly/compare/v0.11.2...HEAD
+[0.11.2]: https://github.com/AhmadHakroosh/bookly/compare/v0.11.1...v0.11.2
 [0.11.1]: https://github.com/AhmadHakroosh/bookly/compare/v0.11.0...v0.11.1
 [0.11.0]: https://github.com/AhmadHakroosh/bookly/compare/v0.10.1...v0.11.0
 [0.10.1]: https://github.com/AhmadHakroosh/bookly/compare/v0.10.0...v0.10.1
