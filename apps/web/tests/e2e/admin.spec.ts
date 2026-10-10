@@ -90,8 +90,9 @@ test.describe("admin", () => {
       timeout: 15_000,
     });
     // auth.setup.ts signed the demo user in, which is the first entry every install has.
-    await expect(page.getByText("Session signed in").first()).toBeVisible();
-    await expect(page.getByText(DEMO.email).first()).toBeVisible();
+    const rows = page.getByRole("list").filter({ hasText: "Session signed in" });
+    await expect(rows.getByText("Session signed in").first()).toBeVisible();
+    await expect(rows.getByText(DEMO.email).first()).toBeVisible();
   });
 });
 
