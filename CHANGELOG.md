@@ -4,6 +4,11 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 ## [Unreleased]
 
+### Changed
+
+- The event type editor is grouped by topic: Basics, Time, Where, People, Booking rules, Payment, and Reminders & follow-up, each with a short intro. A jump bar sticks under the header and highlights the section in view, and the Save and Delete bar sticks to the bottom, so a long form reads as a few short ones
+- Settings tabs wrap onto a second line on narrow screens instead of scrolling sideways
+
 ## [0.11.2] - 2026-10-10
 
 ### Fixed
