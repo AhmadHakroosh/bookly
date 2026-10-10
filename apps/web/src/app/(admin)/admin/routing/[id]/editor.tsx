@@ -164,7 +164,7 @@ export function RoutingFormEditor({
                   <Button
                     type="button"
                     variant="ghost"
-                    size="icon-sm"
+                    size="icon"
                     aria-label="Remove rule"
                     onClick={() => setRules((all) => all.filter((_, j) => j !== i))}
                     className="ml-auto shrink-0 text-muted-foreground hover:text-destructive"
@@ -217,7 +217,7 @@ export function RoutingFormEditor({
                     <Button
                       type="button"
                       variant="ghost"
-                      size="icon-sm"
+                      size="icon"
                       aria-label="Remove condition"
                       className="shrink-0 text-muted-foreground hover:text-destructive"
                       onClick={() =>

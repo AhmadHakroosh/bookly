@@ -73,7 +73,7 @@ async function AvailabilityPage({ searchParams }: PageProps<"/admin/availability
               key={x.id}
               href={x.isDefault ? "/admin/availability" : `/admin/availability?schedule=${x.id}`}
               aria-current={x.id === s.id ? "page" : undefined}
-              className={`inline-flex h-8 items-center gap-2 rounded-lg border px-3 text-sm ${x.id === s.id ? "border-primary bg-primary/5 font-medium" : "text-muted-foreground hover:text-foreground"}`}
+              className={`inline-flex h-10 items-center gap-2 rounded-lg border px-3 text-sm ${x.id === s.id ? "border-primary bg-primary/5 font-medium" : "text-muted-foreground hover:text-foreground"}`}
             >
               {x.name}
               {x.isDefault && (
@@ -88,7 +88,7 @@ async function AvailabilityPage({ searchParams }: PageProps<"/admin/availability
               name="name"
               placeholder="New schedule, e.g. Evenings"
               aria-label="New schedule name"
-              className="h-8 w-56"
+              className="w-56"
             />
             <SubmitButton variant="outline">Add schedule</SubmitButton>
           </form>

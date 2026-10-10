@@ -102,13 +102,13 @@ export function LocationsEditor({
                   onChange={(e) =>
                     update(rows.map((x, j) => (j === i ? { ...x, value: e.target.value } : x)))
                   }
-                  className="h-8 min-w-0 flex-1"
+                  className="min-w-0 flex-1"
                 />
               )}
               <Button
                 type="button"
                 variant="ghost"
-                size="icon-sm"
+                size="icon"
                 aria-label={`Remove location ${i + 1}`}
                 disabled={rows.length === 1}
                 className="shrink-0 text-muted-foreground hover:text-destructive"

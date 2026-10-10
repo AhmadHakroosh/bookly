@@ -59,7 +59,7 @@ export function DatePicker({
               aria-label={ariaLabel}
               aria-required={required || undefined}
               className={cn(
-                "h-8 w-full justify-start gap-2 bg-background px-2.5 font-normal",
+                "h-10 w-full justify-start gap-2 bg-background px-3 font-normal",
                 !date && "text-muted-foreground",
                 !required && date && "pr-8",
               )}

@@ -71,7 +71,7 @@ export function ScheduleForm({
         {/* Small screens: the day on its own line, each range on the line beneath. */}
         {rows.map((d) => (
           <li key={d.weekday} className="flex flex-wrap items-start gap-2 p-3 text-sm sm:gap-3">
-            <label className="inline-flex basis-full items-center gap-2 sm:h-8 sm:w-32 sm:basis-auto">
+            <label className="inline-flex basis-full items-center gap-2 sm:h-10 sm:w-32 sm:basis-auto">
               <input
                 type="checkbox"
                 name={`on_${d.weekday}`}
@@ -138,7 +138,7 @@ export function ScheduleForm({
                   <Button
                     type="button"
                     variant="ghost"
-                    size="icon-sm"
+                    size="icon"
                     onClick={() =>
                       update(d.weekday, (x) => ({
                         ...x,

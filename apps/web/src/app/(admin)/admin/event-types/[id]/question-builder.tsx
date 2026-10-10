@@ -71,7 +71,7 @@ export function QuestionBuilder({
             <Button
               type="button"
               variant="ghost"
-              size="icon-sm"
+              size="icon"
               onClick={() => move(i, -1)}
               disabled={i === 0}
               aria-label="Move up"
@@ -82,7 +82,7 @@ export function QuestionBuilder({
             <Button
               type="button"
               variant="ghost"
-              size="icon-sm"
+              size="icon"
               onClick={() => move(i, 1)}
               disabled={i === qs.length - 1}
               aria-label="Move down"
@@ -93,7 +93,7 @@ export function QuestionBuilder({
             <Button
               type="button"
               variant="ghost"
-              size="icon-sm"
+              size="icon"
               onClick={() => setQs((all) => all.filter((_, j) => j !== i))}
               aria-label="Remove question"
               className="shrink-0 text-muted-foreground hover:text-destructive"

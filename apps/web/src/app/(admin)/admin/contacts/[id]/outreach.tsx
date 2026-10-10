@@ -165,17 +165,17 @@ export function Outreach({
                   ariaLabel="Amount"
                   required
                   className="flex-1"
-                  inputClassName="h-9 text-left"
+                  inputClassName="text-left"
                 />
-                <input name="currency" defaultValue="usd" className={`${field} h-9 w-24`} />
+                <input name="currency" defaultValue="usd" className={`${field} w-24`} />
               </div>
-              <input name="description" placeholder="What it is for" className={`${field} h-9`} />
+              <input name="description" placeholder="What it is for" className={field} />
             </>
           )}
           <input
             name="subject"
             defaultValue={templates[open].subject}
-            className={`${field} h-9`}
+            className={field}
             placeholder="Subject"
             required
           />

@@ -73,7 +73,7 @@ export function HandleField({
   return (
     <div
       className={cn(
-        "flex h-8 items-center rounded-lg border border-input bg-transparent transition-colors focus-within:border-ring focus-within:ring-3 focus-within:ring-ring/50 dark:bg-input/30",
+        "flex h-10 items-center rounded-lg border border-input bg-transparent transition-colors focus-within:border-ring focus-within:ring-3 focus-within:ring-ring/50 dark:bg-input/30",
         invalid && "border-destructive ring-3 ring-destructive/20 dark:border-destructive/50",
         className,
       )}
