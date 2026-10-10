@@ -12,7 +12,6 @@ async function EmailsPage() {
   return (
     <div className="max-w-xl space-y-6">
       <div>
-        <h2 className="text-xl font-semibold tracking-tight">Emails</h2>
         <p className="text-sm text-muted-foreground">
           Your wording for the emails Bookly sends on the workspace&apos;s behalf. Each event type
           can still carry its own follow-up message, which wins over the one here.

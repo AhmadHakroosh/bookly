@@ -4,7 +4,9 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import { BusyOverlay } from "@/components/busy-overlay";
 import { Button } from "@/components/ui/button";
+import { Spinner } from "@/components/ui/spinner";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -21,7 +23,9 @@ export function LoginForm({
   providers: readonly SocialProvider[];
 }) {
   const router = useRouter();
-  const [pending, setPending] = useState(false);
+  // What is in flight; sign-ins cover the page, sending a link only busies its button.
+  const [busy, setBusy] = useState<{ label: string; overlay: boolean } | null>(null);
+  const pending = busy !== null;
 
   // Browsers that support conditional mediation offer saved passkeys in the email field's
   // autofill; picking one signs in without touching the password. Harmless elsewhere.
@@ -51,12 +55,12 @@ export function LoginForm({
     });
   }
 
-  async function withPending(fn: () => Promise<void>) {
-    setPending(true);
+  async function withPending(fn: () => Promise<void>, label = "Signing in…", overlay = true) {
+    setBusy({ label, overlay });
     try {
       await fn();
     } finally {
-      setPending(false);
+      setBusy(null);
     }
   }
 
@@ -81,18 +85,23 @@ export function LoginForm({
   async function onMagic(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const f = new FormData(e.currentTarget);
-    await withPending(async () => {
-      const { error } = await authClient.signIn.magicLink({
-        email: String(f.get("email")),
-        callbackURL: next,
-      });
-      if (error) return void toast.error(error.message ?? "Could not send link");
-      toast.success("Check your email for a sign-in link.");
-    });
+    await withPending(
+      async () => {
+        const { error } = await authClient.signIn.magicLink({
+          email: String(f.get("email")),
+          callbackURL: next,
+        });
+        if (error) return void toast.error(error.message ?? "Could not send link");
+        toast.success("Check your email for a sign-in link.");
+      },
+      "Sending link…",
+      false,
+    );
   }
 
   return (
     <>
+      <BusyOverlay show={!!busy?.overlay} label={busy?.label ?? ""} />
       {providers.length > 0 && (
         <>
           <SocialButtons
@@ -143,7 +152,8 @@ export function LoginForm({
                   Forgot your password?
                 </Link>
               </p>
-              <Button type="submit" className="w-full" disabled={pending}>
+              <Button type="submit" className="w-full" disabled={pending} aria-busy={pending}>
+                {pending && busy?.overlay && <Spinner data-icon="inline-start" />}
                 Sign in
               </Button>
             </FieldGroup>
@@ -156,8 +166,9 @@ export function LoginForm({
                 <FieldLabel htmlFor="magic-email">Email</FieldLabel>
                 <Input id="magic-email" name="email" type="email" autoComplete="email" required />
               </Field>
-              <Button type="submit" className="w-full" disabled={pending}>
-                Send sign-in link
+              <Button type="submit" className="w-full" disabled={pending} aria-busy={pending}>
+                {pending && !busy?.overlay && <Spinner data-icon="inline-start" />}
+                {pending && !busy?.overlay ? "Sending link…" : "Send sign-in link"}
               </Button>
             </FieldGroup>
           </form>
@@ -168,8 +179,10 @@ export function LoginForm({
         variant="outline"
         className="mt-4 w-full"
         disabled={pending}
+        aria-busy={pending}
         onClick={onPasskey}
       >
+        {pending && busy?.overlay && <Spinner data-icon="inline-start" />}
         Sign in with a passkey
       </Button>
     </>

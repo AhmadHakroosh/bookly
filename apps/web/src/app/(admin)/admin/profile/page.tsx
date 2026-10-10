@@ -1,5 +1,4 @@
 import { ProfileSkeleton } from "@/components/skeletons/pages";
-import Link from "next/link";
 import { Suspense } from "react";
 import { timezoneList } from "@/lib/time";
 import { getProfileByUser } from "@/server/scheduling";
@@ -42,13 +41,6 @@ async function ProfilePage({ searchParams }: PageProps<"/admin/profile">) {
         saved={!!p}
         zones={timezoneList()}
       />
-      <p className="text-sm text-muted-foreground">
-        Passwords, passkeys and sign-in methods moved to{" "}
-        <Link href="/admin/account" className="underline underline-offset-4">
-          Account
-        </Link>
-        .
-      </p>
     </div>
   );
 }

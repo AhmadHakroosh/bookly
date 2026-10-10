@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useActionState, useEffect } from "react";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
+import { SubmitButton } from "@/components/submit-button";
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { ColorPicker } from "@/components/color-picker";
@@ -17,7 +17,7 @@ export function BrandingForm({
   /** Custom logo and colour come with the plans that remove Bookly branding. */
   allowed: boolean;
 }) {
-  const [state, action, pending] = useActionState(updateWorkspaceSettings, {} as SettingsState);
+  const [state, action] = useActionState(updateWorkspaceSettings, {} as SettingsState);
   useEffect(() => {
     if (state.ok) toast.success("Branding saved");
     else if (state.error && !state.fields) toast.error(state.error);
@@ -66,9 +66,9 @@ export function BrandingForm({
               <FieldError errors={err("accent")} />
             </Field>
           </div>
-          <Button type="submit" disabled={pending || !allowed}>
-            {pending ? "Saving…" : "Save"}
-          </Button>
+          <SubmitButton pendingText="Saving…" disabled={!allowed}>
+            Save
+          </SubmitButton>
         </fieldset>
       </FieldGroup>
     </form>

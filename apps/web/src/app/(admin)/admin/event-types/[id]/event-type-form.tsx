@@ -3,7 +3,8 @@
 import { useActionState, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { BackLink, ExternalLink } from "@/components/links";
-import { Button } from "@/components/ui/button";
+import { SubmitButton } from "@/components/submit-button";
+import { ActionButton } from "@/components/action-button";
 import { Field, FieldDescription, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -69,7 +70,7 @@ export function EventTypeForm({
   notetaker?: boolean;
   teammates: { userId: string; name: string }[];
 }) {
-  const [state, action, pending] = useActionState(saveEventType, {} as EventTypeSaveState);
+  const [state, action] = useActionState(saveEventType, {} as EventTypeSaveState);
   const [locs, setLocs] = useState<EventLocation[]>(initial.locations);
   const types = locs.map((l) => l.type);
   const captureable = locs.some(
@@ -439,16 +440,16 @@ export function EventTypeForm({
           </label>
         </div>
         <div className="flex items-center justify-between">
-          <Button type="submit" disabled={pending}>
-            {pending ? "Saving…" : "Save"}
-          </Button>
-          <Button
-            type="button"
+          <SubmitButton pendingText="Saving…">Save</SubmitButton>
+          <ActionButton
             variant="destructive"
-            onClick={() => confirm("Delete this event type?") && deleteEventType(initial.id)}
+            pendingText="Deleting…"
+            action={async () => {
+              if (confirm("Delete this event type?")) await deleteEventType(initial.id);
+            }}
           >
             Delete
-          </Button>
+          </ActionButton>
         </div>
       </FieldGroup>
     </form>

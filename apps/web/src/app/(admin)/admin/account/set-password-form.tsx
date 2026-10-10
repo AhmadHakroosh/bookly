@@ -1,14 +1,14 @@
 "use client";
 
 import { useActionState } from "react";
-import { Button } from "@/components/ui/button";
+import { SubmitButton } from "@/components/submit-button";
 import { Field, FieldDescription, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { setPasswordAction, type AccountState } from "./account-actions";
 
 /** For accounts created through a provider: adds a password as a second way to sign in. */
 export function SetPasswordForm() {
-  const [state, action, pending] = useActionState(setPasswordAction, {} as AccountState);
+  const [state, action] = useActionState(setPasswordAction, {} as AccountState);
   return (
     <form action={action} className="rounded-xl border p-4">
       <h2 className="text-base font-semibold tracking-tight">Password</h2>
@@ -34,9 +34,7 @@ export function SetPasswordForm() {
         </Field>
         {state.error && <p className="text-sm text-destructive">{state.error}</p>}
         {state.ok && <p className="text-sm text-muted-foreground">Password set.</p>}
-        <Button type="submit" disabled={pending}>
-          {pending ? "Saving…" : "Set password"}
-        </Button>
+        <SubmitButton pendingText="Saving…">Set password</SubmitButton>
       </FieldGroup>
     </form>
   );

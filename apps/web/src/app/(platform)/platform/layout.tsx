@@ -131,9 +131,12 @@ async function SessionMenu() {
         </Link>
       )}
       <form action={signOut}>
-        <button type="submit" className="w-full rounded-md px-2 py-2 text-left">
+        <SubmitButton
+          variant="ghost"
+          className="h-auto w-full justify-start rounded-md px-2 py-2 font-normal"
+        >
           Sign out
-        </button>
+        </SubmitButton>
       </form>
     </>
   );

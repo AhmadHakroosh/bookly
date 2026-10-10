@@ -17,7 +17,6 @@ async function GeneralPage() {
   return (
     <div className="max-w-xl space-y-8">
       <div>
-        <h2 className="text-xl font-semibold tracking-tight">General</h2>
         <p className="text-sm text-muted-foreground">
           The workspace name appears in the admin header and in email footers. The default timezone
           is used for new booking pages and schedules.
@@ -39,12 +38,12 @@ async function GeneralPage() {
       <section className="space-y-3 rounded-lg border p-4">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <h3 className="flex items-center gap-2 text-base font-semibold tracking-tight">
+            <h2 className="flex items-center gap-2 text-base font-semibold tracking-tight">
               Attendee joined
               <Badge variant={joinEnabled ? "default" : "secondary"}>
                 {joinEnabled ? "On" : "Off"}
               </Badge>
-            </h3>
+            </h2>
             <p className="text-sm text-muted-foreground">
               When the first attendee enters a Bookly video room, hosts who asked for it under
               Notifications get a ping. Turning this off mutes it for the whole workspace.

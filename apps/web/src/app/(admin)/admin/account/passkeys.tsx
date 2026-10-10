@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
+import { ActionButton } from "@/components/action-button";
 import { Input } from "@/components/ui/input";
 import { authClient } from "@/lib/auth-client";
 import { dismissed } from "@/lib/passkey-rp";
@@ -28,14 +28,14 @@ export function Passkeys({
 }) {
   const router = useRouter();
   const [name, setName] = useState("");
-  const [busy, setBusy] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
 
   async function add() {
-    setBusy("add");
+    setBusy(true);
     const { error } = await authClient.passkey.addPasskey({
       name: name.trim() || "This device",
     });
-    setBusy(null);
+    setBusy(false);
     if (error) {
       if (!dismissed(error)) toast.error(error.message ?? "Could not add a passkey");
       return;
@@ -46,9 +46,9 @@ export function Passkeys({
   }
 
   async function remove(id: string) {
-    setBusy(id);
+    setBusy(true);
     const { error } = await authClient.passkey.deletePasskey({ id });
-    setBusy(null);
+    setBusy(false);
     if (error) return void toast.error(error.message ?? "Could not remove the passkey");
     toast.success("Passkey removed");
     router.refresh();
@@ -73,15 +73,15 @@ export function Passkeys({
                   </span>
                 )}
               </span>
-              <Button
-                type="button"
+              <ActionButton
                 variant="ghost"
                 size="sm"
-                disabled={busy !== null}
-                onClick={() => remove(p.id)}
+                disabled={busy}
+                pendingText="Removing…"
+                action={() => remove(p.id)}
               >
                 Remove
-              </Button>
+              </ActionButton>
             </li>
           ))}
         </ul>
@@ -96,9 +96,14 @@ export function Passkeys({
             className="w-full sm:w-56"
             maxLength={60}
           />
-          <Button type="button" variant="outline" disabled={busy !== null} onClick={add}>
-            {busy === "add" ? "Waiting for your device…" : "Add a passkey"}
-          </Button>
+          <ActionButton
+            variant="outline"
+            disabled={busy}
+            pendingText="Waiting for your device…"
+            action={add}
+          >
+            Add a passkey
+          </ActionButton>
         </div>
       ) : (
         <p className="text-sm text-muted-foreground">This browser does not support passkeys.</p>

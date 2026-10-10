@@ -2,7 +2,7 @@
 
 import { useActionState } from "react";
 import { API_SCOPES, WEBHOOK_EVENTS } from "@bookly/db/schema";
-import { Button } from "@/components/ui/button";
+import { SubmitButton } from "@/components/submit-button";
 import { Input } from "@/components/ui/input";
 import { createApiKey, createWebhook, type HookState, type KeyState } from "./actions";
 
@@ -17,7 +17,7 @@ function Secret({ label, value }: { label: string; value: string }) {
 }
 
 export function ApiKeyForm() {
-  const [state, action, pending] = useActionState(createApiKey, {} as KeyState);
+  const [state, action] = useActionState(createApiKey, {} as KeyState);
   return (
     <form action={action} className="max-w-2xl space-y-3 rounded-xl border p-4">
       <div className="flex flex-wrap items-end gap-2">
@@ -27,9 +27,7 @@ export function ApiKeyForm() {
           required
           className="min-w-56 flex-1"
         />
-        <Button type="submit" disabled={pending}>
-          Create key
-        </Button>
+        <SubmitButton>Create key</SubmitButton>
       </div>
       <fieldset className="flex flex-wrap gap-3 text-sm">
         <legend className="sr-only">Scopes</legend>
@@ -49,7 +47,7 @@ export function ApiKeyForm() {
 }
 
 export function WebhookForm() {
-  const [state, action, pending] = useActionState(createWebhook, {} as HookState);
+  const [state, action] = useActionState(createWebhook, {} as HookState);
   return (
     <form action={action} className="max-w-2xl space-y-3 rounded-xl border p-4">
       <div className="flex flex-wrap items-end gap-2">
@@ -65,9 +63,7 @@ export function WebhookForm() {
           placeholder="Description (optional)"
           className="min-w-40 flex-1 sm:w-48 sm:flex-none"
         />
-        <Button type="submit" disabled={pending}>
-          Add webhook
-        </Button>
+        <SubmitButton>Add webhook</SubmitButton>
       </div>
       <fieldset className="flex flex-wrap gap-3 text-sm">
         <legend className="sr-only">Events</legend>

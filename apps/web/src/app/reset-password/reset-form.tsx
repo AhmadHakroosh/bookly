@@ -3,32 +3,27 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
+import { SubmitButton } from "@/components/submit-button";
 import { Field, FieldDescription, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { authClient } from "@/lib/auth-client";
 
 export function ResetForm({ token, next }: { token: string; next: string }) {
   const router = useRouter();
-  const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    const f = new FormData(e.currentTarget);
+  async function reset(f: FormData) {
     const password = String(f.get("password"));
     if (password !== String(f.get("confirm"))) return setError("The passwords do not match.");
-    setPending(true);
     setError(null);
     const { error } = await authClient.resetPassword({ newPassword: password, token });
-    setPending(false);
     if (error) return setError(error.message ?? "This link is no longer valid.");
     toast.success("Password updated. Sign in with your new password.");
     router.push(`/login?next=${encodeURIComponent(next)}`);
   }
 
   return (
-    <form onSubmit={onSubmit}>
+    <form action={reset}>
       <FieldGroup>
         <Field>
           <FieldLabel htmlFor="password">New password</FieldLabel>
@@ -51,9 +46,9 @@ export function ResetForm({ token, next }: { token: string; next: string }) {
             {error}
           </p>
         )}
-        <Button type="submit" className="w-full" disabled={pending}>
-          {pending ? "Saving…" : "Set new password"}
-        </Button>
+        <SubmitButton className="w-full" pendingText="Saving…">
+          Set new password
+        </SubmitButton>
       </FieldGroup>
     </form>
   );

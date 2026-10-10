@@ -2,13 +2,13 @@
 
 import { useActionState, useEffect } from "react";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
+import { SubmitButton } from "@/components/submit-button";
 import { Input } from "@/components/ui/input";
 import { inviteMember, type TeamState } from "./actions";
 import { Dropdown } from "@/components/dropdown";
 
 export function InviteForm() {
-  const [state, action, pending] = useActionState(inviteMember, {} as TeamState);
+  const [state, action] = useActionState(inviteMember, {} as TeamState);
   useEffect(() => {
     if (state.ok) toast.success("Invitation sent");
     else if (state.error) toast.error(state.error);
@@ -32,9 +32,7 @@ export function InviteForm() {
           { value: "admin", label: "Admin (manages everything)" },
         ]}
       />
-      <Button type="submit" disabled={pending}>
-        {pending ? "Sending…" : "Invite"}
-      </Button>
+      <SubmitButton pendingText="Sending…">Invite</SubmitButton>
     </form>
   );
 }

@@ -13,7 +13,6 @@ async function DataPage() {
   return (
     <div className="max-w-xl space-y-6">
       <div>
-        <h2 className="text-xl font-semibold tracking-tight">Your data</h2>
         <p className="text-sm text-muted-foreground">
           Take a copy of everything, or delete the workspace for good. Both are for the workspace
           owner.

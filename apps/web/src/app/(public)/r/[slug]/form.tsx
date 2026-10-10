@@ -4,9 +4,10 @@ import { useActionState } from "react";
 import type { EventQuestion } from "@bookly/db/schema";
 import { submitRouting, type RoutingState } from "./actions";
 import { Dropdown } from "@/components/dropdown";
+import { SubmitButton } from "@/components/submit-button";
 
 export function RoutingFormView({ slug, questions }: { slug: string; questions: EventQuestion[] }) {
-  const [state, action, pending] = useActionState(submitRouting, {} as RoutingState);
+  const [state, action] = useActionState(submitRouting, {} as RoutingState);
   const field =
     "bg-background h-10 w-full rounded-lg border px-3 text-sm outline-none focus-visible:ring-2";
   return (
@@ -68,13 +69,9 @@ export function RoutingFormView({ slug, questions }: { slug: string; questions: 
           {state.error}
         </p>
       )}
-      <button
-        type="submit"
-        disabled={pending}
-        className="h-10 w-full rounded-lg bg-primary text-sm font-medium text-primary-foreground disabled:opacity-60"
-      >
-        {pending ? "One moment…" : "Continue"}
-      </button>
+      <SubmitButton className="h-10 w-full" pendingText="One moment…">
+        Continue
+      </SubmitButton>
     </form>
   );
 }

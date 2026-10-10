@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
-import { Button } from "@/components/ui/button";
+import { SubmitButton } from "@/components/submit-button";
 import {
   Field,
   FieldError,
@@ -14,7 +14,7 @@ import { Input } from "@/components/ui/input";
 import { completeSetup, type SetupState } from "./actions";
 
 export function SetupForm({ signedIn = false }: { signedIn?: boolean }) {
-  const [state, action, pending] = useActionState(completeSetup, {} as SetupState);
+  const [state, action] = useActionState(completeSetup, {} as SetupState);
   const err = (k: string) => state.fields?.[k]?.map((message) => ({ message }));
   return (
     <form action={action} className="space-y-8">
@@ -82,9 +82,9 @@ export function SetupForm({ signedIn = false }: { signedIn?: boolean }) {
           {state.error}
         </p>
       )}
-      <Button type="submit" className="w-full" disabled={pending}>
-        {pending ? "Creating…" : "Create workspace"}
-      </Button>
+      <SubmitButton className="w-full" pendingText="Creating…">
+        Create workspace
+      </SubmitButton>
     </form>
   );
 }

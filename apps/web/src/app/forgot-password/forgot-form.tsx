@@ -1,26 +1,21 @@
 "use client";
 
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
+import { SubmitButton } from "@/components/submit-button";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { authClient } from "@/lib/auth-client";
 
 export function ForgotForm({ next }: { next: string }) {
-  const [pending, setPending] = useState(false);
   const [sent, setSent] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    const email = String(new FormData(e.currentTarget).get("email"));
-    setPending(true);
+  async function request(f: FormData) {
     setError(null);
     const { error } = await authClient.requestPasswordReset({
-      email,
+      email: String(f.get("email")),
       redirectTo: `/reset-password?next=${encodeURIComponent(next)}`,
     });
-    setPending(false);
     if (error) return setError(error.message ?? "Could not send the email");
     setSent(true);
   }
@@ -32,7 +27,7 @@ export function ForgotForm({ next }: { next: string }) {
       </p>
     );
   return (
-    <form onSubmit={onSubmit}>
+    <form action={request}>
       <FieldGroup>
         <Field>
           <FieldLabel htmlFor="email">Email</FieldLabel>
@@ -43,9 +38,9 @@ export function ForgotForm({ next }: { next: string }) {
             {error}
           </p>
         )}
-        <Button type="submit" className="w-full" disabled={pending}>
-          {pending ? "Sending…" : "Send reset link"}
-        </Button>
+        <SubmitButton className="w-full" pendingText="Sending…">
+          Send reset link
+        </SubmitButton>
       </FieldGroup>
     </form>
   );

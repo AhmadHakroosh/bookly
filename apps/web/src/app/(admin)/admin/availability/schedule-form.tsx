@@ -4,6 +4,7 @@ import { PlusIcon, Trash2Icon } from "lucide-react";
 import { useActionState, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { SubmitButton } from "@/components/submit-button";
 import { Input } from "@/components/ui/input";
 import { TimezoneField } from "@/components/timezone-field";
 import { saveSchedule } from "../scheduling-actions";
@@ -28,10 +29,7 @@ export function ScheduleForm({
   days: Day[];
   weeklyBudget: number | null;
 }) {
-  const [state, action, pending] = useActionState(
-    saveSchedule,
-    {} as { ok?: boolean; error?: string },
-  );
+  const [state, action] = useActionState(saveSchedule, {} as { ok?: boolean; error?: string });
   const [rows, setRows] = useState<Day[]>(days);
   useEffect(() => {
     if (state.ok) toast.success("Availability saved");
@@ -176,9 +174,7 @@ export function ScheduleForm({
           </li>
         ))}
       </ul>
-      <Button type="submit" disabled={pending}>
-        {pending ? "Saving…" : "Save availability"}
-      </Button>
+      <SubmitButton pendingText="Saving…">Save availability</SubmitButton>
     </form>
   );
 }

@@ -2,7 +2,7 @@
 
 import { useActionState, useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
+import { SubmitButton } from "@/components/submit-button";
 import { Field, FieldDescription, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { updateWorkspaceSettings, type SettingsState } from "../actions";
@@ -18,7 +18,7 @@ export function CrmForm({
   connected: boolean;
   companyDomain: string;
 }) {
-  const [state, action, pending] = useActionState(updateWorkspaceSettings, {} as SettingsState);
+  const [state, action] = useActionState(updateWorkspaceSettings, {} as SettingsState);
   const [crm, setCrm] = useState<Provider>(provider);
   useEffect(() => {
     if (state.ok) toast.success("CRM settings saved");
@@ -112,9 +112,7 @@ export function CrmForm({
           </div>
         )}
         <div>
-          <Button type="submit" disabled={pending}>
-            {pending ? "Saving…" : "Save"}
-          </Button>
+          <SubmitButton pendingText="Saving…">Save</SubmitButton>
         </div>
       </FieldGroup>
     </form>

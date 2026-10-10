@@ -2,6 +2,7 @@
 
 import { useActionState } from "react";
 import { joinWaitlistAction, type WaitlistState } from "./actions";
+import { SubmitButton } from "@/components/submit-button";
 
 export function WaitlistForm({
   username,
@@ -15,7 +16,7 @@ export function WaitlistForm({
   target: string;
   tz: string;
 }) {
-  const [state, action, pending] = useActionState(joinWaitlistAction, {} as WaitlistState);
+  const [state, action] = useActionState(joinWaitlistAction, {} as WaitlistState);
   const field =
     "bg-background h-10 w-full rounded-lg border px-3 text-sm outline-none focus-visible:ring-2";
   if (state.ok)
@@ -51,13 +52,9 @@ export function WaitlistForm({
           {state.error}
         </p>
       )}
-      <button
-        type="submit"
-        disabled={pending}
-        className="h-10 w-full rounded-lg bg-primary text-sm font-medium text-primary-foreground disabled:opacity-60"
-      >
-        {pending ? "Joining…" : "Notify me"}
-      </button>
+      <SubmitButton className="h-10 w-full" pendingText="Joining…">
+        Notify me
+      </SubmitButton>
     </form>
   );
 }

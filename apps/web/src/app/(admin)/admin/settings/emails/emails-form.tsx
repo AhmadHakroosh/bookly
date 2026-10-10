@@ -2,7 +2,7 @@
 
 import { useActionState, useEffect } from "react";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
+import { SubmitButton } from "@/components/submit-button";
 import { Field, FieldDescription, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -25,7 +25,7 @@ type Values = {
 };
 
 export function EmailsForm({ templates }: { templates: Values }) {
-  const [state, action, pending] = useActionState(updateWorkspaceSettings, {} as SettingsState);
+  const [state, action] = useActionState(updateWorkspaceSettings, {} as SettingsState);
   useEffect(() => {
     if (state.ok) toast.success("Emails saved");
     else if (state.error) toast.error(state.error);
@@ -131,9 +131,7 @@ export function EmailsForm({ templates }: { templates: Values }) {
             </Field>
           </div>
         </fieldset>
-        <Button type="submit" disabled={pending}>
-          {pending ? "Saving…" : "Save"}
-        </Button>
+        <SubmitButton pendingText="Saving…">Save</SubmitButton>
       </FieldGroup>
     </form>
   );

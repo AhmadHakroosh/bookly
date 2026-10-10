@@ -4,8 +4,8 @@ import { useActionState, useEffect } from "react";
 import { toast } from "sonner";
 import type { Integration } from "@bookly/db/schema";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { SubmitButton } from "@/components/submit-button";
+import { ActionButton } from "@/components/action-button";
 import { ConnectButton } from "@/components/connect-button";
 import { disconnect, reloadCalendars, saveCalendarSettings } from "../integrations-actions";
 import { Dropdown } from "@/components/dropdown";
@@ -23,7 +23,7 @@ export function CalendarCard({
   configured: boolean;
   description: string;
 }) {
-  const [state, action, pending] = useActionState(
+  const [state, action] = useActionState(
     saveCalendarSettings,
     {} as { ok?: boolean; error?: string },
   );
@@ -121,16 +121,16 @@ export function CalendarCard({
           />
         </div>
         <div className="flex items-center gap-3">
-          <Button type="submit" disabled={pending}>
-            {pending ? "Saving…" : "Save"}
-          </Button>
-          <button
-            type="button"
-            onClick={() => reloadCalendars(integration.provider)}
-            className="text-xs text-muted-foreground underline underline-offset-4"
+          <SubmitButton pendingText="Saving…">Save</SubmitButton>
+          <ActionButton
+            variant="link"
+            size="xs"
+            className="h-auto px-0 text-muted-foreground underline"
+            action={() => reloadCalendars(integration.provider)}
+            pendingText="Reloading…"
           >
             Reload calendar list
-          </button>
+          </ActionButton>
         </div>
       </form>
     </section>

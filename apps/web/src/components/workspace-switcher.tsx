@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useState } from "react";
 import {
   BuildingIcon,
   CheckIcon,
@@ -8,6 +9,7 @@ import {
   LayoutGridIcon,
   PlusIcon,
 } from "lucide-react";
+import { BusyOverlay } from "@/components/busy-overlay";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -43,6 +45,12 @@ export function WorkspaceSwitcher({
   allUrl?: string;
   newUrl?: string;
 }) {
+  // A switch is a full navigation to another host; cover the page until it lands.
+  const [going, setGoing] = useState<string | null>(null);
+  const go = (url: string, label: string) => {
+    setGoing(label);
+    window.location.assign(url);
+  };
   if (!workspaces)
     return (
       <Link href="/admin" className="font-semibold tracking-tight">
@@ -51,6 +59,7 @@ export function WorkspaceSwitcher({
     );
   return (
     <DropdownMenu>
+      <BusyOverlay show={going !== null} label={going ?? ""} />
       <DropdownMenuTrigger
         render={
           <Button
@@ -70,7 +79,7 @@ export function WorkspaceSwitcher({
             Workspaces
           </DropdownMenuLabel>
           {workspaces.map((w) => (
-            <DropdownMenuItem key={w.id} onClick={() => window.location.assign(w.url)}>
+            <DropdownMenuItem key={w.id} onClick={() => go(w.url, `Opening ${w.name}…`)}>
               <span className="flex size-4 items-center justify-center">
                 {w.id === current.id && <CheckIcon className="size-4" aria-label="Current" />}
               </span>
@@ -85,13 +94,13 @@ export function WorkspaceSwitcher({
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
         {allUrl && (
-          <DropdownMenuItem onClick={() => window.location.assign(allUrl)}>
+          <DropdownMenuItem onClick={() => go(allUrl, "Opening your workspaces…")}>
             <LayoutGridIcon aria-hidden />
             All workspaces
           </DropdownMenuItem>
         )}
         {newUrl && (
-          <DropdownMenuItem onClick={() => window.location.assign(newUrl)}>
+          <DropdownMenuItem onClick={() => go(newUrl, "Opening the signup…")}>
             <PlusIcon aria-hidden />
             New workspace
           </DropdownMenuItem>
