@@ -11,7 +11,7 @@ export function SettingsNav({ tabs }: { tabs: SettingsTab[] }) {
   const active = (href: string) =>
     href === "/admin/settings" ? pathname === href : pathname.startsWith(href);
   return (
-    <nav aria-label="Settings" className="flex gap-1 overflow-x-auto border-b text-sm">
+    <nav aria-label="Settings" className="flex flex-wrap gap-x-1 border-b text-sm">
       {tabs.map((t) => (
         <Link
           key={t.href}
