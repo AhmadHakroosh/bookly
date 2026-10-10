@@ -81,7 +81,7 @@ export async function updateWorkspaceSettings(
   });
   const s = workspace.settings;
   let columns: Partial<typeof schema.workspaces.$inferInsert> = {};
-  let settings: WorkspaceSettings = s;
+  let settings: WorkspaceSettings;
 
   if (section === "general") {
     const parsed = generalSchema.safeParse(raw);

@@ -4,6 +4,12 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 ## [Unreleased]
 
+### Fixed
+
+- The WhatsApp webhook logs failed deliveries as a JSON string, so nothing in Meta's payload can forge extra log lines (CodeQL log-injection finding)
+- Two transitive build-time packages are pinned to their patched releases through pnpm overrides: `source-map-js` 1.2.2 (Dependabot #4) and `postcss-selector-parser` 7.1.6 (Dependabot #3, pulled by the Tailwind typography plugin)
+- `shadcn` is a devDependency: it is a CLI run through `pnpm dlx`, not something the app imports, so it and its tooling tree no longer sit in the runtime dependency list
+
 ## [0.11.1] - 2026-10-10
 
 ### Changed
