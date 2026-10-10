@@ -47,7 +47,9 @@ export function BrandingForm({
                 defaultValue={workspace.logoUrl}
                 placeholder="https://yourdomain.com/logo.png"
               />
-              <FieldDescription>Square PNG or JPG, at least 112×112, on a public URL.</FieldDescription>
+              <FieldDescription>
+                Square PNG or JPG, at least 112×112, on a public URL.
+              </FieldDescription>
               <FieldError errors={err("logoUrl")} />
             </Field>
             <Field>
