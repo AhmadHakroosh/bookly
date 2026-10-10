@@ -4,11 +4,13 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { encrypt, signState } from "@/lib/crypto";
 import { z } from "zod";
-import type { IntegrationProvider } from "@bookly/db/schema";
+import type { IntegrationProvider, IntegrationSettings } from "@bookly/db/schema";
+import { audit, diff } from "@/server/audit";
 import {
   authorizeUrl,
   pkceVerifier,
   disconnectIntegration,
+  getIntegration,
   providerConfigured,
   invalidateBusy,
   isProvider,
@@ -46,6 +48,11 @@ export async function startConnect(provider: string, back: string) {
     back: dest,
     ...(verifier ? { v: encrypt(verifier) } : {}),
   });
+  // Nothing is stored yet (the state travels signed in the URL); the callback logs the connection.
+  await audit({
+    action: "integration.connect_started",
+    target: { type: "integration", id: provider, label: provider },
+  });
   redirect(authorizeUrl(provider, state, verifier));
 }
 
@@ -53,6 +60,10 @@ export async function disconnect(provider: string) {
   if (!isProvider(provider)) return;
   const uid = await who();
   await disconnectIntegration(uid, provider);
+  await audit({
+    action: "integration.disconnected",
+    target: { type: "integration", id: provider, label: provider },
+  });
   invalidateBusy(uid);
   revalidatePath("/admin", "layout");
 }
@@ -60,6 +71,10 @@ export async function disconnect(provider: string) {
 export async function reloadCalendars(provider: string) {
   if (provider !== "google" && provider !== "microsoft") return;
   await refreshCalendars(await who(), provider);
+  await audit({
+    action: "integration.calendars_reloaded",
+    target: { type: "integration", id: provider, label: provider },
+  });
   revalidatePath("/admin", "layout");
 }
 
@@ -82,9 +97,16 @@ export async function saveCalendarSettings(
   const { provider, destinationCalendarId, conflict } = parsed.data;
   if (!isProvider(provider)) return { error: "Unknown provider" };
   const uid = await who();
-  await updateIntegrationSettings(uid, provider as IntegrationProvider, {
-    destinationCalendarId,
-    conflictCalendarIds: conflict,
+  const before = await getIntegration(uid, provider as IntegrationProvider);
+  const settings: IntegrationSettings = { destinationCalendarId, conflictCalendarIds: conflict };
+  await updateIntegrationSettings(uid, provider as IntegrationProvider, settings);
+  await audit({
+    action: "integration.calendar_settings_updated",
+    target: { type: "integration", id: provider, label: provider },
+    changes: diff<IntegrationSettings>(before?.settings, settings, [
+      "destinationCalendarId",
+      "conflictCalendarIds",
+    ]),
   });
   invalidateBusy(uid);
   revalidatePath("/admin", "layout");

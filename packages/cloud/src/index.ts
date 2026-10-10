@@ -32,6 +32,10 @@ export type Limits = {
   removeBranding: boolean;
   /** Stripe invoices in the host's name with every paid booking (Stripe's per-invoice fee applies). */
   invoices: boolean;
+  /** Days the workspace activity log is kept (null = forever). The log is always written. */
+  auditRetentionDays: number | null;
+  /** Download the activity log as CSV. */
+  activityExport: boolean;
 };
 
 export type Plan = {
@@ -80,16 +84,18 @@ export const PLANS: Record<PlanId, Plan> = {
       api: false,
       removeBranding: false,
       invoices: false,
+      auditRetentionDays: 90,
+      activityExport: false,
     },
     highlights: [
-      "Contacts, briefings and the Meeting Inbox",
+      "Contacts, briefings and the daily Home page",
       "1 connected account: Google (Calendar + Meet), Microsoft (Outlook + Teams) or Zoom",
       "Phone and in-person meetings",
       "1 booking page, 2 event types",
       "Email confirmations and reminders",
       "Paid bookings via Stripe, 5% platform fee",
     ],
-    featured: ["Contacts, briefings and the Meeting Inbox"],
+    featured: ["Contacts, briefings and the daily Home page"],
   },
   pro: {
     id: "pro",
@@ -114,6 +120,8 @@ export const PLANS: Record<PlanId, Plan> = {
       api: true,
       removeBranding: true,
       invoices: true,
+      auditRetentionDays: 365,
+      activityExport: true,
     },
     highlights: [
       "Auto-capture: transcripts, AI recaps, tasks (5 hours a month, then $3 an hour)",
@@ -154,6 +162,8 @@ export const PLANS: Record<PlanId, Plan> = {
       api: true,
       removeBranding: true,
       invoices: true,
+      auditRetentionDays: 730,
+      activityExport: true,
     },
     highlights: [
       "Everything in Pro",
@@ -162,6 +172,7 @@ export const PLANS: Record<PlanId, Plan> = {
       "Auto-capture: 8 hours a month per member, pooled, then $3 an hour",
       "2 to 25 members, priced per member",
       "3 custom domains",
+      "Activity log kept for two years",
     ],
     featured: [
       "Shared customer memory: every contact, timeline and briefing across the team",
@@ -186,6 +197,8 @@ export const UNLIMITED: Limits = {
   api: true,
   removeBranding: true,
   invoices: true,
+  auditRetentionDays: null,
+  activityExport: true,
 };
 
 /** USD per transcribed minute beyond the plan's included minutes (Stripe metered price). */
@@ -263,7 +276,8 @@ export type FeatureLimit =
   | "teamScheduling"
   | "api"
   | "removeBranding"
-  | "invoices";
+  | "invoices"
+  | "activityExport";
 
 /** True when adding one more of `what` stays within the limit. */
 export function withinLimit(limits: Limits, what: CountableLimit, current: number): boolean {
@@ -286,6 +300,7 @@ export const FEATURE_LABELS: Record<FeatureLimit, string> = {
   api: "API and webhooks",
   removeBranding: "Your own branding",
   invoices: "Stripe invoices in your name",
+  activityExport: "Activity log export",
 };
 
 /** First plan (cheapest) that allows `what`. */

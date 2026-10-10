@@ -21,7 +21,7 @@ Zoom); Pro and Team lift that limit.
    With several locations, the attendee picks one when booking.
 2. When someone books, Bookly creates a Zoom meeting on your account for that slot. The join link
    appears in the attendee's confirmation email, in the calendar invitation, on their booking page
-   and on the booking in your admin, and in your **Inbox** for the day.
+   and on the booking in your admin, and on your **Home** page for the day.
 3. Rescheduling a booking updates the Zoom meeting; cancelling it deletes the meeting.
 
 Bookly stores only the meeting id and join link with the booking. Your Zoom tokens are stored

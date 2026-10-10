@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { and, eq, schema } from "@bookly/db";
 import { db } from "@/lib/db";
+import { audit, diff } from "@/server/audit";
 import { refreshWorkspace } from "@/server/cache";
 import { parseQuestionsJson } from "@/server/questions";
 import { parseDestination, parseRulesJson } from "@/server/routing-rules";
@@ -30,6 +31,10 @@ export async function createRoutingForm() {
   await db()
     .insert(schema.routingForms)
     .values({ id, workspaceId: ws.id, slug: `form-${id.slice(0, 4)}`, name: "New routing form" });
+  await audit({
+    action: "routing_form.created",
+    target: { type: "routing_form", id, label: "New routing form" },
+  });
   redirect(`/admin/routing/${id}`);
 }
 
@@ -77,27 +82,42 @@ export async function saveRoutingForm(
       fallback = null;
     }
   }
-  await db()
-    .update(schema.routingForms)
-    .set({
-      name: d.name,
-      slug,
-      description: d.description || null,
-      questions: parseQuestionsJson(d.questionsJson),
-      rules: parseRulesJson(d.rulesJson, known),
-      fallback,
-      active: d.active === "on",
-    })
-    .where(eq(schema.routingForms.id, d.id));
+  const patch = {
+    name: d.name,
+    slug,
+    description: d.description || null,
+    questions: parseQuestionsJson(d.questionsJson),
+    rules: parseRulesJson(d.rulesJson, known),
+    fallback,
+    active: d.active === "on",
+  };
+  await db().update(schema.routingForms).set(patch).where(eq(schema.routingForms.id, d.id));
+  await audit({
+    action: "routing_form.updated",
+    target: { type: "routing_form", id: d.id, label: d.name },
+    changes: {
+      ...diff(existing, patch, ["name", "slug", "description", "active"]),
+      ...diff(
+        { questions: existing.questions.length, rules: existing.rules.length },
+        { questions: patch.questions.length, rules: patch.rules.length },
+      ),
+    },
+  });
   refreshWorkspace(ws.id);
   return { ok: true };
 }
 
 export async function deleteRoutingForm(id: string) {
   const { ws } = await ctx();
-  await db()
+  const [gone] = await db()
     .delete(schema.routingForms)
-    .where(and(eq(schema.routingForms.id, id), eq(schema.routingForms.workspaceId, ws.id)));
+    .where(and(eq(schema.routingForms.id, id), eq(schema.routingForms.workspaceId, ws.id)))
+    .returning({ name: schema.routingForms.name });
+  if (gone)
+    await audit({
+      action: "routing_form.deleted",
+      target: { type: "routing_form", id, label: gone.name },
+    });
   refreshWorkspace(ws.id);
   redirect("/admin/routing");
 }

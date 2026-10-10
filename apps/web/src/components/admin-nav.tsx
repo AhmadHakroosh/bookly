@@ -14,7 +14,7 @@ import {
   ExternalLinkIcon,
   GlobeIcon,
   LifeBuoyIcon,
-  InboxIcon,
+  HomeIcon,
   LayoutGridIcon,
   PlugIcon,
   SettingsIcon,
@@ -107,8 +107,8 @@ export function AdminNav({
   return (
     <nav className="flex min-h-full flex-col gap-4 text-sm" aria-label="Admin">
       <Link href="/admin" className={itemClass(active("/admin"))}>
-        <InboxIcon className="size-4 shrink-0" aria-hidden />
-        Inbox
+        <HomeIcon className="size-4 shrink-0" aria-hidden />
+        Home
       </Link>
       {groups.map((g) => (
         <div key={g.label} className="border-t pt-3">

@@ -223,7 +223,7 @@ export async function noteRecapEmail(bookingId: string, kind: "followUpAt" | "re
     .where(eq(schema.meetingRecaps.id, row.id));
 }
 
-/** Recaps nobody has looked at yet, for the inbox. */
+/** Recaps nobody has looked at yet, for Home. */
 export async function recapsToReview(workspaceId: string, hostUserId?: string, limit = 10) {
   const rows = await db()
     .select({ r: schema.meetingRecaps, b: schema.bookings, eventTitle: schema.eventTypes.title })

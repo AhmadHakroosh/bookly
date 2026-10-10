@@ -1,6 +1,7 @@
 import { apiContext, apiError, json, options, readJson, serializeBooking } from "@/server/api";
 import { publicBaseUrl } from "@/server/urls";
 import { isValidTimezone } from "@/lib/time";
+import { API_KEY_ACTOR, SYSTEM_ACTOR, audit } from "@/server/audit";
 import { BookingError, rescheduleBooking } from "@/server/booking-flow";
 
 export const OPTIONS = options;
@@ -18,6 +19,13 @@ export async function POST(req: Request, ctx: RouteContext<"/api/v1/bookings/[id
   if (tz && !isValidTimezone(tz)) return apiError("Unknown timezone", 400, "bad_request");
   try {
     const b = await rescheduleBooking(api.workspace, id, start, tz);
+    await audit({
+      action: "booking.rescheduled",
+      target: { type: "booking", id: b.id, label: b.attendeeName },
+      actor: api.key ? API_KEY_ACTOR(api.key) : SYSTEM_ACTOR("api"),
+      workspace: api.workspace.id,
+      changes: { startAt: { to: b.startAt }, rescheduledFromId: { to: id } },
+    });
     return json(serializeBooking(b, await publicBaseUrl(api.workspace)), { status: 201 });
   } catch (e) {
     if (e instanceof BookingError) return apiError(e.message, 409, "unavailable");

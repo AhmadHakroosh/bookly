@@ -54,7 +54,7 @@ export function ContactDetailsForm({ contact }: { contact: Values }) {
             defaultValue={contact.nextFollowUpAt}
             placeholder="No date"
           />
-          <FieldDescription>Shows up in your inbox when the day comes.</FieldDescription>
+          <FieldDescription>Shows up on Home when the day comes.</FieldDescription>
         </Field>
         <Field>
           <FieldLabel htmlFor="notes">Notes</FieldLabel>

@@ -14,7 +14,7 @@ test("public pages have no axe violations", async ({ page }) => {
   }
 });
 
-test("admin inbox and bookings have no axe violations", async ({ browser }) => {
+test("admin Home and bookings have no axe violations", async ({ browser }) => {
   const page = await (await browser.newContext({ storageState: STORAGE })).newPage();
   for (const path of ["/admin", "/admin/bookings", "/admin/contacts"]) {
     await page.goto(path);

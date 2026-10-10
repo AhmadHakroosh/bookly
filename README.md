@@ -30,7 +30,7 @@ Most scheduling tools end at the calendar invite. Everything after it, the prep,
 - **Every meeting has a relationship behind it.** One contact per person with a stage, notes and a timeline of every booking, email, form answer and note. Sync it to HubSpot or Pipedrive if that is where your team lives.
 - **You walk in prepared.** Before each meeting, a briefing: who they are, what happened last time, what they asked for when booking, what to prepare.
 - **The call takes care of its own notes.** On Bookly video, Google Meet, Teams and Zoom the call is transcribed with consent and speaker labels (a notetaker joins external calls), then recapped: summary, decisions, action items for both sides with the quote they came from, open questions, objections, next step. Each item is one click to accept.
-- **Outcomes actually happen.** Tasks with reminders, a drafted follow-up, proposal and payment-request emails from templates, a client-facing recap, and an inbox that shows who is waiting on you today.
+- **Outcomes actually happen.** Tasks with reminders, a drafted follow-up, proposal and payment-request emails from templates, a client-facing recap, and an Home that shows who is waiting on you today.
 
 The AI parts (briefings, recaps, capture) use Anthropic's Claude through an optional API key. Without it, Bookly falls back to plain summaries and manual notes rather than losing features.
 
@@ -107,7 +107,7 @@ Every install serves these pages at `/docs`; they live in [docs/](docs/).
 
 - [Availability, event types, bookings](docs/scheduling.md)
 - [Calendars and conferencing](docs/integrations.md)
-- [Contacts, briefings, capture and the inbox](docs/contacts.md)
+- [Contacts, briefings, capture and Home](docs/contacts.md)
 - [Routing forms](docs/routing.md)
 - [Paid bookings](docs/payments.md)
 - [Reminders and host notifications](docs/notifications.md)

@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { CONTACT_STAGES, type ContactStage } from "@bookly/db/schema";
 import { apiContext, apiError, json, options, readJson, serializeContact } from "@/server/api";
+import { API_KEY_ACTOR, SYSTEM_ACTOR, audit, diff } from "@/server/audit";
 import {
   getContactByEmail,
   listContacts,
@@ -48,6 +49,7 @@ export async function POST(req: Request) {
   if (!parsed.success)
     return apiError(parsed.error.issues[0]?.message ?? "Invalid body", 400, "bad_request");
   const d = parsed.data;
+  const before = await getContactByEmail(ctx.workspace.id, d.email);
   const c = await upsertContact(ctx.workspace.id, d);
   const patch: Parameters<typeof updateContact>[2] = {};
   if (d.name !== undefined) patch.name = d.name;
@@ -57,6 +59,13 @@ export async function POST(req: Request) {
   if (d.notes !== undefined) patch.notes = d.notes || null;
   if (Object.keys(patch).length) await updateContact(ctx.workspace.id, c.id, patch);
   if (d.stage) await setStage(ctx.workspace.id, c.id, d.stage, "api");
-  const fresh = await getContactByEmail(ctx.workspace.id, d.email);
-  return json(serializeContact(fresh ?? c), { status: 201 });
+  const fresh = (await getContactByEmail(ctx.workspace.id, d.email)) ?? c;
+  await audit({
+    action: before ? "contact.updated" : "contact.created",
+    target: { type: "contact", id: fresh.id, label: fresh.name || fresh.email },
+    actor: ctx.key ? API_KEY_ACTOR(ctx.key) : SYSTEM_ACTOR("api"),
+    workspace: ctx.workspace.id,
+    changes: diff(before, fresh, ["email", "name", "company", "phone", "tags", "stage"]),
+  });
+  return json(serializeContact(fresh), { status: 201 });
 }

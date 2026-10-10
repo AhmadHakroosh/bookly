@@ -1,6 +1,8 @@
 import { ConsoleUsersSkeleton } from "@/components/skeletons/pages";
 import { connection } from "next/server";
 import { Suspense } from "react";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { SubmitButton } from "@/components/submit-button";
 import { listUsersForConsole } from "@/server/ops";
@@ -16,15 +18,16 @@ async function UsersPage({ searchParams }: PageProps<"/platform/console/users">)
   return (
     <div className="space-y-4">
       <form className="flex gap-2">
-        <input
+        <Input
           name="q"
           defaultValue={q}
           placeholder="Search email or name"
-          className="h-8 min-w-0 flex-1 rounded-lg border bg-background px-2 text-sm sm:w-72 sm:flex-none"
+          aria-label="Search email or name"
+          className="min-w-0 flex-1 sm:w-72 sm:flex-none"
         />
-        <button type="submit" className="h-8 shrink-0 rounded-lg border px-3 text-sm">
+        <Button type="submit" variant="outline" className="shrink-0">
           Search
-        </button>
+        </Button>
       </form>
       <ul className="divide-y rounded-xl border text-sm">
         {rows.map(({ u, lastSeen, workspaces }) => (
@@ -54,11 +57,7 @@ async function UsersPage({ searchParams }: PageProps<"/platform/console/users">)
               </form>
             ) : (
               <form action={banUser.bind(null, u.id)} className="flex gap-1">
-                <input
-                  name="reason"
-                  placeholder="Reason"
-                  className="h-8 w-40 rounded-md border bg-background px-2 text-sm"
-                />
+                <Input name="reason" placeholder="Reason" className="w-40" aria-label="Reason" />
                 <SubmitButton variant="ghost">Ban</SubmitButton>
               </form>
             )}

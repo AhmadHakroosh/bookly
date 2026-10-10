@@ -32,7 +32,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 /* ---------------- Admin ---------------- */
 
-export function InboxSkeleton() {
+export function HomeSkeleton() {
   return (
     <Shell className="space-y-8">
       <Heading width="w-24" />

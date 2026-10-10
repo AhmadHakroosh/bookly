@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import type Stripe from "stripe";
 import { loadEnv } from "@bookly/config";
+import { SYSTEM_ACTOR, audit } from "@/server/audit";
 import { finalizePaidBooking } from "@/server/booking-flow";
 import { syncSubscription } from "@/server/billing";
 import { stripe } from "@/server/payments";
@@ -43,13 +44,24 @@ export async function POST(req: Request) {
     }
     const bookingId = session.metadata?.bookingId;
     if (bookingId && session.payment_status === "paid") {
-      await finalizePaidBooking(
+      const paid = await finalizePaidBooking(
         bookingId,
         typeof session.payment_intent === "string"
           ? session.payment_intent
           : (session.payment_intent?.id ?? null),
         typeof session.invoice === "string" ? session.invoice : (session.invoice?.id ?? null),
       );
+      if (paid)
+        await audit({
+          action: "booking.paid",
+          target: { type: "booking", id: paid.id, label: paid.attendeeName },
+          actor: SYSTEM_ACTOR("stripe"),
+          workspace: paid.workspaceId,
+          changes: {
+            paymentStatus: { to: paid.paymentStatus },
+            status: { from: "awaiting_payment", to: paid.status },
+          },
+        });
     }
   }
   return NextResponse.json({ received: true });

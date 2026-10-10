@@ -30,6 +30,7 @@ Before pushing: `pnpm format && pnpm lint && pnpm typecheck && pnpm test && pnpm
 - Vendor SDKs stay behind the package interfaces (`packages/email`, `packages/jobs`, provider drivers). Pages and actions never call a vendor API directly.
 - Env: add new variables to `packages/config` and `.env.example` with a comment.
 - Tenancy: every query is scoped by the tenant id; never trust the host header outside `proxy.ts`.
+- UI: follow [DESIGN.md](DESIGN.md) (one button scale, pointers, loading states, section navigation). Every server action that writes workspace data calls `audit()` once after the write; `audit-coverage.test.ts` enforces it. Features that are not finished ship behind a flag (`hasFlag`).
 
 ## Pull requests
 

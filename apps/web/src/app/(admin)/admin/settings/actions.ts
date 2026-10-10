@@ -4,9 +4,10 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { eq, schema } from "@bookly/db";
-import type { WorkspaceSettings } from "@bookly/db/schema";
+import type { AuditChanges, WorkspaceSettings } from "@bookly/db/schema";
 import { encrypt } from "@/lib/crypto";
 import { parseBlocklist } from "@/server/abuse";
+import { audit, diff } from "@/server/audit";
 import { refreshWorkspace } from "@/server/cache";
 import { syncConnectBranding } from "@/server/connect";
 import { hasFeature } from "@/server/limits";
@@ -82,6 +83,7 @@ export async function updateWorkspaceSettings(
   const s = workspace.settings;
   let columns: Partial<typeof schema.workspaces.$inferInsert> = {};
   let settings: WorkspaceSettings;
+  let changes: AuditChanges;
 
   if (section === "general") {
     const parsed = generalSchema.safeParse(raw);
@@ -93,6 +95,21 @@ export async function updateWorkspaceSettings(
       blockedEmails: parseBlocklist(blocklist),
       postalAddress: postalAddress || undefined,
       telemetryStats: telemetryStats === "on",
+    };
+    changes = {
+      ...diff(workspace, columns, ["name", "description", "locale", "timezone"]),
+      ...diff(
+        {
+          blockedEmails: s.blockedEmails?.length ?? 0,
+          postalAddress: s.postalAddress ?? null,
+          telemetryStats: s.telemetryStats ?? false,
+        },
+        {
+          blockedEmails: settings.blockedEmails?.length ?? 0,
+          postalAddress: settings.postalAddress ?? null,
+          telemetryStats: settings.telemetryStats ?? false,
+        },
+      ),
     };
   } else if (section === "branding") {
     const parsed = brandingSchema.safeParse(raw);
@@ -107,6 +124,7 @@ export async function updateWorkspaceSettings(
         accent: parsed.data.accent || undefined,
       },
     };
+    changes = diff(s.branding, settings.branding ?? {}, ["logoUrl", "accent"]);
   } else if (section === "emails") {
     const parsed = emailsSchema.safeParse(raw);
     if (!parsed.success) return fail(parsed.error);
@@ -126,6 +144,9 @@ export async function updateWorkspaceSettings(
         checkIn: t(d.checkInSubject, d.checkInBody),
       },
     };
+    // Bodies are content, not settings: record which templates changed, not what they say.
+    const changed = Object.keys(diff(s.templates ?? {}, settings.templates ?? {}));
+    changes = changed.length ? { templates: { to: changed } } : {};
   } else if (section === "integrations") {
     const parsed = crmSchema.safeParse(raw);
     if (!parsed.success) return fail(parsed.error);
@@ -146,6 +167,12 @@ export async function updateWorkspaceSettings(
         error: `Enter your ${crmProvider === "hubspot" ? "HubSpot access token" : "Pipedrive API token"} to connect.`,
       };
     settings = { ...s, crm: crm?.apiKey ? crm : null };
+    const crmFields = (c: WorkspaceSettings["crm"]) => ({
+      crmProvider: c?.provider ?? null,
+      crmCompanyDomain: c?.companyDomain ?? null,
+      crmApiKey: c?.apiKey ?? null,
+    });
+    changes = diff(crmFields(s.crm), crmFields(settings.crm));
   } else {
     return { error: "Unknown settings section." };
   }
@@ -155,6 +182,11 @@ export async function updateWorkspaceSettings(
     .set({ ...columns, settings })
     .where(eq(schema.workspaces.id, workspace.id));
   refreshWorkspace(workspace.id);
+  await audit({
+    action: `settings.${section}.updated`,
+    target: { type: "workspace", id: workspace.id, label: workspace.name },
+    changes,
+  });
   if (section === "general" || section === "branding") {
     // The Stripe Checkout page follows the workspace's name and branding.
     const fresh = await getCurrentWorkspace();
@@ -181,6 +213,10 @@ async function setJoinPings(on: boolean): Promise<SettingsState> {
     .update(schema.workspaces)
     .set({ settings: { ...ws.settings, daily: { ...(ws.settings.daily ?? {}), joinPings: on } } })
     .where(eq(schema.workspaces.id, ws.id));
+  await audit({
+    action: `settings.join_pings.${on ? "enabled" : "disabled"}`,
+    target: { type: "workspace", id: ws.id, label: ws.name },
+  });
   revalidatePath("/admin", "layout");
   return { ok: true };
 }
@@ -199,6 +235,12 @@ export async function deleteWorkspaceAction(
   const parsed = deleteSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success || parsed.data.confirm !== workspace.slug)
     return { error: `Type “${workspace.slug}” to confirm.` };
+  // Logged first: the entry outlives the workspace, and nothing can resolve it after the cascade.
+  await audit({
+    action: "workspace.deleted",
+    target: { type: "workspace", id: workspace.id, label: workspace.name },
+    workspace: workspace.id,
+  });
   await deleteWorkspace(workspace);
   redirect(isCloud() ? platformUrl("/workspaces") : "/setup");
 }

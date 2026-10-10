@@ -10,6 +10,7 @@ import {
 } from "@/server/connect";
 import { eq, schema } from "@bookly/db";
 import { db } from "@/lib/db";
+import { audit, diff } from "@/server/audit";
 import { refreshWorkspace } from "@/server/cache";
 import { hasFeature } from "@/server/limits";
 import { paymentsConfigured } from "@/server/payments";
@@ -24,11 +25,19 @@ async function owner() {
   return { session, ws };
 }
 
+const target = (ws: { id: string; name: string }) => ({
+  type: "workspace",
+  id: ws.id,
+  label: ws.name,
+});
+
 /** Sends the owner to Stripe's hosted onboarding; creates the account on the first visit. */
 export async function connectStripeAction() {
   const { session, ws } = await owner();
   if (!hasFeature(ws, "payments")) redirect("/admin/billing");
-  redirect(await connectOnboardingUrl(ws, session.user.email));
+  const url = await connectOnboardingUrl(ws, session.user.email);
+  await audit({ action: "payments.stripe_connect_started", target: target(ws) });
+  redirect(url);
 }
 
 /** Stripe invoices in the host's name with every paid booking (Pro and up). */
@@ -42,23 +51,40 @@ export async function setInvoicesAction(on: boolean) {
     })
     .where(eq(schema.workspaces.id, ws.id));
   refreshWorkspace(ws.id);
+  await audit({
+    action: `payments.invoices_${on ? "enabled" : "disabled"}`,
+    target: target(ws),
+    changes: { invoices: { from: ws.settings.payments?.invoices ?? false, to: on } },
+  });
   revalidatePath("/admin/settings/payments");
 }
 
 export async function refreshStripeAction() {
   const { ws } = await owner();
-  await refreshConnectStatus(ws);
+  const status = await refreshConnectStatus(ws);
+  await audit({
+    action: "payments.stripe_refreshed",
+    target: target(ws),
+    changes: diff(ws.settings.payments ?? {}, status ?? {}, [
+      "chargesEnabled",
+      "payoutsEnabled",
+      "detailsSubmitted",
+    ]),
+  });
   revalidatePath("/admin/settings/payments");
 }
 
 export async function openStripeDashboardAction() {
   const { ws } = await owner();
   const url = await connectDashboardUrl(ws);
-  if (url) redirect(url);
+  if (!url) return;
+  await audit({ action: "payments.stripe_dashboard_opened", target: target(ws) });
+  redirect(url);
 }
 
 export async function disconnectStripeAction() {
   const { ws } = await owner();
   await disconnectStripe(ws);
+  await audit({ action: "payments.stripe_disconnected", target: target(ws) });
   revalidatePath("/admin/settings/payments");
 }

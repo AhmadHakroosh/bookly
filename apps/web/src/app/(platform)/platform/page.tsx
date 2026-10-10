@@ -27,7 +27,7 @@ import {
   BookingPageMock,
   BriefMock,
   ContactMock,
-  InboxMock,
+  HomeMock,
   RecapMock,
 } from "./mocks";
 import { EmailMock, FollowUpMock, LiveTranscriptMock, RoutingMock, SeatsMock } from "./mocks-more";
@@ -311,7 +311,7 @@ export default function LandingPage() {
           </ol>
 
           <div className="rise-in mt-12" style={{ "--rise-delay": "300ms" } as never}>
-            <InboxMock />
+            <HomeMock />
           </div>
           <ul className="mt-8 flex flex-wrap justify-center gap-2 text-sm text-muted-foreground">
             <li className="mr-1">Built for people who live off their meetings:</li>
@@ -452,7 +452,7 @@ export default function LandingPage() {
           flip
         >
           One record per person: stage, tags, notes, and a timeline of every booking, email, form
-          answer and note. The inbox tells you who has gone quiet and when to follow up. Sync it to
+          answer and note. Home tells you who has gone quiet and when to follow up. Sync it to
           HubSpot or Pipedrive if that is where your team lives.
         </Feature>
       </Section>

@@ -2,6 +2,8 @@ import { ConsoleSkeleton } from "@/components/skeletons/pages";
 import Link from "next/link";
 import { connection } from "next/server";
 import { Suspense } from "react";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { PLANS } from "@bookly/cloud";
 import { Badge } from "@/components/ui/badge";
 import { planName } from "@/server/billing";
@@ -72,11 +74,12 @@ async function ConsoleHome({ searchParams }: PageProps<"/platform/console">) {
       </div>
 
       <form className="flex flex-wrap items-center gap-2">
-        <input
+        <Input
           name="q"
           defaultValue={q}
           placeholder="Search name, slug or owner email"
-          className="h-8 w-full min-w-0 rounded-lg border bg-background px-2 text-sm sm:w-72"
+          aria-label="Search name, slug or owner email"
+          className="w-full min-w-0 sm:w-72"
         />
         <Dropdown
           name="plan"
@@ -100,9 +103,9 @@ async function ConsoleHome({ searchParams }: PageProps<"/platform/console">) {
             { value: "suspended", label: "Suspended" },
           ]}
         />
-        <button type="submit" className="h-8 rounded-lg border px-3 text-sm">
+        <Button type="submit" variant="outline">
           Filter
-        </button>
+        </Button>
       </form>
 
       <ul className="divide-y rounded-xl border text-sm">

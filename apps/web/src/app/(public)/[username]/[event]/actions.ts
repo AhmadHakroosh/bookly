@@ -4,6 +4,7 @@ import { redirect, unstable_rethrow } from "next/navigation";
 import { z } from "zod";
 import { toE164 } from "@/lib/phone";
 import { isValidTimezone } from "@/lib/time";
+import { GUEST_ACTOR, audit } from "@/server/audit";
 import { BookingError, createBooking } from "@/server/booking-flow";
 import { createCheckout } from "@/server/payments";
 import { getEventType, getProfileByUsername } from "@/server/scheduling";
@@ -70,6 +71,17 @@ export async function book(_prev: BookState, formData: FormData): Promise<BookSt
     });
     token = b.manageToken;
     skipped = b.skipped?.length ?? 0;
+    await audit({
+      action: b.rescheduledFromId ? "booking.rescheduled" : "booking.created",
+      target: { type: "booking", id: b.id, label: `${et.title} · ${d.name}` },
+      actor: GUEST_ACTOR(d.email, d.name),
+      workspace: ws.id,
+      changes: {
+        startAt: { to: b.startAt },
+        status: { to: b.status },
+        ...(b.rescheduledFromId ? { rescheduledFromId: { to: b.rescheduledFromId } } : {}),
+      },
+    });
     if (b.status === "awaiting_payment") {
       const url = await createCheckout(ws, b, et);
       redirect(url);
@@ -118,6 +130,18 @@ export async function joinWaitlistAction(
     if (Number.isNaN(startAt.getTime())) return { error: "Invalid time." };
     target = { startAt };
   }
-  await joinWaitlist(ws, et, { name: d.name, email: d.email, timezone: d.tz, target });
+  const entry = await joinWaitlist(ws, et, {
+    name: d.name,
+    email: d.email,
+    timezone: d.tz,
+    target,
+  });
+  await audit({
+    action: "waitlist.joined",
+    target: { type: "waitlist_entry", id: entry.id, label: `${et.title} · ${d.name}` },
+    actor: GUEST_ACTOR(d.email, d.name),
+    workspace: ws.id,
+    changes: "date" in target ? { date: { to: target.date } } : { startAt: { to: target.startAt } },
+  });
   return { ok: true };
 }

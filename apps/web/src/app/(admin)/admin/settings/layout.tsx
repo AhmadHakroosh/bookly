@@ -8,7 +8,7 @@ export const metadata = { title: "Settings" };
 
 /**
  * Workspace settings, one page per concern. The role check lives here so every tab and every
- * form under /admin/settings is owner/admin only; members are sent back to the inbox.
+ * form under /admin/settings is owner/admin only; members are sent back to Home.
  */
 export default function SettingsLayout({ children }: LayoutProps<"/admin/settings">) {
   return (

@@ -4,8 +4,9 @@ import { checkHandle, type HandleCheck } from "@/lib/handles";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { and, eq, inArray, isNull, schema } from "@bookly/db";
-import type { EventLocation } from "@bookly/db/schema";
+import type { EventLocation, EventType } from "@bookly/db/schema";
 import { db } from "@/lib/db";
+import { audit, diff } from "@/server/audit";
 import { fmtDateTime, hhmmToMin, isValidTimezone } from "@/lib/time";
 import { revalidatePath } from "next/cache";
 import { cancelBooking, confirmBooking } from "@/server/booking-flow";
@@ -66,6 +67,12 @@ const slugify = (s: string) =>
     .replace(/^-+|-+$/g, "")
     .slice(0, 48);
 
+/** A booking as the activity log names it: who, and when. */
+const bookingLabel = (b: { attendeeName: string; startAt: Date; timezone: string }) =>
+  `${b.attendeeName} · ${fmtDateTime(b.startAt, b.timezone)}`;
+/** The first line of a free-text body, for the log; the text itself stays out of it. */
+const preview = (s: string) => (s.length > 80 ? `${s.slice(0, 79)}…` : s);
+
 /* ---------------- Profile ---------------- */
 
 const profileSchema = z.object({
@@ -78,6 +85,7 @@ const profileSchema = z.object({
 
 /** A member's username, validated as typed (see lib/handles) and free in this workspace. */
 export async function checkUsername(raw: string): Promise<HandleCheck> {
+  // audit: read-only — checks whether a username is free; nothing is written
   const { session, ws } = await ctx();
   const r = checkHandle(raw, "username");
   if (!r.ok) return r;
@@ -99,28 +107,27 @@ export async function saveProfile(_prev: { ok?: boolean; error?: string }, formD
   const checked = await checkUsername(d.username);
   if (!checked.ok) return { error: checked.error };
   const username = checked.value;
+  const before = await getProfileByUser(ws.id, session.user.id);
+  const fields = {
+    username,
+    displayName: d.displayName,
+    bio: d.bio || null,
+    timezone: d.timezone,
+    avatarUrl: d.avatarUrl || null,
+  };
   await db()
     .insert(schema.profiles)
-    .values({
-      workspaceId: ws.id,
-      userId: session.user.id,
-      username,
-      displayName: d.displayName,
-      bio: d.bio || null,
-      timezone: d.timezone,
-      avatarUrl: d.avatarUrl || null,
-    })
+    .values({ workspaceId: ws.id, userId: session.user.id, ...fields })
     .onConflictDoUpdate({
       target: [schema.profiles.workspaceId, schema.profiles.userId],
-      set: {
-        username,
-        displayName: d.displayName,
-        bio: d.bio || null,
-        timezone: d.timezone,
-        avatarUrl: d.avatarUrl || null,
-      },
+      set: fields,
     });
   await ensureDefaultSchedule(ws.id, session.user.id, d.timezone);
+  await audit({
+    action: "profile.updated",
+    target: { type: "profile", id: session.user.id, label: d.displayName },
+    changes: diff(before, fields, ["username", "displayName", "bio", "timezone", "avatarUrl"]),
+  });
   refreshWorkspace(ws.id);
   return { ok: true };
 }
@@ -171,6 +178,11 @@ export async function createSchedule(formData: FormData) {
           kind: r.kind,
         })),
       );
+  await audit({
+    action: "schedule.created",
+    target: { type: "schedule", id: s!.id, label: name },
+    changes: { name: { to: name }, timezone: { to: base.timezone } },
+  });
   refreshWorkspace(ws.id);
   redirect(`/admin/availability?schedule=${s!.id}`);
 }
@@ -188,6 +200,11 @@ export async function setDefaultSchedule(id: string) {
       );
     await tx.update(schema.schedules).set({ isDefault: true }).where(eq(schema.schedules.id, id));
   });
+  await audit({
+    action: "schedule.made_default",
+    target: { type: "schedule", id: s.id, label: s.name },
+    changes: { isDefault: { from: false, to: true } },
+  });
   refreshWorkspace(s.workspaceId);
   revalidatePath("/admin/availability");
 }
@@ -197,6 +214,10 @@ export async function deleteSchedule(id: string) {
   const s = await ownSchedule(id);
   if (!s || s.isDefault) return;
   await db().delete(schema.schedules).where(eq(schema.schedules.id, id));
+  await audit({
+    action: "schedule.deleted",
+    target: { type: "schedule", id: s.id, label: s.name },
+  });
   refreshWorkspace(s.workspaceId);
   redirect("/admin/availability");
 }
@@ -233,18 +254,25 @@ export async function saveSchedule(_prev: { ok?: boolean; error?: string }, form
     });
   }
   const budget = Math.max(0, Math.min(200, Number(formData.get("weeklyBudget")) || 0));
+  const patch = {
+    timezone,
+    name: String(formData.get("name") ?? s.name).trim() || s.name,
+    weeklyBudget: budget || null,
+  };
   await db().transaction(async (tx) => {
-    await tx
-      .update(schema.schedules)
-      .set({
-        timezone,
-        name: String(formData.get("name") ?? s.name).trim() || s.name,
-        weeklyBudget: budget || null,
-      })
-      .where(eq(schema.schedules.id, s.id));
+    await tx.update(schema.schedules).set(patch).where(eq(schema.schedules.id, s.id));
     await tx.delete(schema.scheduleRules).where(eq(schema.scheduleRules.scheduleId, s.id));
     if (rules.length)
       await tx.insert(schema.scheduleRules).values(rules.map((r) => ({ ...r, scheduleId: s.id })));
+  });
+  await audit({
+    action: "schedule.updated",
+    target: { type: "schedule", id: s.id, label: patch.name },
+    changes: {
+      ...diff(s, patch, ["name", "timezone", "weeklyBudget"]),
+      // The weekly hours are rewritten on every save; the count says how full the week is.
+      hours: { to: rules.length },
+    },
   });
   refreshWorkspace(ws.id);
   return { ok: true };
@@ -284,6 +312,15 @@ export async function addOverride(formData: FormData) {
         );
       await tx.insert(schema.scheduleOverrides).values({ scheduleId: t.id, date, ...times });
     }
+  });
+  await audit({
+    action: "override.added",
+    target: { type: "schedule", id: s.id, label: s.name },
+    changes: {
+      date: { to: date },
+      hours: { to: times.startMin === null ? "blocked" : `${start}–${end}` },
+      schedules: { to: targets.length },
+    },
   });
   refreshWorkspace(ws.id);
 }
@@ -328,6 +365,11 @@ export async function removeOverride(id: string, everywhere = false) {
         ),
       );
   }
+  await audit({
+    action: "override.removed",
+    target: { type: "schedule_override", id: o.id, label: o.date },
+    changes: { date: { from: o.date }, everywhere: { to: everywhere } },
+  });
   refreshWorkspace(ws.id);
 }
 
@@ -357,6 +399,10 @@ export async function createEventType() {
       title: "New meeting",
       durationMin: 30,
     });
+  await audit({
+    action: "event_type.created",
+    target: { type: "event_type", id, label: "New meeting" },
+  });
   redirect(`/admin/event-types/${id}`);
 }
 
@@ -501,50 +547,67 @@ export async function saveEventType(_prev: EventTypeSaveState, formData: FormDat
     if (e instanceof LimitError) return { error: e.message, upgradeTo: e.upgradeTo };
     throw e;
   }
-  await db()
-    .update(schema.eventTypes)
-    .set({
-      title: d.title,
-      slug,
-      description: d.description || null,
-      durationMin: d.durationMin,
-      slotIntervalMin: d.slotIntervalMin || null,
-      bufferBeforeMin: d.bufferBeforeMin,
-      bufferAfterMin: d.bufferAfterMin,
-      minNoticeMin: d.minNoticeMin,
-      maxDaysAhead: d.maxDaysAhead,
-      maxPerDay: d.maxPerDay || null,
-      maxGuests: d.maxGuests,
-      location,
-      locations,
-      color: d.color,
-      scheduleId: d.scheduleId || existing.scheduleId,
-      questions: d.questionsJson
-        ? parseQuestionsJson(d.questionsJson)
-        : parseQuestions(d.questions),
-      reminders: parseReminders(d.reminders),
-      followUp: {
-        enabled: d.followUpEnabled === "on",
-        delayMin: Math.round(d.followUpDelay * 60),
-        subject: d.followUpSubject || undefined,
-        body: d.followUpBody || undefined,
-      },
-      assignment: d.assignment,
-      hostUserIds: d.assignment === "single" ? [] : hostUserIds,
-      seats: d.seats,
-      autoCapture: captureable ? d.autoCapture : "off",
-      recurrence:
-        d.recurEnabled === "on"
-          ? { enabled: true, freq: d.recurFreq, interval: d.recurInterval, count: d.recurCount }
-          : {},
-      requiresConfirmation: d.requiresConfirmation === "on",
-      hidden: d.hidden === "on",
-      waitlistEnabled: d.waitlist === "on",
-      remindByText: d.remindByText === "on",
-      priceCents: d.price > 0 ? Math.round(d.price * 100) : null,
-      currency: d.price > 0 ? d.currency : null,
-    })
-    .where(eq(schema.eventTypes.id, d.id));
+  const patch = {
+    title: d.title,
+    slug,
+    description: d.description || null,
+    durationMin: d.durationMin,
+    slotIntervalMin: d.slotIntervalMin || null,
+    bufferBeforeMin: d.bufferBeforeMin,
+    bufferAfterMin: d.bufferAfterMin,
+    minNoticeMin: d.minNoticeMin,
+    maxDaysAhead: d.maxDaysAhead,
+    maxPerDay: d.maxPerDay || null,
+    maxGuests: d.maxGuests,
+    location,
+    locations,
+    color: d.color,
+    scheduleId: d.scheduleId || existing.scheduleId,
+    questions: d.questionsJson ? parseQuestionsJson(d.questionsJson) : parseQuestions(d.questions),
+    reminders: parseReminders(d.reminders),
+    followUp: {
+      enabled: d.followUpEnabled === "on",
+      delayMin: Math.round(d.followUpDelay * 60),
+      subject: d.followUpSubject || undefined,
+      body: d.followUpBody || undefined,
+    },
+    assignment: d.assignment,
+    hostUserIds: d.assignment === "single" ? [] : hostUserIds,
+    seats: d.seats,
+    autoCapture: captureable ? d.autoCapture : "off",
+    recurrence:
+      d.recurEnabled === "on"
+        ? { enabled: true, freq: d.recurFreq, interval: d.recurInterval, count: d.recurCount }
+        : {},
+    requiresConfirmation: d.requiresConfirmation === "on",
+    hidden: d.hidden === "on",
+    waitlistEnabled: d.waitlist === "on",
+    remindByText: d.remindByText === "on",
+    priceCents: d.price > 0 ? Math.round(d.price * 100) : null,
+    currency: d.price > 0 ? d.currency : null,
+  };
+  await db().update(schema.eventTypes).set(patch).where(eq(schema.eventTypes.id, d.id));
+  await audit({
+    action: "event_type.updated",
+    target: { type: "event_type", id: d.id, label: d.title },
+    changes: diff<EventType>(existing, patch, [
+      "title",
+      "slug",
+      "durationMin",
+      "scheduleId",
+      "assignment",
+      "seats",
+      "maxGuests",
+      "requiresConfirmation",
+      "hidden",
+      "waitlistEnabled",
+      "remindByText",
+      "autoCapture",
+      "priceCents",
+      "currency",
+      "color",
+    ]),
+  });
   refreshWorkspace(ws.id);
   return { ok: true, slug };
 }
@@ -554,13 +617,17 @@ export async function deleteEventType(id: string) {
   const { ws } = c;
   const existing = await db().query.eventTypes.findFirst({
     where: and(eq(schema.eventTypes.id, id), eq(schema.eventTypes.workspaceId, ws.id)),
-    columns: { userId: true },
+    columns: { userId: true, title: true },
   });
   if (!existing || !canEditEventType(c, existing.userId)) redirect("/admin/event-types");
   await db()
     .update(schema.eventTypes)
     .set({ active: false, hidden: true })
     .where(and(eq(schema.eventTypes.id, id), eq(schema.eventTypes.workspaceId, ws.id)));
+  await audit({
+    action: "event_type.deleted",
+    target: { type: "event_type", id, label: existing.title },
+  });
   refreshWorkspace(ws.id);
   redirect("/admin/event-types");
 }
@@ -569,7 +636,17 @@ export async function deleteEventType(id: string) {
 
 export async function hostCancel(id: string, formData: FormData) {
   const { ws } = await ctx();
-  await cancelBooking(ws, id, "host", String(formData.get("reason") ?? ""));
+  const reason = String(formData.get("reason") ?? "").trim();
+  const b = await cancelBooking(ws, id, "host", reason);
+  if (!b) return;
+  await audit({
+    action: "booking.cancelled",
+    target: { type: "booking", id: b.id, label: bookingLabel(b) },
+    changes: {
+      status: { to: "cancelled" },
+      ...(reason ? { reason: { to: preview(reason) } } : {}),
+    },
+  });
 }
 
 export async function hostMark(id: string, status: "completed" | "no_show" | "confirmed") {
@@ -593,12 +670,24 @@ export async function hostMark(id: string, status: "completed" | "no_show" | "co
     );
     if (status === "no_show") await reconsiderStageAfterNoShow(ws, contact);
   }
+  if (b)
+    await audit({
+      action: `booking.marked_${status}`,
+      target: { type: "booking", id: b.id, label: bookingLabel(b) },
+      changes: { status: { to: status } },
+    });
   refreshWorkspace(ws.id);
 }
 
 export async function hostConfirm(id: string) {
   const { ws } = await ctx();
-  await confirmBooking(ws, id);
+  const b = await confirmBooking(ws, id);
+  if (!b) return;
+  await audit({
+    action: "booking.confirmed",
+    target: { type: "booking", id: b.id, label: bookingLabel(b) },
+    changes: { status: { from: "pending", to: "confirmed" } },
+  });
 }
 
 async function ownBooking(id: string) {
@@ -625,7 +714,12 @@ export async function captureNotes(_prev: CaptureState, formData: FormData): Pro
   if (!o) return { error: "Booking not found" };
   const notes = String(formData.get("notes") ?? "").trim();
   if (notes.length < 3) return { error: "Add a few words first." };
-  const { capture } = await captureMeeting(o.ws, o.b, o.et, notes.slice(0, 20000));
+  const { capture, tasks } = await captureMeeting(o.ws, o.b, o.et, notes.slice(0, 20000));
+  await audit({
+    action: "booking.notes_updated",
+    target: { type: "booking", id: o.b.id, label: bookingLabel(o.b) },
+    changes: { notes: { to: preview(notes) }, tasks: { to: tasks.length } },
+  });
   revalidatePath(`/admin/bookings/${o.b.id}`);
   return { ok: true, followUp: capture.followUp };
 }
@@ -640,8 +734,14 @@ export async function sendFollowUpAction(id: string, formData: FormData) {
     .trim()
     .slice(0, 4000);
   if (!subject || !body) return;
-  await sendFollowUp(o.ws, o.b, subject, body);
+  const sent = await sendFollowUp(o.ws, o.b, subject, body);
   await noteRecapEmail(o.b.id, "followUpAt");
+  if (sent)
+    await audit({
+      action: "booking.follow_up_sent",
+      target: { type: "booking", id: o.b.id, label: bookingLabel(o.b) },
+      changes: { subject: { to: subject } },
+    });
   revalidatePath(`/admin/bookings/${id}`);
 }
 
@@ -652,7 +752,7 @@ export async function addTaskAction(formData: FormData) {
   const due = String(formData.get("dueAt") ?? "");
   const contactId = String(formData.get("contactId") ?? "") || null;
   const bookingId = String(formData.get("bookingId") ?? "") || null;
-  await addTask(ws.id, {
+  const t = await addTask(ws.id, {
     userId: session.user.id,
     title,
     contactId,
@@ -660,6 +760,11 @@ export async function addTaskAction(formData: FormData) {
     dueAt: due ? new Date(due) : null,
   });
   if (contactId) await logContactEvent(ws.id, contactId, "task", `Task: ${title}`, { bookingId });
+  await audit({
+    action: "task.created",
+    target: { type: "task", id: t.id, label: t.title },
+    changes: diff(null, { dueAt: t.dueAt, contactId, bookingId }),
+  });
   refreshWorkspace(ws.id);
   revalidatePath(
     bookingId
@@ -670,15 +775,31 @@ export async function addTaskAction(formData: FormData) {
   );
 }
 
+/** The task's title for the log, read before the row changes or goes. */
+const taskTitle = async (workspaceId: string, id: string) =>
+  (
+    await db().query.tasks.findFirst({
+      where: and(eq(schema.tasks.id, id), eq(schema.tasks.workspaceId, workspaceId)),
+      columns: { title: true },
+    })
+  )?.title;
+
 export async function toggleTask(id: string, done: boolean, path: string) {
   const { ws } = await ctx();
+  const title = await taskTitle(ws.id, id);
   await completeTask(ws.id, id, done);
+  await audit({
+    action: done ? "task.completed" : "task.reopened",
+    target: { type: "task", id, label: title },
+  });
   revalidatePath(path);
 }
 
 export async function removeTask(id: string, path: string) {
   const { ws } = await ctx();
+  const title = await taskTitle(ws.id, id);
   await deleteTask(ws.id, id);
+  await audit({ action: "task.deleted", target: { type: "task", id, label: title } });
   revalidatePath(path);
 }
 
@@ -692,14 +813,27 @@ export async function replyInstead(id: string, formData: FormData) {
   if (!message) return;
   await sendFollowUp(o.ws, o.b, `Re: ${o.et?.title ?? "your request"}`, message);
   await cancelBooking(o.ws, o.b.id, "host", "Answered by email instead", { quiet: true });
+  await audit({
+    action: "booking.replied",
+    target: { type: "booking", id: o.b.id, label: bookingLabel(o.b) },
+    changes: { status: { from: "pending", to: "cancelled" }, message: { to: preview(message) } },
+  });
   revalidatePath("/admin");
 }
 
-/** Pushes a contact's follow-up date out by `days` (the inbox's "snooze"). */
+/** Pushes a contact's follow-up date out by `days` (Home's "snooze"). */
 export async function snoozeContact(contactId: string, days: number) {
   const { ws } = await ctx();
-  await updateContact(ws.id, contactId, {
-    nextFollowUpAt: new Date(Date.now() + Math.max(1, Math.min(90, days)) * 86_400_000),
+  const nextFollowUpAt = new Date(Date.now() + Math.max(1, Math.min(90, days)) * 86_400_000);
+  await updateContact(ws.id, contactId, { nextFollowUpAt });
+  const contact = await db().query.contacts.findFirst({
+    where: and(eq(schema.contacts.id, contactId), eq(schema.contacts.workspaceId, ws.id)),
+    columns: { name: true, email: true },
+  });
+  await audit({
+    action: "contact.snoozed",
+    target: { type: "contact", id: contactId, label: contact?.name || contact?.email },
+    changes: { nextFollowUpAt: { to: nextFollowUpAt }, days: { to: days } },
   });
   revalidatePath("/admin");
 }
@@ -715,8 +849,14 @@ export async function sendAttendeeRecapAction(id: string, formData: FormData) {
     .trim()
     .slice(0, 6000);
   if (!subject || !body) return;
-  await sendFollowUp(o.ws, o.b, subject, body);
+  const sent = await sendFollowUp(o.ws, o.b, subject, body);
   await noteRecapEmail(o.b.id, "recapAt");
+  if (sent)
+    await audit({
+      action: "recap.sent_to_attendee",
+      target: { type: "booking", id: o.b.id, label: bookingLabel(o.b) },
+      changes: { subject: { to: subject } },
+    });
   revalidatePath(`/admin/bookings/${id}`);
 }
 
@@ -727,7 +867,12 @@ export async function acceptRecapActionsAction(id: string, formData: FormData) {
     .getAll("action")
     .map((v) => Number(v))
     .filter((n) => Number.isInteger(n));
-  await acceptRecapActions(o.ws, o.b, indexes);
+  const tasks = await acceptRecapActions(o.ws, o.b, indexes);
+  await audit({
+    action: "recap.actions_accepted",
+    target: { type: "booking", id: o.b.id, label: bookingLabel(o.b) },
+    changes: { tasks: { to: tasks.length } },
+  });
   revalidatePath(`/admin/bookings/${id}`);
   revalidatePath("/admin");
 }
@@ -736,6 +881,10 @@ export async function applyRecapStageAction(id: string) {
   const o = await ownBooking(id);
   if (!o) return;
   await applyRecapStage(o.ws, o.b);
+  await audit({
+    action: "recap.stage_applied",
+    target: { type: "booking", id: o.b.id, label: bookingLabel(o.b) },
+  });
   revalidatePath(`/admin/bookings/${id}`);
 }
 
@@ -743,6 +892,10 @@ export async function markRecapReviewedAction(id: string) {
   const o = await ownBooking(id);
   if (!o) return;
   await markRecapReviewed(o.b.id);
+  await audit({
+    action: "recap.reviewed",
+    target: { type: "booking", id: o.b.id, label: bookingLabel(o.b) },
+  });
   revalidatePath(`/admin/bookings/${id}`);
   revalidatePath("/admin");
 }
@@ -750,7 +903,12 @@ export async function markRecapReviewedAction(id: string) {
 export async function regenerateRecapAction(id: string) {
   const o = await ownBooking(id);
   if (!o) return;
-  await generateRecap(o.ws, o.b, o.et);
+  const recap = await generateRecap(o.ws, o.b, o.et);
+  if (recap)
+    await audit({
+      action: "recap.regenerated",
+      target: { type: "booking", id: o.b.id, label: bookingLabel(o.b) },
+    });
   revalidatePath(`/admin/bookings/${id}`);
 }
 
@@ -758,6 +916,10 @@ export async function deleteTranscriptAction(id: string) {
   const o = await ownBooking(id);
   if (!o) return;
   await deleteTranscript(o.b.id);
+  await audit({
+    action: "transcript.deleted",
+    target: { type: "booking", id: o.b.id, label: bookingLabel(o.b) },
+  });
   revalidatePath(`/admin/bookings/${id}`);
 }
 
@@ -771,10 +933,27 @@ export async function regenerateBrief(id: string) {
     ? await db().query.eventTypes.findFirst({ where: eq(schema.eventTypes.id, b.eventTypeId) })
     : null;
   await briefForBooking(ws, b, et ?? null, { force: true });
+  await audit({
+    action: "brief.regenerated",
+    target: { type: "booking", id: b.id, label: bookingLabel(b) },
+  });
   revalidatePath(`/admin/bookings/${id}`);
 }
 
 export async function hostRemoveWaitlist(id: string) {
   const { ws } = await ctx();
+  const entry = await db().query.waitlistEntries.findFirst({
+    where: and(eq(schema.waitlistEntries.id, id), eq(schema.waitlistEntries.workspaceId, ws.id)),
+    columns: { attendeeName: true, attendeeEmail: true },
+  });
   await removeWaitlistEntry(ws.id, id);
+  await audit({
+    action: "waitlist.removed",
+    target: {
+      type: "waitlist_entry",
+      id,
+      label: entry ? `${entry.attendeeName} <${entry.attendeeEmail}>` : null,
+    },
+    changes: { status: { to: "left" } },
+  });
 }

@@ -5,6 +5,7 @@ import { z } from "zod";
 import { loadEnv } from "@bookly/config";
 import { eq, schema } from "@bookly/db";
 import { db } from "@/lib/db";
+import { audit } from "@/server/audit";
 import { isCloud, tenantUrl } from "@/server/platform";
 import { getSession } from "@/server/session";
 import { invalidateHostCache } from "@/server/tenancy";
@@ -12,6 +13,7 @@ import { checkHandle, slugify, type HandleCheck } from "@/lib/handles";
 
 /** The workspace's subdomain, validated as typed (see lib/handles) and unused by any other workspace. */
 export async function checkAddress(raw: string): Promise<HandleCheck> {
+  // audit: read-only — availability lookup for a workspace address
   const r = checkHandle(raw, "address");
   if (!r.ok) return r;
   const taken = await db().query.workspaces.findFirst({
@@ -43,7 +45,7 @@ export async function createWorkspace(
 
   const env = loadEnv();
   const host = `${slug}.${env.ROOT_DOMAIN}`.toLowerCase();
-  await db().transaction(async (tx) => {
+  const wsId = await db().transaction(async (tx) => {
     const orgId = crypto.randomUUID();
     await tx
       .insert(schema.organizations)
@@ -62,7 +64,15 @@ export async function createWorkspace(
     await tx
       .insert(schema.workspaceDomains)
       .values({ workspaceId: ws!.id, host, isPrimary: true, verifiedAt: new Date() });
+    return ws!.id;
   });
   invalidateHostCache();
+  await audit({
+    action: "workspace.created",
+    target: { type: "workspace", id: wsId, label: name },
+    actor: { type: "user", id: session.user.id, label: session.user.email },
+    workspace: wsId,
+    changes: { name: { to: name }, slug: { to: slug }, host: { to: host } },
+  });
   redirect(tenantUrl(slug, "/admin/profile?setup=1"));
 }

@@ -9,7 +9,7 @@ import {
   CheckIcon,
   ClipboardCheckIcon,
   FileTextIcon,
-  InboxIcon,
+  HomeIcon,
   LayoutGridIcon,
   MailIcon,
   NotebookPenIcon,
@@ -56,7 +56,7 @@ export function BrowserFrame({
 }
 
 const NAV = [
-  ["Inbox", InboxIcon, true],
+  ["Home", HomeIcon, true],
   ["Booking page", UserIcon],
   ["Event types", LayoutGridIcon],
   ["Availability", CalendarClockIcon],
@@ -87,15 +87,15 @@ function Sidebar() {
   );
 }
 
-/** The Meeting Inbox as the host sees it on a normal Tuesday. */
-export function InboxMock() {
+/** Home as the host sees it on a normal Tuesday. */
+export function HomeMock() {
   return (
     <BrowserFrame url="acme.bookly-app.io/admin">
       <div className="flex">
         <Sidebar />
         <div className="min-w-0 flex-1 space-y-5 p-5 text-sm">
           <div>
-            <p className="text-xl font-semibold tracking-tight">Inbox</p>
+            <p className="text-xl font-semibold tracking-tight">Home</p>
             <p className="text-xs text-muted-foreground">
               Tue, Sep 22 · 2 meetings today · 1 request · 1 overdue task · 2 to follow up
             </p>
