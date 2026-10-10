@@ -51,7 +51,7 @@ export function HeadingWithAction({
   return (
     <div className="flex flex-wrap items-start justify-between gap-4">
       <Heading width={width} sub={sub} />
-      <Skeleton className="h-9 w-32 rounded-lg" />
+      <Skeleton className="h-10 w-32 rounded-lg" />
     </div>
   );
 }
@@ -67,7 +67,7 @@ export function Line({ width = "w-full", className = "" }: { width?: string; cla
 }
 
 export function Button({ width = "w-28", full = false }: { width?: string; full?: boolean }) {
-  return <Skeleton className={`h-9 ${full ? "w-full" : width} rounded-lg`} />;
+  return <Skeleton className={`h-10 ${full ? "w-full" : width} rounded-lg`} />;
 }
 
 /** A labelled field: label line + input box (textarea when `rows` is set). */
@@ -128,9 +128,9 @@ export function FormCard({ fields = 3, title = true }: { fields?: number; title?
 export function Toolbar({ buttons = 1 }: { buttons?: number }) {
   return (
     <div className="flex flex-wrap gap-2">
-      <Skeleton className="h-9 w-64 max-w-full rounded-lg" />
+      <Skeleton className="h-10 w-64 max-w-full rounded-lg" />
       {Array.from({ length: buttons }, (_, i) => (
-        <Skeleton key={i} className="h-9 w-24 rounded-lg" />
+        <Skeleton key={i} className="h-10 w-24 rounded-lg" />
       ))}
     </div>
   );
@@ -271,9 +271,9 @@ export function WeekRows() {
         <div key={i} className="flex items-center gap-3">
           <Skeleton className="h-5 w-5 rounded" />
           <Skeleton className="h-4 w-24" />
-          <Skeleton className="h-9 w-24 rounded-lg" />
+          <Skeleton className="h-10 w-24 rounded-lg" />
           <Skeleton className="h-4 w-3" />
-          <Skeleton className="h-9 w-24 rounded-lg" />
+          <Skeleton className="h-10 w-24 rounded-lg" />
           <Skeleton className="ml-auto h-6 w-14 rounded-full" />
         </div>
       ))}
@@ -309,7 +309,7 @@ export function SlotGrid({ n = 8 }: { n?: number }) {
   return (
     <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 lg:grid-cols-5">
       {Array.from({ length: n }, (_, i) => (
-        <Skeleton key={i} className="h-9 rounded-lg" />
+        <Skeleton key={i} className="h-10 rounded-lg" />
       ))}
     </div>
   );

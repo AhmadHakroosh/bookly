@@ -55,7 +55,7 @@ async function ContactsPage({ searchParams }: PageProps<"/admin/contacts">) {
             name="q"
             defaultValue={q}
             placeholder="Search name, email, company"
-            className="h-8 w-64 rounded-lg border bg-background px-2 text-sm"
+            className="w-64 rounded-lg border bg-background px-3 text-sm"
           />
         </form>
         <nav className="flex gap-1 text-sm">

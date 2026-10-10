@@ -22,8 +22,10 @@ Text is `font-semibold`. Icons inside a button carry `data-icon="inline-start"` 
 Variants: `default` (primary), `outline` (secondary), `ghost` (tertiary, in rows and menus),
 `destructive`, `secondary`, `link`.
 
-Form controls share the 40 px default height (`Input`, `Select`, native `<select>` styled in
-`globals.css`), so a text field and its button line up without extra classes.
+Form controls share the 40 px default height: `Input`, `Select`, `DatePicker`, `NumberField`,
+`ColorPicker`, `HandleField`, and, through a base rule in `globals.css`, every native text
+`<input>` and single `<select>`. A text field and the button beside it line up without classes;
+add `h-8` (and a `size="sm"` button) only inside tables and chips.
 
 ## Pointers
 

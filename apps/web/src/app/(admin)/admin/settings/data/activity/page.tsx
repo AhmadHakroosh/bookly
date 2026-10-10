@@ -96,7 +96,7 @@ async function ActivityPage({ searchParams }: { searchParams: Promise<Search> })
           <select
             name="actor"
             defaultValue={filters.actor ?? ""}
-            className="h-10 rounded-lg border bg-background pl-3 text-sm"
+            className="rounded-lg border bg-background pl-3 text-sm"
           >
             <option value="">Anyone</option>
             {facets.actors.map((a) => (
@@ -111,7 +111,7 @@ async function ActivityPage({ searchParams }: { searchParams: Promise<Search> })
           <select
             name="action"
             defaultValue={filters.action ?? ""}
-            className="h-10 rounded-lg border bg-background pl-3 text-sm"
+            className="rounded-lg border bg-background pl-3 text-sm"
           >
             <option value="">Anything</option>
             {facets.actions.map((a) => (
@@ -126,7 +126,7 @@ async function ActivityPage({ searchParams }: { searchParams: Promise<Search> })
           <select
             name="target"
             defaultValue={filters.targetType ?? ""}
-            className="h-10 rounded-lg border bg-background pl-3 text-sm"
+            className="rounded-lg border bg-background pl-3 text-sm"
           >
             <option value="">Any target</option>
             {targets.map((t) => (

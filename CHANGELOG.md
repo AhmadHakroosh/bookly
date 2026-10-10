@@ -15,6 +15,7 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 - **"Inbox" is now Home.** The admin's first page keeps its address (`/admin`) and content; the label, title, docs and marketing site say Home. "Inbox" is reserved for email
 - **One button scale** across the app and the marketing site: 40 px by default (up from 32), 44 px for the primary call to action, 32 px inside tables and chips, heavier text and consistent icon spacing. Inputs and selects grew to the same 40 px so forms line up. The last hand-rolled buttons and inputs on the console pages use the shared components
 - Every link and clickable control shows a pointer on hover, and every disabled control shows a not-allowed cursor, through one global rule instead of per-element classes
+- Every field matches the button beside it: native text inputs and selects are 40 px through a base rule, and the date, number, colour, handle and timezone pickers, the availability rows, the contact outreach and recap forms, the bookings "reason" box and the task box follow. Icon buttons that belong to a row of fields (remove a location or question, move it, remove a time range) are full height too
 
 ## [0.11.3] - 2026-10-10
 

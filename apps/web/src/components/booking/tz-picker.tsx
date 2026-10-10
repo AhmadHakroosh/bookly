@@ -12,7 +12,6 @@ export function TzPicker({ value, zones }: { value: string; zones: string[] }) {
     <Dropdown
       ariaLabel="Timezone"
       value={value}
-      size="sm"
       className="max-w-full"
       contentClassName="max-h-80"
       options={list.map((z) => ({ value: z, label: z.replace(/_/g, " ") }))}

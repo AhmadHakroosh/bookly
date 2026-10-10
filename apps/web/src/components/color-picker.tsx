@@ -88,7 +88,7 @@ export function ColorPicker({
               type="button"
               variant="outline"
               aria-label={ariaLabel}
-              className="h-8 gap-2 bg-background px-2 font-normal"
+              className="h-10 gap-2 bg-background px-3 font-normal"
             />
           }
         >
@@ -138,7 +138,7 @@ export function ColorPicker({
               placeholder="#2563eb"
               aria-label="Hex colour"
               aria-invalid={!draftOk}
-              className="h-8 font-mono text-xs"
+              className="font-mono text-xs"
               spellCheck={false}
             />
             <Button type="button" size="sm" variant="outline" disabled={!draftOk} onClick={apply}>

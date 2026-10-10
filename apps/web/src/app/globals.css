@@ -184,6 +184,17 @@
     opacity: 0.5;
   }
   /*
+   * Native fields share the default button height (40 px, `Button` default / `Input`), so a
+   * text box and the button beside it line up without classes. A utility such as `h-8`
+   * still wins for the small variant inside tables and chips.
+   */
+  input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]):not([type="file"]):not(
+      [type="range"]
+    ):not([type="color"]):not([type="image"]),
+  select:not([multiple]):not([size]) {
+    height: 2.5rem;
+  }
+  /*
    * Every clickable thing shows a pointer: links, buttons, menu items, tabs, labels and
    * summaries, plus anything that opens something (`cursor-pointer` on rows and cards).
    * Disabled controls show that they are off, instead of nothing.

@@ -149,7 +149,7 @@ async function ContactPage({ params, searchParams }: PageProps<"/admin/contacts/
               <input
                 name="text"
                 placeholder="Add a note…"
-                className="h-9 flex-1 rounded-lg border bg-background px-3 text-sm"
+                className="flex-1 rounded-lg border bg-background px-3 text-sm"
               />
               <SubmitButton>Add</SubmitButton>
             </form>

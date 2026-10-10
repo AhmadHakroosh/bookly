@@ -64,8 +64,8 @@ export function BookingsSkeleton() {
       <div className="flex flex-wrap items-start justify-between gap-4">
         <Heading width="w-32" />
         <div className="flex gap-2">
-          <Skeleton className="h-9 w-24 rounded-lg" />
-          <Skeleton className="h-9 w-20 rounded-lg" />
+          <Skeleton className="h-10 w-24 rounded-lg" />
+          <Skeleton className="h-10 w-20 rounded-lg" />
         </div>
       </div>
       <CardList rows={4} height="h-24" />
@@ -121,9 +121,9 @@ export function AvailabilitySkeleton() {
       <Heading width="w-32" />
       <section className="space-y-3">
         <div className="flex flex-wrap items-center gap-2">
-          <Skeleton className="h-8 w-32 rounded-lg" />
-          <Skeleton className="h-8 w-28 rounded-lg" />
-          <Skeleton className="h-8 w-56 rounded-lg" />
+          <Skeleton className="h-10 w-32 rounded-lg" />
+          <Skeleton className="h-10 w-28 rounded-lg" />
+          <Skeleton className="h-10 w-56 rounded-lg" />
         </div>
         <Line width="w-96" className="h-3" />
       </section>
@@ -135,10 +135,10 @@ export function AvailabilitySkeleton() {
       <section className="space-y-3">
         <Subheading width="w-32" />
         <div className="flex flex-wrap gap-2">
-          <Skeleton className="h-9 w-40 rounded-lg" />
-          <Skeleton className="h-9 w-24 rounded-lg" />
-          <Skeleton className="h-9 w-24 rounded-lg" />
-          <Skeleton className="h-9 w-28 rounded-lg" />
+          <Skeleton className="h-10 w-40 rounded-lg" />
+          <Skeleton className="h-10 w-24 rounded-lg" />
+          <Skeleton className="h-10 w-24 rounded-lg" />
+          <Skeleton className="h-10 w-28 rounded-lg" />
         </div>
         <Line width="w-32" />
       </section>
@@ -161,7 +161,7 @@ export function ContactSkeleton() {
     <Shell className="space-y-8">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <Heading width="w-56" eyebrow />
-        <Skeleton className="h-9 w-32 rounded-lg" />
+        <Skeleton className="h-10 w-32 rounded-lg" />
       </div>
       <div className="grid gap-8 lg:grid-cols-[1fr_340px]">
         <section className="space-y-6">
@@ -173,7 +173,7 @@ export function ContactSkeleton() {
             <Subheading width="w-20" />
             <div className="flex gap-2">
               <Skeleton className="h-9 flex-1 rounded-lg" />
-              <Skeleton className="h-9 w-20 rounded-lg" />
+              <Skeleton className="h-10 w-20 rounded-lg" />
             </div>
             {[0, 1, 2, 3].map((i) => (
               <div key={i} className="flex gap-3">
@@ -455,10 +455,10 @@ export function ConsolePaymentsSkeleton() {
       <div className="space-y-3 rounded-xl border p-4">
         <Skeleton className="h-5 w-32" />
         <div className="flex flex-wrap gap-3">
-          <Skeleton className="h-9 w-24 rounded-lg" />
-          <Skeleton className="h-9 w-24 rounded-lg" />
-          <Skeleton className="h-9 w-24 rounded-lg" />
-          <Skeleton className="h-9 w-20 rounded-lg" />
+          <Skeleton className="h-10 w-24 rounded-lg" />
+          <Skeleton className="h-10 w-24 rounded-lg" />
+          <Skeleton className="h-10 w-24 rounded-lg" />
+          <Skeleton className="h-10 w-20 rounded-lg" />
         </div>
       </div>
       <Table rows={4} cols={5} />
@@ -507,7 +507,7 @@ export function AuthFormSkeleton({
             </div>
           </div>
         )}
-        {tabs && <Skeleton className="h-9 w-full rounded-lg" />}
+        {tabs && <Skeleton className="h-10 w-full rounded-lg" />}
         <Form fields={fields} />
       </div>
     </Shell>
@@ -567,7 +567,7 @@ export function EventPublicSkeleton() {
           <Skeleton className="h-7 w-44" />
           <Line width="w-32" />
           <Prose lines={4} />
-          <Skeleton className="h-9 w-full rounded-lg" />
+          <Skeleton className="h-10 w-full rounded-lg" />
         </aside>
         <section className="space-y-6 p-6">
           <MonthGrid />

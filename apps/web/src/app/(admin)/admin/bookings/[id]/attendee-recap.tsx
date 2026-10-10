@@ -85,7 +85,7 @@ export function AttendeeRecap({
             name="subject"
             value={subject}
             onChange={(e) => setSubject(e.target.value)}
-            className={`${field} h-9`}
+            className={field}
             placeholder="Subject"
           />
           <textarea

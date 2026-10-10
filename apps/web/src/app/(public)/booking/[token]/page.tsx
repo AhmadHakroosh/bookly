@@ -234,7 +234,7 @@ async function BookingPage({ params, searchParams }: PageProps<"/booking/[token]
               <input
                 name="reason"
                 placeholder="Reason (optional)"
-                className="h-9 w-full rounded-lg border bg-background px-3 text-sm"
+                className="w-full rounded-lg border bg-background px-3 text-sm"
               />
               <SubmitButton
                 variant="outline"
@@ -280,7 +280,7 @@ async function BookingPage({ params, searchParams }: PageProps<"/booking/[token]
                   <input
                     name="reason"
                     placeholder="Reason (optional)"
-                    className="h-9 w-full rounded-lg border bg-background px-3 text-sm"
+                    className="w-full rounded-lg border bg-background px-3 text-sm"
                   />
                   <SubmitButton
                     variant="outline"

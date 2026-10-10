@@ -56,7 +56,7 @@ function Actions({ b, past }: { b: Row; past: boolean }) {
             name="reason"
             placeholder="Reason"
             aria-label="Cancellation reason"
-            className="h-7 w-28 rounded-md border bg-background px-2 text-xs"
+            className="w-32 rounded-lg border bg-background px-3 text-sm"
           />
           <SubmitButton variant="ghost">Cancel</SubmitButton>
         </form>

@@ -84,7 +84,7 @@ export function CaptureForm({
           value={subject}
           onChange={(e) => setSubject(e.target.value)}
           placeholder="Subject"
-          className="mt-2 h-9 w-full rounded-lg border bg-background px-3 text-sm"
+          className="mt-2 w-full rounded-lg border bg-background px-3 text-sm"
         />
         <textarea
           name="body"
