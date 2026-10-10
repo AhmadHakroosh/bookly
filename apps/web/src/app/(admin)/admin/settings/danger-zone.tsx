@@ -22,7 +22,7 @@ export function DangerZone({
   return (
     <div className="space-y-4">
       <section className="space-y-3 rounded-lg border p-4">
-        <h2 className="text-base font-semibold tracking-tight">Export your data</h2>
+        <h3 className="text-base font-semibold tracking-tight">Export your data</h3>
         <p className="text-sm text-muted-foreground">
           One JSON file with the workspace, members, event types, availability, bookings, contacts
           and their timeline, tasks, routing forms, transcripts and recaps. Secrets such as
@@ -42,9 +42,9 @@ export function DangerZone({
         )}
       </section>
       <section className="space-y-3 rounded-lg border border-destructive/40 p-4">
-        <h2 className="text-base font-semibold tracking-tight text-destructive">
+        <h3 className="text-base font-semibold tracking-tight text-destructive">
           Delete this workspace
-        </h2>
+        </h3>
         <p className="text-sm text-muted-foreground">
           Removes the workspace, its booking pages, bookings, contacts, transcripts and members from
           the database immediately, and{" "}

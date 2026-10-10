@@ -25,7 +25,7 @@ export async function PaymentsCard({ ws, canManage }: { ws: Workspace; canManage
   const fee = await platformFeePercent(ws);
   return (
     <section className="space-y-3 rounded-lg border p-4">
-      <h2 className="text-base font-semibold tracking-tight">Payments</h2>
+      <h3 className="text-base font-semibold tracking-tight">Payments</h3>
       <p className="text-sm text-muted-foreground">
         Paid event types and payment requests charge your guests through your own Stripe account, so
         the money is paid out to you by Stripe.

@@ -65,8 +65,13 @@ test.describe("admin", () => {
       ["/admin/settings/data", "Your data"],
     ] as const) {
       await page.goto(path);
-      await expect(page.getByRole("heading", { name: "Settings", level: 1 })).toBeVisible();
-      await expect(page.getByRole("heading", { name: heading, level: 2 })).toBeVisible();
+      // The layout heading streams in after the shell; give a cold production server room.
+      await expect(page.getByRole("heading", { name: "Settings", level: 1 })).toBeVisible({
+        timeout: 15_000,
+      });
+      await expect(
+        page.getByRole("heading", { name: heading, level: 2, exact: true }),
+      ).toBeVisible();
       await expect(page.getByRole("navigation", { name: "Settings" })).toBeVisible();
     }
     await page.goto("/admin/api");
