@@ -1,4 +1,4 @@
-import { and, eq, isNotNull, schema } from "@bookly/db";
+import { and, asc, eq, isNotNull, schema } from "@bookly/db";
 import { loadEnv } from "@bookly/config";
 import { db } from "@/lib/db";
 
@@ -27,7 +27,13 @@ export async function resolveWorkspaceByHost(
 
   let value: Resolved = null;
   if (env.TENANCY === "single") {
-    const workspace = await db().query.workspaces.findFirst({ columns: { id: true } });
+    // The install's first workspace. Without an order, Postgres hands back whichever row is
+    // physically first, which changes after an update, so a dev database with leftover test
+    // workspaces would flip between them.
+    const workspace = await db().query.workspaces.findFirst({
+      columns: { id: true },
+      orderBy: asc(schema.workspaces.createdAt),
+    });
     value = workspace ? { workspaceId: workspace.id, primaryHost: null } : null;
   } else if (host) {
     const domain = await db().query.workspaceDomains.findFirst({

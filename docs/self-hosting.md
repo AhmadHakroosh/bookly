@@ -74,12 +74,12 @@ See `.env.example`; every variable is documented inline and validated at startup
 
 ## Export and deletion
 
-Admin → Settings → Your data lets the workspace owner download everything as one JSON file
+Admin → Settings → Data lets the workspace owner download everything as one JSON file
 (workspace, members, event types, availability, bookings, contacts and timeline, tasks, routing
 forms, transcripts, recaps; tokens and keys excluded) and delete the workspace permanently.
 Deletion removes the owning organization, which cascades through every table; on a
 single-tenant install the app returns to the setup wizard. Users delete their own account from
-Admin → Booking page once they own no workspace. Neither action touches your backups, so keep
+Admin → Account (the menu under their email) once they own no workspace. Neither action touches your backups, so keep
 their retention in mind when someone asks for erasure.
 
 ## Accounts and passwords
@@ -121,7 +121,7 @@ What is sent, always: the app version, `TENANCY`, the Node version and a random 
 generated once and stored in `platform_state`. It is not derived from your hostname, IP, users or
 anything else about you.
 
-What is sent only if you opt in under **Admin → Settings → Help improve Bookly**: counts of
+What is sent only if you opt in under **Admin → Settings → General → Help improve Bookly**: counts of
 workspaces, hosts, event types, bookings in the last 30 days and contacts, plus which integration
 providers are connected and whether video capture and payments are configured. Never names,
 emails, transcripts or content.

@@ -28,7 +28,7 @@ Turn on **Waitlist** on an event type to let people ask to be told when a spot o
 ## Abuse controls
 
 - Public forms (booking, waitlist, routing) accept at most 10 submissions per visitor (IP) per 10 minutes, and every form has a honeypot field.
-- `Admin → Settings → Block bookings from` refuses named emails or whole `@domains`.
+- `Admin → Settings → General → Block bookings from` refuses named emails or whole `@domains`.
 - In cloud mode the Free plan allows 100 new bookings per month per workspace; API keys get a per-plan request budget (60 / 600 / 1200 per minute). Self-hosted installs have no quotas.
 
 ## Buffers

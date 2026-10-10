@@ -43,15 +43,21 @@ import {
 } from "@/server/limits";
 import { captureSupportsLocation } from "@/server/integrations/notetaker";
 import { paymentsHint, paymentsReady } from "@/server/payments";
-import { requireStaff } from "@/server/session";
+import { isManager, requireStaff } from "@/server/session";
 import { removeWaitlistEntry } from "@/server/waitlist";
 import { getCurrentWorkspace } from "@/server/workspace";
 
 async function ctx() {
-  const [{ session }, ws] = await Promise.all([requireStaff(), getCurrentWorkspace()]);
+  const [{ session, role }, ws] = await Promise.all([requireStaff(), getCurrentWorkspace()]);
   if (!ws) throw new Error("No workspace");
-  return { session, ws };
+  return { session, ws, role };
 }
+
+/** Owners and admins edit every host's event types; a member only their own. */
+const canEditEventType = (
+  c: { session: { user: { id: string } }; role: string },
+  ownerId: string,
+) => isManager(c.role) || ownerId === c.session.user.id;
 const slugify = (s: string) =>
   s
     .toLowerCase()
@@ -439,7 +445,8 @@ export type EventTypeSaveState = {
 };
 
 export async function saveEventType(_prev: EventTypeSaveState, formData: FormData) {
-  const { ws } = await ctx();
+  const c = await ctx();
+  const { ws } = c;
   const parsed = eventSchema.safeParse({
     ...Object.fromEntries(formData),
     requiresConfirmation: formData.get("requiresConfirmation") ? "on" : "off",
@@ -456,6 +463,8 @@ export async function saveEventType(_prev: EventTypeSaveState, formData: FormDat
     where: and(eq(schema.eventTypes.id, d.id), eq(schema.eventTypes.workspaceId, ws.id)),
   });
   if (!existing) return { error: "Event type not found" };
+  if (!canEditEventType(c, existing.userId))
+    return { error: "Only the host, or an owner or admin, can edit this event type." };
   let slug = slugify(d.slug) || slugify(d.title) || "meeting";
   const clash = await db().query.eventTypes.findFirst({
     where: and(eq(schema.eventTypes.userId, existing.userId), eq(schema.eventTypes.slug, slug)),
@@ -541,7 +550,13 @@ export async function saveEventType(_prev: EventTypeSaveState, formData: FormDat
 }
 
 export async function deleteEventType(id: string) {
-  const { ws } = await ctx();
+  const c = await ctx();
+  const { ws } = c;
+  const existing = await db().query.eventTypes.findFirst({
+    where: and(eq(schema.eventTypes.id, id), eq(schema.eventTypes.workspaceId, ws.id)),
+    columns: { userId: true },
+  });
+  if (!existing || !canEditEventType(c, existing.userId)) redirect("/admin/event-types");
   await db()
     .update(schema.eventTypes)
     .set({ active: false, hidden: true })

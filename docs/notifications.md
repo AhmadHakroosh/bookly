@@ -1,7 +1,7 @@
 # Host notifications and text reminders
 
 Attendees always get email: confirmation with calendar invite, 24-hour and 1-hour reminders,
-cancellation. Hosts choose how they hear about things under **Admin → Notifications**.
+cancellation. Hosts choose how they hear about things under **Admin → Personal → Notifications**.
 
 ## Host pings
 
@@ -16,7 +16,7 @@ that. **Send a test message** posts a line to the saved Slack webhook and report
 
 ## Attendee joined (Bookly video)
 
-On by default; owners can mute it for the workspace under Admin → Notifications
+On by default; owners can mute it for the workspace under Admin → Settings → General
 (`settings.daily.joinPings`). The first attendee to enter a booking's room triggers one ping. The
 host is recognised because the meeting page gives signed-in workspace members a Daily owner
 token (`owner: true` on the `participant.joined` event); a host who opens the raw room link
@@ -106,7 +106,7 @@ header (Admin → Settings → Branding: logo URL and accent colour, on Pro, Tea
 buttons, the booking details in a card, and a plain-text alternative generated from the same
 template. "Powered by Bookly" appears in the footer unless the plan removes branding. The same logo, colour and footer rule applies to the booking pages themselves.
 
-Under Admin → Settings → Guest emails you can replace the opening words of the confirmation,
+Under Admin → Settings → Emails you can replace the opening words of the confirmation,
 reminder and cancellation emails; the details block, buttons and branding are always added.
 Placeholders: `{name}` `{host}` `{event}` `{when}` `{where}` `{duration}` `{bookingUrl}`
 `{workspace}`, plus `{relative}` in reminders ("tomorrow", "in 1 hour"). Blank fields keep

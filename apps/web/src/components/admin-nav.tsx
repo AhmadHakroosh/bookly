@@ -15,7 +15,6 @@ import {
   GlobeIcon,
   LifeBuoyIcon,
   InboxIcon,
-  KeyRoundIcon,
   LayoutGridIcon,
   PlugIcon,
   SettingsIcon,
@@ -29,6 +28,10 @@ import {
 type Item = { href: string; label: string; icon: LucideIcon; external?: boolean };
 type Group = { label: string; icon: LucideIcon; items: Item[] };
 
+/**
+ * Three kinds of pages: your scheduling, your own connections, and the workspace everyone
+ * shares. The Workspace group is for owners and admins; members never see it.
+ */
 const GROUPS: Group[] = [
   {
     label: "Scheduling",
@@ -40,28 +43,29 @@ const GROUPS: Group[] = [
       { href: "/admin/bookings", label: "Bookings", icon: CalendarIcon },
       { href: "/admin/contacts", label: "Contacts", icon: UsersIcon },
       { href: "/admin/routing", label: "Routing forms", icon: SplitIcon },
-      { href: "/admin/notifications", label: "Notifications", icon: BellIcon },
     ],
   },
   {
-    label: "Integrations",
+    label: "Personal",
     icon: PlugIcon,
     items: [
       { href: "/admin/calendars", label: "Calendars", icon: CalendarDaysIcon },
       { href: "/admin/conferencing", label: "Conferencing", icon: VideoIcon },
-    ],
-  },
-  {
-    label: "Workspace",
-    icon: BuildingIcon,
-    items: [
-      { href: "/admin/team", label: "Team", icon: UsersIcon },
-      { href: "/admin/api", label: "API & webhooks", icon: KeyRoundIcon },
-      { href: "/admin/domains", label: "Domains", icon: GlobeIcon },
-      { href: "/admin/settings", label: "Settings", icon: SettingsIcon },
+      { href: "/admin/notifications", label: "Notifications", icon: BellIcon },
     ],
   },
 ];
+
+const WORKSPACE = (cloud: boolean): Group => ({
+  label: "Workspace",
+  icon: BuildingIcon,
+  items: [
+    { href: "/admin/settings", label: "Settings", icon: SettingsIcon },
+    { href: "/admin/team", label: "Team", icon: UsersIcon },
+    { href: "/admin/domains", label: "Domains", icon: GlobeIcon },
+    ...(cloud ? [{ href: "/admin/billing", label: "Billing", icon: CreditCardIcon }] : []),
+  ],
+});
 
 /** Pinned to the bottom of the sidebar: help links that never move. */
 const HELP = (supportHref: string): Item[] => [
@@ -77,28 +81,19 @@ const HELP = (supportHref: string): Item[] => [
 
 export function AdminNav({
   cloud = false,
+  manager = false,
   supportHref = "https://github.com/AhmadHakroosh/bookly/issues",
 }: {
   cloud?: boolean;
+  /** Owner or admin: shows the Workspace group. */
+  manager?: boolean;
   /** Where "Support" goes: a mailto in cloud mode, the issue tracker when self-hosted. */
   supportHref?: string;
 }) {
   const pathname = usePathname();
   const active = (href: string) =>
     href === "/admin" ? pathname === href : pathname.startsWith(href);
-  const groups = cloud
-    ? GROUPS.map((g) =>
-        g.label === "Workspace"
-          ? {
-              ...g,
-              items: [
-                { href: "/admin/billing", label: "Billing", icon: CreditCardIcon },
-                ...g.items,
-              ],
-            }
-          : g,
-      )
-    : GROUPS;
+  const groups = manager ? [...GROUPS, WORKSPACE(cloud)] : GROUPS;
   const itemClass = (on: boolean) =>
     `flex items-center gap-2 rounded-md px-2 py-1.5 ${on ? "bg-muted font-medium text-foreground" : "text-muted-foreground hover:bg-muted/60 hover:text-foreground"}`;
   const External = ({ it }: { it: Item }) => (

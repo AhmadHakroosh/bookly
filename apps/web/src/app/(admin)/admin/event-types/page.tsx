@@ -4,19 +4,21 @@ import { Suspense } from "react";
 import { Badge } from "@/components/ui/badge";
 import { SubmitButton } from "@/components/submit-button";
 import { getProfileByUser, listAllEventTypes, locationLabel } from "@/server/scheduling";
-import { requireStaff } from "@/server/session";
+import { isManager, requireStaff } from "@/server/session";
 import { getCurrentWorkspace } from "@/server/workspace";
 import { createEventType } from "../scheduling-actions";
 
 export const metadata = { title: "Event types" };
 
 async function EventTypesPage({ searchParams }: PageProps<"/admin/event-types">) {
-  const [{ session }, ws] = await Promise.all([requireStaff(), getCurrentWorkspace()]);
+  const [{ session, role }, ws] = await Promise.all([requireStaff(), getCurrentWorkspace()]);
   if (!ws) return null;
-  const [profile, events] = await Promise.all([
+  const [profile, all] = await Promise.all([
     getProfileByUser(ws.id, session.user.id),
     listAllEventTypes(ws.id),
   ]);
+  // Owners and admins manage every host's event types; a member manages their own.
+  const events = isManager(role) ? all : all.filter((e) => e.userId === session.user.id);
   const active = events.filter((e) => e.active);
   const sp = await searchParams;
   const limit = typeof sp.limit === "string" ? sp.limit : null;

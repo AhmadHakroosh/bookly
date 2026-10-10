@@ -4,6 +4,7 @@ import { Suspense } from "react";
 import { Badge } from "@/components/ui/badge";
 import { SubmitButton } from "@/components/submit-button";
 import { dnsTarget, listDomains, VERIFY_PREFIX } from "@/server/domains";
+import { requireManager } from "@/server/session";
 import { getCurrentWorkspace } from "@/server/workspace";
 import { checkDomain, makePrimary, removeDomain } from "./actions";
 import { AddDomainForm } from "./add-domain-form";
@@ -11,6 +12,7 @@ import { AddDomainForm } from "./add-domain-form";
 export const metadata = { title: "Domains" };
 
 async function DomainsPage() {
+  await requireManager();
   const workspace = await getCurrentWorkspace();
   if (!workspace) return null;
   const env = loadEnv();

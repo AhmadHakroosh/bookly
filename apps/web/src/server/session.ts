@@ -35,3 +35,21 @@ export async function requireStaff() {
   if (!role) redirect("/login?error=staff");
   return { session, role };
 }
+
+/** Owners and admins manage the workspace; members manage their own scheduling. */
+export const isManager = (role: string | null | undefined) => role === "owner" || role === "admin";
+
+/** Workspace pages (Settings, Team, Domains, Billing): members are sent back to the inbox. */
+export async function requireManager() {
+  const staff = await requireStaff();
+  if (!isManager(staff.role)) redirect("/admin?error=role");
+  return staff;
+}
+
+export const ROLE_ERROR = "Only workspace owners and admins can change this.";
+
+/** Workspace actions: the same gate, as an error the form can show instead of a redirect. */
+export async function assertManager() {
+  const staff = await requireStaff();
+  return isManager(staff.role) ? { ...staff, error: null } : { ...staff, error: ROLE_ERROR };
+}

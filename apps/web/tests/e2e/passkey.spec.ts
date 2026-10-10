@@ -25,12 +25,13 @@ test("a passkey registers on the profile page and signs in without a password", 
   // Unique per run: an aborted earlier run may have left its passkey behind.
   const name = `CI authenticator ${Date.now().toString(36)}`;
   try {
-    await page.goto("/admin/profile");
+    await page.goto("/admin/account");
     await page.getByLabel("Passkey name").fill(name);
     await page.getByRole("button", { name: "Add a passkey" }).click();
     await expect(page.getByText(name)).toBeVisible();
 
-    await page.getByRole("button", { name: "Sign out" }).click();
+    await page.getByRole("button", { name: /^Account:/ }).click();
+    await page.getByRole("menuitem", { name: "Sign out" }).click();
     await page.waitForURL(/\/login/);
     // The login page offers saved passkeys through the email field's autofill; the virtual
     // authenticator answers that request by itself, so the sign-in may already have happened.
@@ -44,7 +45,7 @@ test("a passkey registers on the profile page and signs in without a password", 
       await expect(page).toHaveURL(/\/admin/);
     }
 
-    await page.goto("/admin/profile");
+    await page.goto("/admin/account");
     await page
       .getByRole("listitem")
       .filter({ hasText: name })

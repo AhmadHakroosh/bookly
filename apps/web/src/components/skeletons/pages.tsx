@@ -319,12 +319,26 @@ export function ProfileSkeleton() {
         <Field label="w-24" />
         <Button full />
       </div>
+    </Shell>
+  );
+}
+
+export function AccountSkeleton() {
+  return (
+    <Shell className="max-w-xl space-y-6">
+      <Heading width="w-32" />
       <div className="space-y-3 rounded-xl border p-4">
         <Skeleton className="h-5 w-32" />
         <Line width="w-80" className="h-3" />
-        <DividedList rows={3} lines={1} />
+        <DividedList rows={2} lines={1} />
+      </div>
+      <div className="space-y-3 rounded-xl border p-4">
+        <Skeleton className="h-5 w-24" />
+        <DividedList rows={2} lines={1} />
+        <Field label="w-24" />
       </div>
       <FormCard fields={3} />
+      <FormCard fields={1} />
     </Shell>
   );
 }

@@ -16,10 +16,11 @@ import { db } from "@/lib/db";
 import { getCurrentWorkspace } from "@/server/workspace";
 import { deleteWebhook, pingWebhook, retryDelivery, revokeApiKey, toggleWebhook } from "./actions";
 import { ApiKeyForm, WebhookForm } from "./forms";
+import { CrmForm } from "./crm-form";
 
-export const metadata = { title: "API & webhooks" };
+export const metadata = { title: "Integrations" };
 
-async function ApiPage() {
+async function IntegrationsPage() {
   const workspace = await getCurrentWorkspace();
   if (!workspace) return null;
   const base = loadEnv().APP_URL.replace(/\/$/, "");
@@ -53,7 +54,24 @@ async function ApiPage() {
   return (
     <div className="space-y-12">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight">API & webhooks</h1>
+        <h2 className="text-xl font-semibold tracking-tight">Integrations</h2>
+        <p className="text-sm text-muted-foreground">
+          Services the whole workspace talks to. Your own calendar, conferencing and notification
+          connections are under Personal.
+        </p>
+      </div>
+
+      <section className="space-y-4">
+        <h3 className="text-lg font-semibold tracking-tight">CRM sync</h3>
+        <CrmForm
+          provider={workspace.settings.crm?.provider ?? ""}
+          connected={!!workspace.settings.crm?.apiKey}
+          companyDomain={workspace.settings.crm?.companyDomain ?? ""}
+        />
+      </section>
+
+      <section className="space-y-4">
+        <h3 className="text-lg font-semibold tracking-tight">API keys</h3>
         <p className="text-sm text-muted-foreground">
           Event types and availability need no key. Keys unlock reading and creating bookings. Spec:{" "}
           <a
@@ -66,10 +84,6 @@ async function ApiPage() {
           </a>{" "}
           · Guide: <code>docs/api.md</code>
         </p>
-      </div>
-
-      <section className="space-y-4">
-        <h2 className="text-lg font-semibold tracking-tight">API keys</h2>
         <ApiKeyForm />
         <Table>
           <TableHeader>
@@ -113,7 +127,7 @@ async function ApiPage() {
       </section>
 
       <section className="space-y-4">
-        <h2 className="text-lg font-semibold tracking-tight">Webhooks</h2>
+        <h3 className="text-lg font-semibold tracking-tight">Webhooks</h3>
         <WebhookForm />
         <Table>
           <TableHeader>
@@ -170,7 +184,7 @@ async function ApiPage() {
         </Table>
         {deliveries.length > 0 && (
           <>
-            <h3 className="text-sm font-medium">Recent deliveries</h3>
+            <h4 className="text-sm font-medium">Recent deliveries</h4>
             <Table>
               <TableHeader>
                 <TableRow>
@@ -217,10 +231,10 @@ async function ApiPage() {
   );
 }
 
-export default function ApiPageBoundary() {
+export default function IntegrationsPageBoundary() {
   return (
     <Suspense fallback={<ApiSkeleton />}>
-      <ApiPage />
+      <IntegrationsPage />
     </Suspense>
   );
 }

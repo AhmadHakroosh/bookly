@@ -16,7 +16,7 @@ export async function GET(request: Request) {
     getStaffRole(),
     getCurrentWorkspace(),
   ]);
-  const settings = new URL("/admin/settings", request.url);
+  const settings = new URL("/admin/settings/payments", request.url);
   if (!session || !ws || !role) return NextResponse.redirect(new URL("/login", request.url));
   if (ws.stripeAccountId) {
     await refreshConnectStatus(ws).catch(() => null);
