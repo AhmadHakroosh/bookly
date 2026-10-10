@@ -10,7 +10,7 @@ import { pageMetadata, SITE } from "../site";
 export const metadata: Metadata = pageMetadata({
   title: "Pricing",
   description:
-    "Bookly plans: Free with contacts, briefings, the Meeting Inbox and paid bookings at a 5% fee; Pro at $24/month or $240/year adds Bookly video, auto-capture, paid bookings with no platform fee, a custom domain; Team at $30 a member shares the customer memory, two months free yearly.",
+    "Bookly plans: Free with contacts, briefings, the daily Home page and paid bookings at a 5% fee; Pro at $24/month or $240/year adds Bookly video, auto-capture, paid bookings with no platform fee, a custom domain; Team at $30 a member shares the customer memory, two months free yearly.",
   path: "/pricing",
 });
 
@@ -29,7 +29,7 @@ const ROWS: [string, (p: Plan) => string | boolean][] = [
   ["Google Meet, Teams or Zoom links, phone, in person", () => true],
   ["Bookly video (no account needed)", ({ limits: l }) => l.booklyVideo],
   ["Email confirmations and reminders", () => true],
-  ["Contacts, timeline and Meeting Inbox", () => true],
+  ["Contacts, timeline and the Home page", () => true],
   [
     "Customer memory",
     ({ limits: l }) => (l.members !== null && l.members > 1 ? "Shared across the team" : "Yours"),

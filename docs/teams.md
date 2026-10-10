@@ -8,6 +8,20 @@ single-tenant mode) and lands on their booking-page setup. Roles: **owner** (one
 **admin** (manages everything), **member** (own booking page, availability, event types and
 bookings).
 
+## The activity log
+
+Every change in a workspace is recorded: who did it (a member, a guest through a booking link,
+an API key, an integration or Bookly itself), what (the action, in plain words), on which
+booking, contact, event type or setting, and which fields changed, with the time, the request
+id and the client address. Owners and admins read it under **Admin → Settings → Data →
+Activity**, newest first, with filters by person, action, target and date, and a "Show earlier"
+button that loads the next page without reloading the ones you have. Pro and Team can download
+the filtered log as CSV.
+
+How long it is kept depends on the plan: 90 days on Free, a year on Pro, two years on Team,
+forever when self-hosted. Deleting the workspace keeps its log for that window. Sign-ins are
+recorded too, so "who was in here on Tuesday?" has an answer.
+
 ## Team event types
 
 On an event type, **Who hosts** offers three modes:

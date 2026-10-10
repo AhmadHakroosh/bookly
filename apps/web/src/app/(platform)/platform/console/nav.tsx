@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 const TABS = [
   ["/console", "Workspaces"],
   ["/console/users", "Users"],
+  ["/console/flags", "Flags"],
   ["/console/audit", "Audit log"],
   ["/console/health", "Health"],
   ["/console/payments", "Payments"],

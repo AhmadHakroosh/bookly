@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { and, eq, schema } from "@bookly/db";
 import { db } from "@/lib/db";
+import { audit } from "@/server/audit";
 import { normalizeHost, verifyDomain } from "@/server/domains";
 import { invalidatePrimaryDomainCache } from "@/server/urls";
 import { assertWithinLimit, LimitError } from "@/server/limits";
@@ -41,21 +42,39 @@ export async function addDomain(_prev: DomainState, formData: FormData): Promise
           ? "Already added."
           : "This domain is used by another workspace.",
     };
-  await db()
+  const [row] = await db()
     .insert(schema.workspaceDomains)
     .values({
       workspaceId: workspace.id,
       host,
       isPrimary: false,
       verificationToken: `bookly-verify=${crypto.randomUUID().replace(/-/g, "")}`,
-    });
+    })
+    .returning({ id: schema.workspaceDomains.id });
+  await audit({ action: "domain.added", target: { type: "domain", id: row?.id, label: host } });
   revalidatePath("/admin/domains");
   return { ok: true };
 }
 
 export async function checkDomain(id: string) {
   const workspace = await ctx();
-  await verifyDomain(workspace.id, id);
+  const row = await db().query.workspaceDomains.findFirst({
+    where: and(
+      eq(schema.workspaceDomains.id, id),
+      eq(schema.workspaceDomains.workspaceId, workspace.id),
+    ),
+    columns: { host: true, verifiedAt: true },
+  });
+  if (!row) return;
+  const r = await verifyDomain(workspace.id, id);
+  await audit({
+    action: "domain.checked",
+    target: { type: "domain", id, label: row.host },
+    changes: {
+      verified: { from: !!row.verifiedAt, to: r.ok },
+      ...(r.ok ? {} : { error: { to: r.error ?? (!r.txt ? "txt" : "not pointing here") } }),
+    },
+  });
   invalidateHostCache();
   invalidatePrimaryDomainCache();
   revalidatePath("/admin/domains");
@@ -63,12 +82,12 @@ export async function checkDomain(id: string) {
 
 export async function makePrimary(id: string) {
   const workspace = await ctx();
-  await db().transaction(async (tx) => {
+  const [row] = await db().transaction(async (tx) => {
     await tx
       .update(schema.workspaceDomains)
       .set({ isPrimary: false })
       .where(eq(schema.workspaceDomains.workspaceId, workspace.id));
-    await tx
+    return tx
       .update(schema.workspaceDomains)
       .set({ isPrimary: true })
       .where(
@@ -76,8 +95,11 @@ export async function makePrimary(id: string) {
           eq(schema.workspaceDomains.id, id),
           eq(schema.workspaceDomains.workspaceId, workspace.id),
         ),
-      );
+      )
+      .returning({ host: schema.workspaceDomains.host });
   });
+  if (row)
+    await audit({ action: "domain.made_primary", target: { type: "domain", id, label: row.host } });
   invalidateHostCache();
   invalidatePrimaryDomainCache();
   revalidatePath("/admin/domains");
@@ -93,6 +115,7 @@ export async function removeDomain(id: string) {
   });
   if (!row || row.isPrimary) return;
   await db().delete(schema.workspaceDomains).where(eq(schema.workspaceDomains.id, id));
+  await audit({ action: "domain.removed", target: { type: "domain", id, label: row.host } });
   invalidateHostCache();
   invalidatePrimaryDomainCache();
   revalidatePath("/admin/domains");

@@ -11,6 +11,7 @@ import { nudgeOverdueTasks } from "./capture";
 import { expireTranscripts } from "./transcripts";
 import { reconcileSeats } from "./billing";
 import { expireManualPlans, setState } from "./ops";
+import { sweepAuditLog } from "./audit";
 import { sendTelemetryPing } from "./telemetry";
 import { ensureDailyWebhook } from "./daily-webhook";
 import { trackBooking } from "./contacts";
@@ -176,6 +177,7 @@ export async function sendDueReminders(
   await nudgeOverdueTasks(now).catch((e) => console.error("[tasks] nudge failed", e));
   await expireTranscripts(now).catch((e) => console.error("[capture] retention failed", e));
   await expireManualPlans(now).catch((e) => console.error("[ops] plan expiry failed", e));
+  await sweepAuditLog(now).catch((e) => console.error("[audit] retention failed", e));
   await reconcileSeats(now).catch((e) => console.error("[billing] seat reconcile failed", e));
   await sendTelemetryPing(now).catch((e) => console.error("[telemetry] failed", e));
   await ensureDailyWebhook().catch((e) => console.error("[daily] webhook", e));

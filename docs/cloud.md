@@ -21,8 +21,9 @@ outside cloud mode) means no limits. Enforcement points: creating event types, i
 connecting integrations, adding custom domains, enabling workflows / team scheduling (paid
 bookings are open to every plan; only the fee differs), Bookly video (a Pro feature: the location cannot be saved on Free, a Free workspace's
 existing Bookly video rows are hidden from the booking page and provisioning skips the room), the
-keyed API, and the "Powered by Bookly" line on booking pages and emails (and the workspace's own
-logo and colour in its place).
+keyed API, the "Powered by Bookly" line on booking pages and emails (and the workspace's own
+logo and colour in its place), the activity log's retention (`auditRetentionDays`: 90 days on
+Free, a year on Pro, two years on Team) and its CSV export (`activityExport`, Pro and Team).
 
 Auto-capture: Pro 300 minutes a month (5 hours), Team 480 per member pooled (8 hours); the UI talks in hours
 (`captureHours`, "5 hours", "$3 an hour") while billing counts minutes. Past the budget transcription
@@ -62,6 +63,22 @@ Payments; `STRIPE_CONNECT_WEBHOOK_SECRET` verifies the events from hosts' accoun
 plan, owner and booking counts, suspend / unsuspend (public pages and the API go offline; the admin
 shows a banner), and "sign in as owner" (Better Auth admin impersonation, which lands you in that
 workspace's admin). Stop impersonating from the account menu or by signing out.
+
+The console also has **Flags** (feature flags and beta cohorts, below) and every operator action
+lands in **Audit log**.
+
+## Feature flags and betas
+
+New features reach a few workspaces before everyone. Each feature the code knows about is a
+flag (`FLAGS` in `apps/web/src/server/flags.ts`, rows in `feature_flags`) with a state: **off**
+(nobody), **beta** (the cohorts ticked for it plus any workspace granted it on its console page,
+unless that workspace opted out of betas under Admin → Settings → General) or **on** (everyone).
+A per-workspace **deny** always wins, a **grant** can carry an expiry, and cohorts
+(`beta_cohorts`, Console → Flags) are named groups of workspaces such as "design partners" that a
+flag can be opened to as a whole. Pages behind a flag show a "Beta" badge. In code,
+`hasFlag(workspace, key)` resolves denial → on → opt-out → grant → cohort, once per request.
+Flag, cohort and grant changes are operator actions and appear in the operator audit log; a
+workspace's own activity log records when it opts in or out.
 
 ## Background jobs on QStash
 

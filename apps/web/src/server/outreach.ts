@@ -92,7 +92,7 @@ export async function paymentLink(
 
 /**
  * Sends a templated email (proposal, payment request, follow-up) from the host to the contact, logs it,
- * mirrors it to the CRM and sets a follow-up date so the inbox escalates if nobody answers.
+ * mirrors it to the CRM and sets a follow-up date so Home escalates if nobody answers.
  */
 export async function sendOutreach(
   ws: Workspace,

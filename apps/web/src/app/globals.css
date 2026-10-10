@@ -183,6 +183,40 @@
     cursor: not-allowed;
     opacity: 0.5;
   }
+  /*
+   * Every clickable thing shows a pointer: links, buttons, menu items, tabs, labels and
+   * summaries, plus anything that opens something (`cursor-pointer` on rows and cards).
+   * Disabled controls show that they are off, instead of nothing.
+   */
+  a[href],
+  button,
+  summary,
+  label[for],
+  select,
+  input[type="file"],
+  input[type="radio"],
+  input[type="range"],
+  input[type="submit"],
+  input[type="button"],
+  [role="button"],
+  [role="link"],
+  [role="tab"],
+  [role="menuitem"],
+  [role="menuitemcheckbox"],
+  [role="menuitemradio"],
+  [role="option"],
+  [role="switch"],
+  [role="checkbox"] {
+    cursor: pointer;
+  }
+  button:disabled,
+  select:disabled,
+  input:disabled,
+  textarea:disabled,
+  [aria-disabled="true"],
+  [data-disabled] {
+    cursor: not-allowed;
+  }
 }
 
 /* Documentation: hover-revealed anchor links on headings. */

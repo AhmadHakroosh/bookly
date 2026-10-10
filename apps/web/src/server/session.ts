@@ -39,7 +39,7 @@ export async function requireStaff() {
 /** Owners and admins manage the workspace; members manage their own scheduling. */
 export const isManager = (role: string | null | undefined) => role === "owner" || role === "admin";
 
-/** Workspace pages (Settings, Team, Domains, Billing): members are sent back to the inbox. */
+/** Workspace pages (Settings, Team, Domains, Billing): members are sent back to Home. */
 export async function requireManager() {
   const staff = await requireStaff();
   if (!isManager(staff.role)) redirect("/admin?error=role");

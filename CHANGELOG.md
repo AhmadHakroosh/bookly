@@ -4,6 +4,18 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 ## [Unreleased]
 
+### Added
+
+- **Activity log.** Every change in a workspace is recorded with who did it (member, guest, API key, integration or Bookly), what changed field by field, the time, request id and client address, including sign-ins. Owners and admins read it under Settings → Data → Activity with filters and a "Show earlier" button (keyset-paginated, so a long history costs nothing extra); Pro and Team download it as CSV. Retention follows the plan: 90 days on Free, a year on Pro, two years on Team, unlimited self-hosted. A test enumerates every server action and fails when one neither audits nor is marked read-only
+- **Feature flags and beta cohorts.** Features can go to a closed beta before everyone: flags are off, beta or on; beta cohorts are named groups of workspaces; a workspace can be granted or denied a flag with an expiry. Operators manage them under Console → Flags and on each workspace's console page; hosts can opt out of betas under Settings → General and see a "Beta" badge on pages that are still in beta
+- `DESIGN.md` documents the button scale, pointer rule, loading states and section navigation
+
+### Changed
+
+- **"Inbox" is now Home.** The admin's first page keeps its address (`/admin`) and content; the label, title, docs and marketing site say Home. "Inbox" is reserved for email
+- **One button scale** across the app and the marketing site: 40 px by default (up from 32), 44 px for the primary call to action, 32 px inside tables and chips, heavier text and consistent icon spacing. Inputs and selects grew to the same 40 px so forms line up. The last hand-rolled buttons and inputs on the console pages use the shared components
+- Every link and clickable control shows a pointer on hover, and every disabled control shows a not-allowed cursor, through one global rule instead of per-element classes
+
 ## [0.11.3] - 2026-10-10
 
 ### Changed

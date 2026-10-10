@@ -6,6 +6,7 @@ import { loadEnv } from "@bookly/config";
 import { schema } from "@bookly/db";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { audit } from "@/server/audit";
 import { getSession } from "@/server/session";
 import { needsSetup } from "@/server/workspace";
 import { invalidateHostCache } from "@/server/tenancy";
@@ -38,8 +39,9 @@ export async function completeSetup(_prev: SetupState, formData: FormData): Prom
 
   // 1. Owner account: the signed-in user if there is one, otherwise a new one (sets the cookie).
   let userId: string;
+  let ownerEmail: string;
   const existing = await getSession();
-  if (existing) userId = existing.user.id;
+  if (existing) ({ id: userId, email: ownerEmail } = existing.user);
   else {
     if (!name || !email || !password) return { error: "Please fill in the owner account." };
     const res = await auth.api
@@ -47,13 +49,14 @@ export async function completeSetup(_prev: SetupState, formData: FormData): Prom
       .catch((e: Error) => ({ error: e.message }));
     if ("error" in res) return { error: res.error };
     userId = res.user.id;
+    ownerEmail = res.user.email;
   }
 
   // 2. Organization (ownership layer) + workspace + primary host, in one transaction.
   const env = loadEnv();
   const slug = slugify(workspaceName);
   const host = new URL(env.APP_URL).host.toLowerCase();
-  await db().transaction(async (tx) => {
+  const wsId = await db().transaction(async (tx) => {
     const orgId = crypto.randomUUID();
     await tx
       .insert(schema.organizations)
@@ -72,7 +75,15 @@ export async function completeSetup(_prev: SetupState, formData: FormData): Prom
     await tx
       .insert(schema.workspaceDomains)
       .values({ workspaceId: workspace!.id, host, isPrimary: true, verifiedAt: new Date() });
+    return workspace!.id;
   });
   invalidateHostCache();
+  await audit({
+    action: "setup.completed",
+    target: { type: "workspace", id: wsId, label: workspaceName },
+    actor: { type: "user", id: userId, label: ownerEmail },
+    workspace: wsId,
+    changes: { name: { to: workspaceName }, slug: { to: slug }, host: { to: host } },
+  });
   redirect("/admin");
 }

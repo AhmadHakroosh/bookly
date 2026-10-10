@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { headers } from "next/headers";
 import { z } from "zod";
 import { auth } from "@/lib/auth";
+import { audit } from "@/server/audit";
 import { previewSeatAdd, syncSeats } from "@/server/billing";
 import { assertWithinLimit, LimitError } from "@/server/limits";
 import { requireStaff } from "@/server/session";
@@ -40,14 +41,21 @@ export async function inviteMember(_prev: TeamState, formData: FormData): Promis
     const q = new URLSearchParams({ email: parsed.data.email, role: parsed.data.role });
     redirect(`/admin/team/invite?${q}`);
   }
+  let invitationId: string | undefined;
   try {
-    await auth.api.createInvitation({
+    const inv = await auth.api.createInvitation({
       headers: h,
       body: { email: parsed.data.email, role: parsed.data.role, organizationId: ws.organizationId },
     });
+    invitationId = inv?.id;
   } catch (e) {
     return { error: e instanceof Error ? e.message : "Invitation failed" };
   }
+  await audit({
+    action: formData.get("confirmed") === "1" ? "member.invite_confirmed" : "member.invited",
+    target: { type: "invitation", id: invitationId, label: parsed.data.email },
+    changes: { role: { to: parsed.data.role } },
+  });
   revalidatePath("/admin/team");
   return { ok: true };
 }
@@ -64,26 +72,45 @@ export async function confirmInvite(email: string, role: string) {
 
 export async function cancelInvite(id: string) {
   const { h } = await manager();
-  await auth.api.cancelInvitation({ headers: h, body: { invitationId: id } }).catch(() => {});
+  const inv = await auth.api
+    .cancelInvitation({ headers: h, body: { invitationId: id } })
+    .catch(() => null);
+  if (inv)
+    await audit({
+      action: "member.invite_cancelled",
+      target: { type: "invitation", id, label: inv.email },
+    });
   revalidatePath("/admin/team");
 }
 
 export async function removeMember(memberId: string) {
   const { ws, h } = await manager();
-  await auth.api
+  const r = await auth.api
     .removeMember({
       headers: h,
       body: { memberIdOrEmail: memberId, organizationId: ws.organizationId },
     })
-    .catch(() => {});
+    .catch(() => null);
   await syncSeats(ws);
+  if (r)
+    await audit({
+      action: "member.removed",
+      target: { type: "member", id: r.member.id, label: r.member.user.email },
+      changes: { role: { from: r.member.role } },
+    });
   revalidatePath("/admin/team");
 }
 
 export async function setRole(memberId: string, role: "member" | "admin") {
   const { ws, h } = await manager();
-  await auth.api
+  const m = await auth.api
     .updateMemberRole({ headers: h, body: { memberId, role, organizationId: ws.organizationId } })
-    .catch(() => {});
+    .catch(() => null);
+  if (m)
+    await audit({
+      action: "member.role_changed",
+      target: { type: "member", id: memberId, label: m.user.email },
+      changes: { role: { to: role } },
+    });
   revalidatePath("/admin/team");
 }

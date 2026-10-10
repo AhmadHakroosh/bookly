@@ -1,10 +1,10 @@
 "use server";
 
-import { publicBaseUrl } from "@/server/urls";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { CONTACT_STAGES, type ContactStage } from "@bookly/db/schema";
 import { brandForPreview } from "@/emails/brand";
+import { audit, diff } from "@/server/audit";
 import { paymentsReady } from "@/server/payments";
 import {
   getContact,
@@ -18,6 +18,7 @@ import { fillTemplate, type OutreachKind } from "@/server/outreach-text";
 import { formatPrice } from "@/server/payments";
 import { getProfileByUser } from "@/server/scheduling";
 import { requireStaff } from "@/server/session";
+import { publicBaseUrl } from "@/server/urls";
 import { getCurrentWorkspace } from "@/server/workspace";
 
 async function ctx() {
@@ -25,6 +26,12 @@ async function ctx() {
   if (!ws) throw new Error("No workspace");
   return { session, ws };
 }
+
+const contactTarget = (c: { id: string; name: string | null; email: string }) => ({
+  type: "contact",
+  id: c.id,
+  label: c.name || c.email,
+});
 
 const detailsSchema = z.object({
   id: z.string().min(1),
@@ -37,6 +44,8 @@ const detailsSchema = z.object({
 });
 
 export type ContactState = { ok?: boolean; error?: string };
+/** Send actions: nothing on success, or the reason the email could not go out. */
+export type SendResult = { error?: string } | void;
 
 export async function saveContact(_prev: ContactState, formData: FormData): Promise<ContactState> {
   const { ws } = await ctx();
@@ -44,9 +53,10 @@ export async function saveContact(_prev: ContactState, formData: FormData): Prom
   if (!parsed.success)
     return { error: parsed.error.issues[0]?.message ?? "Please check the form." };
   const d = parsed.data;
-  if (!(await getContact(ws.id, d.id))) return { error: "Contact not found" };
+  const c = await getContact(ws.id, d.id);
+  if (!c) return { error: "Contact not found" };
   const next = d.nextFollowUpAt ? new Date(d.nextFollowUpAt) : null;
-  await updateContact(ws.id, d.id, {
+  const patch = {
     name: d.name,
     company: d.company || null,
     phone: d.phone || null,
@@ -60,15 +70,18 @@ export async function saveContact(_prev: ContactState, formData: FormData): Prom
     ].slice(0, 20),
     notes: d.notes || null,
     nextFollowUpAt: next && !Number.isNaN(next.getTime()) ? next : null,
+  };
+  await updateContact(ws.id, d.id, patch);
+  await audit({
+    action: "contact.updated",
+    target: contactTarget(c),
+    changes: diff(c, patch, ["name", "company", "phone", "tags", "notes", "nextFollowUpAt"]),
   });
   revalidatePath(`/admin/contacts/${d.id}`);
   return { ok: true };
 }
 
-export async function sendProposal(
-  id: string,
-  formData: FormData,
-): Promise<{ error?: string } | void> {
+export async function sendProposal(id: string, formData: FormData): Promise<SendResult> {
   const { ws, session } = await ctx();
   const c = await getContact(ws.id, id);
   if (!c) return;
@@ -93,14 +106,16 @@ export async function sendProposal(
     if (e instanceof OptedOutError) return { error: e.message };
     throw e;
   }
+  await audit({
+    action: "email.proposal_sent",
+    target: contactTarget(c),
+    changes: { subject: { to: t.subject } },
+  });
   revalidatePath(`/admin/contacts/${id}`);
 }
 
 /** The follow-up nudge: same flow as a proposal, defaulting to a week until the next check-in. */
-export async function sendFollowUp(
-  id: string,
-  formData: FormData,
-): Promise<{ error?: string } | void> {
+export async function sendFollowUp(id: string, formData: FormData): Promise<SendResult> {
   const { ws, session } = await ctx();
   const c = await getContact(ws.id, id);
   if (!c) return;
@@ -126,14 +141,16 @@ export async function sendFollowUp(
     if (e instanceof OptedOutError) return { error: e.message };
     throw e;
   }
+  await audit({
+    action: "email.follow_up_sent",
+    target: contactTarget(c),
+    changes: { subject: { to: t.subject } },
+  });
   revalidatePath(`/admin/contacts/${id}`);
   revalidatePath("/admin");
 }
 
-export async function sendPaymentRequest(
-  id: string,
-  formData: FormData,
-): Promise<{ error?: string } | void> {
+export async function sendPaymentRequest(id: string, formData: FormData): Promise<SendResult> {
   const { ws, session } = await ctx();
   const c = await getContact(ws.id, id);
   if (!c) return;
@@ -175,6 +192,11 @@ export async function sendPaymentRequest(
     if (e instanceof OptedOutError) return { error: e.message };
     throw e;
   }
+  await audit({
+    action: "email.payment_request_sent",
+    target: contactTarget(c),
+    changes: { subject: { to: t.subject }, amount: { to: formatPrice(amountCents, currency) } },
+  });
   revalidatePath(`/admin/contacts/${id}`);
 }
 
@@ -182,7 +204,14 @@ export async function changeStage(id: string, formData: FormData) {
   const { ws, session } = await ctx();
   const stage = String(formData.get("stage") ?? "");
   if (!(CONTACT_STAGES as readonly string[]).includes(stage)) return;
+  const c = await getContact(ws.id, id);
+  if (!c || c.stage === stage) return;
   await setStage(ws.id, id, stage as ContactStage, session.user.id);
+  await audit({
+    action: "contact.stage_changed",
+    target: contactTarget(c),
+    changes: { stage: { from: c.stage, to: stage } },
+  });
   revalidatePath(`/admin/contacts/${id}`);
 }
 
@@ -191,10 +220,15 @@ export async function addNote(id: string, formData: FormData) {
   const text = String(formData.get("text") ?? "")
     .trim()
     .slice(0, 2000);
-  if (!text || !(await getContact(ws.id, id))) return;
+  if (!text) return;
+  const c = await getContact(ws.id, id);
+  if (!c) return;
   await logContactEvent(ws.id, id, "note", text);
+  await audit({ action: "contact.note_added", target: contactTarget(c) });
   revalidatePath(`/admin/contacts/${id}`);
 }
+
+export type PreviewResult = OutreachPreview | { error: string };
 
 export type OutreachPreview = {
   to: string;
@@ -212,7 +246,8 @@ export async function previewOutreach(
   id: string,
   kind: OutreachKind,
   formData: FormData,
-): Promise<OutreachPreview | { error: string }> {
+): Promise<PreviewResult> {
+  // audit: read-only — renders the email for review; nothing is sent or stored.
   const { ws, session } = await ctx();
   const c = await getContact(ws.id, id);
   if (!c) return { error: "Contact not found." };
@@ -259,7 +294,14 @@ export async function previewOutreach(
 /** Host-side opt-out (a contact asked in person) or opt-in again (they asked for emails back). */
 export async function setContactEmailOptOut(id: string, optOut: boolean) {
   const { ws } = await ctx();
+  const c = await getContact(ws.id, id);
+  if (!c) return;
   await setEmailOptOut(ws.id, id, optOut, "host");
+  await audit({
+    action: "contact.email_opt_out_set",
+    target: contactTarget(c),
+    changes: { emailOptOut: { from: c.emailOptOut, to: optOut } },
+  });
   revalidatePath(`/admin/contacts/${id}`);
   revalidatePath("/admin");
 }

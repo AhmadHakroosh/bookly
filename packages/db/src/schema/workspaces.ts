@@ -28,6 +28,8 @@ export type WorkspaceSettings = {
   daily?: { joinPings?: boolean; webhookId?: string; hmac?: string; url?: string } | null;
   /** Emails or `@domains` whose bookings are refused. */
   blockedEmails?: string[];
+  /** Settings → General: the workspace does not want features that are still in beta. */
+  betaOptOut?: boolean;
   /** CRM sync: contacts and meeting notes are pushed here (API key is encrypted at rest). */
   crm?: { provider: "hubspot" | "pipedrive"; apiKey: string; companyDomain?: string } | null;
   /** Opt-in: include coarse usage counts in the daily update check (self-hosted only). */

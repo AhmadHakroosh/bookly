@@ -1,4 +1,4 @@
-import { InboxSkeleton } from "@/components/skeletons/pages";
+import { HomeSkeleton } from "@/components/skeletons/pages";
 import Link from "next/link";
 import { ExternalLink } from "@/components/links";
 import { CheckIcon, SparklesIcon } from "lucide-react";
@@ -24,8 +24,8 @@ import { listWaitlist } from "@/server/waitlist";
 import { getCurrentWorkspace } from "@/server/workspace";
 import { hostConfirm, replyInstead, snoozeContact } from "./scheduling-actions";
 
-/** The Meeting Inbox: what needs the host's attention today, with one-click actions. */
-async function AdminInbox() {
+/** Home: what needs the host's attention today, with one-click actions. */
+async function AdminHome() {
   const [{ session, role }, workspace] = await Promise.all([requireStaff(), getCurrentWorkspace()]);
   if (!workspace) return null;
   const mine = role !== "owner" && role !== "admin";
@@ -88,7 +88,7 @@ async function AdminInbox() {
     <div className="space-y-8">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Inbox</h1>
+          <h1 className="text-2xl font-semibold tracking-tight">Home</h1>
           <p className="text-sm text-muted-foreground">
             {fmtDate(now, tz)} · {todays.length} meeting{todays.length === 1 ? "" : "s"} today ·{" "}
             {pending.length} request{pending.length === 1 ? "" : "s"} · {overdue.length} overdue
@@ -373,10 +373,10 @@ async function AdminInbox() {
   );
 }
 
-export default function AdminInboxBoundary() {
+export default function AdminHomeBoundary() {
   return (
-    <Suspense fallback={<InboxSkeleton />}>
-      <AdminInbox />
+    <Suspense fallback={<HomeSkeleton />}>
+      <AdminHome />
     </Suspense>
   );
 }

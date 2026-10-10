@@ -33,7 +33,7 @@ const SERVER_KIND = {
 /**
  * Proposal, payment-request and follow-up emails in two steps: edit the prefilled template,
  * preview the exact email the contact will receive, then send. `initial` opens a composer at
- * once (the inbox links here with the follow-up ready to go).
+ * once (Home links here with the follow-up ready to go).
  */
 export function Outreach({
   contactId,

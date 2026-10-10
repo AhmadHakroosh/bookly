@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { bookFirstSlot, STORAGE } from "./helpers";
+import { bookFirstSlot, DEMO, STORAGE } from "./helpers";
 
 test.describe("admin", () => {
   test("wrong password is refused", async ({ page }) => {
@@ -10,7 +10,7 @@ test.describe("admin", () => {
     await expect(page.getByRole("heading", { name: "Sign in" })).toBeVisible();
   });
 
-  test("inbox, bookings, brief, capture, contact", async ({ browser, page }) => {
+  test("home, bookings, brief, capture, contact", async ({ browser, page }) => {
     await bookFirstSlot(page, { name: "E2E Client", email: "e2e-client@example.com" });
     const admin = await (await browser.newContext({ storageState: STORAGE })).newPage();
     await admin.goto("/admin/bookings");
@@ -76,6 +76,23 @@ test.describe("admin", () => {
     }
     await page.goto("/admin/api");
     await expect(page).toHaveURL(/\/admin\/settings\/integrations$/);
+  });
+
+  test("the activity log records the sign-in and the Home label is Home", async ({ browser }) => {
+    const page = await (await browser.newContext({ storageState: STORAGE })).newPage();
+    await page.goto("/admin");
+    await expect(
+      page.getByRole("navigation", { name: "Admin" }).getByRole("link", { name: "Home" }),
+    ).toBeVisible();
+    await expect(page.getByRole("link", { name: "Inbox" })).toHaveCount(0);
+    await page.goto("/admin/settings/data/activity");
+    await expect(page.getByRole("heading", { name: "Activity", level: 2 })).toBeVisible({
+      timeout: 15_000,
+    });
+    // auth.setup.ts signed the demo user in, which is the first entry every install has.
+    const rows = page.getByRole("list").filter({ hasText: "Session signed in" });
+    await expect(rows.getByText("Session signed in").first()).toBeVisible();
+    await expect(rows.getByText(DEMO.email).first()).toBeVisible();
   });
 });
 

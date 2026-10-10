@@ -2,6 +2,7 @@ import { z } from "zod";
 import { apiContext, apiError, json, options, readJson, serializeBooking } from "@/server/api";
 import { publicBaseUrl } from "@/server/urls";
 import { isValidTimezone } from "@/lib/time";
+import { API_KEY_ACTOR, SYSTEM_ACTOR, audit } from "@/server/audit";
 import { BookingError, createBooking } from "@/server/booking-flow";
 import { getEventType, getProfileByUsername, listBookings } from "@/server/scheduling";
 
@@ -85,6 +86,13 @@ export async function POST(req: Request) {
       guests: d.guests ?? [],
       location: d.location ?? null,
       locationValue: d.address ?? null,
+    });
+    await audit({
+      action: "booking.created",
+      target: { type: "booking", id: b.id, label: `${et.title} · ${d.name}` },
+      actor: ctx.key ? API_KEY_ACTOR(ctx.key) : SYSTEM_ACTOR("api"),
+      workspace: ctx.workspace.id,
+      changes: { startAt: { to: b.startAt }, status: { to: b.status } },
     });
     return json(serializeBooking(b, await publicBaseUrl(ctx.workspace), { eventType: et }), {
       status: 201,

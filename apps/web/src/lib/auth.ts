@@ -7,6 +7,7 @@ import { loadEnv } from "@bookly/config";
 import { schema } from "@bookly/db";
 import { sendEmail } from "@bookly/email";
 import { db } from "./db";
+import { recordSignIn } from "@/server/audit-signin";
 import { authStorage, getLimiter } from "@/server/ratelimit";
 import { CONSENT_COOKIE, consentCookieOptions } from "@/server/consent";
 import { configuredSocialProviders, TRUSTED_SOCIAL_PROVIDERS } from "@/lib/social-providers";
@@ -151,6 +152,13 @@ export const auth = betterAuth({
     },
   },
   databaseHooks: {
+    session: {
+      create: {
+        after: async (session) => {
+          await recordSignIn(session.userId);
+        },
+      },
+    },
     user: {
       create: {
         before: async (user, ctx) => {

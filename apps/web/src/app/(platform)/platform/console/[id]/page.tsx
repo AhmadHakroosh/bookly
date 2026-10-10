@@ -22,6 +22,8 @@ import {
 import { Dropdown } from "@/components/dropdown";
 import { DatePicker } from "@/components/date-picker";
 import { NumberField } from "@/components/number-field";
+import { Input } from "@/components/ui/input";
+import { FlagsSection } from "./flags-section";
 
 export const metadata = { title: "Workspace", robots: { index: false } };
 
@@ -167,11 +169,7 @@ async function WorkspacePage({ params }: PageProps<"/platform/console/[id]">) {
               </form>
             ) : (
               <form action={suspendWorkspace.bind(null, ws.id)} className="flex flex-wrap gap-1">
-                <input
-                  name="reason"
-                  placeholder="Reason"
-                  className="h-8 w-40 rounded-md border bg-background px-2 text-sm"
-                />
+                <Input name="reason" placeholder="Reason" className="w-40" aria-label="Reason" />
                 <SubmitButton variant="ghost">Suspend</SubmitButton>
               </form>
             )}
@@ -193,11 +191,12 @@ async function WorkspacePage({ params }: PageProps<"/platform/console/[id]">) {
               options={Object.values(PLANS).map((p) => ({ value: p.id, label: p.name }))}
             />
             <DatePicker name="until" ariaLabel="Until" placeholder="No expiry" className="w-40" />
-            <input
+            <Input
               name="note"
               placeholder="Note (e.g. 3-month trial)"
               defaultValue={ws.planNote ?? ""}
-              className="h-8 w-52 rounded-lg border bg-background px-2 text-sm"
+              className="w-52"
+              aria-label="Note"
             />
             <SubmitButton>Set plan</SubmitButton>
           </form>
@@ -253,6 +252,8 @@ async function WorkspacePage({ params }: PageProps<"/platform/console/[id]">) {
           </ul>
         </section>
       </div>
+
+      <FlagsSection ws={ws} />
 
       <section className="rounded-xl border p-4">
         <h3 className="text-base font-semibold tracking-tight">

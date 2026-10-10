@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { eq, schema } from "@bookly/db";
 import { db } from "@/lib/db";
+import { GUEST_ACTOR, audit } from "@/server/audit";
 import { logContactEvent, upsertContact } from "@/server/contacts";
 import { throttlePublicForm } from "@/server/request";
 import { getRoutingForm } from "@/server/routing";
@@ -45,6 +46,13 @@ export async function submitRouting(
   const contact = await upsertContact(ws.id, { email: d.email, name: d.name });
   await logContactEvent(ws.id, contact.id, "form_submitted", `Filled the "${form.name}" form`, {
     data: { form: form.slug, answers: labelled },
+  });
+  await audit({
+    action: "routing.submitted",
+    target: { type: "routing_form", id: form.id, label: form.name },
+    actor: GUEST_ACTOR(d.email, d.name),
+    workspace: ws.id,
+    changes: { contactId: { to: contact.id } },
   });
   const dest = routeAnswers(form, answers);
   if (!dest) return { error: "Sorry, we could not find a matching option. Please email us." };
