@@ -4,6 +4,8 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 ## [Unreleased]
 
+## [0.11.3] - 2026-10-10
+
 ### Changed
 
 - The event type editor is grouped by topic: Basics, Time, Where, People, Booking rules, Payment, and Reminders & follow-up, each with a short intro. A jump bar sticks under the header and highlights the section in view, and the Save and Delete bar sticks to the bottom, so a long form reads as a few short ones
@@ -374,7 +376,8 @@ First public release: the self-hostable scheduling platform with contacts, brief
 
 - The unused storage layer (`packages/storage`, `STORAGE_*` and `S3_*` variables, the MinIO service in Compose): nothing in Bookly uploads files; profile photos and logos are URLs
 
-[Unreleased]: https://github.com/AhmadHakroosh/bookly/compare/v0.11.2...HEAD
+[Unreleased]: https://github.com/AhmadHakroosh/bookly/compare/v0.11.3...HEAD
+[0.11.3]: https://github.com/AhmadHakroosh/bookly/compare/v0.11.2...v0.11.3
 [0.11.2]: https://github.com/AhmadHakroosh/bookly/compare/v0.11.1...v0.11.2
 [0.11.1]: https://github.com/AhmadHakroosh/bookly/compare/v0.11.0...v0.11.1
 [0.11.0]: https://github.com/AhmadHakroosh/bookly/compare/v0.10.1...v0.11.0
