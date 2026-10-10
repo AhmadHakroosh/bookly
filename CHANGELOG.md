@@ -4,6 +4,8 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 ## [Unreleased]
 
+## [0.12.0] - 2026-10-10
+
 ### Added
 
 - **Activity log.** Every change in a workspace is recorded with who did it (member, guest, API key, integration or Bookly), what changed field by field, the time, request id and client address, including sign-ins. Owners and admins read it under Settings → Data → Activity with filters and a "Show earlier" button (keyset-paginated, so a long history costs nothing extra); Pro and Team download it as CSV. Retention follows the plan: 90 days on Free, a year on Pro, two years on Team, unlimited self-hosted. A test enumerates every server action and fails when one neither audits nor is marked read-only
@@ -389,7 +391,8 @@ First public release: the self-hostable scheduling platform with contacts, brief
 
 - The unused storage layer (`packages/storage`, `STORAGE_*` and `S3_*` variables, the MinIO service in Compose): nothing in Bookly uploads files; profile photos and logos are URLs
 
-[Unreleased]: https://github.com/AhmadHakroosh/bookly/compare/v0.11.3...HEAD
+[Unreleased]: https://github.com/AhmadHakroosh/bookly/compare/v0.12.0...HEAD
+[0.12.0]: https://github.com/AhmadHakroosh/bookly/compare/v0.11.3...v0.12.0
 [0.11.3]: https://github.com/AhmadHakroosh/bookly/compare/v0.11.2...v0.11.3
 [0.11.2]: https://github.com/AhmadHakroosh/bookly/compare/v0.11.1...v0.11.2
 [0.11.1]: https://github.com/AhmadHakroosh/bookly/compare/v0.11.0...v0.11.1
