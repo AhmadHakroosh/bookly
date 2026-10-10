@@ -6,12 +6,14 @@ import { db } from "@/lib/db";
 import { normalizeHost, verifyDomain } from "@/server/domains";
 import { invalidatePrimaryDomainCache } from "@/server/urls";
 import { assertWithinLimit, LimitError } from "@/server/limits";
-import { requireStaff } from "@/server/session";
+import { assertManager } from "@/server/session";
 import { getCurrentWorkspace } from "@/server/workspace";
 import { invalidateHostCache } from "@/server/tenancy";
 
+/** Domains serve the whole workspace: owner/admin only. */
 async function ctx() {
-  const [, workspace] = await Promise.all([requireStaff(), getCurrentWorkspace()]);
+  const [{ error }, workspace] = await Promise.all([assertManager(), getCurrentWorkspace()]);
+  if (error) throw new Error(error);
   if (!workspace) throw new Error("No workspace");
   return workspace;
 }

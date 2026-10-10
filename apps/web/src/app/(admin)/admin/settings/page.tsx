@@ -1,79 +1,72 @@
 import { SettingsSkeleton } from "@/components/skeletons/pages";
-import { hasFeature } from "@/server/limits";
-import { paymentsConfigured } from "@/server/payments";
-import { isCloud } from "@/server/platform";
-import { timezoneList } from "@/lib/time";
-import { getCurrentWorkspace } from "@/server/workspace";
 import { Suspense } from "react";
-import { requireStaff } from "@/server/session";
-import { DangerZone } from "./danger-zone";
-import { PaymentsCard } from "./payments-card";
-import { SettingsForm } from "./settings-form";
+import { Badge } from "@/components/ui/badge";
+import { timezoneList } from "@/lib/time";
+import { dailyConfigured } from "@/server/integrations";
+import { isCloud } from "@/server/platform";
+import { getCurrentWorkspace } from "@/server/workspace";
+import { GeneralForm } from "./general-form";
+import { JoinToggle } from "./join-toggle";
 
 export const metadata = { title: "Settings" };
 
-async function SettingsPage() {
+async function GeneralPage() {
   const workspace = await getCurrentWorkspace();
   if (!workspace) return null;
-  const { role } = await requireStaff();
-  const payments = isCloud() && paymentsConfigured();
+  const joinEnabled = workspace.settings.daily?.joinPings !== false;
   return (
-    <div className="max-w-xl space-y-6">
+    <div className="max-w-xl space-y-8">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Settings</h1>
+        <h2 className="text-xl font-semibold tracking-tight">General</h2>
         <p className="text-sm text-muted-foreground">
           The workspace name appears in the admin header and in email footers. The default timezone
           is used for new booking pages and schedules.
         </p>
       </div>
-      <SettingsForm
+      <GeneralForm
         workspace={{
           name: workspace.name,
           description: workspace.description ?? "",
           locale: workspace.locale,
           timezone: workspace.timezone,
           blocklist: ((workspace.settings.blockedEmails as string[] | undefined) ?? []).join("\n"),
-          crmProvider: workspace.settings.crm?.provider ?? "",
-          crmConnected: !!workspace.settings.crm?.apiKey,
-          crmCompanyDomain: workspace.settings.crm?.companyDomain ?? "",
-          proposalSubject: workspace.settings.templates?.proposal?.subject ?? "",
-          proposalBody: workspace.settings.templates?.proposal?.body ?? "",
-          paymentSubject: workspace.settings.templates?.paymentRequest?.subject ?? "",
-          paymentBody: workspace.settings.templates?.paymentRequest?.body ?? "",
-          checkInSubject: workspace.settings.templates?.checkIn?.subject ?? "",
-          checkInBody: workspace.settings.templates?.checkIn?.body ?? "",
           postalAddress: workspace.settings.postalAddress ?? "",
-          confirmationSubject: workspace.settings.templates?.confirmation?.subject ?? "",
-          confirmationBody: workspace.settings.templates?.confirmation?.body ?? "",
-          reminderSubject: workspace.settings.templates?.reminder?.subject ?? "",
-          reminderBody: workspace.settings.templates?.reminder?.body ?? "",
-          cancellationSubject: workspace.settings.templates?.cancellation?.subject ?? "",
-          cancellationBody: workspace.settings.templates?.cancellation?.body ?? "",
           telemetryStats: !!workspace.settings.telemetryStats,
-          logoUrl: workspace.settings.branding?.logoUrl ?? "",
-          accent: workspace.settings.branding?.accent ?? "",
         }}
         selfHosted={!isCloud()}
-        brandingAllowed={hasFeature(workspace, "removeBranding")}
         zones={timezoneList()}
       />
-      {payments && <PaymentsCard ws={workspace} canManage={role === "owner" || role === "admin"} />}
-      <div className="border-t pt-6">
-        <h2 className="mb-1 text-xl font-semibold tracking-tight">Your data</h2>
-        <p className="mb-4 text-sm text-muted-foreground">
-          Take a copy of everything, or delete the workspace for good.
-        </p>
-        <DangerZone slug={workspace.slug} owner={role === "owner"} cloud={isCloud()} />
-      </div>
+      <section className="space-y-3 rounded-lg border p-4">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <h3 className="flex items-center gap-2 text-base font-semibold tracking-tight">
+              Attendee joined
+              <Badge variant={joinEnabled ? "default" : "secondary"}>
+                {joinEnabled ? "On" : "Off"}
+              </Badge>
+            </h3>
+            <p className="text-sm text-muted-foreground">
+              When the first attendee enters a Bookly video room, hosts who asked for it under
+              Notifications get a ping. Turning this off mutes it for the whole workspace.
+            </p>
+          </div>
+          {dailyConfigured() && <JoinToggle enabled={joinEnabled} />}
+        </div>
+        {!dailyConfigured() && (
+          <p className="text-xs text-muted-foreground">
+            Bookly video is not configured on this server.
+          </p>
+        )}
+      </section>
     </div>
   );
 }
 
 /** Suspense boundary for Cache Components: the page reads request data and streams in. */
-export default function SettingsPageBoundary() {
+export default function GeneralPageBoundary() {
   return (
     <Suspense fallback={<SettingsSkeleton />}>
-      <SettingsPage />
+      <GeneralPage />
     </Suspense>
   );
 }

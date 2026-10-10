@@ -10,8 +10,8 @@ Bookly keeps a **contact** for every person who books, joins a waitlist or fills
 
 ## Executing the outcome
 
-- **Proposal / Payment request / Follow-up** buttons on a contact page send a templated email (edit the templates under `Admin → Settings`; placeholders `{name} {company} {host} {amount} {payLink} {bookingUrl}`). A payment request with Stripe configured includes a Checkout link for the amount. All three set the next follow-up date so the inbox nudges you again; the inbox's "Follow up" link opens the contact with the follow-up composer ready.
-- **CRM sync** (`Admin → Settings → CRM sync`): with a HubSpot private-app token or a Pipedrive API token, contacts and stage changes are mirrored to the CRM and meeting summaries and sent proposals become notes on the CRM contact. Sync is best-effort and never blocks a booking.
+- **Proposal / Payment request / Follow-up** buttons on a contact page send a templated email (edit the templates under `Admin → Settings → Emails`; placeholders `{name} {company} {host} {amount} {payLink} {bookingUrl}`). A payment request with Stripe configured includes a Checkout link for the amount. All three set the next follow-up date so the inbox nudges you again; the inbox's "Follow up" link opens the contact with the follow-up composer ready.
+- **CRM sync** (`Admin → Settings → Integrations → CRM sync`): with a HubSpot private-app token or a Pipedrive API token, contacts and stage changes are mirrored to the CRM and meeting summaries and sent proposals become notes on the CRM contact. Sync is best-effort and never blocks a booking.
 - **Webhooks and API**: `contact.created`, `contact.stage_changed`, `meeting.captured` and `task.created` events, plus `GET/POST /api/v1/contacts` and `GET /api/v1/tasks`, let any other tool react to what happens in Bookly.
 
 ## Pre-meeting briefing

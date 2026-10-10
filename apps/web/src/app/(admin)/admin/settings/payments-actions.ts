@@ -42,13 +42,13 @@ export async function setInvoicesAction(on: boolean) {
     })
     .where(eq(schema.workspaces.id, ws.id));
   refreshWorkspace(ws.id);
-  revalidatePath("/admin/settings");
+  revalidatePath("/admin/settings/payments");
 }
 
 export async function refreshStripeAction() {
   const { ws } = await owner();
   await refreshConnectStatus(ws);
-  revalidatePath("/admin/settings");
+  revalidatePath("/admin/settings/payments");
 }
 
 export async function openStripeDashboardAction() {
@@ -60,5 +60,5 @@ export async function openStripeDashboardAction() {
 export async function disconnectStripeAction() {
   const { ws } = await owner();
   await disconnectStripe(ws);
-  revalidatePath("/admin/settings");
+  revalidatePath("/admin/settings/payments");
 }

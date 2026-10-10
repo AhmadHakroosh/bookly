@@ -12,21 +12,21 @@ import {
   listProfiles,
   listSchedules,
 } from "@/server/scheduling";
-import { requireStaff } from "@/server/session";
+import { isManager, requireStaff } from "@/server/session";
 import { getCurrentWorkspace } from "@/server/workspace";
 import { EventTypeForm } from "./event-type-form";
 
 export const metadata = { title: "Edit event type" };
 
 async function EditEventTypePage({ params }: PageProps<"/admin/event-types/[id]">) {
-  const [{ id }, { session }, ws] = await Promise.all([
+  const [{ id }, { session, role }, ws] = await Promise.all([
     params,
     requireStaff(),
     getCurrentWorkspace(),
   ]);
   if (!ws) return null;
   const et = await getEventTypeById(ws.id, id);
-  if (!et) notFound();
+  if (!et || (!isManager(role) && et.userId !== session.user.id)) notFound();
   const [schedules, profile, avail, profiles] = await Promise.all([
     listSchedules(ws.id, et.userId),
     getProfileByUser(ws.id, session.user.id),

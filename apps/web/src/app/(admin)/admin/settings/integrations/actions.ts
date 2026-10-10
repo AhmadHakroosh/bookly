@@ -6,12 +6,14 @@ import { and, eq, schema } from "@bookly/db";
 import { API_SCOPES, WEBHOOK_EVENTS, type ApiScope, type WebhookEvent } from "@bookly/db/schema";
 import { db } from "@/lib/db";
 import { generateApiKey } from "@/server/api";
-import { requireStaff } from "@/server/session";
+import { assertManager } from "@/server/session";
 import { getCurrentWorkspace } from "@/server/workspace";
 import { attemptDelivery, generateWebhookSecret } from "@/server/webhooks";
 
+/** Keys and webhooks act for the whole workspace: owner/admin only. */
 async function ctx() {
-  const [, workspace] = await Promise.all([requireStaff(), getCurrentWorkspace()]);
+  const [{ error }, workspace] = await Promise.all([assertManager(), getCurrentWorkspace()]);
+  if (error) throw new Error(error);
   if (!workspace) throw new Error("No workspace");
   return workspace;
 }
@@ -32,7 +34,7 @@ export async function createApiKey(_prev: KeyState, formData: FormData): Promise
   await db()
     .insert(schema.apiKeys)
     .values({ workspaceId: workspace.id, name, prefix, keyHash: hash, scopes });
-  revalidatePath("/admin/api");
+  revalidatePath("/admin/settings/integrations");
   return { created: { name, raw } };
 }
 
@@ -42,7 +44,7 @@ export async function revokeApiKey(id: string) {
     .update(schema.apiKeys)
     .set({ revokedAt: new Date() })
     .where(and(eq(schema.apiKeys.id, id), eq(schema.apiKeys.workspaceId, workspace.id)));
-  revalidatePath("/admin/api");
+  revalidatePath("/admin/settings/integrations");
 }
 
 export type HookState = { created?: { url: string; secret: string }; error?: string };
@@ -69,7 +71,7 @@ export async function createWebhook(_prev: HookState, formData: FormData): Promi
           .trim()
           .slice(0, 120) || null,
     });
-  revalidatePath("/admin/api");
+  revalidatePath("/admin/settings/integrations");
   return { created: { url: url.data, secret } };
 }
 
@@ -79,7 +81,7 @@ export async function toggleWebhook(id: string, active: boolean) {
     .update(schema.webhooks)
     .set({ active: active ? 1 : 0 })
     .where(and(eq(schema.webhooks.id, id), eq(schema.webhooks.workspaceId, workspace.id)));
-  revalidatePath("/admin/api");
+  revalidatePath("/admin/settings/integrations");
 }
 
 export async function deleteWebhook(id: string) {
@@ -87,7 +89,7 @@ export async function deleteWebhook(id: string) {
   await db()
     .delete(schema.webhooks)
     .where(and(eq(schema.webhooks.id, id), eq(schema.webhooks.workspaceId, workspace.id)));
-  revalidatePath("/admin/api");
+  revalidatePath("/admin/settings/integrations");
 }
 
 export async function retryDelivery(id: string) {
@@ -98,7 +100,7 @@ export async function retryDelivery(id: string) {
     .innerJoin(schema.webhooks, eq(schema.webhooks.id, schema.webhookDeliveries.webhookId))
     .where(and(eq(schema.webhookDeliveries.id, id), eq(schema.webhooks.workspaceId, workspace.id)));
   if (d[0]) await attemptDelivery(d[0].id);
-  revalidatePath("/admin/api");
+  revalidatePath("/admin/settings/integrations");
 }
 
 /** Sends a signed `ping` delivery so the receiver can be verified. */
@@ -117,5 +119,5 @@ export async function pingWebhook(id: string) {
     })
     .returning();
   await attemptDelivery(d!.id);
-  revalidatePath("/admin/api");
+  revalidatePath("/admin/settings/integrations");
 }

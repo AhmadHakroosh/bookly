@@ -4,6 +4,16 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 ## [Unreleased]
 
+### Changed
+
+- The admin is regrouped by who a page is for. **Account** (the menu under your email in the header, `/admin/account`) holds sign-in methods, passkeys, password and account deletion, which used to sit on the Booking page. The sidebar now reads Scheduling (your booking page, event types, availability, bookings, contacts, routing forms), Personal (your calendars, conferencing and notifications) and Workspace (settings, team, domains, billing), and only owners and admins see Workspace
+- Settings is one page per concern with a tab strip: General (name, locale, timezone, block list, postal address, telemetry, and the workspace-wide "attendee joined" switch that used to sit on Notifications), Branding, Emails (guest emails plus the proposal, payment-request and follow-up templates), Integrations (CRM sync, API keys and webhooks, which moved from `/admin/api`; the old address redirects), Payments (cloud) and Data (export, delete). Each tab saves on its own, so saving one never rewrites another
+
+### Fixed
+
+- Workspace settings, API keys, webhooks and domains could be changed by any member; they now need an owner or admin, like Team and Payments already did. A member sees and edits only their own event types; owners and admins keep the whole list
+- Single-tenant installs resolve "the" workspace by creation date; before, a database holding several workspaces (a dev or test database) could switch between them after any update to the workspace row
+
 ## [0.10.1] - 2026-10-10
 
 ### Fixed

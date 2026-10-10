@@ -111,24 +111,3 @@ export async function testSlackAction(): Promise<PrefsState> {
   const r = await testSlackWebhook(url, session.user.id);
   return r.ok ? { ok: true } : { error: r.error };
 }
-
-/** Turns the "attendee joined" ping on for the workspace (owner/admin only). */
-export async function enableJoinNotifications(): Promise<PrefsState> {
-  return setJoinPings(true);
-}
-
-export async function disableJoinNotifications(): Promise<PrefsState> {
-  return setJoinPings(false);
-}
-
-async function setJoinPings(on: boolean): Promise<PrefsState> {
-  const [{ role }, ws] = await Promise.all([requireStaff(), getCurrentWorkspace()]);
-  if (!ws) return { error: "No workspace" };
-  if (role !== "owner" && role !== "admin") return { error: "Only owners can change this." };
-  await db()
-    .update(schema.workspaces)
-    .set({ settings: { ...ws.settings, daily: { ...(ws.settings.daily ?? {}), joinPings: on } } })
-    .where(eq(schema.workspaces.id, ws.id));
-  revalidatePath("/admin", "layout");
-  return { ok: true };
-}

@@ -83,6 +83,12 @@ const nextConfig: NextConfig = {
       { protocol: "http", hostname: "localhost" },
     ],
   },
+  async redirects() {
+    return [
+      // API keys and webhooks moved under Settings → Integrations (0.11.0).
+      { source: "/admin/api", destination: "/admin/settings/integrations", permanent: true },
+    ];
+  },
   async headers() {
     return [
       { source: "/(.*)", headers: securityHeaders },

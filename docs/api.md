@@ -14,7 +14,7 @@ Responses are `{ "data": …, "meta": … }` or `{ "error": { "code", "message" 
 | `GET /event-types/{username}/{slug}`                     | One event type                                                                                                |
 | `GET /availability?username=&event=&timezone=&from=&to=` | Free start times grouped by day in `timezone`; `from`/`to` are `YYYY-MM-DD`, at most 62 days                  |
 
-**Keyed (`Authorization: Bearer bk_…`, 600 requests/min):** create keys with scopes under **Admin → API & webhooks**.
+**Keyed (`Authorization: Bearer bk_…`, 600 requests/min):** create keys with scopes under **Admin → Settings → Integrations**.
 
 | Endpoint                                                                                                                     | Scope                                                                                                                                                                                                                                                                                                                                       |
 | ---------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -43,7 +43,7 @@ Typical assistant flow: `GET /event-types` → `GET /availability` → `POST /bo
 
 ## Webhooks
 
-Add an endpoint under **Admin → API & webhooks** and choose events: `booking.created`,
+Add an endpoint under **Admin → Settings → Integrations** and choose events: `booking.created`,
 `booking.confirmed` (host approved a pending booking), `booking.cancelled`, `booking.rescheduled`
 (sent together with `booking.created` for the replacement; carries `previousBookingId`). Use
 **Ping** to send a test delivery.

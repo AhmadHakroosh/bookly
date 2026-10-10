@@ -49,10 +49,28 @@ test.describe("admin", () => {
       ["/admin/contacts", "Contacts"],
       ["/admin/routing", "Routing forms"],
       ["/admin/settings", "Settings"],
+      ["/admin/account", "Account"],
     ] as const) {
       await page.goto(path);
       await expect(page.getByRole("heading", { name: heading, level: 1 })).toBeVisible();
     }
+  });
+
+  test("settings pages share the tab strip and the old API page redirects", async ({ browser }) => {
+    const page = await (await browser.newContext({ storageState: STORAGE })).newPage();
+    for (const [path, heading] of [
+      ["/admin/settings/branding", "Branding"],
+      ["/admin/settings/emails", "Emails"],
+      ["/admin/settings/integrations", "Integrations"],
+      ["/admin/settings/data", "Your data"],
+    ] as const) {
+      await page.goto(path);
+      await expect(page.getByRole("heading", { name: "Settings", level: 1 })).toBeVisible();
+      await expect(page.getByRole("heading", { name: heading, level: 2 })).toBeVisible();
+      await expect(page.getByRole("navigation", { name: "Settings" })).toBeVisible();
+    }
+    await page.goto("/admin/api");
+    await expect(page).toHaveURL(/\/admin\/settings\/integrations$/);
   });
 });
 

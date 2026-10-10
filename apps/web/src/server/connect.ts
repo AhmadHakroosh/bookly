@@ -122,7 +122,7 @@ export async function connectOnboardingUrl(ws: Workspace, email: string): Promis
   const link = await stripe.accountLinks.create({
     account,
     type: "account_onboarding",
-    refresh_url: tenantUrl(ws.slug, "/admin/settings?stripe=refresh"),
+    refresh_url: tenantUrl(ws.slug, "/admin/settings/payments?stripe=refresh"),
     // A route handler refreshes the account flags first (a page render may not revalidate).
     return_url: tenantUrl(ws.slug, "/api/admin/stripe/return"),
   });

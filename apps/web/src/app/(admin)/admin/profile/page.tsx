@@ -1,20 +1,11 @@
 import { ProfileSkeleton } from "@/components/skeletons/pages";
-import { headers } from "next/headers";
+import Link from "next/link";
 import { Suspense } from "react";
-import { loadEnv } from "@bookly/config";
-import { auth } from "@/lib/auth";
-import { configuredSocialProviders, socialErrorMessage } from "@/lib/social-providers";
 import { timezoneList } from "@/lib/time";
 import { getProfileByUser } from "@/server/scheduling";
 import { requireStaff } from "@/server/session";
 import { getCurrentWorkspace } from "@/server/workspace";
-import { ownerOf } from "@/server/data-rights";
-import { DeleteAccount } from "./delete-account";
-import { PasswordForm } from "./password-form";
 import { ProfileForm } from "./profile-form";
-import { SetPasswordForm } from "./set-password-form";
-import { SignInMethods } from "./sign-in-methods";
-import { Passkeys } from "./passkeys";
 
 export const metadata = { title: "Booking page" };
 
@@ -25,22 +16,7 @@ async function ProfilePage({ searchParams }: PageProps<"/admin/profile">) {
     searchParams,
   ]);
   if (!ws) return null;
-  const h = await headers();
-  const [p, accounts, passkeys] = await Promise.all([
-    getProfileByUser(ws.id, session.user.id),
-    auth.api.listUserAccounts({ headers: h }),
-    auth.api.listPasskeys({ headers: h }),
-  ]);
-  const hasPassword = accounts.some((a) => a.providerId === "credential");
-  const providers = configuredSocialProviders(loadEnv());
-  const linked = accounts
-    .filter((a) => a.providerId !== "credential")
-    .map((a) => ({ providerId: a.providerId, accountId: a.accountId }));
-  // Connecting a provider comes back here with ?error=<code>&provider=<id> when it fails.
-  const linkError =
-    typeof sp.error === "string" && typeof sp.provider === "string"
-      ? socialErrorMessage(sp.error, sp.provider, true)
-      : null;
+  const p = await getProfileByUser(ws.id, session.user.id);
   const suggested = session.user.name
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
@@ -66,34 +42,13 @@ async function ProfilePage({ searchParams }: PageProps<"/admin/profile">) {
         saved={!!p}
         zones={timezoneList()}
       />
-      {linkError && (
-        <p role="alert" className="rounded-md border border-destructive/40 p-3 text-sm">
-          {linkError}
-        </p>
-      )}
-      {(providers.length > 0 || linked.length > 0) && (
-        <SignInMethods
-          providers={providers}
-          linked={linked}
-          hasPassword={hasPassword}
-          passkeyCount={passkeys.length}
-          email={session.user.email}
-        />
-      )}
-      <Passkeys
-        passkeys={passkeys.map((k) => ({
-          id: k.id,
-          name: k.name ?? null,
-          createdAt: k.createdAt ? new Date(k.createdAt).toISOString() : null,
-        }))}
-        timezone={p?.timezone ?? ws.timezone}
-        supported
-      />
-      {hasPassword ? <PasswordForm /> : <SetPasswordForm />}
-      <DeleteAccount
-        email={session.user.email}
-        ownsWorkspaces={(await ownerOf(session.user.id)).map((w) => w.name)}
-      />
+      <p className="text-sm text-muted-foreground">
+        Passwords, passkeys and sign-in methods moved to{" "}
+        <Link href="/admin/account" className="underline underline-offset-4">
+          Account
+        </Link>
+        .
+      </p>
     </div>
   );
 }

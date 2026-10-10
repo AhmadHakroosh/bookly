@@ -2,16 +2,16 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import { auth } from "@/lib/auth";
+import { AccountMenu } from "@/components/account-menu";
 import { AdminNav } from "@/components/admin-nav";
 import { UpdateNotice } from "@/components/update-notice";
 import { WorkspaceSwitcher } from "@/components/workspace-switcher";
 import { ExternalLink } from "@/components/links";
 import { Button } from "@/components/ui/button";
-import { SubmitButton } from "@/components/submit-button";
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { isCloud, listUserWorkspaces, platformUrl } from "@/server/platform";
-import { getSession, getStaffRole } from "@/server/session";
+import { getSession, getStaffRole, isManager } from "@/server/session";
 import { getCurrentWorkspace } from "@/server/workspace";
 import { MenuIcon } from "lucide-react";
 
@@ -81,7 +81,7 @@ async function AdminShell({ children }: { children: React.ReactNode }) {
                   {workspace?.name ?? "Bookly"}
                 </SheetTitle>
                 <div className="flex min-h-[calc(100vh-6rem)] flex-col">
-                  <AdminNav cloud={isCloud()} supportHref={supportHref} />
+                  <AdminNav cloud={isCloud()} manager={isManager(role)} supportHref={supportHref} />
                 </div>
               </SheetContent>
             </Sheet>
@@ -99,19 +99,14 @@ async function AdminShell({ children }: { children: React.ReactNode }) {
             </ExternalLink>
           </div>
           <div className="flex items-center gap-2">
-            <span className="hidden text-sm text-muted-foreground md:inline">
-              {session.user.email}
-            </span>
             <ThemeToggle />
-            <form action={signOut}>
-              <SubmitButton variant="outline">Sign out</SubmitButton>
-            </form>
+            <AccountMenu email={session.user.email} name={session.user.name} signOut={signOut} />
           </div>
         </div>
       </header>
       <div className="flex flex-1">
         <aside className="sticky top-14 hidden h-[calc(100vh-3.5rem)] w-56 shrink-0 overflow-y-auto border-r p-4 lg:block">
-          <AdminNav cloud={isCloud()} supportHref={supportHref} />
+          <AdminNav cloud={isCloud()} manager={isManager(role)} supportHref={supportHref} />
         </aside>
         <main className="min-w-0 flex-1 px-4 py-8 lg:px-8">
           <div className="admin-page mx-auto max-w-6xl">
