@@ -1,4 +1,5 @@
 import { ProfileSkeleton } from "@/components/skeletons/pages";
+import { hasFlag } from "@/server/flags";
 import { Suspense } from "react";
 import { timezoneList } from "@/lib/time";
 import { getProfileByUser } from "@/server/scheduling";
@@ -40,6 +41,7 @@ async function ProfilePage({ searchParams }: PageProps<"/admin/profile">) {
         }}
         saved={!!p}
         zones={timezoneList()}
+        uploads={await hasFlag(ws, "file_uploads")}
       />
     </div>
   );

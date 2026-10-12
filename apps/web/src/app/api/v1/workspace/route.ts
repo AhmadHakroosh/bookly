@@ -1,4 +1,5 @@
 import { apiContext, json, options } from "@/server/api";
+import { absoluteFileUrl } from "@/server/files";
 import { listProfiles } from "@/server/scheduling";
 import { publicBaseUrl } from "@/server/urls";
 
@@ -20,7 +21,7 @@ export async function GET(req: Request) {
       username: p.username,
       name: p.displayName,
       bio: p.bio,
-      avatarUrl: p.avatarUrl,
+      avatarUrl: absoluteFileUrl(p.avatarUrl),
       timezone: p.timezone,
       url: `${base}/${p.username}`,
     })),

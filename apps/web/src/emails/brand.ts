@@ -1,5 +1,6 @@
 import type { Workspace } from "@bookly/db/schema";
 import { workspaceBrand } from "@/server/brand";
+import { absoluteFileUrl } from "@/server/files";
 import { baseUrl } from "@/server/scheduling";
 import type { EmailBrand } from "./layout";
 
@@ -10,7 +11,7 @@ export function brandFor(ws: Workspace | null): EmailBrand {
   const b = workspaceBrand(ws);
   return {
     name: b.name,
-    logoUrl: b.logoUrl ?? `${base}/logo-mark.png`,
+    logoUrl: absoluteFileUrl(b.logoUrl, base) ?? `${base}/logo-mark.png`,
     accent: b.accent,
     baseUrl: base,
     poweredBy: b.poweredBy,

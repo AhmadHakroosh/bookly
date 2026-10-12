@@ -1,4 +1,5 @@
 import { ProfilePublicSkeleton } from "@/components/skeletons/pages";
+import { absoluteFileUrl } from "@/server/files";
 import { hasFeature } from "@/server/limits";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -47,7 +48,7 @@ async function ProfilePage({ params }: PageProps<"/[username]">) {
       name: profile.displayName,
       url: `${base}/${profile.username}`,
       ...(profile.bio ? { description: profile.bio } : {}),
-      ...(profile.avatarUrl ? { image: profile.avatarUrl } : {}),
+      ...(profile.avatarUrl ? { image: absoluteFileUrl(profile.avatarUrl) } : {}),
       worksFor: { "@type": "Organization", name: ws.name, url: `${base}/` },
     },
   ];

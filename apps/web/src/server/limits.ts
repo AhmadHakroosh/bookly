@@ -2,7 +2,9 @@ import "server-only";
 import { loadEnv } from "@bookly/config";
 import {
   captureBudget,
+  formatBytes,
   isPlanId,
+  storageBudget,
   FEATURE_LABELS,
   LIMIT_LABELS,
   limitsFor,
@@ -223,8 +225,50 @@ export function assertCaptureFeature(ws: Workspace) {
     throw new LimitError(`Auto-capture needs the ${PLANS.pro.name} plan.`, "pro");
 }
 
+/* ---------------- Storage ---------------- */
+
+/** Bytes of uploaded files the workspace holds (ready, plus pending uploads that reserved room). */
+export async function storageUsed(ws: Pick<Workspace, "id">): Promise<number> {
+  const rows = await db()
+    .select({ n: sql<number>`coalesce(sum(${schema.files.size}), 0)::bigint` })
+    .from(schema.files)
+    .where(eq(schema.files.workspaceId, ws.id));
+  return Number(rows[0]?.n ?? 0);
+}
+
+/** The workspace's storage budget in bytes (null = unlimited; Team pools per seat). */
+export async function storageBudgetFor(ws: Workspace): Promise<number | null> {
+  const limits = workspaceLimits(ws);
+  if (limits.storageBytes === null) return null;
+  return isPlanId(ws.plan)
+    ? storageBudget(PLANS[ws.plan], await count(ws, "members"))
+    : limits.storageBytes;
+}
+
+/** Throws a LimitError when storing `bytes` more would exceed the plan. No-op when self-hosted. */
+export async function assertStorageQuota(ws: Workspace, bytes: number) {
+  const max = await storageBudgetFor(ws);
+  if (max === null) return;
+  const used = await storageUsed(ws);
+  if (used + bytes <= max) return;
+  const next = ws.plan === "free" ? "pro" : "team";
+  throw new LimitError(
+    `This workspace has used ${formatBytes(used)} of its ${formatBytes(max)} of file storage. Delete files or upgrade to ${PLANS[next].name} for more.`,
+    next,
+  );
+}
+
+export type UsageRow = {
+  key: string;
+  label: string;
+  used: number;
+  max: number | null;
+  /** How to print `used` and `max` when they are not plain counts (bytes). */
+  format?: (n: number) => string;
+};
+
 /** Current usage for the billing page. */
-export async function usageSummary(ws: Workspace) {
+export async function usageSummary(ws: Workspace): Promise<UsageRow[]> {
   const limits = workspaceLimits(ws);
   const keys: CountableLimit[] = ["eventTypes", "members", "integrations", "domains"];
   const counts = await Promise.all(keys.map((k) => count(ws, k)));
@@ -240,6 +284,13 @@ export async function usageSummary(ws: Workspace) {
       label: "bookings this month",
       used: await bookingsThisMonth(ws),
       max: limits.bookingsPerMonth,
+    },
+    {
+      key: "storageBytes",
+      label: limits.storagePerSeat ? "file storage (pooled across the team)" : "file storage",
+      used: await storageUsed(ws),
+      max: await storageBudgetFor(ws),
+      format: formatBytes,
     },
     {
       key: "captureMinutesPerMonth",

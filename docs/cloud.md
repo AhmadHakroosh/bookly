@@ -23,7 +23,9 @@ bookings are open to every plan; only the fee differs), Bookly video (a Pro feat
 existing Bookly video rows are hidden from the booking page and provisioning skips the room), the
 keyed API, the "Powered by Bookly" line on booking pages and emails (and the workspace's own
 logo and colour in its place), the activity log's retention (`auditRetentionDays`: 90 days on
-Free, a year on Pro, two years on Team) and its CSV export (`activityExport`, Pro and Team).
+Free, a year on Pro, two years on Team), its CSV export (`activityExport`, Pro and Team) and
+file storage (`storageBytes`: 1 GB on Free, 20 GB on Pro, 20 GB per seat pooled on Team;
+shown on Admin → Billing).
 
 Auto-capture: Pro 300 minutes a month (5 hours), Team 480 per member pooled (8 hours); the UI talks in hours
 (`captureHours`, "5 hours", "$3 an hour") while billing counts minutes. Past the budget transcription
@@ -182,6 +184,10 @@ and `.env.cloud.preview` (Preview environment) at the
 repository root list every value, with the staging webhook and callback URLs to register on
 Stripe (test mode), Google, Entra, GitHub and Zoom. Staging has its own `AUTH_SECRET`, Upstash
 database and Stripe test keys; it shares the QStash, Daily, Anthropic and OAuth credentials.
+Uploads go to Cloudflare R2 (`STORAGE_DRIVER=s3`, the `S3_*` variables): the `bookly-prod`
+bucket in production, `bookly-staging` on staging and previews. There is no custom domain on
+the buckets (the zone stays on Vercel for the wildcard subdomains); public files are proxied
+at `/files/<id>` and cached at the edge, private ones are presigned.
 
 ## Deploying on Vercel (bookly-app.io)
 

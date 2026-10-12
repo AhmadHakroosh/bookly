@@ -26,6 +26,18 @@ export const envSchema = z.object({
   SMTP_PASS: z.string().optional(),
   SMTP_SECURE: bool,
 
+  // ---- File storage (avatars, logos, attachments) ----
+  /** local: files on disk under STORAGE_LOCAL_DIR (single server). s3: any S3-compatible bucket (R2, S3, MinIO). */
+  STORAGE_DRIVER: z.enum(["local", "s3"]).default("local"),
+  STORAGE_LOCAL_DIR: z.string().default("./data/uploads"),
+  S3_BUCKET: z.string().optional(),
+  S3_REGION: z.string().default("auto"),
+  S3_ENDPOINT: z.url().optional(),
+  S3_ACCESS_KEY_ID: z.string().optional(),
+  S3_SECRET_ACCESS_KEY: z.string().optional(),
+  /** Path-style addressing (`endpoint/bucket/key`): R2 and MinIO want it; AWS prefers virtual hosts. */
+  S3_FORCE_PATH_STYLE: bool,
+
   // ---- Integrations (all optional; a provider is "available" when its keys are set) ----
   GOOGLE_CLIENT_ID: z.string().optional(),
   GOOGLE_CLIENT_SECRET: z.string().optional(),

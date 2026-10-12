@@ -1,5 +1,6 @@
 import { SettingsSkeleton } from "@/components/skeletons/pages";
 import { Suspense } from "react";
+import { hasFlag } from "@/server/flags";
 import { hasFeature } from "@/server/limits";
 import { getCurrentWorkspace } from "@/server/workspace";
 import { BrandingForm } from "./branding-form";
@@ -24,6 +25,7 @@ async function BrandingPage() {
           accent: workspace.settings.branding?.accent ?? "",
         }}
         allowed={hasFeature(workspace, "removeBranding")}
+        uploads={await hasFlag(workspace, "file_uploads")}
       />
     </div>
   );

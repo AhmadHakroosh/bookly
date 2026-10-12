@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import sharp from "sharp";
 import { bookFirstSlot, DEMO, STORAGE } from "./helpers";
 
 test.describe("admin", () => {
@@ -76,6 +77,39 @@ test.describe("admin", () => {
     }
     await page.goto("/admin/api");
     await expect(page).toHaveURL(/\/admin\/settings\/integrations$/);
+  });
+
+  test("a profile photo can be uploaded and is served from /files", async ({ browser }) => {
+    const page = await (await browser.newContext({ storageState: STORAGE })).newPage();
+    await page.goto("/admin/profile");
+    // A small solid PNG; the server resizes whatever it gets, so a tiny image is enough.
+    const png = await sharp({
+      create: { width: 8, height: 8, channels: 3, background: "#e8965a" },
+    })
+      .png()
+      .toBuffer();
+    // The input is wired by React on hydration; the file chooser only opens once it is.
+    await page.waitForLoadState("networkidle");
+    const [chooser] = await Promise.all([
+      page.waitForEvent("filechooser"),
+      page.getByRole("button", { name: /(Upload|Replace) photo/ }).click(),
+    ]);
+    await chooser.setFiles({ name: "me.png", mimeType: "image/png", buffer: png });
+    await expect(page.getByText("Photo updated")).toBeVisible({ timeout: 15_000 });
+    const url = await page.locator('input[name="avatarUrl"]').inputValue();
+    expect(url).toMatch(/^\/files\/[0-9a-f-]{36}$/);
+    const res = await page.request.get(url);
+    expect(res.status()).toBe(200);
+    expect(res.headers()["content-type"]).toMatch(/^image\//);
+    expect(res.headers()["cache-control"]).toContain("immutable");
+    await page.goto("/admin/settings/data/activity");
+    await expect(
+      page
+        .getByRole("list")
+        .filter({ hasText: "File uploaded" })
+        .getByText("File uploaded")
+        .first(),
+    ).toBeVisible({ timeout: 15_000 });
   });
 
   test("the activity log records the sign-in and the Home label is Home", async ({ browser }) => {

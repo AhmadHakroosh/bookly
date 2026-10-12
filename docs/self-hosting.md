@@ -1,6 +1,6 @@
 # Self-hosting Bookly
 
-Bookly is one container plus Postgres. Optional: a mail provider. There are no file uploads: profile photos and logos are URLs you host anywhere.
+Bookly is one container plus Postgres. Optional: a mail provider, and a bucket for uploads (otherwise they live on a volume).
 
 ## 1. Docker Compose (recommended)
 
@@ -71,6 +71,22 @@ Restore with `gunzip -c file.sql.gz | docker compose exec -T postgres psql -U bo
 ## 6. Environment reference
 
 See `.env.example`; every variable is documented inline and validated at startup by `packages/config`.
+
+## Uploads
+
+Profile photos and workspace logos can be uploaded (Admin → Booking page, Admin → Settings →
+Branding) or linked by URL as before. Uploads are resized once on the server (512×512 photos,
+logos up to 1024 px, metadata stripped), recorded in the `files` table and served at
+`/files/<id>` with a year-long cache. Where the bytes live is `STORAGE_DRIVER`:
+
+- `local` (default): a directory, `STORAGE_LOCAL_DIR` (`./data/uploads`; the compose stack
+  mounts the `uploads-data` volume at `/app/data/uploads`). Back it up with the database.
+- `s3`: any S3-compatible bucket: Cloudflare R2, AWS S3, MinIO, Backblaze. Set `S3_BUCKET`,
+  `S3_ENDPOINT`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY` (`S3_REGION` is `auto` for R2,
+  `S3_FORCE_PATH_STYLE=true` for R2 and MinIO). Large private files, when later features add
+  them, go straight to the bucket with presigned URLs and come back the same way.
+
+Self-hosted installs have no storage quota. Every upload and deletion is in the activity log.
 
 ## Export and deletion
 

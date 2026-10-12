@@ -78,7 +78,8 @@ async function BillingPage({ searchParams }: PageProps<"/admin/billing">) {
                   u.max !== null && u.used >= u.max ? "text-destructive" : "text-muted-foreground"
                 }
               >
-                {u.used} / {u.max === null ? "unlimited" : u.max}
+                {u.format ? u.format(u.used) : u.used} /{" "}
+                {u.max === null ? "unlimited" : u.format ? u.format(u.max) : u.max}
               </span>
             </li>
           ))}

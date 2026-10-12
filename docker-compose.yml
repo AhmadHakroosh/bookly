@@ -32,6 +32,8 @@ services:
         required: false
     environment:
       DATABASE_URL: postgres://bookly:bookly@postgres:5432/bookly
+      STORAGE_LOCAL_DIR: /app/data/uploads
+    volumes: [uploads-data:/app/data/uploads]
     ports: ["3002:3000"]
 
   caddy:
@@ -49,5 +51,6 @@ services:
 
 volumes:
   postgres-data:
+  uploads-data:
   caddy-data:
   caddy-config:
