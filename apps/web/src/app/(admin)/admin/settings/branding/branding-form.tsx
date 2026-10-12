@@ -47,7 +47,7 @@ export function BrandingForm({
             <Field>
               <FieldLabel>Logo</FieldLabel>
               <ImageUpload
-                value={logoUrl}
+                initial={workspace.logoUrl}
                 onChange={setLogoUrl}
                 upload={uploadLogoAction}
                 remove={removeLogoAction}

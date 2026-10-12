@@ -87,7 +87,7 @@ export function ProfileForm({
           <Field>
             <FieldLabel>Photo</FieldLabel>
             <ImageUpload
-              value={avatarUrl}
+              initial={initial.avatarUrl}
               onChange={setAvatarUrl}
               upload={uploadAvatarAction}
               remove={removeAvatarAction}

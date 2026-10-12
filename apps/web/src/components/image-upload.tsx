@@ -11,11 +11,13 @@ export type ImageUploadResult = { ok?: boolean; url?: string; error?: string };
 
 /**
  * A picture with "Upload" and "Remove": choosing a file sends it to the upload action at once
- * and shows the result, so the surrounding form never has to carry the bytes. `value` is the
- * current image URL (uploaded or linked); `onChange` lets the form keep its URL field in step.
+ * and shows the result, so the surrounding form never has to carry the bytes. The preview shows
+ * `initial` (the saved image) and then whatever the server returns; a URL typed into the form
+ * is not previewed here, so nothing from the page's own text reaches the image. `onChange`
+ * lets the form keep its URL field in step with uploads and removals.
  */
 export function ImageUpload({
-  value,
+  initial,
   onChange,
   upload,
   remove,
@@ -24,7 +26,7 @@ export function ImageUpload({
   hint,
   disabled,
 }: {
-  value: string;
+  initial: string;
   onChange?: (url: string) => void;
   upload: (formData: FormData) => Promise<ImageUploadResult>;
   remove: () => Promise<ImageUploadResult>;
@@ -35,7 +37,7 @@ export function ImageUpload({
 }) {
   const input = useRef<HTMLInputElement>(null);
   const [pending, start] = useTransition();
-  const [current, setCurrent] = useState(value);
+  const [current, setCurrent] = useState(initial);
   const apply = (r: ImageUploadResult) => {
     if (r.error) toast.error(r.error);
     else {

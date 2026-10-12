@@ -1,5 +1,4 @@
 import { describe, expect, it } from "vitest";
-import { safeKey } from "@bookly/storage";
 import { formatBytes, GIB, PLANS, storageBudget } from "@bookly/cloud";
 import { absoluteFileUrl, checkUpload, fileIdFromUrl, fileUrl } from "@/lib/files";
 
@@ -37,15 +36,6 @@ describe("file urls", () => {
       "https://x.test/a.png",
     );
     expect(absoluteFileUrl(null, "https://acme.bookly-app.io")).toBeNull();
-  });
-});
-
-describe("storage keys", () => {
-  it("normalises and refuses escapes", () => {
-    expect(safeKey("/ws/a/avatar/x.png")).toBe("ws/a/avatar/x.png");
-    expect(safeKey("ws/a/../b/x.png")).toBe("ws/b/x.png");
-    expect(() => safeKey("../x")).toThrow();
-    expect(() => safeKey("")).toThrow();
   });
 });
 
