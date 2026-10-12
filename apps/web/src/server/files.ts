@@ -70,15 +70,22 @@ export async function storeImage(opts: {
   if (!check.ok) throw new Error(check.error);
   const size = IMAGE_SIZES[opts.kind];
   // A pixel bomb (tiny file, enormous dimensions) is refused before decoding.
-  const image = sharp(opts.input, { limitInputPixels: 40e6, animated: false }).rotate();
-  const meta = await image.metadata();
-  if (!meta.format || !["png", "jpeg", "webp", "gif", "avif", "heif"].includes(meta.format))
-    throw new Error("That does not look like an image.");
-  const alpha = !!meta.hasAlpha && meta.format !== "jpeg";
-  const resized = image.resize({ ...size, withoutEnlargement: true });
-  const out = alpha
-    ? await resized.png({ compressionLevel: 9 }).toBuffer()
-    : await resized.jpeg({ quality: 85, mozjpeg: true }).toBuffer();
+  let out: Buffer;
+  let alpha = false;
+  try {
+    const image = sharp(opts.input, { limitInputPixels: 40e6, animated: false }).rotate();
+    const meta = await image.metadata();
+    if (!meta.format || !["png", "jpeg", "webp", "gif", "avif", "heif"].includes(meta.format))
+      throw new Error("not an image");
+    alpha = !!meta.hasAlpha && meta.format !== "jpeg";
+    const resized = image.resize({ ...size, withoutEnlargement: true });
+    out = alpha
+      ? await resized.png({ compressionLevel: 9 }).toBuffer()
+      : await resized.jpeg({ quality: 85, mozjpeg: true }).toBuffer();
+  } catch {
+    // Truncated, corrupt or mislabelled files: libvips' message is not for people.
+    throw new Error("That image could not be read. Try exporting it again as PNG or JPEG.");
+  }
   const mime = alpha ? "image/png" : "image/jpeg";
   const id = crypto.randomUUID();
   const key = keyFor(opts.ws.id, opts.kind, id, alpha ? "png" : "jpg");
