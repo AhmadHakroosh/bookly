@@ -13,6 +13,8 @@ next-env.d.ts
 .DS_Store
 .vercel
 /data/
+# Uploaded files with the local storage driver
+apps/web/data/
 
 packages/db/dist
 # Playwright output

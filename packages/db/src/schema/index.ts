@@ -4,3 +4,4 @@ export * from "./scheduling";
 export * from "./integrations";
 export * from "./api";
 export * from "./audit";
+export * from "./files";

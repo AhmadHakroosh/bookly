@@ -1,4 +1,5 @@
 import "server-only";
+import { deleteWorkspaceFiles } from "./files";
 import { eq, inArray, schema } from "@bookly/db";
 import type { Workspace } from "@bookly/db/schema";
 import { db } from "@/lib/db";
@@ -137,6 +138,7 @@ export async function deleteWorkspace(ws: Workspace) {
       console.error("[data-rights] subscription cancel failed", e);
     }
   }
+  await deleteWorkspaceFiles(ws.id).catch((e) => console.error("[data-rights] file cleanup", e));
   await db().delete(schema.organizations).where(eq(schema.organizations.id, ws.organizationId));
   refreshWorkspace(ws.id);
   invalidateHostCache();

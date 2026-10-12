@@ -36,7 +36,13 @@ export type Limits = {
   auditRetentionDays: number | null;
   /** Download the activity log as CSV. */
   activityExport: boolean;
+  /** Uploaded files (avatars, logos, attachments) the workspace may keep, in bytes (null = unlimited). */
+  storageBytes: number | null;
+  /** The bytes are per billed seat and pooled across the workspace (Team). */
+  storagePerSeat?: boolean;
 };
+
+export const GIB = 1024 ** 3;
 
 export type Plan = {
   id: PlanId;
@@ -86,6 +92,7 @@ export const PLANS: Record<PlanId, Plan> = {
       invoices: false,
       auditRetentionDays: 90,
       activityExport: false,
+      storageBytes: 1 * GIB,
     },
     highlights: [
       "Contacts, briefings and the daily Home page",
@@ -122,6 +129,7 @@ export const PLANS: Record<PlanId, Plan> = {
       invoices: true,
       auditRetentionDays: 365,
       activityExport: true,
+      storageBytes: 20 * GIB,
     },
     highlights: [
       "Auto-capture: transcripts, AI recaps, tasks (5 hours a month, then $3 an hour)",
@@ -164,6 +172,8 @@ export const PLANS: Record<PlanId, Plan> = {
       invoices: true,
       auditRetentionDays: 730,
       activityExport: true,
+      storageBytes: 20 * GIB,
+      storagePerSeat: true,
     },
     highlights: [
       "Everything in Pro",
@@ -199,7 +209,23 @@ export const UNLIMITED: Limits = {
   invoices: true,
   auditRetentionDays: null,
   activityExport: true,
+  storageBytes: null,
 };
+
+/** The workspace's storage budget in bytes: flat, or per billed seat and pooled. */
+export function storageBudget(plan: Plan, members: number): number | null {
+  const b = plan.limits.storageBytes;
+  if (b === null) return null;
+  return plan.limits.storagePerSeat ? b * billedSeats(plan, members) : b;
+}
+
+/** "1 GB", "20 GB", "512 MB": bytes as people read them. */
+export function formatBytes(n: number): string {
+  if (n >= GIB) return `${Math.round((n / GIB) * 10) / 10} GB`;
+  if (n >= 1024 ** 2) return `${Math.round(n / 1024 ** 2)} MB`;
+  if (n >= 1024) return `${Math.round(n / 1024)} KB`;
+  return `${n} B`;
+}
 
 /** USD per transcribed minute beyond the plan's included minutes (Stripe metered price). */
 export const CAPTURE_OVERAGE_PER_MINUTE = 0.05;

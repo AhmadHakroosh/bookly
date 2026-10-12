@@ -4,6 +4,11 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 ## [Unreleased]
 
+### Added
+
+- **Uploads.** Profile photos and workspace logos can be uploaded instead of linked (behind the `file_uploads` flag): the image is resized once on the server (512×512 photos, logos up to 1024 px with transparency kept, metadata stripped), stored through a new storage layer (`local` directory for self-hosting, any S3-compatible bucket such as Cloudflare R2 in the cloud) and served at `/files/<id>` with a year-long cache. Every file is recorded in a `files` table that drives per-plan storage quotas (1 GB on Free, 20 GB on Pro, 20 GB per seat on Team, shown on Billing), cleanup on workspace deletion and the activity log. The primitive for large files is in place too: `POST /api/uploads` reserves a file and returns a presigned PUT (or the app's own route on the local driver), `/api/uploads/<id>/complete` confirms it, private files come back as short-lived presigned links, and unconfirmed uploads are swept after a day
+- Docker: the compose stack mounts an `uploads-data` volume at `/app/data/uploads`; `STORAGE_DRIVER`, `STORAGE_LOCAL_DIR` and the `S3_*` variables are in `.env.example`
+
 ## [0.12.0] - 2026-10-10
 
 ### Added

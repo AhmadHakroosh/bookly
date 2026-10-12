@@ -8,7 +8,9 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { TimezoneField } from "@/components/timezone-field";
 import { HandleField, HandleHint, useHandleCheck } from "@/components/handle-field";
+import { ImageUpload } from "@/components/image-upload";
 import { checkUsername, saveProfile } from "../scheduling-actions";
+import { removeAvatarAction, uploadAvatarAction } from "./avatar-actions";
 
 type Values = {
   username: string;
@@ -22,14 +24,18 @@ export function ProfileForm({
   initial,
   saved,
   zones,
+  uploads = false,
 }: {
   initial: Values;
   /** A profile exists, so the initial username is its own and needs no availability check. */
   saved: boolean;
   zones: string[];
+  /** The `file_uploads` flag: show the upload control next to the URL field. */
+  uploads?: boolean;
 }) {
   const [state, action] = useActionState(saveProfile, {} as { ok?: boolean; error?: string });
   const [username, setUsername] = useState(initial.username);
+  const [avatarUrl, setAvatarUrl] = useState(initial.avatarUrl);
   const handle = useHandleCheck(username, "username", checkUsername, {
     initial: saved || state.ok ? initial.username : undefined,
   });
@@ -77,12 +83,26 @@ export function ProfileForm({
             Where you are. Visitors see times in their own timezone automatically.
           </FieldDescription>
         </Field>
+        {uploads && (
+          <Field>
+            <FieldLabel>Photo</FieldLabel>
+            <ImageUpload
+              value={avatarUrl}
+              onChange={setAvatarUrl}
+              upload={uploadAvatarAction}
+              remove={removeAvatarAction}
+              label="Photo"
+              hint="PNG, JPEG, WebP, GIF or AVIF up to 8 MB; resized to 512×512."
+            />
+          </Field>
+        )}
         <Field>
-          <FieldLabel htmlFor="avatarUrl">Avatar URL</FieldLabel>
+          <FieldLabel htmlFor="avatarUrl">{uploads ? "Or a photo URL" : "Avatar URL"}</FieldLabel>
           <Input
             id="avatarUrl"
             name="avatarUrl"
-            defaultValue={initial.avatarUrl}
+            value={avatarUrl}
+            onChange={(e) => setAvatarUrl(e.target.value)}
             placeholder="https://…"
           />
           <FieldDescription>Link to a square image, ideally at least 256×256.</FieldDescription>

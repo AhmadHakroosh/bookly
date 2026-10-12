@@ -78,6 +78,28 @@ test.describe("admin", () => {
     await expect(page).toHaveURL(/\/admin\/settings\/integrations$/);
   });
 
+  test("a profile photo can be uploaded and is served from /files", async ({ browser }) => {
+    const page = await (await browser.newContext({ storageState: STORAGE })).newPage();
+    await page.goto("/admin/profile");
+    // A 2×2 PNG; the server resizes whatever it gets, so a tiny image is enough.
+    const png = Buffer.from(
+      "iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAIAAAD91JpzAAAAFklEQVR4nGP8z8DAwMDAxMDAwMDAAAANHQEDkCRVPgAAAABJRU5ErkJggg==",
+      "base64",
+    );
+    await page
+      .getByLabel("Choose photo")
+      .setInputFiles({ name: "me.png", mimeType: "image/png", buffer: png });
+    await expect(page.getByText("Photo updated")).toBeVisible({ timeout: 15_000 });
+    const url = await page.locator('input[name="avatarUrl"]').inputValue();
+    expect(url).toMatch(/^\/files\/[0-9a-f-]{36}$/);
+    const res = await page.request.get(url);
+    expect(res.status()).toBe(200);
+    expect(res.headers()["content-type"]).toMatch(/^image\//);
+    expect(res.headers()["cache-control"]).toContain("immutable");
+    await page.goto("/admin/settings/data/activity");
+    await expect(page.getByText("File uploaded").first()).toBeVisible({ timeout: 15_000 });
+  });
+
   test("the activity log records the sign-in and the Home label is Home", async ({ browser }) => {
     const page = await (await browser.newContext({ storageState: STORAGE })).newPage();
     await page.goto("/admin");

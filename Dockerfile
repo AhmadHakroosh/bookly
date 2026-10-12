@@ -33,7 +33,9 @@ RUN pnpm --filter @bookly/web build && pnpm --filter @bookly/db build:migrator
 FROM node:24-alpine AS runner
 WORKDIR /app
 ENV NODE_ENV=production PORT=3000 HOSTNAME=0.0.0.0 NEXT_TELEMETRY_DISABLED=1
-RUN addgroup -S bookly && adduser -S bookly -G bookly
+RUN addgroup -S bookly && adduser -S bookly -G bookly && mkdir -p /app/data/uploads && chown bookly:bookly /app/data/uploads
+# Uploaded files with the local storage driver (mount a volume here).
+VOLUME /app/data/uploads
 COPY --from=build --chown=bookly:bookly /app/apps/web/.next/standalone ./
 COPY --from=build --chown=bookly:bookly /app/apps/web/.next/static ./apps/web/.next/static
 COPY --from=build --chown=bookly:bookly /app/apps/web/public ./apps/web/public

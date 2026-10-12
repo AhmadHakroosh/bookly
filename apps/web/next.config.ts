@@ -58,7 +58,7 @@ const nextConfig: NextConfig = {
   cacheComponents: true,
   // The stylesheet is small (~24 KiB) and most visits to the marketing site are first visits:
   // inlining it removes the render-blocking request that held the mobile LCP.
-  experimental: { inlineCss: true },
+  experimental: { inlineCss: true, serverActions: { bodySizeLimit: "12mb" } },
   // Local multi-tenant testing: <slug>.lvh.me resolves to 127.0.0.1 and accepts subdomain cookies.
   allowedDevOrigins: ["lvh.me", "*.lvh.me"],
   transpilePackages: [

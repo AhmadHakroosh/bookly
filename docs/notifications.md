@@ -102,7 +102,7 @@ requests and client recaps. The platform name comes from the display name in `EM
 ## Look and wording
 
 Emails are rendered with React Email in the workspace's look: your logo and name in the
-header (Admin → Settings → Branding: logo URL and accent colour, on Pro, Team and self-hosted installs; the Free plan keeps the Bookly mark), your accent colour on
+header (Admin → Settings → Branding: an uploaded logo or a logo URL, and the accent colour, on Pro, Team and self-hosted installs; the Free plan keeps the Bookly mark), your accent colour on
 buttons, the booking details in a card, and a plain-text alternative generated from the same
 template. "Powered by Bookly" appears in the footer unless the plan removes branding. The same logo, colour and footer rule applies to the booking pages themselves.
 

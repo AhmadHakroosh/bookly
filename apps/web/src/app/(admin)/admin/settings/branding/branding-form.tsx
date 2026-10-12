@@ -1,23 +1,29 @@
 "use client";
 
 import Link from "next/link";
-import { useActionState, useEffect } from "react";
+import { useActionState, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { SubmitButton } from "@/components/submit-button";
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { ColorPicker } from "@/components/color-picker";
+import { ImageUpload } from "@/components/image-upload";
 import { updateWorkspaceSettings, type SettingsState } from "../actions";
+import { removeLogoAction, uploadLogoAction } from "./logo-actions";
 
 export function BrandingForm({
   workspace,
   allowed,
+  uploads = false,
 }: {
   workspace: { logoUrl: string; accent: string };
   /** Custom logo and colour come with the plans that remove Bookly branding. */
   allowed: boolean;
+  /** The `file_uploads` flag: show the upload control next to the URL field. */
+  uploads?: boolean;
 }) {
   const [state, action] = useActionState(updateWorkspaceSettings, {} as SettingsState);
+  const [logoUrl, setLogoUrl] = useState(workspace.logoUrl);
   useEffect(() => {
     if (state.ok) toast.success("Branding saved");
     else if (state.error && !state.fields) toast.error(state.error);
@@ -37,14 +43,29 @@ export function BrandingForm({
           </p>
         )}
         <fieldset disabled={!allowed} className="contents">
+          {uploads && (
+            <Field>
+              <FieldLabel>Logo</FieldLabel>
+              <ImageUpload
+                value={logoUrl}
+                onChange={setLogoUrl}
+                upload={uploadLogoAction}
+                remove={removeLogoAction}
+                shape="square"
+                label="Logo"
+                hint="PNG, JPEG, WebP, GIF or AVIF up to 8 MB; transparency is kept."
+                disabled={!allowed}
+              />
+            </Field>
+          )}
           <div className="grid gap-4 sm:grid-cols-[1fr_140px]">
             <Field>
-              <FieldLabel htmlFor="logoUrl">Logo URL</FieldLabel>
+              <FieldLabel htmlFor="logoUrl">{uploads ? "Or a logo URL" : "Logo URL"}</FieldLabel>
               <Input
                 id="logoUrl"
                 name="logoUrl"
-                type="url"
-                defaultValue={workspace.logoUrl}
+                value={logoUrl}
+                onChange={(e) => setLogoUrl(e.target.value)}
                 placeholder="https://yourdomain.com/logo.png"
               />
               <FieldDescription>
