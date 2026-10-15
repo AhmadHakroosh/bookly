@@ -77,7 +77,12 @@ async function BookingPage({ params, searchParams }: PageProps<"/booking/[token]
                 : ""}{" "}
               to confirm {b.seriesCount ? `all ${b.seriesCount}` : "it"}.
             </p>
-            <form action={payNow.bind(null, token)} className="mt-3">
+            <form
+              action={payNow.bind(null, token)}
+              className="mt-3"
+              toolname="pay_for_booking"
+              tooldescription="Open the payment page for this booking (the booking is held until it is paid). Only when the guest asks to pay."
+            >
               <SubmitButton pendingText="Redirecting…">Pay now</SubmitButton>
             </form>
           </div>
@@ -193,7 +198,12 @@ async function BookingPage({ params, searchParams }: PageProps<"/booking/[token]
                 : " once the call has taken place"}
               . You can have it deleted at any time; a short summary may be kept.
             </p>
-            <form action={deleteMyTranscript.bind(null, token)} className="mt-2">
+            <form
+              action={deleteMyTranscript.bind(null, token)}
+              className="mt-2"
+              toolname="delete_meeting_transcript"
+              tooldescription="Delete the transcript of this meeting at the guest's request. Irreversible; confirm with the guest first."
+            >
               <SubmitButton variant="outline" pendingText="Deleting…">
                 Delete the transcript
               </SubmitButton>
@@ -230,11 +240,17 @@ async function BookingPage({ params, searchParams }: PageProps<"/booking/[token]
                 ? `Cancelling refunds your ${formatPrice(b.amountCents, b.currency)} payment to the card you paid with.`
                 : "You can also reschedule instead, using the button above."}
             </p>
-            <form action={cancelByAttendee.bind(null, token)} className="mt-3 space-y-2">
+            <form
+              action={cancelByAttendee.bind(null, token)}
+              className="mt-3 space-y-2"
+              toolname="cancel_booking"
+              tooldescription="Cancel this booking on the guest's behalf. Irreversible; confirm with the guest first."
+            >
               <input
                 name="reason"
                 placeholder="Reason (optional)"
                 className="w-full rounded-lg border bg-background px-3 text-sm"
+                toolparamdescription="Why the guest is cancelling (optional); the host sees it."
               />
               <SubmitButton
                 variant="outline"
@@ -276,11 +292,14 @@ async function BookingPage({ params, searchParams }: PageProps<"/booking/[token]
                 <form
                   action={cancelRemainingByAttendee.bind(null, token)}
                   className="mt-3 space-y-2"
+                  toolname="cancel_remaining_sessions"
+                  tooldescription="Cancel every remaining session of this series on the guest's behalf. Irreversible; confirm with the guest first."
                 >
                   <input
                     name="reason"
                     placeholder="Reason (optional)"
                     className="w-full rounded-lg border bg-background px-3 text-sm"
+                    toolparamdescription="Why the guest is cancelling (optional); the host sees it."
                   />
                   <SubmitButton
                     variant="outline"

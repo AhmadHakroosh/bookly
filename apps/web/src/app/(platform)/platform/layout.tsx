@@ -12,7 +12,11 @@ import { GitHubIcon, Logo, LogoMark } from "@/components/brand/logo";
 import { auth } from "@/lib/auth";
 import { isPlatformAdmin } from "@/server/platform";
 import { getSession } from "@/server/session";
-import { FOOTER, NAV, SITE } from "./site";
+import { PLANS } from "@bookly/cloud";
+import { WebMcpTools } from "@/components/webmcp-tools";
+import { ARD_PATH } from "@/lib/ard";
+import { listDocs } from "@/server/docs";
+import { FOOTER, NAV, SITE, siteUrl } from "./site";
 import { Reveal } from "./reveal";
 
 async function signOut() {
@@ -42,7 +46,40 @@ export const metadata: Metadata = {
  * items stream in behind their own boundary. That keeps navigations instant.
  */
 export default function PlatformLayout({ children }: LayoutProps<"/platform">) {
-  return <Shell>{children}</Shell>;
+  return (
+    <>
+      {/* Agentic Resource Discovery: where an AI agent finds what this site offers it. */}
+      <link rel="ard" href={ARD_PATH} />
+      <Suspense fallback={null}>
+        <AgentTools />
+      </Suspense>
+      <Shell>{children}</Shell>
+    </>
+  );
+}
+
+/** WebMCP tools for agents driving a browser that supports them; data the page has anyway. */
+async function AgentTools() {
+  const docs = await listDocs();
+  const base = siteUrl();
+  return (
+    <WebMcpTools
+      base={base}
+      plans={Object.values(PLANS).map((p) => ({
+        id: p.id,
+        name: p.name,
+        priceMonthly: p.priceMonthly,
+        priceYearly: p.priceYearly,
+        minSeats: p.minSeats,
+        highlights: p.highlights,
+      }))}
+      docs={docs.map((d) => ({
+        title: d.title,
+        url: `${base}/docs/${d.slug}`,
+        description: d.description,
+      }))}
+    />
+  );
 }
 
 function NavLinks({ className = "" }: { className?: string }) {
@@ -102,7 +139,11 @@ async function SessionNav() {
           Console
         </Button>
       )}
-      <form action={signOut}>
+      <form
+        action={signOut}
+        toolname="sign_out"
+        tooldescription="Sign the current person out of Bookly."
+      >
         <SubmitButton variant="ghost" className="hidden sm:inline-flex">
           Sign out
         </SubmitButton>
@@ -130,7 +171,11 @@ async function SessionMenu() {
           Console
         </Link>
       )}
-      <form action={signOut}>
+      <form
+        action={signOut}
+        toolname="sign_out"
+        tooldescription="Sign the current person out of Bookly."
+      >
         <SubmitButton
           variant="ghost"
           className="h-auto w-full justify-start rounded-md px-2 py-2 font-normal"

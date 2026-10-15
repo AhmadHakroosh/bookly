@@ -122,7 +122,12 @@ export function LoginForm({
           </TabsTrigger>
         </TabsList>
         <TabsContent value="password">
-          <form onSubmit={onPassword} className="mt-4">
+          <form
+            onSubmit={onPassword}
+            className="mt-4"
+            toolname="sign_in_with_password"
+            tooldescription="Sign the account owner in with their email and password. Only with credentials they provide."
+          >
             <FieldGroup>
               <Field>
                 <FieldLabel htmlFor="email">Email</FieldLabel>
@@ -132,6 +137,7 @@ export function LoginForm({
                   type="email"
                   autoComplete="email webauthn"
                   required
+                  toolparamdescription="The account's email address."
                 />
               </Field>
               <Field>
@@ -142,6 +148,7 @@ export function LoginForm({
                   type="password"
                   autoComplete="current-password"
                   required
+                  toolparamdescription="The account's password."
                 />
               </Field>
               <p className="-mt-2 text-right text-xs">
@@ -160,11 +167,23 @@ export function LoginForm({
           </form>
         </TabsContent>
         <TabsContent value="magic">
-          <form onSubmit={onMagic} className="mt-4">
+          <form
+            onSubmit={onMagic}
+            className="mt-4"
+            toolname="send_sign_in_link"
+            tooldescription="Email the account owner a one-time sign-in link."
+          >
             <FieldGroup>
               <Field>
                 <FieldLabel htmlFor="magic-email">Email</FieldLabel>
-                <Input id="magic-email" name="email" type="email" autoComplete="email" required />
+                <Input
+                  id="magic-email"
+                  name="email"
+                  type="email"
+                  autoComplete="email"
+                  required
+                  toolparamdescription="The account's email address."
+                />
               </Field>
               <Button type="submit" className="w-full" disabled={pending} aria-busy={pending}>
                 {pending && !busy?.overlay && <Spinner data-icon="inline-start" />}

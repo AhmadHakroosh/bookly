@@ -107,15 +107,32 @@ export function SignupForm({
 
   if (step === 1)
     return (
-      <form onSubmit={createAccount}>
+      <form
+        onSubmit={createAccount}
+        toolname="create_account"
+        tooldescription="Create a Bookly account for the person using the browser. They must agree to the terms and privacy policy themselves; never tick those for them."
+      >
         <FieldGroup>
           <Field>
             <FieldLabel htmlFor="name">Your name</FieldLabel>
-            <Input id="name" name="name" required autoComplete="name" />
+            <Input
+              id="name"
+              name="name"
+              required
+              autoComplete="name"
+              toolparamdescription="The person's full name."
+            />
           </Field>
           <Field>
             <FieldLabel htmlFor="email">Email</FieldLabel>
-            <Input id="email" name="email" type="email" required autoComplete="email" />
+            <Input
+              id="email"
+              name="email"
+              type="email"
+              required
+              autoComplete="email"
+              toolparamdescription="The person's email address; a verification link is sent there."
+            />
           </Field>
           <Field>
             <FieldLabel htmlFor="password">Password</FieldLabel>
@@ -126,6 +143,7 @@ export function SignupForm({
               minLength={10}
               required
               autoComplete="new-password"
+              toolparamdescription="A password of at least 10 characters chosen by the person."
             />
             <FieldDescription>At least 10 characters.</FieldDescription>
           </Field>
@@ -201,7 +219,11 @@ export function SignupForm({
     );
 
   return (
-    <form action={action}>
+    <form
+      action={action}
+      toolname="create_workspace"
+      tooldescription="Create the person's workspace: its name and the address it will live at."
+    >
       <FieldGroup>
         <Field>
           <FieldLabel htmlFor="wsname">Workspace name</FieldLabel>
@@ -211,6 +233,7 @@ export function SignupForm({
             required
             placeholder="Jane Doe"
             onChange={(e) => setSlug(slugify(e.target.value))}
+            toolparamdescription="The workspace name shown to people who book."
           />
           <FieldDescription>Shown to people who book with you.</FieldDescription>
         </Field>
@@ -219,6 +242,7 @@ export function SignupForm({
           <HandleField
             id="slug"
             name="slug"
+            toolparamdescription="The workspace address: lowercase letters, numbers and hyphens."
             value={slug}
             onChange={(e) => setSlug(e.target.value)}
             autoCapitalize="none"
