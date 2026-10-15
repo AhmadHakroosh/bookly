@@ -26,6 +26,37 @@ async function api(page: Page, path: string, init?: { method?: string; body?: un
   );
 }
 
+test.describe("agent discovery", () => {
+  test("the ARD manifest, its legacy path and the skill are served and advertised", async ({
+    page,
+  }) => {
+    await page.goto("/");
+    await expect(page.locator('link[rel="ard"]')).toHaveAttribute(
+      "href",
+      /\/\.well-known\/ard\.json$/,
+    );
+    const ard = await api(page, "/.well-known/ard.json");
+    expect(ard.status).toBe(200);
+    expect(ard.type).toContain("application/json");
+    const manifest = JSON.parse(ard.text) as {
+      specVersion: string;
+      entries: { identifier: string; type: string; url: string; representativeQueries: string[] }[];
+    };
+    expect(manifest.specVersion).toBe("1.0");
+    expect(manifest.entries[0]?.identifier).toMatch(/^urn:air:[a-z0-9.-]+:skills:scheduling$/);
+    expect(manifest.entries[0]?.representativeQueries.length).toBeGreaterThanOrEqual(2);
+    const legacy = await api(page, "/.well-known/ai-catalog.json");
+    expect(legacy.status).toBe(200);
+    expect(JSON.parse(legacy.text).entries[0].identifier).toBe(manifest.entries[0]?.identifier);
+    const skill = await api(page, new URL(manifest.entries[0]!.url).pathname);
+    expect(skill.status).toBe(200);
+    expect(skill.type).toContain('profile="urn:air:agent-skills"');
+    expect(skill.text).toContain("name: bookly-scheduling");
+    const llms = await api(page, "/llms.txt");
+    expect(llms.status).toBe(200);
+  });
+});
+
 test.describe("marketing site", () => {
   const pages: [string, string][] = [
     ["/", "The meeting is booked"],

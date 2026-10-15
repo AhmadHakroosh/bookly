@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { WebMcpFormHints } from "@/components/webmcp-form-hints";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Suspense } from "react";
 import { ThemeProvider } from "@/components/theme-provider";
@@ -37,6 +38,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         suppressHydrationWarning
         className="flex min-h-full flex-col bg-background font-sans text-foreground"
       >
+        <WebMcpFormHints />
         <ThemeProvider>
           <Suspense fallback={null}>
             <TopProgress />

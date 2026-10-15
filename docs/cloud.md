@@ -139,6 +139,18 @@ path on the platform host is a 404. Tenant hosts stay out of search engines.
   before you take paying customers, and update `legalUpdated` in
   `apps/web/src/app/(platform)/platform/site.ts` when you change them.
 
+**For AI agents.** The platform host also serves `/llms.txt` (a Markdown map of the site and the
+manual, https://llmstxt.org), `/.well-known/ard.json` (the Agentic Resource Discovery manifest,
+https://agenticresourcediscovery.org, advertised with `<link rel="ard">`; the predecessor path
+`/.well-known/ai-catalog.json` returns the same) and the Agent Skill it points at,
+`/.well-known/agent-skills/scheduling.md`, which tells an agent how to read a host's event types
+and availability and book, cancel or reschedule through the public API or the booking pages.
+Every public form (booking, waitlist, routing, manage-booking, sign-up, sign-in) is a WebMCP
+declarative tool (`toolname`, `tooldescription`, `toolparamdescription`), and the marketing pages
+register two imperative tools, `get_pricing_plans` and `search_documentation`, when the browser
+exposes `navigator.modelContext`. Lighthouse's Agentic Browsing category checks all of this;
+workspace hosts answer 404 for the manifest and the skill.
+
 ## Accounts
 
 The workspace address (the subdomain) and every member's username follow the rules in `apps/web/src/lib/handles.ts`, shared by the forms (live feedback, submit held until the name passes and is free) and the server actions: lowercase letters, digits and single hyphens, 3–40 characters (2 for usernames), and none of the reserved names (platform hosts and environments, mail and DNS hosts, app routes for usernames), no look-alikes of Bookly or well-known services (leetspeak folded, so `b00kly` counts), and no address built from sign-in or payment words. To give a brand its own address, the operator creates the workspace; the lists are plain arrays in that file.

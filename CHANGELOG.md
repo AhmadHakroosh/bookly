@@ -4,6 +4,10 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 ## [Unreleased]
 
+### Added
+
+- **Ready for AI agents.** The marketing host publishes an Agentic Resource Discovery manifest at `/.well-known/ard.json` (advertised with `<link rel="ard">`; `/.well-known/ai-catalog.json` returns the same for older consumers) pointing at an Agent Skill, `/.well-known/agent-skills/scheduling.md`, that explains how to read a host's event types and availability and book, cancel or reschedule. Every public form (booking, waitlist, routing, manage-booking, sign-up, sign-in, sign-out) carries WebMCP declarative tool annotations, and the marketing pages register `get_pricing_plans` and `search_documentation` tools in browsers that expose `navigator.modelContext`. Lighthouse's Agentic Browsing audits pass
+
 ## [0.12.1] - 2026-10-12
 
 ### Added

@@ -67,12 +67,44 @@ export function BookingForm({
   const field =
     "bg-background h-10 w-full rounded-lg border px-3 text-sm outline-none focus-visible:ring-2";
   return (
-    <form action={action} className="space-y-4">
-      <input type="hidden" name="username" value={username} />
-      <input type="hidden" name="event" value={event} />
-      <input type="hidden" name="slot" value={slot} />
-      <input type="hidden" name="tz" value={tz} />
-      {reschedule && <input type="hidden" name="reschedule" value={reschedule} />}
+    <form
+      action={action}
+      className="space-y-4"
+      toolname="book_meeting"
+      tooldescription="Book the selected time with this host on the guest's behalf. The host, event type, start time and timezone are already set from the page; fill in the guest's details and answers, then submit."
+    >
+      <input
+        type="hidden"
+        name="username"
+        value={username}
+        toolparamdescription="The host's username (fixed by the page)."
+      />
+      <input
+        type="hidden"
+        name="event"
+        value={event}
+        toolparamdescription="The event type slug (fixed by the page)."
+      />
+      <input
+        type="hidden"
+        name="slot"
+        value={slot}
+        toolparamdescription="The chosen start time, ISO 8601 (fixed by the page)."
+      />
+      <input
+        type="hidden"
+        name="tz"
+        value={tz}
+        toolparamdescription="The guest's IANA timezone (fixed by the page)."
+      />
+      {reschedule && (
+        <input
+          type="hidden"
+          name="reschedule"
+          value={reschedule}
+          toolparamdescription="The booking being rescheduled (fixed by the page)."
+        />
+      )}
       <input
         type="text"
         name="website"
@@ -80,6 +112,7 @@ export function BookingForm({
         autoComplete="off"
         className="hidden"
         aria-hidden
+        toolparamdescription="Leave empty. This field catches bots; any value rejects the booking."
       />
       {locations.length > 1 ? (
         <fieldset className="text-sm">
@@ -97,6 +130,7 @@ export function BookingForm({
                   checked={l.type === location}
                   onChange={() => setLocation(l.type)}
                   className="size-4 accent-primary"
+                  toolparamdescription="How to meet: one of the offered location types."
                 />
                 <span>{l.label}</span>
               </label>
@@ -104,7 +138,12 @@ export function BookingForm({
           </div>
         </fieldset>
       ) : (
-        <input type="hidden" name="location" value={location} />
+        <input
+          type="hidden"
+          name="location"
+          value={location}
+          toolparamdescription="How to meet (the only option, fixed by the page)."
+        />
       )}
       {chosen?.ask === "phone" && (
         <div className="text-sm">
@@ -120,6 +159,7 @@ export function BookingForm({
             <Dropdown
               name="phoneCountry"
               ariaLabel="Country"
+              toolparamdescription="ISO 3166-1 alpha-2 country of the guest's phone number, e.g. US."
               value={country}
               onValueChange={setCountry}
               className="w-auto shrink-0 rounded-r-none border-r-0 bg-muted px-2.5 text-muted-foreground data-[size=default]:h-10"
@@ -140,6 +180,7 @@ export function BookingForm({
               autoComplete="tel-national"
               inputMode="tel"
               aria-label="Phone number"
+              toolparamdescription="The guest's phone number in national format for the chosen country."
               defaultValue={defaultPhone ?? undefined}
               placeholder="201 555 0123"
               className={`${field} min-w-0 flex-1 rounded-l-none`}
@@ -154,6 +195,7 @@ export function BookingForm({
             name="address"
             required
             autoComplete="street-address"
+            toolparamdescription="Where to meet in person: street and city."
             placeholder="Street, city"
             className={field}
           />
@@ -165,6 +207,7 @@ export function BookingForm({
           name="name"
           required
           autoComplete="name"
+          toolparamdescription="The guest's full name."
           defaultValue={defaults?.name}
           className={field}
         />
@@ -176,6 +219,7 @@ export function BookingForm({
           type="email"
           required
           autoComplete="email"
+          toolparamdescription="The guest's email address; the confirmation and manage link go there."
           defaultValue={defaults?.email}
           className={field}
         />
@@ -196,6 +240,7 @@ export function BookingForm({
               required={q.required}
               rows={3}
               className="w-full rounded-lg border bg-background px-3 py-2 text-sm"
+              toolparamdescription={`The host's question: ${q.label}`}
             />
           ) : q.type === "select" ? (
             <Dropdown
@@ -204,6 +249,7 @@ export function BookingForm({
               className="h-10"
               ariaLabel={q.label}
               options={(q.options ?? []).map((o) => ({ value: o, label: o }))}
+              toolparamdescription={`The host's question: ${q.label}. One of: ${(q.options ?? []).join(", ")}.`}
             />
           ) : (
             <input
@@ -211,6 +257,7 @@ export function BookingForm({
               type={q.type === "email" ? "email" : q.type === "phone" ? "tel" : "text"}
               required={q.required}
               className={field}
+              toolparamdescription={`The host's question: ${q.label}`}
             />
           )}
         </label>
@@ -224,6 +271,7 @@ export function BookingForm({
             name="guests"
             rows={2}
             placeholder={`One email per line, up to ${maxGuests}`}
+            toolparamdescription={`Colleagues to invite, one email per line, up to ${maxGuests}.`}
             className="w-full rounded-lg border bg-background px-3 py-2 text-sm"
           />
           <span className="mt-1 block text-xs text-muted-foreground">
@@ -239,6 +287,7 @@ export function BookingForm({
           name="notes"
           rows={3}
           className="w-full rounded-lg border bg-background px-3 py-2 text-sm"
+          toolparamdescription="Anything the host should prepare or know (optional)."
         />
       </label>
       {chosen?.captureAlways && (
@@ -250,7 +299,12 @@ export function BookingForm({
       )}
       {askCapture && (
         <label className="flex items-start gap-2 text-sm">
-          <input type="checkbox" name="captureConsent" className="mt-1" />
+          <input
+            type="checkbox"
+            name="captureConsent"
+            className="mt-1"
+            toolparamdescription="Tick to let the call be transcribed (optional); ask the guest first."
+          />
           <span>
             Transcribe the call so we both get notes and action items afterwards.{" "}
             <span className="text-muted-foreground">

@@ -13,7 +13,12 @@ export function UnsubscribeForm({ token, email }: { token: string; email: string
       </p>
     );
   return (
-    <form action={action} className="mt-3 space-y-3">
+    <form
+      action={action}
+      className="mt-3 space-y-3"
+      toolname="unsubscribe_from_host_emails"
+      tooldescription="Stop this host's proposals, payment requests and follow-up emails to the guest's address. Booking confirmations and reminders are unaffected."
+    >
       <p className="text-muted-foreground">
         Stop emails like proposals, payment requests and follow-ups to <strong>{email}</strong>?
         Booking confirmations and reminders for meetings you book are not affected.

@@ -1,6 +1,6 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { cn } from "cn";
 import {
   Select,
@@ -32,6 +32,7 @@ export function Dropdown({
   contentClassName,
   size = "default",
   renderValue,
+  toolparamdescription,
 }: {
   options: DropdownOption[];
   name?: string;
@@ -49,36 +50,57 @@ export function Dropdown({
   size?: "sm" | "default";
   /** What the closed trigger shows for a value, when it should differ from the list label. */
   renderValue?: (value: string) => ReactNode;
+  /**
+   * WebMCP: describes this parameter to an AI agent. The description has to sit on the
+   * submitted input, which Base UI owns, so with one set the component submits its own.
+   */
+  toolparamdescription?: string;
 }) {
   const items = options.map((o) => ({ value: o.value, label: o.label }));
+  const [inner, setInner] = useState(defaultValue ?? "");
+  const described = toolparamdescription !== undefined;
+  const current = value ?? inner;
   return (
-    <Select
-      items={items}
-      name={name}
-      value={value}
-      defaultValue={defaultValue}
-      onValueChange={(v) => onValueChange?.(String(v ?? ""))}
-      required={required}
-      disabled={disabled}
-    >
-      <SelectTrigger
-        id={id}
-        aria-label={ariaLabel}
-        size={size}
-        className={cn("w-full min-w-0 bg-background", className)}
+    <>
+      <Select
+        items={items}
+        name={described ? undefined : name}
+        value={described ? current : value}
+        defaultValue={described ? undefined : defaultValue}
+        onValueChange={(v) => {
+          setInner(String(v ?? ""));
+          onValueChange?.(String(v ?? ""));
+        }}
+        required={required}
+        disabled={disabled}
       >
-        <SelectValue placeholder={placeholder}>
-          {renderValue ? (v: string | null) => (v ? renderValue(v) : placeholder) : undefined}
-        </SelectValue>
-      </SelectTrigger>
-      {/* Drop below the field like a menu, instead of overlaying the selected item on it. */}
-      <SelectContent alignItemWithTrigger={false} align="start" className={contentClassName}>
-        {options.map((o) => (
-          <SelectItem key={o.value} value={o.value} disabled={o.disabled}>
-            {o.label}
-          </SelectItem>
-        ))}
-      </SelectContent>
-    </Select>
+        <SelectTrigger
+          id={id}
+          aria-label={ariaLabel}
+          size={size}
+          className={cn("w-full min-w-0 bg-background", className)}
+        >
+          <SelectValue placeholder={placeholder}>
+            {renderValue ? (v: string | null) => (v ? renderValue(v) : placeholder) : undefined}
+          </SelectValue>
+        </SelectTrigger>
+        {/* Drop below the field like a menu, instead of overlaying the selected item on it. */}
+        <SelectContent alignItemWithTrigger={false} align="start" className={contentClassName}>
+          {options.map((o) => (
+            <SelectItem key={o.value} value={o.value} disabled={o.disabled}>
+              {o.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+      {described && (
+        <input
+          type="hidden"
+          name={name}
+          value={current}
+          toolparamdescription={toolparamdescription}
+        />
+      )}
+    </>
   );
 }
