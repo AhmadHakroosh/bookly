@@ -38,6 +38,14 @@ export type ArdManifest = {
 export const ardIdentifier = (publisher: string, namespace: string, name: string) =>
   `urn:air:${publisher}:${namespace}:${name}`;
 
+/** `2026-10-02` → `2026-10-02T00:00:00Z`; a full date-time passes through unchanged. */
+export function toDateTime(value: string): string {
+  if (/^\d{4}-\d{2}-\d{2}$/.test(value)) return `${value}T00:00:00Z`;
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) throw new Error(`Not a date: ${value}`);
+  return d.toISOString().replace(/\.\d{3}Z$/, "Z");
+}
+
 export function buildArdManifest(opts: {
   /** `https://bookly-app.io` */
   base: string;
@@ -74,7 +82,9 @@ export function buildArdManifest(opts: {
         ],
         tags: ["scheduling", "booking", "calendar", "meetings"],
         version: opts.version,
-        updatedAt: opts.updatedAt,
+        // RFC 3339 date-time: the ARD schema validates `updatedAt` with format "date-time",
+        // so a bare date (2026-10-02) fails Lighthouse's ard-schema audit.
+        updatedAt: toDateTime(opts.updatedAt),
       },
     ],
   };

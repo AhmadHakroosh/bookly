@@ -4,6 +4,10 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 ## [Unreleased]
 
+### Fixed
+
+- The ARD manifest's `updatedAt` is a full RFC 3339 date-time (`2026-10-02T00:00:00Z`) as the ARD schema requires; the bare date failed Lighthouse's `ard-schema` audit
+
 ## [0.12.2] - 2026-10-15
 
 ### Added
