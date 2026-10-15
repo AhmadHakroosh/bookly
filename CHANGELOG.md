@@ -4,6 +4,8 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 ## [Unreleased]
 
+## [0.12.2] - 2026-10-15
+
 ### Added
 
 - **Ready for AI agents.** The marketing host publishes an Agentic Resource Discovery manifest at `/.well-known/ard.json` (advertised with `<link rel="ard">`; `/.well-known/ai-catalog.json` returns the same for older consumers) pointing at an Agent Skill, `/.well-known/agent-skills/scheduling.md`, that explains how to read a host's event types and availability and book, cancel or reschedule. Every public form (booking, waitlist, routing, manage-booking, sign-up, sign-in, sign-out) carries WebMCP declarative tool annotations, and the marketing pages register `get_pricing_plans` and `search_documentation` tools in browsers that expose `navigator.modelContext`. Lighthouse's Agentic Browsing audits pass
@@ -402,7 +404,8 @@ First public release: the self-hostable scheduling platform with contacts, brief
 
 - The unused storage layer (`packages/storage`, `STORAGE_*` and `S3_*` variables, the MinIO service in Compose): nothing in Bookly uploads files; profile photos and logos are URLs
 
-[Unreleased]: https://github.com/AhmadHakroosh/bookly/compare/v0.12.1...HEAD
+[Unreleased]: https://github.com/AhmadHakroosh/bookly/compare/v0.12.2...HEAD
+[0.12.2]: https://github.com/AhmadHakroosh/bookly/compare/v0.12.1...v0.12.2
 [0.12.1]: https://github.com/AhmadHakroosh/bookly/compare/v0.12.0...v0.12.1
 [0.12.0]: https://github.com/AhmadHakroosh/bookly/compare/v0.11.3...v0.12.0
 [0.11.3]: https://github.com/AhmadHakroosh/bookly/compare/v0.11.2...v0.11.3
