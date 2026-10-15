@@ -4,6 +4,8 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 ## [Unreleased]
 
+## [0.12.5] - 2026-10-15
+
 ### Fixed
 
 - Dropdowns inside WebMCP forms (booking questions with a fixed list of answers, the phone country) are described from the first render: the form gets a server-rendered native `<select>` with the name, the options and the description, kept in step with the visible dropdown, and Base UI's own input is detached from the form. Chrome reads a declarative tool when the form first renders, so the description added after hydration in 0.12.4 came too late on the live booking page. Agents now get those questions as an enum of the allowed answers
@@ -420,7 +422,8 @@ First public release: the self-hostable scheduling platform with contacts, brief
 
 - The unused storage layer (`packages/storage`, `STORAGE_*` and `S3_*` variables, the MinIO service in Compose): nothing in Bookly uploads files; profile photos and logos are URLs
 
-[Unreleased]: https://github.com/AhmadHakroosh/bookly/compare/v0.12.4...HEAD
+[Unreleased]: https://github.com/AhmadHakroosh/bookly/compare/v0.12.5...HEAD
+[0.12.5]: https://github.com/AhmadHakroosh/bookly/compare/v0.12.4...v0.12.5
 [0.12.4]: https://github.com/AhmadHakroosh/bookly/compare/v0.12.3...v0.12.4
 [0.12.3]: https://github.com/AhmadHakroosh/bookly/compare/v0.12.2...v0.12.3
 [0.12.2]: https://github.com/AhmadHakroosh/bookly/compare/v0.12.1...v0.12.2
