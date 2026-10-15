@@ -146,7 +146,7 @@ https://agenticresourcediscovery.org, advertised with `<link rel="ard">`; the pr
 `/.well-known/agent-skills/scheduling.md`, which tells an agent how to read a host's event types
 and availability and book, cancel or reschedule through the public API or the booking pages.
 Every public form (booking, waitlist, routing, manage-booking, sign-up, sign-in) is a WebMCP
-declarative tool (`toolname`, `tooldescription`, `toolparamdescription`), and the marketing pages
+declarative tool (`toolname`, `tooldescription`, `toolparamdescription`) (a radio group is described on its `<fieldset>`; hidden fields fixed by the page carry no description, so they are not parameters), and the marketing pages
 register two imperative tools, `get_pricing_plans` and `search_documentation`, when the browser
 exposes `navigator.modelContext`. Lighthouse's Agentic Browsing category checks all of this;
 workspace hosts answer 404 for the manifest and the skill.

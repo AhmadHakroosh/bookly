@@ -4,6 +4,10 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 ## [Unreleased]
 
+### Fixed
+
+- WebMCP schemas on the booking page are clean under Lighthouse with WebMCP enabled: the "how to meet" choice is described on its fieldset (how Chrome describes radio groups), dropdowns describe Base UI's own named input instead of adding an unnamed one, and the page-fixed hidden fields (host, event type, slot, timezone) carry no description, so they are not parameters an agent could change
+
 ## [0.12.3] - 2026-10-15
 
 ### Fixed

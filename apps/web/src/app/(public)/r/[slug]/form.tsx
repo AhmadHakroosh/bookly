@@ -17,12 +17,7 @@ export function RoutingFormView({ slug, questions }: { slug: string; questions: 
       toolname="submit_routing_form"
       tooldescription="Answer this routing form on the guest's behalf; the answers decide which booking page or event type the guest is sent to."
     >
-      <input
-        type="hidden"
-        name="slug"
-        value={slug}
-        toolparamdescription="The routing form's slug (fixed by the page)."
-      />
+      <input type="hidden" name="slug" value={slug} />
       <input
         type="text"
         name="website"

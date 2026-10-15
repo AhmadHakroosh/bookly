@@ -12,6 +12,10 @@ declare module "react" {
     /** Let the agent submit the form itself instead of handing it back to the person. */
     toolautosubmit?: boolean;
   }
+  /** A radio group or a set of checkboxes is one parameter, described on its fieldset. */
+  interface FieldsetHTMLAttributes<T> extends HTMLAttributes<T> {
+    toolparamdescription?: string;
+  }
   interface InputHTMLAttributes<T> extends HTMLAttributes<T> {
     toolparamdescription?: string;
   }

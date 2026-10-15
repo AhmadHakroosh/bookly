@@ -73,38 +73,13 @@ export function BookingForm({
       toolname="book_meeting"
       tooldescription="Book the selected time with this host on the guest's behalf. The host, event type, start time and timezone are already set from the page; fill in the guest's details and answers, then submit."
     >
-      <input
-        type="hidden"
-        name="username"
-        value={username}
-        toolparamdescription="The host's username (fixed by the page)."
-      />
-      <input
-        type="hidden"
-        name="event"
-        value={event}
-        toolparamdescription="The event type slug (fixed by the page)."
-      />
-      <input
-        type="hidden"
-        name="slot"
-        value={slot}
-        toolparamdescription="The chosen start time, ISO 8601 (fixed by the page)."
-      />
-      <input
-        type="hidden"
-        name="tz"
-        value={tz}
-        toolparamdescription="The guest's IANA timezone (fixed by the page)."
-      />
-      {reschedule && (
-        <input
-          type="hidden"
-          name="reschedule"
-          value={reschedule}
-          toolparamdescription="The booking being rescheduled (fixed by the page)."
-        />
-      )}
+      {/* Fixed by the page. Hidden inputs without a description are not WebMCP parameters,
+          so an agent cannot change the host, the event type, the slot or the timezone. */}
+      <input type="hidden" name="username" value={username} />
+      <input type="hidden" name="event" value={event} />
+      <input type="hidden" name="slot" value={slot} />
+      <input type="hidden" name="tz" value={tz} />
+      {reschedule && <input type="hidden" name="reschedule" value={reschedule} />}
       <input
         type="text"
         name="website"
@@ -115,7 +90,10 @@ export function BookingForm({
         toolparamdescription="Leave empty. This field catches bots; any value rejects the booking."
       />
       {locations.length > 1 ? (
-        <fieldset className="text-sm">
+        <fieldset
+          className="text-sm"
+          toolparamdescription="How to meet: one of the offered location types (video, phone, in person…)."
+        >
           <legend className="mb-1 block font-medium">How do you want to meet?</legend>
           <div className="space-y-2">
             {locations.map((l) => (
@@ -130,7 +108,6 @@ export function BookingForm({
                   checked={l.type === location}
                   onChange={() => setLocation(l.type)}
                   className="size-4 accent-primary"
-                  toolparamdescription="How to meet: one of the offered location types."
                 />
                 <span>{l.label}</span>
               </label>
@@ -138,12 +115,7 @@ export function BookingForm({
           </div>
         </fieldset>
       ) : (
-        <input
-          type="hidden"
-          name="location"
-          value={location}
-          toolparamdescription="How to meet (the only option, fixed by the page)."
-        />
+        <input type="hidden" name="location" value={location} />
       )}
       {chosen?.ask === "phone" && (
         <div className="text-sm">
