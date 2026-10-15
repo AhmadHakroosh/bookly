@@ -32,30 +32,10 @@ export function WaitlistForm({
       toolname="join_waitlist"
       tooldescription="Put the guest on the waiting list for this event type when the wanted day or time is full; they are emailed the moment a spot opens."
     >
-      <input
-        type="hidden"
-        name="username"
-        value={username}
-        toolparamdescription="The host's username (fixed by the page)."
-      />
-      <input
-        type="hidden"
-        name="event"
-        value={event}
-        toolparamdescription="The event type slug (fixed by the page)."
-      />
-      <input
-        type="hidden"
-        name="target"
-        value={target}
-        toolparamdescription="The wanted day or start time (fixed by the page)."
-      />
-      <input
-        type="hidden"
-        name="tz"
-        value={tz}
-        toolparamdescription="The guest's IANA timezone (fixed by the page)."
-      />
+      <input type="hidden" name="username" value={username} />
+      <input type="hidden" name="event" value={event} />
+      <input type="hidden" name="target" value={target} />
+      <input type="hidden" name="tz" value={tz} />
       <input
         type="text"
         name="website"
