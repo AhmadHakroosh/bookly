@@ -4,6 +4,8 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 ## [Unreleased]
 
+## [0.12.4] - 2026-10-15
+
 ### Fixed
 
 - WebMCP schemas on the booking page are clean under Lighthouse with WebMCP enabled: the "how to meet" choice is described on its fieldset (how Chrome describes radio groups), dropdowns describe Base UI's own named input instead of adding an unnamed one, and the page-fixed hidden fields (host, event type, slot, timezone) carry no description, so they are not parameters an agent could change
@@ -414,7 +416,8 @@ First public release: the self-hostable scheduling platform with contacts, brief
 
 - The unused storage layer (`packages/storage`, `STORAGE_*` and `S3_*` variables, the MinIO service in Compose): nothing in Bookly uploads files; profile photos and logos are URLs
 
-[Unreleased]: https://github.com/AhmadHakroosh/bookly/compare/v0.12.3...HEAD
+[Unreleased]: https://github.com/AhmadHakroosh/bookly/compare/v0.12.4...HEAD
+[0.12.4]: https://github.com/AhmadHakroosh/bookly/compare/v0.12.3...v0.12.4
 [0.12.3]: https://github.com/AhmadHakroosh/bookly/compare/v0.12.2...v0.12.3
 [0.12.2]: https://github.com/AhmadHakroosh/bookly/compare/v0.12.1...v0.12.2
 [0.12.1]: https://github.com/AhmadHakroosh/bookly/compare/v0.12.0...v0.12.1
