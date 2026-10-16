@@ -84,6 +84,20 @@ describe("reading replies", () => {
     expect(stripQuoted("Thanks\nFrom: Ann\nSent: Friday\nTo: me")).toBe("Thanks");
     expect(stripQuoted("> only a quote")).toBe("> only a quote");
   });
+  it("never leaves tag fragments, script bodies or doubly decoded entities", () => {
+    // The nested opener is one tag; what is left is text with no "<" to start a tag.
+    expect(htmlToText("<scr<script>ipt>alert(1)</script>ok")).toBe("ipt>alert(1)ok");
+    expect(htmlToText("<<img src=x onerror=alert(1)>>")).not.toContain("<");
+    expect(htmlToText("a<script>x</script>b")).toBe("ab");
+    expect(htmlToText("&amp;lt;b&amp;gt;")).toBe("&lt;b&gt;");
+    expect(htmlToText("<p>unclosed <b")).toBe("unclosed");
+  });
+  it("parses reply addresses without slow patterns", () => {
+    const evil = `${"<".repeat(5000)}x@reply.example.com`;
+    const t = Date.now();
+    expect(readReplyAddress(evil, "reply.example.com")).toBeNull();
+    expect(Date.now() - t).toBeLessThan(50);
+  });
   it("turns HTML into readable text", () => {
     expect(htmlToText("<p>Hi&nbsp;there</p><p>Line&amp;two<br>three</p><style>x{}</style>")).toBe(
       "Hi there\nLine&two\nthree",

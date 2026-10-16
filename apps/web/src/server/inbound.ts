@@ -29,9 +29,14 @@ export function replyToken(eventId: string) {
 
 /** The entry id behind a reply address, or null when it is not one of ours or the signature fails. */
 export function readReplyAddress(address: string, domain: string): string | null {
-  const m = /^\s*(?:.*<)?([^<>@\s]+)@([^<>\s]+?)>?\s*$/.exec(address);
-  if (!m || m[2]!.toLowerCase() !== domain.toLowerCase()) return null;
-  const local = m[1]!.toLowerCase().split("+")[0]!;
+  // Untrusted input: plain string slicing, no backtracking patterns, and a sane length cap.
+  if (address.length > 320) return null;
+  const lt = address.lastIndexOf("<");
+  const gt = lt >= 0 ? address.indexOf(">", lt) : -1;
+  const inner = (lt >= 0 ? address.slice(lt + 1, gt >= 0 ? gt : undefined) : address).trim();
+  const at = inner.lastIndexOf("@");
+  if (at <= 0 || inner.slice(at + 1).toLowerCase() !== domain.toLowerCase()) return null;
+  const local = inner.slice(0, at).toLowerCase().split("+")[0]!;
   const parts = /^r-([0-9a-f]{32})-([0-9a-f]{16})$/.exec(local);
   if (!parts) return null;
   const u = UUID.exec(parts[1]!);
@@ -123,19 +128,61 @@ export async function fetchReceived(emailId: string): Promise<ReceivedEmail | nu
   return (await res.json()) as ReceivedEmail;
 }
 
-/** Plain text from HTML when a reply has no text part (tags out, entities and breaks kept sane). */
+const ENTITIES: Record<string, string> = {
+  nbsp: " ",
+  amp: "&",
+  lt: "<",
+  gt: ">",
+  quot: '"',
+  "#39": "'",
+  apos: "'",
+};
+/** Tags that end a line of text. */
+const BREAKS = new Set([
+  "br",
+  "/p",
+  "/div",
+  "/li",
+  "/tr",
+  "/h1",
+  "/h2",
+  "/h3",
+  "/h4",
+  "/h5",
+  "/h6",
+]);
+
+/**
+ * Plain text from HTML when a reply has no text part. One pass over the characters: tags are
+ * dropped (script and style with their content), block ends become line breaks, and entities
+ * are decoded once (so "&amp;lt;" stays "&lt;"). The result is only ever shown as text.
+ */
 export function htmlToText(html: string) {
-  return html
-    .replace(/<(script|style)[\s\S]*?<\/\1>/gi, "")
-    .replace(/<br\s*\/?>/gi, "\n")
-    .replace(/<\/(p|div|li|tr|h\d)>/gi, "\n")
-    .replace(/<[^>]+>/g, "")
-    .replace(/&nbsp;/g, " ")
-    .replace(/&amp;/g, "&")
-    .replace(/&lt;/g, "<")
-    .replace(/&gt;/g, ">")
-    .replace(/&quot;/g, '"')
-    .replace(/&#39;/g, "'")
+  const lower = html.toLowerCase();
+  let out = "";
+  let i = 0;
+  while (i < html.length) {
+    const c = html[i]!;
+    if (c !== "<") {
+      out += c;
+      i++;
+      continue;
+    }
+    const end = html.indexOf(">", i + 1);
+    if (end < 0) break; // an unclosed tag: drop the rest
+    const name = /^\/?[a-z0-9]+/.exec(lower.slice(i + 1, Math.min(end, i + 12)))?.[0] ?? "";
+    if (name === "script" || name === "style") {
+      const close = lower.indexOf(`</${name}`, end + 1);
+      const closeEnd = close < 0 ? -1 : html.indexOf(">", close);
+      i = closeEnd < 0 ? html.length : closeEnd + 1;
+      continue;
+    }
+    if (BREAKS.has(name)) out += "\n";
+    i = end + 1;
+  }
+  return out
+    .replace(/&(nbsp|amp|lt|gt|quot|apos|#39);/g, (_, e: string) => ENTITIES[e] ?? "")
+    .replace(/[ \t]+\n/g, "\n")
     .replace(/\n{3,}/g, "\n\n")
     .trim();
 }
