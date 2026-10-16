@@ -175,6 +175,7 @@ export function serializeTask(t: Task) {
     title: t.title,
     contactId: t.contactId,
     bookingId: t.bookingId,
+    statusId: t.statusId,
     dueAt: t.dueAt?.toISOString() ?? null,
     doneAt: t.doneAt?.toISOString() ?? null,
     createdAt: t.createdAt.toISOString(),

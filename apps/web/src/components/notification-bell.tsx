@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState, useTransition } from "react";
 import {
   AlarmClockIcon,
+  AtSignIcon,
   BanknoteIcon,
   BellIcon,
   CalendarClockIcon,
@@ -40,6 +41,7 @@ const ICONS: Record<string, LucideIcon> = {
   "recap.ready": FileTextIcon,
   "payment.received": BanknoteIcon,
   "task.assigned": UserCheckIcon,
+  "task.mentioned": AtSignIcon,
   "task.overdue": ClockAlertIcon,
 };
 

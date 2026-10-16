@@ -41,6 +41,7 @@ async function AdminShell({ children }: { children: React.ReactNode }) {
     getCurrentWorkspace(),
     getStaffRole(),
   ]);
+  const tasks = workspace ? await hasFlag(workspace, "task_board") : false;
   if (!session) redirect("/login?next=/admin");
   if (!role) redirect("/login?error=staff");
 
@@ -91,7 +92,12 @@ async function AdminShell({ children }: { children: React.ReactNode }) {
                   {workspace?.name ?? "Bookly"}
                 </SheetTitle>
                 <div className="flex min-h-[calc(100vh-6rem)] flex-col">
-                  <AdminNav cloud={isCloud()} manager={isManager(role)} supportHref={supportHref} />
+                  <AdminNav
+                    cloud={isCloud()}
+                    manager={isManager(role)}
+                    tasks={tasks}
+                    supportHref={supportHref}
+                  />
                 </div>
               </SheetContent>
             </Sheet>
@@ -121,7 +127,12 @@ async function AdminShell({ children }: { children: React.ReactNode }) {
       </header>
       <div className="flex flex-1">
         <aside className="sticky top-14 hidden h-[calc(100vh-3.5rem)] w-56 shrink-0 overflow-y-auto border-r p-4 lg:block">
-          <AdminNav cloud={isCloud()} manager={isManager(role)} supportHref={supportHref} />
+          <AdminNav
+            cloud={isCloud()}
+            manager={isManager(role)}
+            tasks={tasks}
+            supportHref={supportHref}
+          />
         </aside>
         <main className="min-w-0 flex-1 px-4 py-8 lg:px-8">
           <div className="admin-page mx-auto max-w-6xl">

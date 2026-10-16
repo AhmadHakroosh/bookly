@@ -60,4 +60,12 @@ describe("plans", () => {
     expect(planFor("members", 3)).toBe("team");
     expect(planFor("eventTypes", 2)).toBe("free");
   });
+  it("tasks: list on Free, board and custom statuses on Pro, assignment on Team, all self-hosted", () => {
+    expect(PLANS.free.limits.taskBoard).toBe(false);
+    expect(planFor("taskBoard")).toBe("pro");
+    expect(PLANS.pro.limits.taskAssignment).toBe(false);
+    expect(planFor("taskAssignment")).toBe("team");
+    expect(UNLIMITED.taskBoard && UNLIMITED.taskAssignment).toBe(true);
+    expect(limitsFor("pro", "past_due").taskBoard).toBe(PLANS.pro.limits.taskBoard);
+  });
 });

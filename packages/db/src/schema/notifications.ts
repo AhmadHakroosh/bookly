@@ -22,6 +22,7 @@ export type NotificationKind =
   | "recap.ready"
   | "payment.received"
   | "task.assigned"
+  | "task.mentioned"
   | "task.overdue";
 
 /**

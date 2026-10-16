@@ -31,6 +31,7 @@ import {
   RecapMock,
   CalendarMock,
   NotificationsMock,
+  TaskBoardMock,
 } from "./mocks";
 import { EmailMock, FollowUpMock, LiveTranscriptMock, RoutingMock, SeatsMock } from "./mocks-more";
 import { PlanGrid } from "./plan-card";
@@ -441,6 +442,7 @@ export default function LandingPage() {
       <Suspense fallback={null}>
         <GatedCalendarFeature />
         <GatedNotificationsFeature />
+        <GatedTaskBoardFeature />
       </Suspense>
 
       <Section className="border-t">
@@ -697,6 +699,30 @@ async function GatedNotificationsFeature() {
         New bookings, requests, cancellations, a guest waiting in the room, a payment that just
         landed, a recap ready to review: Bookly tells you the moment it happens, where you want to
         hear it.
+      </Feature>
+    </Section>
+  );
+}
+
+/** The task board in the tour, once it is on for every workspace. */
+async function GatedTaskBoardFeature() {
+  if (!(await flagOnForEveryone("task_board"))) return null;
+  return (
+    <Section className="border-t">
+      <Feature
+        eyebrow="Task board"
+        title="The follow-ups land on a board, not in someone's notes."
+        mock={<TaskBoardMock />}
+        flip
+        bullets={[
+          "Columns are your own flow: inquiry, quoted, booked, or whatever your business runs on",
+          "Drag cards between columns with a mouse, a finger or the keyboard",
+          "Action items from a meeting recap arrive as tasks, linked to the booking and the contact",
+          "Assign teammates, @-mention them in comments, share saved views (Team)",
+        ]}
+      >
+        Every promise made on a call becomes a card someone owns. The board shows what is waiting,
+        what is stuck and what is done, for you or the whole team.
       </Feature>
     </Section>
   );

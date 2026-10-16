@@ -17,6 +17,7 @@ const ORDER = [
   "self-hosting",
   "scheduling",
   "contacts",
+  "tasks",
   "integrations",
   "zoom",
   "payments",

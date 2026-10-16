@@ -193,14 +193,21 @@ async function TasksCard({
   scope,
   userId,
   manager,
+  board,
 }: {
   scope: HomeScope;
   userId: string;
   manager: boolean;
+  /** The task board is on: the card opens its "My tasks" view. */
+  board: boolean;
 }) {
   const t = await tasksSummary(scope, userId, manager);
   return (
-    <CardShell href="/admin#tasks" title="Your tasks" icon={CheckSquareIcon}>
+    <CardShell
+      href={board ? "/admin/tasks?view=mine" : "/admin#tasks"}
+      title="Your tasks"
+      icon={CheckSquareIcon}
+    >
       <Big>{t.open}</Big>
       {t.open === 0 ? (
         <Sub>No open tasks.</Sub>
@@ -255,6 +262,7 @@ export function HomeCards({
   manager,
   since,
   notifications = false,
+  taskBoard = false,
 }: {
   scope: HomeScope;
   userId: string;
@@ -262,6 +270,8 @@ export function HomeCards({
   since: Date | null;
   /** The notifications card, once that flag is on for the workspace. */
   notifications?: boolean;
+  /** The task board is on: the tasks card links to it. */
+  taskBoard?: boolean;
 }) {
   return (
     <section aria-label="Summary" className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
@@ -275,7 +285,7 @@ export function HomeCards({
         <AttentionCard scope={scope} />
       </Slot>
       <Slot>
-        <TasksCard scope={scope} userId={userId} manager={manager} />
+        <TasksCard scope={scope} userId={userId} manager={manager} board={taskBoard} />
       </Slot>
       {notifications && (
         <Slot>

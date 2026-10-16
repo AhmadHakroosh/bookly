@@ -166,7 +166,7 @@ test.describe("admin", () => {
       ["This week", "/admin/bookings"],
       ["Since your last visit", "/admin/bookings"],
       ["Needs attention", "/admin#"],
-      ["Your tasks", "/admin#tasks"],
+      ["Your tasks", "/admin/tasks?view=mine"],
       ["Contacts", "/admin/contacts"],
       ["Payments this month", "/admin/"],
     ] as const) {

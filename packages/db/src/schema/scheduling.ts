@@ -1,5 +1,7 @@
+import { sql } from "drizzle-orm";
 import {
   boolean,
+  doublePrecision,
   index,
   integer,
   jsonb,
@@ -315,6 +317,38 @@ export const contactEvents = pgTable(
   (t) => [index("contact_events_contact_idx").on(t.contactId, t.createdAt)],
 );
 
+/**
+ * A column of the task board. Each workspace defines its own flow (a clinic: new → contacted →
+ * scheduled → seen → billed); Bookly seeds To do / In progress / Done. Exactly one active,
+ * non-done status is the default for new tasks; tasks in an `isDone` status count as done
+ * (`tasks.done_at` is kept in step so everything that reads it keeps working).
+ */
+export const taskStatuses = pgTable(
+  "task_statuses",
+  {
+    id: id(),
+    workspaceId: text("workspace_id")
+      .notNull()
+      .references(() => workspaces.id, { onDelete: "cascade" }),
+    name: text("name").notNull(),
+    /** `#rrggbb`. */
+    color: text("color").notNull().default("#71717a"),
+    position: integer("position").notNull().default(0),
+    isDefault: boolean("is_default").notNull().default(false),
+    isDone: boolean("is_done").notNull().default(false),
+    /** Work-in-progress hint: the column header warns above this many tasks. */
+    wipLimit: integer("wip_limit"),
+    archivedAt: timestamp("archived_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    index("task_statuses_ws_idx").on(t.workspaceId, t.position),
+    uniqueIndex("task_statuses_ws_name_idx")
+      .on(t.workspaceId, t.name)
+      .where(sql`${t.archivedAt} is null`),
+  ],
+);
+
 /** Action items captured after meetings (or added by hand), with reminders. */
 export const tasks = pgTable(
   "tasks",
@@ -334,12 +368,69 @@ export const tasks = pgTable(
     doneAt: timestamp("done_at", { withTimezone: true }),
     /** Set once the overdue nudge went out, so it is sent once. */
     nudgedAt: timestamp("nudged_at", { withTimezone: true }),
+    /** The board column; null only for rows written before statuses existed. */
+    statusId: text("status_id").references(() => taskStatuses.id, { onDelete: "set null" }),
+    /** Order inside a column (fractional, so a move rewrites one row). */
+    position: doublePrecision("position").notNull().default(0),
+    description: text("description"),
+    /** Who created it; differs from `userId` when a teammate assigned it. */
+    createdBy: text("created_by").references(() => users.id, { onDelete: "set null" }),
     ...timestamps,
   },
   (t) => [
     index("tasks_ws_due_idx").on(t.workspaceId, t.doneAt, t.dueAt),
     index("tasks_contact_idx").on(t.contactId),
+    index("tasks_ws_status_idx").on(t.workspaceId, t.statusId, t.position, t.id),
   ],
+);
+
+/** Comments on a task; `mentions` are the user ids @-mentioned (they are notified). */
+export const taskComments = pgTable(
+  "task_comments",
+  {
+    id: id(),
+    workspaceId: text("workspace_id")
+      .notNull()
+      .references(() => workspaces.id, { onDelete: "cascade" }),
+    taskId: text("task_id")
+      .notNull()
+      .references(() => tasks.id, { onDelete: "cascade" }),
+    authorId: text("author_id").references(() => users.id, { onDelete: "set null" }),
+    body: text("body").notNull(),
+    mentions: text("mentions").array().notNull().default([]),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index("task_comments_task_idx").on(t.taskId, t.createdAt, t.id)],
+);
+
+/** Filters a saved task view applies; every field is optional. */
+export type TaskFilters = {
+  /** "me", a user id, or absent for everyone. */
+  assignee?: string;
+  due?: "overdue" | "today" | "week" | "none";
+  contactId?: string;
+  eventTypeId?: string;
+  statusIds?: string[];
+  /** Include done tasks in the list view (the board always shows done columns). */
+  showDone?: boolean;
+};
+
+/** A named set of filters and a layout; `userId` null = shared with the whole workspace. */
+export const taskViews = pgTable(
+  "task_views",
+  {
+    id: id(),
+    workspaceId: text("workspace_id")
+      .notNull()
+      .references(() => workspaces.id, { onDelete: "cascade" }),
+    userId: text("user_id").references(() => users.id, { onDelete: "cascade" }),
+    name: text("name").notNull(),
+    layout: text("layout").$type<"board" | "list">().notNull().default("board"),
+    filters: jsonb("filters").$type<TaskFilters>().notNull().default({}),
+    createdBy: text("created_by").references(() => users.id, { onDelete: "set null" }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index("task_views_ws_idx").on(t.workspaceId, t.userId)],
 );
 
 /* ---------------- Bookings ---------------- */
@@ -597,3 +688,6 @@ export type Task = typeof tasks.$inferSelect;
 export type MeetingTranscript = typeof meetingTranscripts.$inferSelect;
 export type MeetingRecap = typeof meetingRecaps.$inferSelect;
 export type ContactEvent = typeof contactEvents.$inferSelect;
+export type TaskStatus = typeof taskStatuses.$inferSelect;
+export type TaskComment = typeof taskComments.$inferSelect;
+export type TaskView = typeof taskViews.$inferSelect;
