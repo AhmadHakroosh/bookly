@@ -4,6 +4,8 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 ## [Unreleased]
 
+## [0.16.0] - 2026-10-16
+
 ### Added
 
 - **Task board.** Tasks get their own page (Admin → Tasks): a board with one column per status and drag and drop with the mouse, a finger or the keyboard (Space to pick up, arrows to move between and within columns, Space to drop; announced to screen readers), and a list view (soonest due first, keyset "Show more"). Statuses are the workspace's own flow: owners and admins add, rename, colour, reorder and archive them, mark which count as done and which one is the default, and set WIP limits the column header warns about; every workspace starts with To do → In progress → Done and existing tasks are placed in it. A side pane (`?task=<id>`) edits title, notes, status, due date and assignee, links back to the booking and contact, and holds comments. Filters (assignee, due, status, contact, event type) live in the URL; views can be saved, for yourself or the whole workspace. On Team, tasks can be given to teammates and teammates @-mentioned in comments, both with notifications ("Task assigned to you", "Mentioned in a task"). Plans: the list with the default statuses on Free, the board, custom statuses and saved views from Pro (`taskBoard`), assignment, mentions and shared views on Team (`taskAssignment`); self-hosted has everything. Home's tasks card opens "My tasks". Behind the `task_board` flag with a Beta badge; the landing page shows the board once the flag is on for everyone
@@ -453,7 +455,8 @@ First public release: the self-hostable scheduling platform with contacts, brief
 
 - The unused storage layer (`packages/storage`, `STORAGE_*` and `S3_*` variables, the MinIO service in Compose): nothing in Bookly uploads files; profile photos and logos are URLs
 
-[Unreleased]: https://github.com/AhmadHakroosh/bookly/compare/v0.15.0...HEAD
+[Unreleased]: https://github.com/AhmadHakroosh/bookly/compare/v0.16.0...HEAD
+[0.16.0]: https://github.com/AhmadHakroosh/bookly/compare/v0.15.0...v0.16.0
 [0.15.0]: https://github.com/AhmadHakroosh/bookly/compare/v0.14.0...v0.15.0
 [0.14.0]: https://github.com/AhmadHakroosh/bookly/compare/v0.13.0...v0.14.0
 [0.13.0]: https://github.com/AhmadHakroosh/bookly/compare/v0.12.5...v0.13.0
