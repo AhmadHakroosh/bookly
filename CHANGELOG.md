@@ -4,6 +4,8 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 ## [Unreleased]
 
+## [0.13.0] - 2026-10-16
+
 ### Added
 
 - **Home dashboard.** Home opens with summary cards, each a link to its page: this week's meetings with the next three, new bookings and cancellations since your last visit, what needs attention (requests, recaps to review, people to follow up), your tasks (open, overdue, due today, plus the team's count for owners and admins), contacts added this week and follow-ups due, and, for owners and admins, payments received this month per currency (or a prompt to connect Stripe). Members see their own meetings. Each card streams in on its own with a skeleton of its size and its own empty state; the Today list and the action sections keep their place below. Behind the `home_dashboard` flag, with a Beta badge while it is in beta; the landing page's Home mock shows the cards once the flag is on for everyone
@@ -426,7 +428,8 @@ First public release: the self-hostable scheduling platform with contacts, brief
 
 - The unused storage layer (`packages/storage`, `STORAGE_*` and `S3_*` variables, the MinIO service in Compose): nothing in Bookly uploads files; profile photos and logos are URLs
 
-[Unreleased]: https://github.com/AhmadHakroosh/bookly/compare/v0.12.5...HEAD
+[Unreleased]: https://github.com/AhmadHakroosh/bookly/compare/v0.13.0...HEAD
+[0.13.0]: https://github.com/AhmadHakroosh/bookly/compare/v0.12.5...v0.13.0
 [0.12.5]: https://github.com/AhmadHakroosh/bookly/compare/v0.12.4...v0.12.5
 [0.12.4]: https://github.com/AhmadHakroosh/bookly/compare/v0.12.3...v0.12.4
 [0.12.3]: https://github.com/AhmadHakroosh/bookly/compare/v0.12.2...v0.12.3
