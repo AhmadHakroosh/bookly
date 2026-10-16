@@ -135,7 +135,8 @@ test.describe("admin", () => {
     }
     await block.first().click();
     const pane = admin.locator('[data-slot="sheet-content"]');
-    await expect(pane.getByRole("heading", { name: /with Calendar Guest/ })).toBeVisible({
+    // The visible title (level 1); the dialog also has a screen-reader title with the same text.
+    await expect(pane.getByRole("heading", { level: 1, name: /with Calendar Guest/ })).toBeVisible({
       timeout: 15_000,
     });
     await expect(admin).toHaveURL(/booking=/);
