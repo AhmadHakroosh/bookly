@@ -36,10 +36,11 @@ async function AdminHome() {
   const mine = role !== "owner" && role !== "admin";
   const profile = await getProfileByUser(workspace.id, session.user.id);
   const tz = profile?.timezone ?? workspace.timezone;
-  const [dashboard, beta, since] = await Promise.all([
+  const [dashboard, beta, since, notifications] = await Promise.all([
     hasFlag(workspace, "home_dashboard"),
     inBeta(workspace, "home_dashboard"),
     lastHomeVisit(workspace.id, session.user.id),
+    hasFlag(workspace, "notifications"),
   ]);
   const [schedules, events, upcoming, stale, tasks, waitlist, recaps] = await Promise.all([
     profile ? listSchedules(workspace.id, session.user.id) : Promise.resolve([]),
@@ -119,6 +120,7 @@ async function AdminHome() {
             userId={session.user.id}
             manager={isManager(role)}
             since={since}
+            notifications={notifications}
           />
           <HomeVisit />
         </>

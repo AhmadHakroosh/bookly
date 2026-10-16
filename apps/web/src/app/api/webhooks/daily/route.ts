@@ -3,7 +3,7 @@ import { eq, schema } from "@bookly/db";
 import { db } from "@/lib/db";
 import { fmtDateTime } from "@/lib/time";
 import { verifyDailySignature } from "@/server/integrations";
-import { notifyHost } from "@/server/notify";
+import { notify } from "@/server/notifications";
 import { getProfileByUser } from "@/server/scheduling";
 import {
   bookingForRoomAnywhere,
@@ -117,10 +117,14 @@ export async function POST(req: Request) {
     .set({ remindersSent: [...b.remindersSent, key] })
     .where(eq(schema.bookings.id, b.id));
   const text = `${who} just joined your ${et?.title ?? "meeting"} (${fmtDateTime(b.startAt, host?.timezone ?? ws.timezone)}). Join: ${b.meetingUrl}`;
-  await notifyHost(b.hostUserId, "onJoin", {
-    subject: `${who} joined your call`,
-    text,
+  await notify(ws, b.hostUserId, {
+    kind: "guest.joined",
+    title: `${who} joined your call`,
+    body: `${et?.title ?? "Meeting"} · ${fmtDateTime(b.startAt, host?.timezone ?? ws.timezone)}`,
+    link: `/admin/bookings/${b.id}`,
+    dedupeKey: `booking:${b.id}:joined`,
     bookingId: b.id,
+    text,
     email: { subject: `${who} joined your call`, text },
   });
   return NextResponse.json({ ok: true });

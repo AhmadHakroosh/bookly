@@ -6,6 +6,7 @@ import {
   CalendarIcon,
   CheckSquareIcon,
   CreditCardIcon,
+  InboxIcon,
   UsersIcon,
   type LucideIcon,
 } from "lucide-react";
@@ -20,6 +21,7 @@ import {
   upcomingThisWeek,
   type HomeScope,
 } from "@/server/home";
+import { listNotifications, unreadCount } from "@/server/notifications";
 import { formatPrice, paymentsReady } from "@/server/payments";
 
 /*
@@ -217,6 +219,32 @@ async function TasksCard({
   );
 }
 
+async function NotificationsCard({ scope, userId }: { scope: HomeScope; userId: string }) {
+  const [unread, { rows }] = await Promise.all([
+    unreadCount(scope.ws.id, userId),
+    listNotifications(scope.ws.id, userId, { limit: 3 }),
+  ]);
+  return (
+    <CardShell href="/admin/notifications" title="Notifications" icon={InboxIcon}>
+      <Big>{unread}</Big>
+      {rows.length === 0 ? (
+        <Sub>Nothing yet. The bell in the header lists what happens as it happens.</Sub>
+      ) : (
+        <>
+          <Sub>{unread === 0 ? "All read" : plural(unread, "unread")}</Sub>
+          <ul className="mt-1 space-y-0.5 text-muted-foreground">
+            {rows.map((n) => (
+              <li key={n.id} className={n.readAt ? "truncate" : "truncate text-foreground"}>
+                {n.title}
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
+    </CardShell>
+  );
+}
+
 const Slot = ({ children }: { children: ReactNode }) => (
   <Suspense fallback={<CardSkeleton />}>{children}</Suspense>
 );
@@ -226,11 +254,14 @@ export function HomeCards({
   userId,
   manager,
   since,
+  notifications = false,
 }: {
   scope: HomeScope;
   userId: string;
   manager: boolean;
   since: Date | null;
+  /** The notifications card, once that flag is on for the workspace. */
+  notifications?: boolean;
 }) {
   return (
     <section aria-label="Summary" className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
@@ -246,6 +277,11 @@ export function HomeCards({
       <Slot>
         <TasksCard scope={scope} userId={userId} manager={manager} />
       </Slot>
+      {notifications && (
+        <Slot>
+          <NotificationsCard scope={scope} userId={userId} />
+        </Slot>
+      )}
       <Slot>
         <ContactsCard scope={scope} />
       </Slot>

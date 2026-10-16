@@ -4,18 +4,28 @@ import { Suspense } from "react";
 import { auth } from "@/lib/auth";
 import { AccountMenu } from "@/components/account-menu";
 import { AdminNav } from "@/components/admin-nav";
+import { NotificationBell } from "@/components/notification-bell";
 import { UpdateNotice } from "@/components/update-notice";
 import { WorkspaceSwitcher } from "@/components/workspace-switcher";
 import { ExternalLink } from "@/components/links";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { hasFlag } from "@/server/flags";
+import { KIND_KEYS, channelsFor, unreadCount } from "@/server/notifications";
 import { isCloud, listUserWorkspaces, platformUrl } from "@/server/platform";
+import { vapidPublicKey } from "@/server/push";
+import { getProfileByUser } from "@/server/scheduling";
 import { getSession, getStaffRole, isManager } from "@/server/session";
 import { getCurrentWorkspace } from "@/server/workspace";
 import { MenuIcon } from "lucide-react";
 
-export const metadata = { title: "Admin", robots: { index: false, follow: false } };
+export const metadata = {
+  title: "Admin",
+  robots: { index: false, follow: false },
+  // The installable host app (start_url /admin); guests' pages keep the root manifest.
+  manifest: "/admin.webmanifest",
+};
 
 export default function AdminLayout({ children }: LayoutProps<"/admin">) {
   return (
@@ -99,6 +109,11 @@ async function AdminShell({ children }: { children: React.ReactNode }) {
             </ExternalLink>
           </div>
           <div className="flex items-center gap-2">
+            {workspace && (
+              <Suspense fallback={null}>
+                <HeaderBell workspace={workspace} userId={session.user.id} />
+              </Suspense>
+            )}
             <ThemeToggle />
             <AccountMenu email={session.user.email} name={session.user.name} signOut={signOut} />
           </div>
@@ -125,5 +140,28 @@ async function AdminShell({ children }: { children: React.ReactNode }) {
         </main>
       </div>
     </div>
+  );
+}
+
+/** The bell, once notifications are enabled for this workspace. */
+async function HeaderBell({
+  workspace,
+  userId,
+}: {
+  workspace: NonNullable<Awaited<ReturnType<typeof getCurrentWorkspace>>>;
+  userId: string;
+}) {
+  if (!(await hasFlag(workspace, "notifications"))) return null;
+  const [unread, profile] = await Promise.all([
+    unreadCount(workspace.id, userId),
+    getProfileByUser(workspace.id, userId),
+  ]);
+  const prefs = profile?.notifications ?? {};
+  return (
+    <NotificationBell
+      initialUnread={unread}
+      pushKey={vapidPublicKey()}
+      desktopKinds={KIND_KEYS.filter((k) => channelsFor(prefs, k).desktop)}
+    />
   );
 }

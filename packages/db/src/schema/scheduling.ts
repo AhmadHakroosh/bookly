@@ -11,6 +11,7 @@ import {
 } from "drizzle-orm/pg-core";
 import { users } from "./auth";
 import { workspaces } from "./workspaces";
+import type { NotificationKind } from "./notifications";
 
 const id = () =>
   text("id")
@@ -78,6 +79,14 @@ export type HostNotifications = {
   onCancel?: boolean;
   onJoin?: boolean;
   reminder1h?: boolean;
+  /**
+   * Per kind of notification: shown in Bookly (bell, Home), sent to this member's browsers
+   * (desktop / PWA push), emailed. Missing entries fall back to the defaults in the app's
+   * `server/notifications.ts`.
+   */
+  kinds?: Partial<
+    Record<NotificationKind, { inApp?: boolean; desktop?: boolean; email?: boolean }>
+  >;
 };
 
 /* ---------------- Availability ---------------- */
@@ -283,7 +292,8 @@ export type ContactEventType =
   | "form_submitted"
   | "brief"
   | "capture"
-  | "task";
+  | "task"
+  | "payment";
 
 /** The contact's timeline: everything that happened between them and the workspace. */
 export const contactEvents = pgTable(

@@ -18,8 +18,9 @@ import { buildIcsCalendar, type IcsEvent } from "./ics";
 import { deprovisionBooking, provisionBooking, syncEventAttendees } from "./integrations";
 import { serializeBooking } from "./api";
 import { adminBaseUrl, publicBaseUrl } from "./urls";
-import { notifyHost, textAttendee } from "./notify";
-import { isPaid, paymentsReady, recordPayment, refundBooking } from "./payments";
+import { notify, wantsEmail } from "./notifications";
+import { textAttendee } from "./notify";
+import { formatPrice, isPaid, paymentsReady, recordPayment, refundBooking } from "./payments";
 import { notifyWaitlist } from "./waitlist";
 import { emitEvent } from "./webhooks";
 import { brandFor } from "@/emails/brand";
@@ -464,6 +465,19 @@ export async function finalizePaidBooking(
   const first = await finalizeBooking(ws, paid, et);
   for (const s of siblings)
     await finalizeBooking(ws, { ...s, paymentStatus: "paid" }, et, null, false);
+  const cents = [paid, ...siblings].reduce((sum, b) => sum + (b.amountCents ?? 0), 0);
+  if (cents > 0)
+    void notify(ws, paid.hostUserId, {
+      kind: "payment.received",
+      title: `${paid.attendeeName} paid ${formatPrice(cents, paid.currency)}`,
+      body: `${et.title}${siblings.length ? ` · ${siblings.length + 1} sessions` : ""}`,
+      link: `/admin/bookings/${paid.id}`,
+      dedupeKey: `booking:${paid.id}:paid`,
+      email: {
+        subject: `Payment received: ${formatPrice(cents, paid.currency)} from ${paid.attendeeName}`,
+        text: `${paid.attendeeName} paid ${formatPrice(cents, paid.currency)} for ${et.title}.\n\n${adminBaseUrl(ws)}/admin/bookings/${paid.id}`,
+      },
+    });
   return first;
 }
 
@@ -472,7 +486,7 @@ export async function finalizeBooking(
   booking: Booking,
   eventType: EventType,
   rescheduledFromId: string | null = booking.rescheduledFromId,
-  notify = true,
+  announce = true,
 ): Promise<Booking> {
   if (booking.status === "awaiting_payment") {
     const [b] = await db()
@@ -483,7 +497,7 @@ export async function finalizeBooking(
     booking = b!;
   }
   if (booking.status === "confirmed") booking = await provision(workspace, booking, eventType);
-  if (notify) {
+  if (announce) {
     await notifyCreated(workspace, booking, eventType);
     await trackBooking(
       workspace,
@@ -496,10 +510,17 @@ export async function finalizeBooking(
       (await getProfileByUser(workspace.id, booking.hostUserId))?.timezone ?? workspace.timezone,
     );
     const series = booking.seriesCount ? ` (${booking.seriesCount} sessions)` : "";
-    void notifyHost(booking.hostUserId, "onBooking", {
-      subject: `New booking: ${eventType.title}`,
-      text: `${booking.attendeeName} booked ${eventType.title}${series} on ${when}${booking.status === "pending" ? " (needs your confirmation)" : ""}. ${adminBaseUrl(workspace)}/admin/bookings`,
+    const pending = booking.status === "pending";
+    void notify(workspace, booking.hostUserId, {
+      kind: pending ? "booking.requested" : "booking.created",
+      title: pending
+        ? `${booking.attendeeName} requested ${eventType.title}`
+        : `${booking.attendeeName} booked ${eventType.title}`,
+      body: `${when}${series}${pending ? " · needs your answer" : ""}`,
+      link: `/admin/bookings/${booking.id}`,
+      dedupeKey: `booking:${booking.id}:created`,
       bookingId: booking.id,
+      text: `${booking.attendeeName} booked ${eventType.title}${series} on ${when}${pending ? " (needs your confirmation)" : ""}. ${adminBaseUrl(workspace)}/admin/bookings`,
     });
   }
   const payload = {
@@ -525,6 +546,11 @@ async function notifyCreated(workspace: Workspace, booking: Booking, eventType: 
   const a = await attendeeConfirmation(ctx);
   const h = await hostNotification(ctx);
   const hostTo = await hostEmail(booking.hostUserId);
+  const hostCopy = await wantsEmail(
+    workspace.id,
+    booking.hostUserId,
+    booking.status === "pending" ? "booking.requested" : "booking.created",
+  );
   const invite =
     booking.status === "confirmed"
       ? [{ filename: "invite.ics", content: ics, contentType: "text/calendar; method=REQUEST" }]
@@ -552,7 +578,7 @@ async function notifyCreated(workspace: Workspace, booking: Booking, eventType: 
         attachments: invite,
       });
     }),
-    hostTo
+    hostTo && hostCopy
       ? sendEmail({
           to: hostTo,
           subject: h.subject,
@@ -684,12 +710,18 @@ export async function cancelBooking(
   });
   refreshWorkspace(workspace.id);
   if (opts.quiet) return updated!;
-  if (by === "attendee")
-    void notifyHost(b.hostUserId, "onCancel", {
-      subject: "Booking cancelled",
-      text: `${b.attendeeName} cancelled their booking on ${fmtDateTime(b.startAt, workspace.timezone)}${reason ? `: ${reason}` : ""}.`,
+  if (by === "attendee") {
+    const when = fmtDateTime(b.startAt, workspace.timezone);
+    void notify(workspace, b.hostUserId, {
+      kind: "booking.cancelled",
+      title: `${b.attendeeName} cancelled ${et?.title ?? "their booking"}`,
+      body: `${when}${reason ? ` · “${reason.trim()}”` : ""}`,
+      link: `/admin/bookings/${b.id}`,
+      dedupeKey: `booking:${b.id}:cancelled`,
       bookingId: b.id,
+      text: `${b.attendeeName} cancelled their booking on ${when}${reason ? `: ${reason}` : ""}.`,
     });
+  }
   const ctx = await mailCtx(updated!, et ?? null, workspace);
   if (et?.remindByText && b.attendeePhone)
     void textAttendee(
@@ -705,7 +737,9 @@ export async function cancelBooking(
       },
     );
   const ics = await icsFor(ctx, "CANCEL", 2);
-  const hostTo = await hostEmail(b.hostUserId);
+  const hostTo = (await wantsEmail(workspace.id, b.hostUserId, "booking.cancelled"))
+    ? await hostEmail(b.hostUserId)
+    : null;
   const a = await cancellationMail(ctx, false);
   const h = await cancellationMail(ctx, true);
   await Promise.all([
@@ -782,7 +816,9 @@ export async function cancelSeries(
     cancelled.map((c) => icsEvent(ctx, c, "CANCEL", 2)),
     "CANCEL",
   );
-  const hostTo = await hostEmail(first.hostUserId);
+  const hostTo = (await wantsEmail(workspace.id, first.hostUserId, "booking.cancelled"))
+    ? await hostEmail(first.hostUserId)
+    : null;
   const a = await cancellationMail(ctx, false);
   const h = await cancellationMail(ctx, true);
   const attachments = [
@@ -802,8 +838,12 @@ export async function cancelSeries(
       : Promise.resolve(),
   ]).catch((e) => console.error("[booking] series cancel email failed", e));
   if (by === "attendee")
-    void notifyHost(first.hostUserId, "onCancel", {
-      subject: "Series cancelled",
+    void notify(workspace, first.hostUserId, {
+      kind: "booking.cancelled",
+      title: `${first.attendeeName} cancelled ${cancelled.length} remaining ${et?.title ?? "sessions"}`,
+      body: reason ? `“${reason.trim()}”` : null,
+      link: `/admin/bookings/${first.id}`,
+      dedupeKey: `series:${first.seriesId ?? first.id}:cancelled:${cancelled.length}`,
       text: `${first.attendeeName} cancelled ${cancelled.length} remaining ${et?.title ?? "sessions"}${reason ? `: ${reason}` : ""}.`,
     });
   return cancelled;

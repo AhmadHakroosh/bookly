@@ -133,6 +133,15 @@ export const envSchema = z.object({
   QSTASH_NEXT_SIGNING_KEY: z.string().optional(),
   UPSTASH_REDIS_REST_TOKEN: z.string().optional(),
   TELEMETRY_URL: z.url().default("https://bookly-app.io/api/telemetry"),
+  /**
+   * Web Push (desktop and installed-app notifications when Bookly is closed). Generate a pair
+   * with `npx web-push generate-vapid-keys`; the subject is a mailto: or https: contact for push
+   * services. Unset = notifications still arrive in the open app (bell + browser notification),
+   * just not when every Bookly tab is closed.
+   */
+  VAPID_PUBLIC_KEY: z.string().optional(),
+  VAPID_PRIVATE_KEY: z.string().optional(),
+  VAPID_SUBJECT: z.string().optional(),
 
   // ---- Text messages (SMS / WhatsApp reminders and host pings): Meta, Sent.dm or Twilio ----
   /**

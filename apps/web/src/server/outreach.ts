@@ -1,6 +1,6 @@
 import "server-only";
-import { publicBaseUrl } from "./urls";
-import { eq, schema } from "@bookly/db";
+import { adminBaseUrl, publicBaseUrl } from "./urls";
+import { and, eq, schema, sql } from "@bookly/db";
 import type { Contact, Workspace } from "@bookly/db/schema";
 import { sendEmail } from "@bookly/email";
 import { db } from "@/lib/db";
@@ -13,6 +13,7 @@ import { platformFeeCents, platformFeePercent } from "./connect";
 import { destinationCharge, formatPrice, paymentsFor, stripe } from "./payments";
 import { unsubscribePostUrl, unsubscribeUrl } from "./unsubscribe";
 import { getProfileByUser } from "./scheduling";
+import { notify } from "./notifications";
 
 export function templatesFor(ws: Workspace) {
   const t = ws.settings.templates ?? {};
@@ -65,6 +66,8 @@ export async function paymentLink(
   amountCents: number,
   currency: string,
   description: string,
+  /** The member who asked; told when the contact pays. */
+  requestedBy?: string,
 ) {
   const route = paymentsFor(ws);
   if (!route.ok || amountCents <= 0) return null;
@@ -82,7 +85,12 @@ export async function paymentLink(
         },
       },
     ],
-    metadata: { contactId: c.id, workspaceId: ws.id, kind: "payment_request" },
+    metadata: {
+      contactId: c.id,
+      workspaceId: ws.id,
+      kind: "payment_request",
+      ...(requestedBy ? { requestedBy } : {}),
+    },
     ...(route.account ? { payment_intent_data: destinationCharge(route.account, fee) } : {}),
     success_url: `${await publicBaseUrl(ws)}/?paid=1`,
     cancel_url: await publicBaseUrl(ws),
@@ -154,4 +162,57 @@ export async function sendOutreach(
   const days = input.followUpDays ?? 5;
   if (days > 0)
     await updateContact(ws.id, c.id, { nextFollowUpAt: new Date(Date.now() + days * 86_400_000) });
+}
+
+/**
+ * Stripe said a payment request was paid: logs it on the contact's timeline and tells the
+ * member who sent it. Returns null for anything else and for a redelivered event (so the
+ * webhook audits once).
+ */
+export async function paymentRequestPaid(session: {
+  id: string;
+  amount_total: number | null;
+  currency: string | null;
+  metadata: Record<string, string> | null;
+}) {
+  const m = session.metadata ?? {};
+  if (m.kind !== "payment_request" || !m.workspaceId || !m.contactId) return null;
+  const [ws, c] = await Promise.all([
+    db().query.workspaces.findFirst({ where: eq(schema.workspaces.id, m.workspaceId) }),
+    db().query.contacts.findFirst({
+      where: and(
+        eq(schema.contacts.id, m.contactId),
+        eq(schema.contacts.workspaceId, m.workspaceId),
+      ),
+    }),
+  ]);
+  if (!ws || !c) return null;
+  const seen = await db().query.contactEvents.findFirst({
+    where: and(
+      eq(schema.contactEvents.contactId, c.id),
+      eq(schema.contactEvents.type, "payment"),
+      sql`${schema.contactEvents.data}->>'sessionId' = ${session.id}`,
+    ),
+    columns: { id: true },
+  });
+  if (seen) return null;
+  const cents = session.amount_total ?? 0;
+  const amount = formatPrice(cents, session.currency);
+  const who = c.name || c.email;
+  await logContactEvent(ws.id, c.id, "payment", `Paid ${amount} (payment request)`, {
+    data: { sessionId: session.id, amountCents: cents, currency: session.currency },
+  });
+  if (m.requestedBy)
+    await notify(ws, m.requestedBy, {
+      kind: "payment.received",
+      title: `${who} paid ${amount}`,
+      body: "Payment request",
+      link: `/admin/contacts/${c.id}`,
+      dedupeKey: `checkout:${session.id}`,
+      email: {
+        subject: `Payment received: ${amount} from ${who}`,
+        text: `${who} paid your payment request of ${amount}.\n\n${adminBaseUrl(ws)}/admin/contacts/${c.id}`,
+      },
+    });
+  return { workspace: ws, contact: c, cents, currency: session.currency };
 }

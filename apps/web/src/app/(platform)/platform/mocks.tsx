@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import {
   ArrowRightIcon,
+  BanknoteIcon,
   BellIcon,
   CalendarClockIcon,
   CalendarDaysIcon,
@@ -8,6 +9,7 @@ import {
   CalendarPlusIcon,
   CheckIcon,
   ClipboardCheckIcon,
+  DoorOpenIcon,
   FileTextIcon,
   HomeIcon,
   LayoutGridIcon,
@@ -563,5 +565,62 @@ export function CalendarMock() {
         </div>
       </div>
     </BrowserFrame>
+  );
+}
+
+/** The bell's panel in the admin with a desktop notification arriving over it. */
+export function NotificationsMock() {
+  const items: [typeof BellIcon, string, string, string, boolean][] = [
+    [DoorOpenIcon, "Lina Farah joined your call", "Intro call · now", "now", true],
+    [CalendarPlusIcon, "Omar Haddad booked a Working session", "Thu, Oct 22, 10:00", "4 min", true],
+    [BanknoteIcon, "Acme paid $450.00", "Payment request", "1 h", false],
+    [FileTextIcon, "Recap ready: Sara Cohen", "Agreed on a two-week pilot…", "3 h", false],
+  ];
+  return (
+    <div className="relative" aria-hidden>
+      <BrowserFrame url="acme.bookly-app.io/admin">
+        <div className="flex items-center justify-between border-b px-4 py-2.5 text-xs">
+          <span className="font-semibold">Acme Advisory</span>
+          <span className="relative flex size-7 items-center justify-center rounded-md bg-muted">
+            <BellIcon className="size-4" />
+            <span className="absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-(--brand) px-1 text-[10px] font-semibold text-white">
+              2
+            </span>
+          </span>
+        </div>
+        <div className="flex justify-end p-4 pt-2">
+          <div className="w-72 overflow-hidden rounded-lg border bg-popover text-xs shadow-md">
+            <div className="flex items-center justify-between border-b px-3 py-2">
+              <span className="font-medium">Notifications</span>
+              <span className="text-muted-foreground">Mark all read</span>
+            </div>
+            {items.map(([Icon, title, body, when, unread]) => (
+              <div
+                key={title}
+                className={`flex gap-2.5 border-b px-3 py-2 last:border-b-0 ${unread ? "bg-(--brand)/5" : ""}`}
+              >
+                <Icon className="mt-0.5 size-3.5 shrink-0 text-muted-foreground" />
+                <div className="min-w-0 flex-1">
+                  <p className={`truncate ${unread ? "font-medium" : ""}`}>{title}</p>
+                  <p className="truncate text-muted-foreground">
+                    {body} · {when}
+                  </p>
+                </div>
+                {unread && <span className="mt-1 size-1.5 shrink-0 rounded-full bg-(--brand)" />}
+              </div>
+            ))}
+          </div>
+        </div>
+      </BrowserFrame>
+      <div className="force-light absolute -top-4 -left-3 flex w-64 gap-2.5 rounded-xl border border-black/10 bg-background/95 p-3 text-xs text-foreground shadow-xl backdrop-blur sm:-left-6">
+        <span className="flex size-7 shrink-0 items-center justify-center rounded-md bg-foreground text-background">
+          <VideoIcon className="size-3.5" />
+        </span>
+        <div className="min-w-0">
+          <p className="font-medium">Lina Farah joined your call</p>
+          <p className="text-muted-foreground">Bookly · Intro call, 14:00</p>
+        </div>
+      </div>
+    </div>
   );
 }

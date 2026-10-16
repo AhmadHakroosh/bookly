@@ -15,7 +15,7 @@ import { assistantConfigured } from "./brief";
 import { emitEvent } from "./webhooks";
 import { CAPTURE_SYSTEM, dueDate, manualCapture, parseCapture, type Capture } from "./capture-text";
 import { logContactEvent, setStage, trackBooking, noteToCrm } from "./contacts";
-import { notifyHost } from "./notify";
+import { notify } from "./notifications";
 import { baseUrl, getProfileByUser } from "./scheduling";
 
 /**
@@ -182,6 +182,8 @@ export async function addTask(
     contactId?: string | null;
     bookingId?: string | null;
     dueAt?: Date | null;
+    /** The member creating it; when that is someone else, the assignee is notified. */
+    assignedBy?: string | null;
   },
 ) {
   const [t] = await db()
@@ -196,6 +198,29 @@ export async function addTask(
     })
     .returning();
   emitEvent(workspaceId, "task.created", { task: serializeTask(t!) });
+  // Someone gave the task to a teammate: tell the teammate.
+  if (input.assignedBy && input.assignedBy !== input.userId) {
+    const ws = await db().query.workspaces.findFirst({
+      where: eq(schema.workspaces.id, workspaceId),
+    });
+    const by = await getProfileByUser(workspaceId, input.assignedBy);
+    if (ws)
+      void notify(ws, input.userId, {
+        kind: "task.assigned",
+        title: `${by?.displayName ?? "A teammate"} gave you a task`,
+        body: t!.title,
+        link: input.bookingId
+          ? `/admin/bookings/${input.bookingId}`
+          : input.contactId
+            ? `/admin/contacts/${input.contactId}`
+            : "/admin#tasks",
+        dedupeKey: `task:${t!.id}:assigned:${input.userId}`,
+        email: {
+          subject: `New task: ${t!.title}`,
+          text: `${by?.displayName ?? "A teammate"} gave you a task: ${t!.title}\n\n${adminBaseUrl(ws)}/admin`,
+        },
+      });
+  }
   return t!;
 }
 
@@ -232,11 +257,21 @@ export async function nudgeOverdueTasks(now = new Date()): Promise<number> {
     const tz = profile?.timezone ?? ws?.timezone ?? "UTC";
     const lines = list.map((t) => `• ${t.title}${t.dueAt ? ` (due ${fmtDate(t.dueAt, tz)})` : ""}`);
     const text = `${list.length} task${list.length === 1 ? " is" : "s are"} overdue:\n\n${lines.join("\n")}\n\n${ws ? adminBaseUrl(ws) : baseUrl()}/admin`;
-    await notifyHost(userId, "reminder1h", {
-      subject: `${list.length} overdue task${list.length === 1 ? "" : "s"}`,
-      text,
-      email: { subject: `${list.length} overdue task${list.length === 1 ? "" : "s"}`, text },
-    }).catch(() => {});
+    if (ws)
+      await notify(ws, userId, {
+        kind: "task.overdue",
+        title:
+          list.length === 1 ? `Overdue: ${list[0]!.title}` : `${list.length} tasks are overdue`,
+        body: list.length === 1 ? null : list.map((t) => t.title).join(" · "),
+        link: "/admin#tasks",
+        dedupeKey: `tasks:overdue:${list
+          .map((t) => t.id)
+          .sort()
+          .join(",")
+          .slice(0, 400)}`,
+        text,
+        email: { subject: `${list.length} overdue task${list.length === 1 ? "" : "s"}`, text },
+      });
     await db()
       .update(schema.tasks)
       .set({ nudgedAt: now })

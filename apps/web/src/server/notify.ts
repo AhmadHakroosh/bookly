@@ -1,7 +1,6 @@
 import "server-only";
-import { eq, schema } from "@bookly/db";
+import { and, eq, schema } from "@bookly/db";
 import type { HostNotifications, Profile } from "@bookly/db/schema";
-import { sendEmail } from "@bookly/email";
 import { db } from "@/lib/db";
 import { providerFor, textProviders, type TextChannel, type TextMessage } from "./texting";
 
@@ -50,42 +49,29 @@ async function slack(url: string, text: string) {
 export type HostEvent = "onBooking" | "onCancel" | "onJoin" | "reminder1h";
 
 /**
- * Pings a host on every channel they enabled for `event`. Email goes out only when `email`
- * is provided (the booking flow already sends richer emails for bookings and cancellations).
+ * Texts and Slack pings for a host who enabled `event` on Admin → Notifications. Called by
+ * `notify()` in notifications.ts, which also handles the bell, desktop push and email.
  */
 export async function notifyHost(
+  workspaceId: string,
   hostUserId: string,
   event: HostEvent,
   msg: {
-    subject: string;
     text: string;
     /** The booking the ping is about; the WhatsApp template's button opens it in the admin. */
     bookingId?: string;
-    email?: { subject: string; text: string; html?: string };
   },
 ) {
   const profile = await db().query.profiles.findFirst({
-    where: eq(schema.profiles.userId, hostUserId),
+    where: and(
+      eq(schema.profiles.workspaceId, workspaceId),
+      eq(schema.profiles.userId, hostUserId),
+    ),
   });
   const prefs: HostNotifications = profile?.notifications ?? {};
   const enabled = prefs[event] ?? (event === "onJoin" || event === "onBooking");
   if (!enabled) return;
   const jobs: Promise<unknown>[] = [];
-  if (msg.email) {
-    const u = await db().query.users.findFirst({
-      where: eq(schema.users.id, hostUserId),
-      columns: { email: true },
-    });
-    if (u?.email)
-      jobs.push(
-        sendEmail({
-          to: u.email,
-          subject: msg.email.subject,
-          text: msg.email.text,
-          html: msg.email.html,
-        }).catch((e) => console.error("[notify] email failed", e)),
-      );
-  }
   const channel = prefs.channel ?? "none";
   // Texts go only to a number the host has proved is theirs (Admin → Notifications).
   if (channel !== "none" && profile?.phone && profile.phoneVerifiedAt)

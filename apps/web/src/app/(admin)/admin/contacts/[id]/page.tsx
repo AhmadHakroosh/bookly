@@ -17,6 +17,7 @@ import {
   UserXIcon,
   XCircleIcon,
   type LucideIcon,
+  BanknoteIcon,
 } from "lucide-react";
 import { BackLink } from "@/components/links";
 import { notFound } from "next/navigation";
@@ -55,6 +56,7 @@ const ICON: Record<string, LucideIcon> = {
   brief: FileTextIcon,
   capture: NotebookPenIcon,
   task: SquareCheckIcon,
+  payment: BanknoteIcon,
 };
 
 async function ContactPage({ params, searchParams }: PageProps<"/admin/contacts/[id]">) {

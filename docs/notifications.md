@@ -3,6 +3,52 @@
 Attendees always get email: confirmation with calendar invite, 24-hour and 1-hour reminders,
 cancellation. Hosts choose how they hear about things under **Admin → Personal → Notifications**.
 
+## In Bookly, on the desktop, by email (beta)
+
+Behind the `notifications` feature flag (Console → Flags; a **Beta** badge shows while it is in
+beta). Every member gets a bell in the admin header with an unread count and a panel of their
+notifications, newest first: click one to open what it is about, **Mark all read**, **Show
+earlier** for older ones. Home gains a Notifications card. Notifications are kept 90 days.
+
+What creates one, and the defaults:
+
+| Kind                  | In Bookly | Desktop | Email                         |
+| --------------------- | --------- | ------- | ----------------------------- |
+| New booking           | on        | on      | on (carries the invite)       |
+| Booking request       | on        | on      | on                            |
+| Cancellation          | on        | on      | on (carries the cancel .ics)  |
+| Guest joined the call | on        | on      | on                            |
+| Starting soon (1 h)   | off       | on      | on (the reminder, with brief) |
+| Recap ready           | on        | on      | on                            |
+| Payment received      | on        | on      | off                           |
+| Task assigned to you  | on        | on      | off                           |
+| Task overdue          | on        | off     | off                           |
+
+Each member changes these under **Admin → Personal → Notifications → What you hear about**;
+the email column also governs the host copies Bookly always sent (booking, cancellation,
+reminder, recap). Texts and Slack keep following the switches below it.
+
+**Live updates.** An open admin tab holds a Server-Sent Events stream
+(`/admin/notifications/stream`) that sends new rows and the unread count; the notifications
+table is the fan-out, so no Redis or worker is involved and it behaves the same on serverless
+and in a container. A stream lives under a minute and the browser reconnects with
+`Last-Event-ID`, so nothing is missed; if streaming is blocked, the bell polls the count every
+minute.
+
+**Desktop notifications.** **Turn on for this browser** asks for permission and, when the install
+has Web Push keys, subscribes the browser so notifications arrive with every Bookly tab closed
+(the service worker is `/sw.js`, scoped to `/admin`; it caches nothing). Without keys, an open
+but hidden tab shows them itself. Each browser is listed with a **Remove** button. The admin is
+installable as an app (`/admin.webmanifest`, start URL `/admin`); on iPhone and iPad, Web Push
+needs Bookly added to the Home Screen first.
+
+Web Push keys, once per install (self-hosting): `npx web-push generate-vapid-keys`, then set
+`VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY` and `VAPID_SUBJECT` (`mailto:` you). Changing the keys
+invalidates every subscription; members turn desktop notifications on again.
+
+Activity log entries: `notifications.kinds_updated`, `notifications.device_added`,
+`notifications.device_removed` (reading and marking read are personal state, not logged).
+
 ## Host pings
 
 Events: someone books, an attendee cancels, an attendee joins the Bookly video room, a call
