@@ -30,6 +30,7 @@ import {
   HomeMock,
   RecapMock,
   CalendarMock,
+  NotificationsMock,
 } from "./mocks";
 import { EmailMock, FollowUpMock, LiveTranscriptMock, RoutingMock, SeatsMock } from "./mocks-more";
 import { PlanGrid } from "./plan-card";
@@ -439,6 +440,7 @@ export default function LandingPage() {
 
       <Suspense fallback={null}>
         <GatedCalendarFeature />
+        <GatedNotificationsFeature />
       </Suspense>
 
       <Section className="border-t">
@@ -671,6 +673,30 @@ async function GatedCalendarFeature() {
         Switch between a list and a day, week or month calendar. Every booking is tinted with its
         event type, group sessions show their seats, and a click opens the booking beside the
         calendar, so you can walk through the week without losing your place.
+      </Feature>
+    </Section>
+  );
+}
+
+/** Notifications in the tour, once they are on for every workspace. */
+async function GatedNotificationsFeature() {
+  if (!(await flagOnForEveryone("notifications"))) return null;
+  return (
+    <Section className="border-t">
+      <Feature
+        eyebrow="Notifications"
+        title="Never miss a booking or a knock."
+        mock={<NotificationsMock />}
+        bullets={[
+          "A bell with everything that happened, read or not",
+          "Desktop notifications, even with every Bookly tab closed",
+          "Install Bookly as an app on your computer or phone",
+          "Choose per kind: in Bookly, on the desktop, by email",
+        ]}
+      >
+        New bookings, requests, cancellations, a guest waiting in the room, a payment that just
+        landed, a recap ready to review: Bookly tells you the moment it happens, where you want to
+        hear it.
       </Feature>
     </Section>
   );

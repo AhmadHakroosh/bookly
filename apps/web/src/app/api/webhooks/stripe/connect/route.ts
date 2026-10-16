@@ -3,6 +3,7 @@ import type Stripe from "stripe";
 import { loadEnv } from "@bookly/config";
 import { SYSTEM_ACTOR, audit } from "@/server/audit";
 import { finalizePaidBooking } from "@/server/booking-flow";
+import { paymentRequestPaid } from "@/server/outreach";
 import { syncConnectAccount } from "@/server/connect";
 import { stripe } from "@/server/payments";
 
@@ -40,6 +41,17 @@ export async function POST(req: Request) {
     event.type === "checkout.session.async_payment_succeeded"
   ) {
     const session = event.data.object;
+    if (session.metadata?.kind === "payment_request" && session.payment_status === "paid") {
+      const r = await paymentRequestPaid(session);
+      if (r)
+        await audit({
+          action: "payment_request.paid",
+          target: { type: "contact", id: r.contact.id, label: r.contact.name || r.contact.email },
+          actor: SYSTEM_ACTOR("stripe"),
+          workspace: r.workspace.id,
+          changes: { amountCents: { to: r.cents }, currency: { to: r.currency } },
+        });
+    }
     const bookingId = session.metadata?.bookingId;
     if (bookingId && session.payment_status === "paid") {
       const paid = await finalizePaidBooking(

@@ -61,6 +61,8 @@ export async function saveNotificationPrefs(
   // A new number has to be proved again before Bookly texts it.
   const phoneChanged = (current?.phone ?? null) !== (d.phone || null);
   const notifications = {
+    // The per-kind choices (bell, desktop, email) are saved by their own form; keep them.
+    ...(current?.notifications.kinds ? { kinds: current.notifications.kinds } : {}),
     channel: d.phone ? d.channel : "none",
     slackWebhookUrl: d.slackWebhookUrl || null,
     onBooking: d.onBooking,

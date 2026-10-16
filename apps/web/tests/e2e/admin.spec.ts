@@ -180,6 +180,57 @@ test.describe("admin", () => {
     await expect(page.getByRole("heading", { name: "Today" })).toBeVisible();
   });
 
+  test("notifications: a booking rings the bell live, opens from the panel, marks read", async ({
+    browser,
+    page,
+  }) => {
+    const admin = await (await browser.newContext({ storageState: STORAGE })).newPage();
+    await admin.goto("/admin");
+    const bell = admin.getByRole("button", { name: /^Notifications/ });
+    await expect(bell).toBeVisible({ timeout: 15_000 });
+    // Let the live feed connect before the booking happens.
+    await admin.waitForTimeout(1_000);
+    await bookFirstSlot(page, { name: "Bell Guest", email: "bell-guest@example.com" });
+    // The stream brings the count in without a reload.
+    await expect(bell).toHaveAccessibleName(/unread/, { timeout: 20_000 });
+    await bell.click();
+    const item = admin
+      .getByRole("list", { name: "Notifications" })
+      .getByRole("button", { name: /Bell Guest (booked|requested)/ });
+    await expect(item).toBeVisible({ timeout: 10_000 });
+    await item.click();
+    await expect(admin).toHaveURL(/\/admin\/bookings\/[^/?]+$/);
+    await bell.click();
+    const markAll = admin.getByRole("button", { name: "Mark all read" });
+    await expect(markAll).toBeVisible();
+    if (await markAll.isEnabled()) await markAll.click();
+    await expect(bell).toHaveAccessibleName("Notifications");
+    // The per-kind grid saves.
+    await admin.goto("/admin/notifications");
+    await expect(admin.getByRole("heading", { name: /What you hear about/ })).toBeVisible();
+    const paymentEmail = admin.getByLabel("Payment received: Email");
+    await paymentEmail.check();
+    const saved = admin.waitForResponse(
+      (r) => r.request().method() === "POST" && !!r.request().headers()["next-action"],
+    );
+    await admin
+      .getByRole("region", { name: /What you hear about/ })
+      .getByRole("button", { name: "Save" })
+      .click();
+    await saved;
+    await expect(admin.getByText("Saved").first()).toBeVisible();
+    // Saving the text / Slack switches below keeps the per-kind choices.
+    await admin.getByLabel("an attendee cancels").uncheck();
+    const savedPrefs = admin.waitForResponse(
+      (r) => r.request().method() === "POST" && !!r.request().headers()["next-action"],
+    );
+    await admin.getByRole("button", { name: "Save" }).last().click();
+    await savedPrefs;
+    await admin.reload();
+    await expect(admin.getByLabel("Payment received: Email")).toBeChecked();
+    await expect(admin.getByLabel("an attendee cancels")).not.toBeChecked();
+  });
+
   test("the activity log records the sign-in and the Home label is Home", async ({ browser }) => {
     const page = await (await browser.newContext({ storageState: STORAGE })).newPage();
     await page.goto("/admin");

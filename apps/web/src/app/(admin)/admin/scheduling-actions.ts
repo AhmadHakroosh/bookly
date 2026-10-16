@@ -867,7 +867,7 @@ export async function acceptRecapActionsAction(id: string, formData: FormData) {
     .getAll("action")
     .map((v) => Number(v))
     .filter((n) => Number.isInteger(n));
-  const tasks = await acceptRecapActions(o.ws, o.b, indexes);
+  const tasks = await acceptRecapActions(o.ws, o.b, indexes, o.session.user.id);
   await audit({
     action: "recap.actions_accepted",
     target: { type: "booking", id: o.b.id, label: bookingLabel(o.b) },

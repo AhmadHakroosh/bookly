@@ -4,6 +4,15 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 ## [Unreleased]
 
+### Added
+
+- **In-app and desktop notifications.** A bell in the admin header with the unread count and a panel of your notifications (open one to go to what it is about, mark all read, show earlier, keyset-paginated), and a Notifications card on Home. Bookly tells you about new bookings, booking requests, cancellations, a guest joining the Bookly video room, meetings starting in an hour, recaps ready for review, payments received (bookings and payment requests) and tasks assigned to you or overdue. Notifications arrive live over Server-Sent Events while a tab is open (the notifications table is the fan-out: no Redis, the same on serverless and self-hosted), with polling as the fallback. Desktop notifications use Web Push with a service worker scoped to `/admin`, so they arrive with every Bookly tab closed, and the admin installs as an app (`/admin.webmanifest`); without Web Push keys an open tab shows them itself. Each member chooses per kind: in Bookly, desktop, email; the email column also governs the host copies of booking, cancellation, reminder and recap emails. Browsers with notifications are listed and removable. Notifications are kept 90 days. Behind the `notifications` flag with a Beta badge; the landing page shows the feature once the flag is on for everyone. Self-hosting: set `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT` for push (`npx web-push generate-vapid-keys`)
+- Paid payment requests are recorded on the contact's timeline ("Paid $450.00") and in the activity log (`payment_request.paid`)
+
+### Fixed
+
+- Text and Slack pings looked up the host's settings without the workspace, so a member of several workspaces could get another workspace's channel settings; they are now read for the workspace the event happened in
+
 ## [0.14.0] - 2026-10-16
 
 ### Added

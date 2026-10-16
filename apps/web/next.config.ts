@@ -95,6 +95,18 @@ const nextConfig: NextConfig = {
       // The admin and platform pages are never meant to be framed.
       { source: "/admin/:path*", headers: [{ key: "X-Frame-Options", value: "DENY" }] },
       { source: "/console/:path*", headers: [{ key: "X-Frame-Options", value: "DENY" }] },
+      // The service worker must never be served stale, or a fix to it waits for the HTTP cache.
+      {
+        source: "/sw.js",
+        headers: [
+          { key: "Cache-Control", value: "no-cache, no-store, must-revalidate" },
+          { key: "Content-Type", value: "application/javascript; charset=utf-8" },
+        ],
+      },
+      {
+        source: "/admin.webmanifest",
+        headers: [{ key: "Content-Type", value: "application/manifest+json" }],
+      },
     ];
   },
 };

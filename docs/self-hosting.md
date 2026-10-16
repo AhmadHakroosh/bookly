@@ -88,6 +88,19 @@ logos up to 1024 px, metadata stripped), recorded in the `files` table and serve
 
 Self-hosted installs have no storage quota. Every upload and deletion is in the activity log.
 
+## Desktop notifications (Web Push)
+
+The bell and browser notifications in an open tab work out of the box. For notifications with
+every Bookly tab closed (and in the installed app), give the install a VAPID key pair once:
+
+```bash
+npx web-push generate-vapid-keys
+```
+
+Set `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY` and `VAPID_SUBJECT` (`mailto:you@example.com`) and
+restart. Keep the pair: new keys invalidate every browser's subscription. Browsers need HTTPS
+(localhost is exempt). See [notifications.md](notifications.md#in-bookly-on-the-desktop-by-email-beta).
+
 ## Export and deletion
 
 Admin → Settings → Data lets the workspace owner download everything as one JSON file

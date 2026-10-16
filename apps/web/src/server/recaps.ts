@@ -13,7 +13,7 @@ import { assistantConfigured } from "./brief";
 import { addTask } from "./capture";
 import { dueDate } from "./capture-text";
 import { logContactEvent, setStage, trackBooking, noteToCrm } from "./contacts";
-import { notifyHost } from "./notify";
+import { notify, wantsEmail } from "./notifications";
 import { parseRecap, RECAP_SYSTEM, type Recap } from "./recap-text";
 import { getProfileByUser } from "./scheduling";
 import { languageNames, renderTranscript } from "./transcript-text";
@@ -139,11 +139,16 @@ export async function notifyRecapReady(
   const text = r
     ? `Your call with ${booking.attendeeName} (${when}):\n\n${r.summary}\n\n${r.actions.length ? `Action items:\n${r.actions.map((a) => `- ${a.owner === "them" ? `${booking.attendeeName}: ` : ""}${a.title}`).join("\n")}\n\n` : ""}${r.nextStep ? `Next step: ${r.nextStep}\n\n` : ""}Review and act with one click: ${link}`
     : `The transcript of your call with ${booking.attendeeName} (${when}) is ready. Review it and turn it into notes, tasks and a follow-up:\n\n${link}`;
-  if (user?.email) await sendEmail({ to: user.email, subject, text }).catch(() => {});
-  void notifyHost(booking.hostUserId, "onBooking", {
-    subject,
-    text: `${subject}. ${link}`,
+  if (user?.email && (await wantsEmail(ws.id, booking.hostUserId, "recap.ready")))
+    await sendEmail({ to: user.email, subject, text }).catch(() => {});
+  void notify(ws, booking.hostUserId, {
+    kind: "recap.ready",
+    title: subject,
+    body: r ? r.summary.slice(0, 160) : when,
+    link: `/admin/bookings/${booking.id}`,
+    dedupeKey: `booking:${booking.id}:${r ? "recap" : "transcript"}`,
     bookingId: booking.id,
+    text: `${subject}. ${link}`,
   });
 }
 
@@ -154,6 +159,8 @@ export async function acceptRecapActions(
   ws: Workspace,
   booking: Booking,
   indexes: number[],
+  /** The member accepting; the booking's host is notified when it is someone else. */
+  actorId?: string,
 ): Promise<Task[]> {
   const row = await getRecap(booking.id);
   const recap = recapOf(row);
@@ -169,6 +176,7 @@ export async function acceptRecapActions(
       contactId: booking.contactId,
       bookingId: booking.id,
       dueAt: dueDate(a.dueInDays),
+      assignedBy: actorId ?? null,
     });
     done[String(i)] = t.id;
     created.push(t);

@@ -168,6 +168,7 @@ export async function sendPaymentRequest(id: string, formData: FormData): Promis
     amountCents,
     currency,
     String(formData.get("description") ?? ""),
+    session.user.id,
   ).catch(() => null);
   const t = fillTemplate(
     { subject: String(formData.get("subject") ?? ""), body: String(formData.get("body") ?? "") },

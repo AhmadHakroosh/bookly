@@ -68,6 +68,8 @@ const STATIC_FILES = new Set([
   "/icon.svg",
   "/apple-icon.png",
   "/manifest.webmanifest",
+  "/admin.webmanifest",
+  "/sw.js",
 ]);
 /** Text files rendered per host (robots.ts, sitemap.ts, llms.txt); they go through the normal flow. */
 const HOST_TEXT = new Set(["/robots.txt", "/sitemap.xml", "/llms.txt"]);

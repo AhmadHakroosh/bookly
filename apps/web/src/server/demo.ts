@@ -63,6 +63,7 @@ export async function seedDemo() {
       { key: "file_uploads", description: "Upload avatars and logos", state: "on" },
       { key: "home_dashboard", description: "Home dashboard with summary cards", state: "on" },
       { key: "bookings_calendar", description: "Bookings list and calendar", state: "on" },
+      { key: "notifications", description: "In-app and desktop notifications", state: "on" },
     ])
     .onConflictDoUpdate({ target: schema.featureFlags.key, set: { state: "on" } });
   const env = loadEnv();

@@ -16,7 +16,8 @@ import { sweepPendingFiles } from "./files";
 import { sendTelemetryPing } from "./telemetry";
 import { ensureDailyWebhook } from "./daily-webhook";
 import { trackBooking } from "./contacts";
-import { notifyHost, textAttendee } from "./notify";
+import { notify, pruneNotifications, wantsEmail } from "./notifications";
+import { textAttendee } from "./notify";
 import { expireUnpaidBookings } from "./payments";
 import { getProfileByUser } from "./scheduling";
 import { fmtDateTime } from "@/lib/time";
@@ -88,7 +89,7 @@ export async function sendDueReminders(
         replyTo: hostUser?.email ?? undefined,
         fromName: host.displayName,
       }),
-      hostUser?.email
+      hostUser?.email && (await wantsEmail(ws.id, b.hostUserId, "booking.reminder"))
         ? sendEmail({ to: hostUser.email, subject: h.subject, text: h.text, html: h.html })
         : Promise.resolve(),
       et?.remindByText && b.attendeePhone
@@ -102,10 +103,14 @@ export async function sendDueReminders(
           })
         : Promise.resolve(),
       m <= 60
-        ? notifyHost(b.hostUserId, "reminder1h", {
-            subject: h.subject,
-            text: `${b.attendeeName} · ${et?.title ?? "Meeting"} in ${hours === 1 ? "1 hour" : `${hours} hours`}. ${b.meetingUrl ?? ""}`.trim(),
+        ? notify(ws, b.hostUserId, {
+            kind: "booking.reminder",
+            title: `${et?.title ?? "Meeting"} with ${b.attendeeName} in ${hours === 1 ? "1 hour" : `${hours} hours`}`,
+            body: fmtDateTime(b.startAt, host.timezone ?? ws.timezone),
+            link: `/admin/bookings/${b.id}`,
+            dedupeKey: `booking:${b.id}:remind:${b.startAt.getTime()}`,
             bookingId: b.id,
+            text: `${b.attendeeName} · ${et?.title ?? "Meeting"} in ${hours === 1 ? "1 hour" : `${hours} hours`}. ${b.meetingUrl ?? ""}`.trim(),
           })
         : Promise.resolve(),
     ]).catch((e) => console.error("[reminders]", e));
@@ -180,6 +185,7 @@ export async function sendDueReminders(
   await expireManualPlans(now).catch((e) => console.error("[ops] plan expiry failed", e));
   await sweepAuditLog(now).catch((e) => console.error("[audit] retention failed", e));
   await sweepPendingFiles(now).catch((e) => console.error("[files] sweep failed", e));
+  await pruneNotifications(now).catch((e) => console.error("[notifications] prune failed", e));
   await reconcileSeats(now).catch((e) => console.error("[billing] seat reconcile failed", e));
   await sendTelemetryPing(now).catch((e) => console.error("[telemetry] failed", e));
   await ensureDailyWebhook().catch((e) => console.error("[daily] webhook", e));
