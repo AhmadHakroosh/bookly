@@ -664,3 +664,54 @@ export function TaskBoardMock() {
     </BrowserFrame>
   );
 }
+
+/** A contact's timeline: a day divider, a meeting with its recap, an email with the guest's reply. */
+export function TimelineMock() {
+  return (
+    <BrowserFrame url="acme.bookly-app.io/admin/contacts/lina-farah">
+      <div className="space-y-3 p-4 text-xs">
+        <p className="text-base font-semibold tracking-tight">Lina Farah · Northwind</p>
+        <p className="flex items-center gap-2 font-medium tracking-wide text-muted-foreground uppercase">
+          Today <span className="h-px flex-1 bg-border" />
+        </p>
+        <div className="flex gap-2.5">
+          <MailIcon className="mt-0.5 size-3.5 shrink-0 text-muted-foreground" />
+          <div className="min-w-0 flex-1 space-y-1.5">
+            <p className="flex justify-between gap-2">
+              <span>Proposal sent: Pilot for Q1</span>
+              <span className="text-muted-foreground">09:12</span>
+            </p>
+            <div className="space-y-1 border-l-2 pl-2.5">
+              <p className="text-muted-foreground">
+                <span className="font-medium text-foreground">Lina Farah</span> replied · 11:40
+              </p>
+              <p>Looks good. Can we start the week of the 2nd?</p>
+              <p className="text-muted-foreground">
+                <span className="font-medium text-foreground">You</span> answered · 11:52
+              </p>
+              <p>Yes, I have put it in the calendar.</p>
+            </div>
+          </div>
+        </div>
+        <p className="flex items-center gap-2 font-medium tracking-wide text-muted-foreground uppercase">
+          Tuesday, October 13 <span className="h-px flex-1 bg-border" />
+        </p>
+        <div className="flex gap-2.5">
+          <CheckIcon className="mt-0.5 size-3.5 shrink-0 text-muted-foreground" />
+          <div>
+            <p>Discovery call took place</p>
+            <p className="space-x-2 text-muted-foreground underline underline-offset-2">
+              <span>Discovery call</span>
+              <span>Recap</span>
+              <span>Transcript</span>
+            </p>
+          </div>
+        </div>
+        <div className="flex gap-2.5">
+          <BanknoteIcon className="mt-0.5 size-3.5 shrink-0 text-muted-foreground" />
+          <p>Paid $450.00 (payment request)</p>
+        </div>
+      </div>
+    </BrowserFrame>
+  );
+}

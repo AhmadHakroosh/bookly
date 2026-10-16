@@ -35,6 +35,11 @@ export default defineConfig({
       APP_URL: `http://localhost:${port}`,
       EMAIL_PROVIDER: "console",
       JOBS_WORKER: "false",
+      // Guest replies: tests sign webhook calls with this secret and stand in for Resend's API.
+      INBOUND_EMAIL_DOMAIN: "reply.bookly.test",
+      RESEND_WEBHOOK_SECRET: `whsec_${Buffer.from("e2e-webhook-secret-0123456789").toString("base64")}`,
+      RESEND_API_KEY: "re_e2e",
+      RESEND_API_URL: "http://localhost:3999",
     },
   },
 });

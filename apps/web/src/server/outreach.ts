@@ -8,11 +8,12 @@ import { brandFor } from "@/emails/brand";
 import type { EmailBrand } from "@/emails/layout";
 import { letterMail } from "@/emails/booking";
 import { logContactEvent, updateContact, noteToCrm } from "./contacts";
-import { DEFAULT_TEMPLATES, type OutreachKind, type Template } from "./outreach-text";
+import { DEFAULT_TEMPLATES, replySubject, type OutreachKind, type Template } from "./outreach-text";
 import { platformFeeCents, platformFeePercent } from "./connect";
 import { destinationCharge, formatPrice, paymentsFor, stripe } from "./payments";
 import { unsubscribePostUrl, unsubscribeUrl } from "./unsubscribe";
 import { getProfileByUser } from "./scheduling";
+import { replyToFor } from "./inbound";
 import { notify } from "./notifications";
 
 export function templatesFor(ws: Workspace) {
@@ -136,12 +137,13 @@ export async function sendOutreach(
     input.payLink,
   );
   const unsub = unsubscribePostUrl(await publicBaseUrl(ws), c.id);
+  const eventId = crypto.randomUUID();
   await sendEmail({
     to: c.email,
     subject,
     text: mail.text,
     html: mail.html,
-    replyTo: user?.email ?? undefined,
+    replyTo: await replyToFor(ws, eventId, user?.email),
     fromName: host?.displayName ?? ws.name,
     // One-click unsubscribe (RFC 8058): mailbox providers show their own button and POST here.
     headers: {
@@ -156,7 +158,8 @@ export async function sendOutreach(
         ? "Follow-up sent"
         : `Payment requested${input.amountCents ? ` (${formatPrice(input.amountCents, input.currency ?? "usd")})` : ""}`;
   await logContactEvent(ws.id, c.id, "email_sent", `${label}: ${subject}`, {
-    data: { kind, body, amountCents: input.amountCents ?? null },
+    id: eventId,
+    data: { kind, subject, body, amountCents: input.amountCents ?? null, sentBy: hostUserId },
   });
   noteToCrm(ws, c.id, `${label} by ${host?.displayName ?? ws.name}: ${subject}\n\n${body}`);
   const days = input.followUpDays ?? 5;
@@ -215,4 +218,73 @@ export async function paymentRequestPaid(session: {
       },
     });
   return { workspace: ws, contact: c, cents, currency: session.currency };
+}
+
+/**
+ * The host answers from the timeline: the email goes to whoever wrote the message they answer
+ * (the contact, or the address their reply came from), threads in the guest's mail client
+ * (In-Reply-To / References) and lands in the same thread on the timeline.
+ */
+export async function sendTimelineReply(
+  ws: Workspace,
+  c: Contact,
+  parentEventId: string,
+  hostUserId: string,
+  text: string,
+): Promise<{ ok: true; id: string } | { error: string }> {
+  if (c.emailOptOut) return { error: "This contact has unsubscribed from your emails." };
+  const body = text.trim().slice(0, 8000);
+  if (!body) return { error: "Write your reply first." };
+  const parent = await db().query.contactEvents.findFirst({
+    where: and(
+      eq(schema.contactEvents.id, parentEventId),
+      eq(schema.contactEvents.workspaceId, ws.id),
+      eq(schema.contactEvents.contactId, c.id),
+    ),
+  });
+  if (!parent || (parent.type !== "email_sent" && parent.type !== "email_received"))
+    return { error: "That email is no longer on the timeline." };
+  const rootId = parent.parentId ?? parent.id;
+  const root =
+    rootId === parent.id
+      ? parent
+      : await db().query.contactEvents.findFirst({ where: eq(schema.contactEvents.id, rootId) });
+  const d = parent.data as { from?: string; subject?: string; messageId?: string | null };
+  const rootSubject =
+    (root?.data as { subject?: string } | undefined)?.subject ?? d.subject ?? root?.summary ?? "";
+  const subject = replySubject(rootSubject || "Our conversation");
+  const to = parent.type === "email_received" && d.from ? d.from : c.email;
+  const [host, user] = await Promise.all([
+    getProfileByUser(ws.id, hostUserId),
+    db().query.users.findFirst({
+      where: eq(schema.users.id, hostUserId),
+      columns: { email: true },
+    }),
+  ]);
+  const signed = `${body}\n\n${host?.displayName ?? ws.name}`;
+  const mail = await letterMail({
+    brand: brandFor(ws),
+    subject,
+    body: signed,
+    signedBy: host?.displayName ?? ws.name,
+  });
+  const id = crypto.randomUUID();
+  const inReplyTo = parent.type === "email_received" ? (d.messageId ?? null) : null;
+  await sendEmail({
+    to,
+    subject,
+    text: mail.text,
+    html: mail.html,
+    replyTo: await replyToFor(ws, id, user?.email),
+    fromName: host?.displayName ?? ws.name,
+    ...(inReplyTo ? { headers: { "In-Reply-To": inReplyTo, References: inReplyTo } } : {}),
+  });
+  await logContactEvent(ws.id, c.id, "email_sent", `Reply: ${subject}`, {
+    id,
+    parentId: rootId,
+    bookingId: parent.bookingId,
+    data: { kind: "reply", subject, body: signed, sentBy: hostUserId, to },
+  });
+  noteToCrm(ws, c.id, `Reply by ${host?.displayName ?? ws.name}: ${subject}\n\n${body}`);
+  return { ok: true, id };
 }

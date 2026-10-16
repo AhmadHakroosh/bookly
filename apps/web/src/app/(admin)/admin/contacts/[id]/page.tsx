@@ -29,6 +29,16 @@ import { fmtDateTime } from "@/lib/time";
 import { TaskList } from "@/components/task-list";
 import { listOpenTasks } from "@/server/capture";
 import { contactBookings, contactTimeline, getContact } from "@/server/contacts";
+import { PLANS, planFor } from "@bookly/cloud";
+import { BookingBriefSkeleton } from "@/components/skeletons/pages";
+import { hasFlag } from "@/server/flags";
+import { inboundOn } from "@/server/inbound";
+import { hasFeature } from "@/server/limits";
+import { tidy, timelineEntry, timelineWindow } from "@/server/timeline";
+import { BookingDetail } from "../../bookings/booking-detail";
+import { BookingPane } from "../../bookings/booking-pane";
+import { EntrySheet, PaneReply } from "./entry-pane";
+import { TimelineView } from "./timeline-view";
 import { getProfileByUser } from "@/server/scheduling";
 import { requireStaff } from "@/server/session";
 import { getCurrentWorkspace } from "@/server/workspace";
@@ -69,11 +79,16 @@ async function ContactPage({ params, searchParams }: PageProps<"/admin/contacts/
   const tz = (await getProfileByUser(ws.id, session.user.id))?.timezone ?? ws.timezone;
   const c = await getContact(ws.id, id);
   if (!c) notFound();
-  const [events, bookings, tasks] = await Promise.all([
-    contactTimeline(c.id),
+  const sp = await searchParams;
+  const v2 = await hasFlag(ws, "timeline_v2");
+  const canReply = v2 && hasFeature(ws, "inboundEmail") && (await inboundOn(ws));
+  const [events, firstWindow, bookings, tasks] = await Promise.all([
+    v2 ? Promise.resolve([]) : contactTimeline(c.id),
+    v2 ? timelineWindow(ws.id, c.id, tz) : Promise.resolve(null),
     contactBookings(c.id),
     listOpenTasks(ws.id, { contactId: c.id }),
   ]);
+  const entryId = typeof sp.entry === "string" ? sp.entry : null;
   const now = new Date();
   const upcoming = bookings.filter(
     (b) => b.endAt > now && (b.status === "confirmed" || b.status === "pending"),
@@ -155,44 +170,68 @@ async function ContactPage({ params, searchParams }: PageProps<"/admin/contacts/
               />
               <SubmitButton>Add</SubmitButton>
             </form>
-            <ol className="mt-3 space-y-3">
-              {events.map((e) => (
-                <li key={e.id} className="flex gap-3 text-sm">
-                  <span className="mt-0.5 w-5 shrink-0 text-muted-foreground" aria-hidden>
-                    {(() => {
-                      const Icon = ICON[e.type] ?? CircleIcon;
-                      return <Icon className="size-4" />;
-                    })()}
-                  </span>
-                  <div className="min-w-0 flex-1">
-                    <p className="whitespace-pre-line">{e.summary}</p>
-                    {e.type === "form_submitted" && e.data.answers ? (
-                      <dl className="mt-1 text-xs text-muted-foreground">
-                        {Object.entries(e.data.answers as Record<string, string>).map(([k, v]) => (
-                          <div key={k}>
-                            <dt className="inline font-medium">{k}: </dt>
-                            <dd className="inline">{v || "—"}</dd>
-                          </div>
-                        ))}
-                      </dl>
-                    ) : null}
-                    {e.type === "booked" &&
-                    e.data.answers &&
-                    Object.keys(e.data.answers as object).length ? (
-                      <p className="mt-1 text-xs text-muted-foreground">
-                        {Object.values(e.data.answers as Record<string, string>)
-                          .filter(Boolean)
-                          .join(" · ")}
+            {firstWindow ? (
+              <>
+                {!hasFeature(ws, "inboundEmail") && (
+                  <p className="mt-2 text-xs text-muted-foreground">
+                    Guests&apos; replies to your emails land here with{" "}
+                    {PLANS[planFor("inboundEmail")].name}.{" "}
+                    <Link href="/admin/billing" className="underline underline-offset-4">
+                      Upgrade
+                    </Link>
+                  </p>
+                )}
+                <TimelineView
+                  key={timelineKey(firstWindow)}
+                  contactId={c.id}
+                  initial={firstWindow}
+                  canReply={canReply}
+                />
+              </>
+            ) : (
+              <ol className="mt-3 space-y-3">
+                {events.map((e) => (
+                  <li key={e.id} className="flex gap-3 text-sm">
+                    <span className="mt-0.5 w-5 shrink-0 text-muted-foreground" aria-hidden>
+                      {(() => {
+                        const Icon = ICON[e.type] ?? CircleIcon;
+                        return <Icon className="size-4" />;
+                      })()}
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <p className="whitespace-pre-line">{e.summary}</p>
+                      {e.type === "form_submitted" && e.data.answers ? (
+                        <dl className="mt-1 text-xs text-muted-foreground">
+                          {Object.entries(e.data.answers as Record<string, string>).map(
+                            ([k, v]) => (
+                              <div key={k}>
+                                <dt className="inline font-medium">{k}: </dt>
+                                <dd className="inline">{v || "—"}</dd>
+                              </div>
+                            ),
+                          )}
+                        </dl>
+                      ) : null}
+                      {e.type === "booked" &&
+                      e.data.answers &&
+                      Object.keys(e.data.answers as object).length ? (
+                        <p className="mt-1 text-xs text-muted-foreground">
+                          {Object.values(e.data.answers as Record<string, string>)
+                            .filter(Boolean)
+                            .join(" · ")}
+                        </p>
+                      ) : null}
+                      <p className="text-xs text-muted-foreground">
+                        {fmtDateTime(e.createdAt, tz)}
                       </p>
-                    ) : null}
-                    <p className="text-xs text-muted-foreground">{fmtDateTime(e.createdAt, tz)}</p>
-                  </div>
-                </li>
-              ))}
-              {events.length === 0 && (
-                <li className="text-sm text-muted-foreground">Nothing yet.</li>
-              )}
-            </ol>
+                    </div>
+                  </li>
+                ))}
+                {events.length === 0 && (
+                  <li className="text-sm text-muted-foreground">Nothing yet.</li>
+                )}
+              </ol>
+            )}
           </div>
         </section>
         <aside className="space-y-4">
@@ -222,7 +261,118 @@ async function ContactPage({ params, searchParams }: PageProps<"/admin/contacts/
           />
         </aside>
       </div>
+      {v2 && entryId && (
+        <Suspense fallback={null}>
+          <EntryPane
+            workspaceId={ws.id}
+            contactId={c.id}
+            entryId={entryId}
+            tz={tz}
+            canReply={canReply}
+            closeHref={`/admin/contacts/${c.id}`}
+          />
+        </Suspense>
+      )}
     </div>
+  );
+}
+
+/** Changes whenever the first window does, so the client view restarts from fresh data. */
+function timelineKey(w: { days: { items: { id: string; replies: unknown[] }[] }[] }) {
+  return w.days.flatMap((d) => d.items.map((i) => `${i.id}:${i.replies.length}`)).join(",");
+}
+
+/** A timeline entry in the side pane: a meeting's booking, or an email with its whole thread. */
+async function EntryPane({
+  workspaceId,
+  contactId,
+  entryId,
+  tz,
+  canReply,
+  closeHref,
+}: {
+  workspaceId: string;
+  contactId: string;
+  entryId: string;
+  tz: string;
+  canReply: boolean;
+  closeHref: string;
+}) {
+  const found = await timelineEntry(workspaceId, contactId, entryId);
+  if (!found)
+    return (
+      <EntrySheet title="Entry not found" closeHref={closeHref}>
+        <p className="text-sm text-muted-foreground">This entry is no longer on the timeline.</p>
+      </EntrySheet>
+    );
+  const { entry, thread } = found;
+  const email = entry.type === "email_sent" || entry.type === "email_received";
+  if (!email && entry.bookingId)
+    return (
+      <BookingPane
+        title={entry.summary}
+        closeHref={closeHref}
+        prevHref={null}
+        nextHref={null}
+        fullHref={`/admin/bookings/${entry.bookingId}`}
+        position={null}
+      >
+        <Suspense fallback={<BookingBriefSkeleton />}>
+          <BookingDetail id={entry.bookingId} inPane />
+        </Suspense>
+      </BookingPane>
+    );
+  const items = email ? thread : [entry];
+  const last = items[items.length - 1]!;
+  return (
+    <EntrySheet title={entry.summary} closeHref={closeHref}>
+      <div className="space-y-5">
+        <h1 className="text-lg font-semibold tracking-tight">{entry.summary}</h1>
+        <ol className="space-y-4">
+          {items.map((e) => {
+            const d = e.data as {
+              subject?: string;
+              body?: string;
+              full?: string;
+              from?: string;
+              to?: string;
+              attachments?: { filename: string; size?: number | null }[];
+            };
+            return (
+              <li
+                key={e.id}
+                className={`rounded-xl border p-4 text-sm ${e.id === entry.id ? "ring-2 ring-ring/30" : ""}`}
+              >
+                <p className="text-xs text-muted-foreground">
+                  {e.type === "email_received"
+                    ? `From ${d.from ?? "them"}`
+                    : e.type === "email_sent"
+                      ? `Sent${d.to ? ` to ${d.to}` : ""}`
+                      : e.type.replace("_", " ")}{" "}
+                  · {fmtDateTime(e.createdAt, tz)}
+                </p>
+                {d.subject && <p className="mt-1 font-medium">{d.subject}</p>}
+                <p className="mt-2 break-words whitespace-pre-line">
+                  {tidy(d.body ?? null) ?? e.summary}
+                </p>
+                {d.full && d.full.trim() !== (d.body ?? "").trim() && (
+                  <details className="mt-2 text-xs text-muted-foreground">
+                    <summary className="cursor-pointer">Show the quoted text</summary>
+                    <p className="mt-1 break-words whitespace-pre-line">{tidy(d.full)}</p>
+                  </details>
+                )}
+                {d.attachments?.length ? (
+                  <p className="mt-2 text-xs text-muted-foreground">
+                    Attachments (not kept): {d.attachments.map((a) => a.filename).join(", ")}
+                  </p>
+                ) : null}
+              </li>
+            );
+          })}
+        </ol>
+        {canReply && email && <PaneReply contactId={contactId} parentId={last.id} />}
+      </div>
+    </EntrySheet>
   );
 }
 

@@ -44,6 +44,8 @@ export type Limits = {
   taskBoard: boolean;
   /** Assign tasks to teammates, @-mention them in comments, share views with the workspace. */
   taskAssignment: boolean;
+  /** Guest replies land on the contact's timeline (signed Reply-To), and hosts reply from there. */
+  inboundEmail: boolean;
 };
 
 export const GIB = 1024 ** 3;
@@ -99,6 +101,8 @@ export const PLANS: Record<PlanId, Plan> = {
       storageBytes: 1 * GIB,
       taskBoard: false,
       taskAssignment: false,
+
+      inboundEmail: false,
     },
     highlights: [
       "Contacts, briefings and the daily Home page",
@@ -138,6 +142,8 @@ export const PLANS: Record<PlanId, Plan> = {
       storageBytes: 20 * GIB,
       taskBoard: true,
       taskAssignment: false,
+
+      inboundEmail: true,
     },
     highlights: [
       "Auto-capture: transcripts, AI recaps, tasks (5 hours a month, then $3 an hour)",
@@ -183,6 +189,8 @@ export const PLANS: Record<PlanId, Plan> = {
       storageBytes: 20 * GIB,
       taskBoard: true,
       taskAssignment: true,
+
+      inboundEmail: true,
       storagePerSeat: true,
     },
     highlights: [
@@ -222,6 +230,8 @@ export const UNLIMITED: Limits = {
   storageBytes: null,
   taskBoard: true,
   taskAssignment: true,
+
+  inboundEmail: true,
 };
 
 /** The workspace's storage budget in bytes: flat, or per billed seat and pooled. */
@@ -317,7 +327,8 @@ export type FeatureLimit =
   | "invoices"
   | "activityExport"
   | "taskBoard"
-  | "taskAssignment";
+  | "taskAssignment"
+  | "inboundEmail";
 
 /** True when adding one more of `what` stays within the limit. */
 export function withinLimit(limits: Limits, what: CountableLimit, current: number): boolean {
@@ -343,6 +354,7 @@ export const FEATURE_LABELS: Record<FeatureLimit, string> = {
   activityExport: "Activity log export",
   taskBoard: "Task board and custom statuses",
   taskAssignment: "Assigning tasks to teammates",
+  inboundEmail: "Guest replies on the timeline",
 };
 
 /** First plan (cheapest) that allows `what`. */

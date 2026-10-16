@@ -4,6 +4,15 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 ## [Unreleased]
 
+### Added
+
+- **Contact timeline v2.** The timeline is grouped by day under date dividers, newest first, with meetings linking to their booking, recap and transcript, sent emails showing their content in an accordion, and an entry side pane (`?entry=<id>`: a meeting's full booking, or an email's thread with its quoted text). It is keyset-paginated from the start: the latest window of about 30 entries (never splitting a day), **Show earlier** for the next, then the following windows load as you scroll; the index is `contact_events (contact_id, created_at, id)` (migration 0034). Behind the `timeline_v2` flag with a Beta badge; the landing page shows it once the flag is on for everyone
+- **Guest replies on the timeline** (Pro and up, `inboundEmail`): every email to a contact carries a signed Reply-To on `INBOUND_EMAIL_DOMAIN`; Resend's `email.received` webhook (`/api/webhooks/resend`, Svix-verified) puts the reply under the email it answers with the quoted history cut, clears the contact's follow-up date and notifies the sender ("Guest replied", whose email channel forwards the reply). Hosts answer from the timeline and the thread continues in the guest's mail client. Auto-replies are ignored and redeliveries are no-ops. Self-hosting: set `INBOUND_EMAIL_DOMAIN`, `RESEND_WEBHOOK_SECRET` and an MX record for the subdomain
+
+### Changed
+
+- Emails to contacts are logged with their subject and text, and every booking confirmation, reminder and follow-up becomes a thread a reply can join
+
 ## [0.16.0] - 2026-10-16
 
 ### Added

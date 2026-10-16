@@ -239,6 +239,13 @@
       "when": 1792150282018,
       "tag": "0033_task_board",
       "breakpoints": true
+    },
+    {
+      "idx": 34,
+      "version": "7",
+      "when": 1792164303637,
+      "tag": "0034_timeline_v2",
+      "breakpoints": true
     }
   ]
 }

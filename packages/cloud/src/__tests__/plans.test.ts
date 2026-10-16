@@ -68,4 +68,9 @@ describe("plans", () => {
     expect(UNLIMITED.taskBoard && UNLIMITED.taskAssignment).toBe(true);
     expect(limitsFor("pro", "past_due").taskBoard).toBe(PLANS.pro.limits.taskBoard);
   });
+  it("guest replies on the timeline from Pro, everywhere self-hosted", () => {
+    expect(PLANS.free.limits.inboundEmail).toBe(false);
+    expect(planFor("inboundEmail")).toBe("pro");
+    expect(UNLIMITED.inboundEmail).toBe(true);
+  });
 });

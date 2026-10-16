@@ -73,6 +73,11 @@ export const KINDS: Record<NotificationKind, KindInfo> = {
     hint: "A guest paid for a booking or a payment request.",
     defaults: { inApp: true, desktop: true, email: false },
   },
+  "email.replied": {
+    label: "Guest replied",
+    hint: "A guest answered one of your emails (the email column forwards the reply to you).",
+    defaults: { inApp: true, desktop: true, email: true },
+  },
   "task.assigned": {
     label: "Task assigned to you",
     hint: "A teammate gave you a task.",
@@ -136,7 +141,7 @@ export type NotifyInput = {
   /** Text for SMS / WhatsApp / Slack; defaults to the title and body. */
   text?: string;
   /** Sent when the member wants this kind by email. Leave out where the caller emails itself. */
-  email?: { subject: string; text: string; html?: string };
+  email?: { subject: string; text: string; html?: string; replyTo?: string };
 };
 
 type Ws = Pick<Workspace, "id" | "slug" | "settings">;

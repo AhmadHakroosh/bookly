@@ -20,6 +20,17 @@ export const envSchema = z.object({
   EMAIL_DRIVER: z.enum(["console", "resend", "smtp"]).default("console"),
   EMAIL_FROM: z.string().min(3).default("Bookly <noreply@localhost>"),
   RESEND_API_KEY: z.string().optional(),
+  /**
+   * Guest replies (Pro and up): a subdomain whose MX points at Resend's receiving, e.g.
+   * `reply.example.com`. Outbound mail to contacts then carries a signed Reply-To on it, and
+   * Resend's `email.received` webhook (POST /api/webhooks/resend, signed with
+   * RESEND_WEBHOOK_SECRET) puts each reply on the contact's timeline. Unset = replies go to the
+   * host's own address as before.
+   */
+  INBOUND_EMAIL_DOMAIN: z.string().optional(),
+  RESEND_WEBHOOK_SECRET: z.string().optional(),
+  /** Resend's API origin; only tests (a local stand-in) or a proxy change it. */
+  RESEND_API_URL: z.url().default("https://api.resend.com"),
   SMTP_HOST: z.string().optional(),
   SMTP_PORT: z.coerce.number().int().positive().default(587),
   SMTP_USER: z.string().optional(),

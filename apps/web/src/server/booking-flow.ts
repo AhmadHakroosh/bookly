@@ -18,6 +18,7 @@ import { buildIcsCalendar, type IcsEvent } from "./ics";
 import { deprovisionBooking, provisionBooking, syncEventAttendees } from "./integrations";
 import { serializeBooking } from "./api";
 import { adminBaseUrl, publicBaseUrl } from "./urls";
+import { replyToFor } from "./inbound";
 import { notify, wantsEmail } from "./notifications";
 import { textAttendee } from "./notify";
 import { formatPrice, isPaid, paymentsReady, recordPayment, refundBooking } from "./payments";
@@ -498,12 +499,15 @@ export async function finalizeBooking(
   }
   if (booking.status === "confirmed") booking = await provision(workspace, booking, eventType);
   if (announce) {
-    await notifyCreated(workspace, booking, eventType);
+    const confirmationId = crypto.randomUUID();
+    const sent = await notifyCreated(workspace, booking, eventType, confirmationId);
     await trackBooking(
       workspace,
       booking,
       "email_sent",
       `Confirmation email for ${eventType.title}`,
+      { subject: sent.subject, body: sent.text, sentBy: booking.hostUserId },
+      { id: confirmationId },
     );
     const when = fmtDateTime(
       booking.startAt,
@@ -537,7 +541,16 @@ export async function finalizeBooking(
   return booking;
 }
 
-async function notifyCreated(workspace: Workspace, booking: Booking, eventType: EventType | null) {
+/**
+ * Confirmation to the attendee (and the guests they brought), copy to the host. `eventId` is
+ * the timeline entry the confirmation will be logged as, so a reply to it lands under it.
+ */
+async function notifyCreated(
+  workspace: Workspace,
+  booking: Booking,
+  eventType: EventType | null,
+  eventId: string,
+): Promise<{ subject: string; text: string }> {
   const ctx = {
     ...(await mailCtx(booking, eventType, workspace)),
     series: await seriesCtx(booking),
@@ -546,6 +559,8 @@ async function notifyCreated(workspace: Workspace, booking: Booking, eventType: 
   const a = await attendeeConfirmation(ctx);
   const h = await hostNotification(ctx);
   const hostTo = await hostEmail(booking.hostUserId);
+  // Guests' replies to the confirmation go to the timeline (Pro and up) or straight to the host.
+  const guestReplyTo = await replyToFor(workspace, eventId, hostTo);
   const hostCopy = await wantsEmail(
     workspace.id,
     booking.hostUserId,
@@ -561,7 +576,7 @@ async function notifyCreated(workspace: Workspace, booking: Booking, eventType: 
       subject: a.subject,
       text: a.text,
       html: a.html,
-      replyTo: hostTo ?? undefined,
+      replyTo: guestReplyTo,
       fromName: ctx.host.displayName,
       attachments: invite,
     }),
@@ -605,6 +620,7 @@ async function notifyCreated(workspace: Workspace, booking: Booking, eventType: 
         token: booking.manageToken,
       },
     );
+  return { subject: a.subject, text: a.text };
 }
 
 export async function confirmBooking(workspace: Workspace, bookingId: string) {

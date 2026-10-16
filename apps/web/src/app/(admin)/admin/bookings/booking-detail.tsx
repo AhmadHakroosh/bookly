@@ -181,13 +181,16 @@ export async function BookingDetail({ id, inPane = false }: { id: string; inPane
         title="Action items"
       />
       {recapRow && (
-        <RecapPanel
-          bookingId={b.id}
-          row={recapRow}
-          attendeeName={b.attendeeName}
-          contactId={b.contactId}
-          currentStage={contact?.stage ?? null}
-        />
+        // Anchors for the contact timeline's "Recap" and "Transcript" links.
+        <div id="recap" className="scroll-mt-20">
+          <RecapPanel
+            bookingId={b.id}
+            row={recapRow}
+            attendeeName={b.attendeeName}
+            contactId={b.contactId}
+            currentStage={contact?.stage ?? null}
+          />
+        </div>
       )}
       {recapRow && recapOf(recapRow) && (
         <AttendeeRecap
@@ -205,15 +208,17 @@ export async function BookingDetail({ id, inPane = false }: { id: string; inPane
       )}
       {(b.transcriptStatus ||
         (et && et.autoCapture !== "off" && b.meetingProvider === "daily")) && (
-        <TranscriptPanel
-          bookingId={b.id}
-          status={b.transcriptStatus}
-          consent={b.captureConsent}
-          mode={et?.autoCapture ?? "off"}
-          transcript={transcript}
-          names={{ host: "You", attendee: b.attendeeName }}
-          tz={tz}
-        />
+        <div id="transcript" className="scroll-mt-20">
+          <TranscriptPanel
+            bookingId={b.id}
+            status={b.transcriptStatus}
+            consent={b.captureConsent}
+            mode={et?.autoCapture ?? "off"}
+            transcript={transcript}
+            names={{ host: "You", attendee: b.attendeeName }}
+            tz={tz}
+          />
+        </div>
       )}
       {(past || b.status === "confirmed") && (
         <CaptureForm
