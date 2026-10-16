@@ -125,9 +125,11 @@ test.describe("admin", () => {
       ["Contacts", "/admin/contacts"],
       ["Payments this month", "/admin/"],
     ] as const) {
-      const card = cards.getByRole("link", { name: new RegExp(title) });
+      // The card whose title is exactly this (other cards may mention the words in their text).
+      const card = cards.getByRole("link").filter({ has: page.getByText(title, { exact: true }) });
       await expect(card).toBeVisible();
-      await expect(card).toHaveAttribute("href", new RegExp(`^${href.replace(/[/#]/g, "\\$&")}`));
+      const value = (await card.getAttribute("href")) ?? "";
+      expect(value.startsWith(href), `${title} links to ${value}, expected ${href}…`).toBe(true);
     }
     // The page under the cards keeps its place.
     await expect(page.getByRole("heading", { name: "Today" })).toBeVisible();
