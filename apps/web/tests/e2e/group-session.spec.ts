@@ -83,18 +83,21 @@ test.describe.serial("group session", () => {
     await shot(page, "admin-bookings-mobile");
     await page.setViewportSize({ width: 1280, height: 900 });
 
+    // A session card (the event-type legend is a list too, so match the seats line).
     await page
-      .locator("li", { hasText: "Working session" })
+      .locator("li", { hasText: "3 / 3 seats" })
       .first()
       .getByRole("link", { name: "Brief" })
       .first()
       .click();
-    await expect(page).toHaveURL(/\/admin\/bookings\/[0-9a-f-]+$/);
-    const who = page.locator("section", { hasText: "Who is in this session" });
-    await expect(who.getByText("3 / 3 seats")).toBeVisible();
+    // "Brief" opens the booking in the side pane (`?booking=<id>`), over the list.
+    await expect(page).toHaveURL(/[?&]booking=[0-9a-f-]+/);
+    const pane = page.locator('[data-slot="sheet-content"]');
+    const who = pane.locator("section", { hasText: "Who is in this session" });
+    await expect(who.getByText("3 / 3 seats")).toBeVisible({ timeout: 15_000 });
     for (const name of ["Noa Levi", "Tom Adler", "Priya Nair"])
       await expect(who.getByText(name, { exact: true })).toBeVisible();
-    await expect(page.getByText("Session 1 of 6").first()).toBeVisible();
+    await expect(pane.getByText("Session 1 of 6").first()).toBeVisible();
     await shot(page, "admin-booking-detail");
     await ctx.close();
   });

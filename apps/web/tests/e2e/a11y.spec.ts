@@ -16,8 +16,15 @@ test("public pages have no axe violations", async ({ page }) => {
 
 test("admin Home and bookings have no axe violations", async ({ browser }) => {
   const page = await (await browser.newContext({ storageState: STORAGE })).newPage();
-  for (const path of ["/admin", "/admin/bookings", "/admin/contacts"]) {
+  for (const path of [
+    "/admin",
+    "/admin/bookings?mode=list",
+    "/admin/bookings?mode=calendar&cal=week",
+    "/admin/bookings?mode=calendar&cal=month",
+    "/admin/contacts",
+  ]) {
     await page.goto(path);
+    await page.waitForLoadState("networkidle");
     const r = await scan(page);
     expect(r.violations, `${path}: ${JSON.stringify(r.violations, null, 2)}`).toEqual([]);
   }

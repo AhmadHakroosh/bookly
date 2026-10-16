@@ -511,3 +511,57 @@ export function BookingPageMock() {
     </div>
   );
 }
+
+/** The bookings calendar as the tour shows it: a work week with tinted blocks. */
+export function CalendarMock() {
+  const days = ["Mon 12", "Tue 13", "Wed 14", "Thu 15", "Fri 16"];
+  // [day index, start hour, length in hours, title, colour]
+  const blocks: [number, number, number, string, string][] = [
+    [0, 9, 1, "Intro · Lina Farah", "#2563eb"],
+    [0, 14, 1.5, "Working session · 3/4", "#16a34a"],
+    [1, 10, 0.5, "Check-in · Omar", "#d97706"],
+    [2, 9.5, 1, "Intro · Sara Cohen", "#2563eb"],
+    [2, 13, 2, "Workshop · 6/8", "#9333ea"],
+    [3, 11, 1, "Discovery · Yusuf Ali", "#2563eb"],
+    [4, 9, 1.5, "Working session · 4/4", "#16a34a"],
+    [4, 15, 0.5, "Check-in · Acme", "#d97706"],
+  ];
+  const from = 8;
+  const hours = 9;
+  const H = 26;
+  return (
+    <BrowserFrame url="acme.bookly-app.io/admin/bookings">
+      <div className="space-y-3 p-4 text-xs">
+        <div className="flex items-center justify-between">
+          <p className="text-base font-semibold tracking-tight">Oct 12 – 16</p>
+          <span className="rounded-md bg-muted px-2 py-1 text-muted-foreground">Week</span>
+        </div>
+        <div className="grid grid-cols-5 gap-px overflow-hidden rounded-lg border bg-border">
+          {days.map((d, di) => (
+            <div key={d} className="bg-background">
+              <p className="border-b py-1 text-center text-muted-foreground">{d}</p>
+              <div className="relative" style={{ height: hours * H }}>
+                {blocks
+                  .filter((b) => b[0] === di)
+                  .map(([, start, len, title, color]) => (
+                    <div
+                      key={title}
+                      className="absolute inset-x-1 overflow-hidden rounded border-l-[3px] px-1 py-0.5 leading-tight"
+                      style={{
+                        top: (start - from) * H,
+                        height: len * H - 2,
+                        borderLeftColor: color,
+                        background: `color-mix(in oklab, ${color} 22%, transparent)`,
+                      }}
+                    >
+                      {title}
+                    </div>
+                  ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </BrowserFrame>
+  );
+}

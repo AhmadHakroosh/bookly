@@ -112,6 +112,50 @@ test.describe("admin", () => {
     ).toBeVisible({ timeout: 15_000 });
   });
 
+  test("bookings calendar: views, the side pane and the remembered toggle", async ({
+    browser,
+    page,
+  }) => {
+    await bookFirstSlot(page, { name: "Calendar Guest", email: "calendar-guest@example.com" });
+    const admin = await (await browser.newContext({ storageState: STORAGE })).newPage();
+    await admin.goto("/admin/bookings");
+    await admin
+      .getByRole("navigation", { name: "View" })
+      .getByRole("link", { name: "Calendar" })
+      .click();
+    const calendar = admin.getByRole("region", { name: "Calendar" });
+    await expect(calendar).toBeVisible({ timeout: 15_000 });
+    // The booking is about two weeks out: the month view of its month shows it.
+    await calendar.getByRole("link", { name: "Month" }).click();
+    await expect(admin).toHaveURL(/cal=month/);
+    let block = calendar.locator('a[href*="booking="]', { hasText: "Calendar Guest" });
+    if ((await block.count()) === 0) {
+      await calendar.getByRole("link", { name: /Next month/ }).click();
+      block = calendar.locator('a[href*="booking="]', { hasText: "Calendar Guest" });
+    }
+    await block.first().click();
+    const pane = admin.locator('[data-slot="sheet-content"]');
+    await expect(pane.getByRole("heading", { name: /with Calendar Guest/ })).toBeVisible({
+      timeout: 15_000,
+    });
+    await expect(admin).toHaveURL(/booking=/);
+    await expect(pane.getByRole("heading", { name: "Briefing" })).toBeVisible();
+    await admin.keyboard.press("Escape");
+    await expect(pane).toHaveCount(0);
+    await expect(admin).not.toHaveURL(/booking=/);
+    // The legend names the event types in view.
+    await expect(admin.getByRole("list", { name: "Event types" })).toContainText("Intro call");
+    // The choice is remembered: the bare URL opens the calendar again.
+    await admin.goto("/admin/bookings");
+    await expect(admin.getByRole("region", { name: "Calendar" })).toBeVisible();
+    // And the list is one click away, with the same pane behind each booking.
+    await admin
+      .getByRole("navigation", { name: "View" })
+      .getByRole("link", { name: "List" })
+      .click();
+    await expect(admin.getByRole("region", { name: "Calendar" })).toHaveCount(0);
+  });
+
   test("Home shows the summary cards, each linking to its page", async ({ browser }) => {
     const page = await (await browser.newContext({ storageState: STORAGE })).newPage();
     await page.goto("/admin");

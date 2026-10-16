@@ -29,6 +29,7 @@ import {
   ContactMock,
   HomeMock,
   RecapMock,
+  CalendarMock,
 } from "./mocks";
 import { EmailMock, FollowUpMock, LiveTranscriptMock, RoutingMock, SeatsMock } from "./mocks-more";
 import { PlanGrid } from "./plan-card";
@@ -436,6 +437,10 @@ export default function LandingPage() {
         </Feature>
       </Section>
 
+      <Suspense fallback={null}>
+        <GatedCalendarFeature />
+      </Suspense>
+
       <Section className="border-t">
         <Feature
           eyebrow="Priority-aware availability"
@@ -650,4 +655,23 @@ open http://localhost:3002`}
 /** The Home mock shows the dashboard cards once the dashboard is on for every workspace. */
 async function GatedHomeMock() {
   return <HomeMock dashboard={await flagOnForEveryone("home_dashboard")} />;
+}
+
+/** The calendar in the tour, once the bookings calendar is on for every workspace. */
+async function GatedCalendarFeature() {
+  if (!(await flagOnForEveryone("bookings_calendar"))) return null;
+  return (
+    <Section className="border-t">
+      <Feature
+        eyebrow="Bookings calendar"
+        title="See your week at a glance."
+        mock={<CalendarMock />}
+        flip
+      >
+        Switch between a list and a day, week or month calendar. Every booking is tinted with its
+        event type, group sessions show their seats, and a click opens the booking beside the
+        calendar, so you can walk through the week without losing your place.
+      </Feature>
+    </Section>
+  );
 }

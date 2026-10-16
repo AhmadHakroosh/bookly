@@ -4,6 +4,10 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 ## [Unreleased]
 
+### Added
+
+- **Bookings list and calendar.** The bookings page has a list and a calendar (day, week, month; own component, keyboard navigable, in the host's timezone), and remembers which one you use. Clicking a booking opens it in a side pane over a blurred backdrop, deep-linkable with `?booking=<id>`, with previous and next (J / K) through the bookings in view and the full booking detail and actions inside. Bookings are tinted with their event type's colour (a dot in the list, blocks in the calendar, a legend with counts), group sessions are one block with their seats, and owners and admins get a host filter. The list is keyset-paginated ("Show more", 50 at a time). Behind the `bookings_calendar` flag with a Beta badge; the landing page shows the calendar in the tour once the flag is on for everyone
+
 ## [0.13.0] - 2026-10-16
 
 ### Added
