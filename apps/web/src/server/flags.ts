@@ -1,4 +1,5 @@
 import "server-only";
+import { cacheLife, cacheTag } from "next/cache";
 import { cache } from "react";
 import { and, eq, gt, inArray, isNull, or, schema, sql } from "@bookly/db";
 import type { FlagState, Workspace } from "@bookly/db/schema";
@@ -92,6 +93,35 @@ export async function hasFlag(
   if (state === "off") return false;
   if (ws.settings.betaOptOut) return false;
   return r.grants.get(key) === "grant" || r.cohortFlags.has(key);
+}
+
+/**
+ * Whether a flag is on for everyone, for the marketing site: a feature is shown there only
+ * once it has left beta. Cached and tagged, so the console's changes reach it at once.
+ */
+export async function flagOnForEveryone(key: FlagKey): Promise<boolean> {
+  "use cache";
+  cacheTag(FLAGS_TAG);
+  cacheLife("hours");
+  try {
+    const row = await db().query.featureFlags.findFirst({
+      where: eq(schema.featureFlags.key, key),
+      columns: { state: true },
+    });
+    return row?.state === "on";
+  } catch {
+    // Builds prerender the marketing pages without a database (or before migrations): the
+    // feature is simply not advertised until the cache refreshes.
+    return false;
+  }
+}
+
+export const FLAGS_TAG = "feature-flags";
+
+/** Live for this workspace through a beta (not on for everyone yet): pages show a Beta badge. */
+export async function inBeta(ws: Pick<Workspace, "id" | "settings">, key: FlagKey) {
+  if (!(await hasFlag(ws, key))) return false;
+  return (await resolve(ws.id)).states.get(key) !== "on";
 }
 
 /** Every flag with how it resolves for this workspace, for the Settings page and the console. */

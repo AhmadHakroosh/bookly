@@ -112,6 +112,27 @@ test.describe("admin", () => {
     ).toBeVisible({ timeout: 15_000 });
   });
 
+  test("Home shows the summary cards, each linking to its page", async ({ browser }) => {
+    const page = await (await browser.newContext({ storageState: STORAGE })).newPage();
+    await page.goto("/admin");
+    const cards = page.getByRole("region", { name: "Summary" });
+    await expect(cards).toBeVisible({ timeout: 15_000 });
+    for (const [title, href] of [
+      ["This week", "/admin/bookings"],
+      ["Since your last visit", "/admin/bookings"],
+      ["Needs attention", "/admin#"],
+      ["Your tasks", "/admin#tasks"],
+      ["Contacts", "/admin/contacts"],
+      ["Payments this month", "/admin/"],
+    ] as const) {
+      const card = cards.getByRole("link", { name: new RegExp(title) });
+      await expect(card).toBeVisible();
+      await expect(card).toHaveAttribute("href", new RegExp(`^${href.replace(/[/#]/g, "\\$&")}`));
+    }
+    // The page under the cards keeps its place.
+    await expect(page.getByRole("heading", { name: "Today" })).toBeVisible();
+  });
+
   test("the activity log records the sign-in and the Home label is Home", async ({ browser }) => {
     const page = await (await browser.newContext({ storageState: STORAGE })).newPage();
     await page.goto("/admin");

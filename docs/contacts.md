@@ -6,6 +6,16 @@ Bookly keeps a **contact** for every person who books, joins a waitlist or fills
 
 ## Home
 
+At the top of Home a row of cards sums up the day, each a link to the page that owns it:
+**This week** (meetings still to come this week and the next three), **Since your last visit**
+(new bookings and cancellations since you last opened Home; reloading within half an hour keeps
+the same starting point), **Needs attention** (requests to accept, recaps to review, people to
+follow up), **Your tasks** (open, overdue, due today; owners and admins also see the team's
+count), **Contacts** (added this week, follow-ups due) and, for owners and admins, **Payments
+this month** (paid bookings summed per currency, or a prompt to connect Stripe). Members see
+their own meetings; owners and admins see everyone's. Every card loads on its own. The cards
+roll out behind the `home_dashboard` flag (a "Beta" badge shows while it is in beta).
+
 `Admin` opens on **Home**: today's meetings with their briefings and join links, booking requests to accept (or answer by email instead, which withdraws the request), contacts to follow up (a due follow-up date, or a lead that has been quiet for a week; snooze pushes it out a week), your open tasks with overdue ones flagged, and a note when people are waiting on a waitlist. Members see their own bookings; owners and admins see the workspace.
 
 ## Executing the outcome

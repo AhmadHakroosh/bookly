@@ -128,3 +128,21 @@ export type AuditEntry = typeof auditLog.$inferSelect;
 export type FeatureFlag = typeof featureFlags.$inferSelect;
 export type BetaCohort = typeof betaCohorts.$inferSelect;
 export type WorkspaceFlag = typeof workspaceFlags.$inferSelect;
+
+/* ---------------- Per-member UI state ---------------- */
+
+/**
+ * When a member last opened Home in a workspace, for the "new since your last visit" card.
+ * UI bookkeeping, not workspace data, so it is not in the activity log.
+ */
+export const homeVisits = pgTable(
+  "home_visits",
+  {
+    workspaceId: text("workspace_id")
+      .notNull()
+      .references(() => workspaces.id, { onDelete: "cascade" }),
+    userId: text("user_id").notNull(),
+    seenAt: timestamp("seen_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [primaryKey({ columns: [t.workspaceId, t.userId] })],
+);

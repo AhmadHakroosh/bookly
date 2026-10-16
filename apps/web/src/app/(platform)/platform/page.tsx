@@ -34,6 +34,8 @@ import { EmailMock, FollowUpMock, LiveTranscriptMock, RoutingMock, SeatsMock } f
 import { PlanGrid } from "./plan-card";
 import { JsonLd, organizationLd, softwareLd, websiteLd } from "./json-ld";
 import { pageMetadata, SITE } from "./site";
+import { Suspense } from "react";
+import { flagOnForEveryone } from "@/server/flags";
 
 export const metadata: Metadata = pageMetadata({ absoluteTitle: `${SITE.name} — ${SITE.tagline}` });
 
@@ -311,7 +313,9 @@ export default function LandingPage() {
           </ol>
 
           <div className="rise-in mt-12" style={{ "--rise-delay": "300ms" } as never}>
-            <HomeMock />
+            <Suspense fallback={<HomeMock />}>
+              <GatedHomeMock />
+            </Suspense>
           </div>
           <ul className="mt-8 flex flex-wrap justify-center gap-2 text-sm text-muted-foreground">
             <li className="mr-1">Built for people who live off their meetings:</li>
@@ -641,4 +645,9 @@ open http://localhost:3002`}
       </section>
     </div>
   );
+}
+
+/** The Home mock shows the dashboard cards once the dashboard is on for every workspace. */
+async function GatedHomeMock() {
+  return <HomeMock dashboard={await flagOnForEveryone("home_dashboard")} />;
 }

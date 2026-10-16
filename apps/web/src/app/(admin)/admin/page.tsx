@@ -19,9 +19,14 @@ import {
   locationLabel,
 } from "@/server/scheduling";
 import { formatPrice } from "@/server/payments";
-import { requireStaff } from "@/server/session";
+import { isManager, requireStaff } from "@/server/session";
 import { listWaitlist } from "@/server/waitlist";
 import { getCurrentWorkspace } from "@/server/workspace";
+import { BetaBadge } from "@/components/beta-badge";
+import { hasFlag, inBeta } from "@/server/flags";
+import { lastHomeVisit } from "@/server/home";
+import { HomeCards } from "./home-cards";
+import { HomeVisit } from "./home-visit";
 import { hostConfirm, replyInstead, snoozeContact } from "./scheduling-actions";
 
 /** Home: what needs the host's attention today, with one-click actions. */
@@ -31,6 +36,11 @@ async function AdminHome() {
   const mine = role !== "owner" && role !== "admin";
   const profile = await getProfileByUser(workspace.id, session.user.id);
   const tz = profile?.timezone ?? workspace.timezone;
+  const [dashboard, beta, since] = await Promise.all([
+    hasFlag(workspace, "home_dashboard"),
+    inBeta(workspace, "home_dashboard"),
+    lastHomeVisit(workspace.id, session.user.id),
+  ]);
   const [schedules, events, upcoming, stale, tasks, waitlist, recaps] = await Promise.all([
     profile ? listSchedules(workspace.id, session.user.id) : Promise.resolve([]),
     listAllEventTypes(workspace.id),
@@ -88,7 +98,10 @@ async function AdminHome() {
     <div className="space-y-8">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Home</h1>
+          <h1 className="flex items-center gap-2 text-2xl font-semibold tracking-tight">
+            Home
+            {dashboard && beta && <BetaBadge />}
+          </h1>
           <p className="text-sm text-muted-foreground">
             {fmtDate(now, tz)} · {todays.length} meeting{todays.length === 1 ? "" : "s"} today ·{" "}
             {pending.length} request{pending.length === 1 ? "" : "s"} · {overdue.length} overdue
@@ -98,6 +111,18 @@ async function AdminHome() {
         </div>
         {profile && <ExternalLink href={`/${profile.username}`}>Your booking page</ExternalLink>}
       </div>
+
+      {dashboard && ready && (
+        <>
+          <HomeCards
+            scope={{ ws: workspace, tz, hostUserId: mine ? session.user.id : undefined }}
+            userId={session.user.id}
+            manager={isManager(role)}
+            since={since}
+          />
+          <HomeVisit />
+        </>
+      )}
 
       {!ready && (
         <section className="space-y-3">
@@ -124,7 +149,7 @@ async function AdminHome() {
       )}
 
       {pending.length > 0 && (
-        <section className="space-y-3">
+        <section id="requests" className="scroll-mt-20 space-y-3">
           <h2 className="text-lg font-semibold tracking-tight">Requests</h2>
           <ul className="space-y-2">
             {pending.map((b) => (
@@ -186,7 +211,7 @@ async function AdminHome() {
         </section>
       )}
       {recaps.length > 0 && (
-        <section className="space-y-3">
+        <section id="recaps" className="scroll-mt-20 space-y-3">
           <h2 className="text-lg font-semibold tracking-tight">Recaps to review</h2>
           <ul className="divide-y rounded-xl border text-sm">
             {recaps.map((x) => (
@@ -308,7 +333,7 @@ async function AdminHome() {
       </section>
 
       <div className="grid gap-6 lg:grid-cols-2">
-        <section className="space-y-3">
+        <section id="follow-up" className="scroll-mt-20 space-y-3">
           <h2 className="text-lg font-semibold tracking-tight">Follow up</h2>
           {stale.length === 0 ? (
             <p className="rounded-xl border border-dashed p-6 text-sm text-muted-foreground">
@@ -358,7 +383,9 @@ async function AdminHome() {
             </ul>
           )}
         </section>
-        <TaskList tasks={tasks} tz={tz} path="/admin" title="Tasks" />
+        <div id="tasks" className="scroll-mt-20">
+          <TaskList tasks={tasks} tz={tz} path="/admin" title="Tasks" />
+        </div>
       </div>
 
       {waitlist.length > 0 && (

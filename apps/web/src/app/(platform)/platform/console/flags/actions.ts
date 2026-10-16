@@ -1,11 +1,12 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, updateTag } from "next/cache";
 import { refreshWorkspace } from "@/server/cache";
 import {
   createCohort,
   deleteCohort,
   findWorkspaces,
+  FLAGS_TAG,
   isFlagKey,
   setCohortMembership,
   setFlagCohorts,
@@ -28,6 +29,7 @@ async function operator() {
 }
 
 const back = (workspaceId?: string) => {
+  updateTag(FLAGS_TAG);
   revalidatePath("/console/flags");
   revalidatePath("/console/audit");
   if (workspaceId) {
