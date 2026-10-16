@@ -15,6 +15,7 @@ import { assistantConfigured } from "./brief";
 import { emitEvent } from "./webhooks";
 import { CAPTURE_SYSTEM, dueDate, manualCapture, parseCapture, type Capture } from "./capture-text";
 import { logContactEvent, setStage, trackBooking, noteToCrm } from "./contacts";
+import { replyToFor } from "./inbound";
 import { notify } from "./notifications";
 import { initialStatusId, newPosition, setTaskDone } from "./tasks";
 import { baseUrl, getProfileByUser } from "./scheduling";
@@ -141,22 +142,28 @@ export async function sendFollowUp(
     body: signed,
     signedBy: host?.displayName ?? workspace.name,
   });
+  const eventId = crypto.randomUUID();
   try {
     await sendEmail({
       to: booking.attendeeEmail,
       subject: subject.trim(),
       text: mail.text,
       html: mail.html,
-      replyTo: user?.email ?? undefined,
+      replyTo: await replyToFor(workspace, eventId, user?.email),
       fromName: host?.displayName ?? workspace.name,
     });
   } catch (e) {
     console.error("[capture] follow-up failed", e);
     return false;
   }
-  await trackBooking(workspace, booking, "email_sent", `Follow-up: ${subject.trim()}`, {
-    body: signed,
-  });
+  await trackBooking(
+    workspace,
+    booking,
+    "email_sent",
+    `Follow-up: ${subject.trim()}`,
+    { subject: subject.trim(), body: signed, sentBy: booking.hostUserId },
+    { id: eventId },
+  );
   return true;
 }
 

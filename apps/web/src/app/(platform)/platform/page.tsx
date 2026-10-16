@@ -32,6 +32,7 @@ import {
   CalendarMock,
   NotificationsMock,
   TaskBoardMock,
+  TimelineMock,
 } from "./mocks";
 import { EmailMock, FollowUpMock, LiveTranscriptMock, RoutingMock, SeatsMock } from "./mocks-more";
 import { PlanGrid } from "./plan-card";
@@ -443,6 +444,7 @@ export default function LandingPage() {
         <GatedCalendarFeature />
         <GatedNotificationsFeature />
         <GatedTaskBoardFeature />
+        <GatedTimelineFeature />
       </Suspense>
 
       <Section className="border-t">
@@ -723,6 +725,29 @@ async function GatedTaskBoardFeature() {
       >
         Every promise made on a call becomes a card someone owns. The board shows what is waiting,
         what is stuck and what is done, for you or the whole team.
+      </Feature>
+    </Section>
+  );
+}
+
+/** The contact timeline in the tour, once v2 is on for every workspace. */
+async function GatedTimelineFeature() {
+  if (!(await flagOnForEveryone("timeline_v2"))) return null;
+  return (
+    <Section className="border-t">
+      <Feature
+        eyebrow="Contact timeline"
+        title="Every email, reply, meeting and payment on one page per client."
+        mock={<TimelineMock />}
+        bullets={[
+          "Grouped by day, newest first, and fast however long the history",
+          "Replies to your emails land under the email they answer, no forwarding",
+          "Answer from the timeline; the thread stays in one place",
+          "Meetings link to their recap and transcript",
+        ]}
+      >
+        The contact page is the memory of the relationship: what was booked, what was said, what was
+        promised and what was paid, without digging through an inbox.
       </Feature>
     </Section>
   );

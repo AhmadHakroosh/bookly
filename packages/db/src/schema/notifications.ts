@@ -21,6 +21,7 @@ export type NotificationKind =
   | "guest.joined"
   | "recap.ready"
   | "payment.received"
+  | "email.replied"
   | "task.assigned"
   | "task.mentioned"
   | "task.overdue";

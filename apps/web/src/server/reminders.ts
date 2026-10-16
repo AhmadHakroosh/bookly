@@ -16,6 +16,7 @@ import { sweepPendingFiles } from "./files";
 import { sendTelemetryPing } from "./telemetry";
 import { ensureDailyWebhook } from "./daily-webhook";
 import { trackBooking } from "./contacts";
+import { replyToFor } from "./inbound";
 import { notify, pruneNotifications, wantsEmail } from "./notifications";
 import { textAttendee } from "./notify";
 import { expireUnpaidBookings } from "./payments";
@@ -80,13 +81,15 @@ export async function sendDueReminders(
     const brief = await briefForBooking(ws, b, et ?? null).catch(() => null);
     const h = await reminderMail({ ...ctx, brief: brief ?? undefined }, true, hours);
     const line = `Reminder: ${et?.title ?? "Meeting"} with ${host.displayName} in ${hours === 1 ? "1 hour" : `${hours} hours`}. ${b.meetingUrl ?? `${ctx.baseUrl}/booking/${b.manageToken}`}`;
+    const reminderId = crypto.randomUUID();
+    const guestReplyTo = await replyToFor(ws, reminderId, hostUser?.email);
     await Promise.all([
       sendEmail({
         to: [b.attendeeEmail, ...b.guests],
         subject: a.subject,
         text: a.text,
         html: a.html,
-        replyTo: hostUser?.email ?? undefined,
+        replyTo: guestReplyTo,
         fromName: host.displayName,
       }),
       hostUser?.email && (await wantsEmail(ws.id, b.hostUserId, "booking.reminder"))
@@ -118,7 +121,14 @@ export async function sendDueReminders(
       .update(schema.bookings)
       .set({ remindersSent: [...b.remindersSent, ...due.map((x) => `r:${x}`)] })
       .where(eq(schema.bookings.id, b.id));
-    await trackBooking(ws, b, "email_sent", `Reminder (${hours}h) for ${et?.title ?? "meeting"}`);
+    await trackBooking(
+      ws,
+      b,
+      "email_sent",
+      `Reminder (${hours}h) for ${et?.title ?? "meeting"}`,
+      { subject: a.subject, body: a.text, sentBy: b.hostUserId },
+      { id: reminderId },
+    );
     sent++;
   }
 
@@ -162,19 +172,27 @@ export async function sendDueReminders(
       baseUrl: await publicBaseUrl(ws),
       adminUrl: adminBaseUrl(ws),
     });
+    const followUpId = crypto.randomUUID();
     await sendEmail({
       to: b.attendeeEmail,
       subject: mail.subject,
       text: mail.text,
       html: mail.html,
-      replyTo: hostUser?.email ?? undefined,
+      replyTo: await replyToFor(ws, followUpId, hostUser?.email),
       fromName: host?.displayName ?? ws.name,
     }).catch((e) => console.error("[followup]", e));
     await db()
       .update(schema.bookings)
       .set({ remindersSent: [...b.remindersSent, "followup"] })
       .where(eq(schema.bookings.id, b.id));
-    await trackBooking(ws, b, "email_sent", `Follow-up email: ${mail.subject}`);
+    await trackBooking(
+      ws,
+      b,
+      "email_sent",
+      `Follow-up email: ${mail.subject}`,
+      { subject: mail.subject, body: mail.text, sentBy: b.hostUserId },
+      { id: followUpId },
+    );
     sent++;
   }
 

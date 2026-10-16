@@ -101,6 +101,15 @@ Set `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY` and `VAPID_SUBJECT` (`mailto:you@exa
 restart. Keep the pair: new keys invalidate every browser's subscription. Browsers need HTTPS
 (localhost is exempt). See [notifications.md](notifications.md#in-bookly-on-the-desktop-by-email-beta).
 
+## Guest replies (optional)
+
+To have guests' replies land on the contact timeline instead of the host's inbox, give the
+install an inbound subdomain on Resend: add receiving for e.g. `reply.example.com` in Resend
+and its MX record in your DNS, create a webhook for `email.received` to
+`https://<your host>/api/webhooks/resend`, and set `INBOUND_EMAIL_DOMAIN` and
+`RESEND_WEBHOOK_SECRET` (with `RESEND_API_KEY`). Details in
+[contacts.md](contacts.md#timeline-v2-and-guest-replies).
+
 ## Export and deletion
 
 Admin → Settings → Data lets the workspace owner download everything as one JSON file

@@ -23,3 +23,7 @@ export function fillTemplate(t: Template, vars: Record<string, string>): Templat
   const fill = (s: string) => s.replace(/\{(\w+)\}/g, (_, k: string) => vars[k] ?? "");
   return { subject: fill(t.subject).trim(), body: fill(t.body).trim() };
 }
+
+/** "Re: subject" once, however many times the thread went back and forth. */
+export const replySubject = (subject: string) =>
+  `Re: ${subject.replace(/^\s*((re|aw|sv|antw|r)\s*:\s*)+/i, "").trim()}`.slice(0, 200);

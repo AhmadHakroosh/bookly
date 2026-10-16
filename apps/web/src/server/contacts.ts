@@ -102,15 +102,24 @@ export async function logContactEvent(
   contactId: string,
   type: ContactEventType,
   summary: string,
-  opts: { bookingId?: string | null; data?: Record<string, unknown> } = {},
+  opts: {
+    bookingId?: string | null;
+    data?: Record<string, unknown>;
+    /** Chosen up front when an outgoing email's Reply-To has to name this entry. */
+    id?: string;
+    /** The email this entry belongs under (a reply, or the host's answer to one). */
+    parentId?: string | null;
+  } = {},
 ): Promise<void> {
   try {
     await db()
       .insert(schema.contactEvents)
       .values({
+        ...(opts.id ? { id: opts.id } : {}),
         workspaceId,
         contactId,
         bookingId: opts.bookingId ?? null,
+        parentId: opts.parentId ?? null,
         type,
         summary: summary.slice(0, 500),
         data: opts.data ?? {},
@@ -131,6 +140,7 @@ export async function trackBooking(
   type: ContactEventType,
   summary: string,
   data: Record<string, unknown> = {},
+  opts: { id?: string } = {},
 ): Promise<Contact> {
   const contact = await upsertContact(workspace.id, {
     email: booking.attendeeEmail,
@@ -142,7 +152,11 @@ export async function trackBooking(
       .update(schema.bookings)
       .set({ contactId: contact.id })
       .where(eq(schema.bookings.id, booking.id));
-  await logContactEvent(workspace.id, contact.id, type, summary, { bookingId: booking.id, data });
+  await logContactEvent(workspace.id, contact.id, type, summary, {
+    bookingId: booking.id,
+    data,
+    id: opts.id,
+  });
   if (type === "booked" || type === "completed") await recount(contact.id);
   // A completed meeting turns a lead into an active relationship.
   if (type === "completed" && contact.stage === "lead")

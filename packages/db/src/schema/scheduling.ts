@@ -295,7 +295,8 @@ export type ContactEventType =
   | "brief"
   | "capture"
   | "task"
-  | "payment";
+  | "payment"
+  | "email_received";
 
 /** The contact's timeline: everything that happened between them and the workspace. */
 export const contactEvents = pgTable(
@@ -309,12 +310,21 @@ export const contactEvents = pgTable(
       .notNull()
       .references(() => contacts.id, { onDelete: "cascade" }),
     bookingId: text("booking_id"),
+    /**
+     * Threads: a guest's reply, or the host's answer from the timeline, points at the email it
+     * belongs under (always the first email of the thread, so threads stay one level deep).
+     */
+    parentId: text("parent_id"),
     type: text("type").$type<ContactEventType>().notNull(),
     summary: text("summary").notNull(),
     data: jsonb("data").$type<Record<string, unknown>>().notNull().default({}),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
-  (t) => [index("contact_events_contact_idx").on(t.contactId, t.createdAt)],
+  (t) => [
+    // Keyset pages of a contact's timeline: (created_at, id) newest first, never offsets.
+    index("contact_events_contact_idx").on(t.contactId, t.createdAt, t.id),
+    index("contact_events_parent_idx").on(t.parentId),
+  ],
 );
 
 /**

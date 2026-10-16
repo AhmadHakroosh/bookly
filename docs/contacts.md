@@ -57,3 +57,38 @@ own unsubscribe button. A contact who unsubscribes (`contacts.email_opt_out`) is
 page and on Home, the composer refuses to send, and a timeline note records it; a host can
 opt them back in on request, or opt someone out who asked in person. Booking confirmations and
 reminders are unaffected, the attendee asked for those by booking.
+
+## Timeline v2 and guest replies
+
+Behind the `timeline_v2` feature flag (Console → Flags; **Beta** while it is in beta), a
+contact's timeline is grouped by day under date dividers, newest first: bookings, emails sent,
+guests' replies, notes, tasks, recaps, payments and stage changes. Meetings link to their
+booking, recap and transcript; sent emails show their content in an accordion; a guest's reply
+sits under the email it answers, with the host's answers in the same thread. Clicking an entry
+opens it in a side pane (`?entry=<id>`): a meeting shows the whole booking, an email its thread
+with the quoted text available. The page loads the latest window (about 30 entries, never
+splitting a day) and **Show earlier** loads the next; after the first click the following
+windows load as you scroll. Pages are keyset-paginated on `(created_at, id)` over the index
+`contact_events (contact_id, created_at, id)`, so a contact with years of history costs the same
+per page as a new one.
+
+**Guest replies (Pro and up; self-hosted when configured).** Every email Bookly sends a contact
+(confirmations, reminders, follow-ups, recaps, proposals, payment requests, timeline replies)
+carries a signed Reply-To on the inbound domain, `r-<entry>-<signature>@<INBOUND_EMAIL_DOMAIN>`.
+The guest replies as usual; Resend receives it and calls `POST /api/webhooks/resend`
+(`email.received`, Svix-signed with `RESEND_WEBHOOK_SECRET`); Bookly fetches the message, cuts
+the quoted history ("On … wrote:", `>` lines, Outlook's header block), files it under the email
+it answers, clears the contact's follow-up date (they answered), logs `contact.reply_received`,
+and notifies whoever sent the email ("Guest replied"). Its email channel forwards the reply with
+the guest as Reply-To, so the host still has it in their inbox and can answer from there or from
+the timeline (**Reply**, logged as `contact.email_replied`; the email threads in the guest's mail
+client). Auto-replies are ignored, a repeated delivery is a no-op, and a forged address fails its
+signature. Attachment names are shown; the files themselves are not kept yet (they arrive with
+messages). On Free, or when the inbound domain is not set up, replies go to the host's own
+address as before.
+
+Setup (self-hosting): in Resend, add receiving on a subdomain (e.g. `reply.example.com`) and put
+its MX record in your DNS (the subdomain keeps your main mail where it is); create a webhook for
+`email.received` pointing at `https://<your host>/api/webhooks/resend`; then set
+`INBOUND_EMAIL_DOMAIN` and `RESEND_WEBHOOK_SECRET` (and `RESEND_API_KEY`, used to fetch the
+message).
