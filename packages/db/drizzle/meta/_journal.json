@@ -232,6 +232,13 @@
       "when": 1792147492853,
       "tag": "0032_notifications",
       "breakpoints": true
+    },
+    {
+      "idx": 33,
+      "version": "7",
+      "when": 1792150282018,
+      "tag": "0033_task_board",
+      "breakpoints": true
     }
   ]
 }

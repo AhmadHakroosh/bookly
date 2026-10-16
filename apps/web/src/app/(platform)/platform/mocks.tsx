@@ -624,3 +624,43 @@ export function NotificationsMock() {
     </div>
   );
 }
+
+/** The task board: workspace-defined columns, cards from meeting recaps, one being dragged. */
+export function TaskBoardMock() {
+  const columns: [string, string, [string, string, string][]][] = [
+    [
+      "Inquiry",
+      "#71717a",
+      [
+        ["Send pricing to Acme", "Lina · due Fri", ""],
+        ["Book discovery with Yusuf", "Omar", ""],
+      ],
+    ],
+    ["Quoted", "#2563eb", [["Follow up on the pilot proposal", "Sara · from the recap", "drag"]]],
+    ["Booked", "#16a34a", [["Kick-off pack for Northwind", "Lina · 2 comments", ""]]],
+  ];
+  return (
+    <BrowserFrame url="acme.bookly-app.io/admin/tasks">
+      <div className="flex gap-2.5 p-4 text-xs">
+        {columns.map(([name, color, cards]) => (
+          <div key={name} className="min-w-0 flex-1 space-y-2 rounded-lg border bg-muted/30 p-2">
+            <p className="flex items-center gap-1.5 font-semibold">
+              <span className="size-2 rounded-full" style={{ background: color }} />
+              {name}
+              <span className="ml-auto font-normal text-muted-foreground">{cards.length}</span>
+            </p>
+            {cards.map(([title, meta, state]) => (
+              <div
+                key={title}
+                className={`rounded-md border bg-background p-2 ${state === "drag" ? "translate-x-1 -rotate-2 shadow-lg ring-2 ring-(--brand)/40" : ""}`}
+              >
+                <p className="font-medium">{title}</p>
+                <p className="mt-1 text-muted-foreground">{meta}</p>
+              </div>
+            ))}
+          </div>
+        ))}
+      </div>
+    </BrowserFrame>
+  );
+}

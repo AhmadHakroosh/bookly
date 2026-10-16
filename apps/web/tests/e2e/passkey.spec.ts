@@ -52,6 +52,8 @@ test("a passkey registers on the profile page and signs in without a password", 
       .getByRole("button", { name: "Remove" })
       .click();
     await expect(page.getByText(name)).toHaveCount(0);
+    // Signing out revoked the session every other spec shares; hand them the new one.
+    await context.storageState({ path: STORAGE });
   } finally {
     await cdp.send("WebAuthn.removeVirtualAuthenticator", { authenticatorId });
     await context.close();

@@ -16,6 +16,7 @@ import { emitEvent } from "./webhooks";
 import { CAPTURE_SYSTEM, dueDate, manualCapture, parseCapture, type Capture } from "./capture-text";
 import { logContactEvent, setStage, trackBooking, noteToCrm } from "./contacts";
 import { notify } from "./notifications";
+import { initialStatusId, newPosition, setTaskDone } from "./tasks";
 import { baseUrl, getProfileByUser } from "./scheduling";
 
 /**
@@ -54,17 +55,20 @@ export async function captureMeeting(
       console.error("[capture] model failed, using manual capture", e);
     }
   }
+  const statusId = capture.actions.length ? await initialStatusId(workspace.id) : null;
   const tasks = capture.actions.length
     ? await db()
         .insert(schema.tasks)
         .values(
-          capture.actions.map((a) => ({
+          capture.actions.map((a, i) => ({
             workspaceId: workspace.id,
             contactId: contact.id,
             bookingId: booking.id,
             userId: booking.hostUserId,
             title: a.owner === "them" ? `${booking.attendeeName}: ${a.title}` : a.title,
             dueAt: dueDate(a.dueInDays),
+            statusId,
+            position: newPosition() + i,
           })),
         )
         .returning()
@@ -184,6 +188,9 @@ export async function addTask(
     dueAt?: Date | null;
     /** The member creating it; when that is someone else, the assignee is notified. */
     assignedBy?: string | null;
+    /** Board column (defaults to the workspace's default status). */
+    statusId?: string | null;
+    description?: string | null;
   },
 ) {
   const [t] = await db()
@@ -195,6 +202,10 @@ export async function addTask(
       contactId: input.contactId ?? null,
       bookingId: input.bookingId ?? null,
       dueAt: input.dueAt ?? null,
+      description: input.description?.trim().slice(0, 5000) || null,
+      statusId: input.statusId ?? (await initialStatusId(workspaceId)),
+      position: newPosition(),
+      createdBy: input.assignedBy ?? input.userId,
     })
     .returning();
   emitEvent(workspaceId, "task.created", { task: serializeTask(t!) });
@@ -224,11 +235,9 @@ export async function addTask(
   return t!;
 }
 
+/** "Mark done" / "Reopen": moves the task to the first done status, or back to the default one. */
 export async function completeTask(workspaceId: string, id: string, done = true) {
-  await db()
-    .update(schema.tasks)
-    .set({ doneAt: done ? new Date() : null })
-    .where(and(eq(schema.tasks.id, id), eq(schema.tasks.workspaceId, workspaceId)));
+  await setTaskDone(workspaceId, id, done);
 }
 
 export async function deleteTask(workspaceId: string, id: string) {

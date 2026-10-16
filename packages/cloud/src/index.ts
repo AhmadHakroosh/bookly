@@ -40,6 +40,10 @@ export type Limits = {
   storageBytes: number | null;
   /** The bytes are per billed seat and pooled across the workspace (Team). */
   storagePerSeat?: boolean;
+  /** Task board with drag and drop, workspace-defined statuses and saved views (list view is free). */
+  taskBoard: boolean;
+  /** Assign tasks to teammates, @-mention them in comments, share views with the workspace. */
+  taskAssignment: boolean;
 };
 
 export const GIB = 1024 ** 3;
@@ -93,6 +97,8 @@ export const PLANS: Record<PlanId, Plan> = {
       auditRetentionDays: 90,
       activityExport: false,
       storageBytes: 1 * GIB,
+      taskBoard: false,
+      taskAssignment: false,
     },
     highlights: [
       "Contacts, briefings and the daily Home page",
@@ -130,6 +136,8 @@ export const PLANS: Record<PlanId, Plan> = {
       auditRetentionDays: 365,
       activityExport: true,
       storageBytes: 20 * GIB,
+      taskBoard: true,
+      taskAssignment: false,
     },
     highlights: [
       "Auto-capture: transcripts, AI recaps, tasks (5 hours a month, then $3 an hour)",
@@ -173,6 +181,8 @@ export const PLANS: Record<PlanId, Plan> = {
       auditRetentionDays: 730,
       activityExport: true,
       storageBytes: 20 * GIB,
+      taskBoard: true,
+      taskAssignment: true,
       storagePerSeat: true,
     },
     highlights: [
@@ -210,6 +220,8 @@ export const UNLIMITED: Limits = {
   auditRetentionDays: null,
   activityExport: true,
   storageBytes: null,
+  taskBoard: true,
+  taskAssignment: true,
 };
 
 /** The workspace's storage budget in bytes: flat, or per billed seat and pooled. */
@@ -303,7 +315,9 @@ export type FeatureLimit =
   | "api"
   | "removeBranding"
   | "invoices"
-  | "activityExport";
+  | "activityExport"
+  | "taskBoard"
+  | "taskAssignment";
 
 /** True when adding one more of `what` stays within the limit. */
 export function withinLimit(limits: Limits, what: CountableLimit, current: number): boolean {
@@ -327,6 +341,8 @@ export const FEATURE_LABELS: Record<FeatureLimit, string> = {
   removeBranding: "Your own branding",
   invoices: "Stripe invoices in your name",
   activityExport: "Activity log export",
+  taskBoard: "Task board and custom statuses",
+  taskAssignment: "Assigning tasks to teammates",
 };
 
 /** First plan (cheapest) that allows `what`. */

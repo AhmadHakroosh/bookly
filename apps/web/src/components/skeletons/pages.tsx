@@ -681,3 +681,24 @@ export function DocsPageSkeleton() {
     </Shell>
   );
 }
+
+export function TasksSkeleton() {
+  return (
+    <Shell className="space-y-6">
+      <HeadingWithAction width="w-24" />
+      <div className="flex gap-2">
+        <Skeleton className="h-10 w-52 rounded-lg" />
+        <Skeleton className="ml-auto h-10 w-40 rounded-lg" />
+      </div>
+      <div className="flex gap-3 overflow-hidden">
+        {[0, 1, 2].map((i) => (
+          <div key={i} className="w-72 shrink-0 space-y-2 rounded-xl border p-3">
+            <Skeleton className="h-4 w-24" />
+            <Skeleton className="h-20 w-full rounded-lg" />
+            <Skeleton className="h-20 w-full rounded-lg" />
+          </div>
+        ))}
+      </div>
+    </Shell>
+  );
+}

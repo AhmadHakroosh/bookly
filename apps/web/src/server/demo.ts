@@ -64,6 +64,7 @@ export async function seedDemo() {
       { key: "home_dashboard", description: "Home dashboard with summary cards", state: "on" },
       { key: "bookings_calendar", description: "Bookings list and calendar", state: "on" },
       { key: "notifications", description: "In-app and desktop notifications", state: "on" },
+      { key: "task_board", description: "Task board with workspace-defined statuses", state: "on" },
     ])
     .onConflictDoUpdate({ target: schema.featureFlags.key, set: { state: "on" } });
   const env = loadEnv();
