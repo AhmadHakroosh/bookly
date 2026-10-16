@@ -88,7 +88,17 @@ function Sidebar() {
 }
 
 /** Home as the host sees it on a normal Tuesday. */
-export function HomeMock() {
+/** The Home dashboard's cards as the mock shows them: title, the number, one line of context. */
+const MOCK_CARDS: [string, string, string][] = [
+  ["This week", "7", "Today 10:00 · Lina Farah"],
+  ["Since your last visit", "3", "new bookings · 1 cancellation"],
+  ["Needs attention", "4", "1 request · 1 recap · 2 follow-ups"],
+  ["Your tasks", "5", "open · 1 overdue"],
+  ["Contacts", "6", "new this week · 2 follow-ups due"],
+  ["Payments this month", "$1,840", "12 paid bookings"],
+];
+
+export function HomeMock({ dashboard = false }: { dashboard?: boolean }) {
   return (
     <BrowserFrame url="acme.bookly-app.io/admin">
       <div className="flex">
@@ -100,6 +110,17 @@ export function HomeMock() {
               Tue, Sep 22 · 2 meetings today · 1 request · 1 overdue task · 2 to follow up
             </p>
           </div>
+          {dashboard && (
+            <div className="grid grid-cols-2 gap-2 lg:grid-cols-3">
+              {MOCK_CARDS.map(([title, big, sub]) => (
+                <div key={title} className="rounded-xl border p-3">
+                  <p className="text-xs font-medium text-muted-foreground">{title}</p>
+                  <p className="text-xl font-semibold tracking-tight tabular-nums">{big}</p>
+                  <p className="truncate text-xs text-muted-foreground">{sub}</p>
+                </div>
+              ))}
+            </div>
+          )}
           <section>
             <p className="text-base font-semibold tracking-tight">Recaps to review</p>
             <div className="mt-2 flex items-start justify-between gap-3 rounded-xl border p-3">

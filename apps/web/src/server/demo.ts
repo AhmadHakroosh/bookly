@@ -59,7 +59,10 @@ export async function seedDemo() {
   // The demo and the e2e suite exercise uploads, so the flag is on from the first run.
   await db()
     .insert(schema.featureFlags)
-    .values({ key: "file_uploads", description: "Upload avatars and logos", state: "on" })
+    .values([
+      { key: "file_uploads", description: "Upload avatars and logos", state: "on" },
+      { key: "home_dashboard", description: "Home dashboard with summary cards", state: "on" },
+    ])
     .onConflictDoUpdate({ target: schema.featureFlags.key, set: { state: "on" } });
   const env = loadEnv();
   let user = await db().query.users.findFirst({ where: eq(schema.users.email, DEMO_EMAIL) });

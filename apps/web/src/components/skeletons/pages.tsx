@@ -36,6 +36,11 @@ export function HomeSkeleton() {
   return (
     <Shell className="space-y-8">
       <Heading width="w-24" />
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+        {Array.from({ length: 6 }, (_, i) => (
+          <Skeleton key={i} className="h-28 rounded-xl sm:h-36" />
+        ))}
+      </div>
       <section className="space-y-3">
         <Subheading width="w-24" />
         <DividedList rows={3} />
