@@ -16,6 +16,27 @@ describe("drive helpers", () => {
     expect(drive.PREVIEWABLE.has("image/svg+xml")).toBe(false);
   });
 
+  it("views images and PDFs only, by stored type or else by extension", async () => {
+    const { previewKind } = await import("@/lib/preview");
+    expect(previewKind({ name: "scan.bin", mime: "application/pdf" })).toBe("pdf");
+    expect(previewKind({ name: "a_resume.pdf" })).toBe("pdf");
+    expect(previewKind({ name: "Photo.JPG", mime: null })).toBe("image");
+    expect(previewKind({ name: "logo.svg" })).toBeNull();
+    expect(previewKind({ name: "notes.docx", mime: "application/octet-stream" })).toBeNull();
+    // The stored type wins over a misleading name.
+    expect(previewKind({ name: "x.png", mime: "text/html" })).toBeNull();
+  });
+
+  it("reads attachments off an entry's data, without a type until it is looked up", async () => {
+    const { attachmentsOf } = await import("@/server/timeline");
+    expect(attachmentsOf({ attachments: [{ filename: "a.pdf", fileId: "f1" }, {}] })).toEqual([
+      { filename: "a.pdf", fileId: "f1", reason: null, mime: null },
+      { filename: "attachment", fileId: null, reason: null, mime: null },
+    ]);
+    expect(attachmentsOf({})).toEqual([]);
+    expect(attachmentsOf(null)).toEqual([]);
+  });
+
   it("cleans names: no slashes, control characters or runs of spaces", () => {
     expect(drive.cleanName("  ../etc/passwd  ")).toBe(".. etc passwd");
     expect(drive.cleanName("a\u0000b\nc")).toBe("a b c");

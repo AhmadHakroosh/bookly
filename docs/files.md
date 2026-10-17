@@ -14,8 +14,14 @@ shows while it is in beta). **Admin → Files** has five places:
 Upload (several at once), new folder, rename, move (between My files, Team and their folders),
 "Belongs to…" (put a file in a contact's folder; it also shows on their timeline), move to the
 trash, restore, delete forever, search by name. Clicking a file opens it in a side pane: a
-preview for images and PDFs (everything else downloads, never rendered in the browser), where it
-came from, its contact and the tasks it is on. Lists load 50 at a time (**Show more**).
+preview for images and PDFs, where it came from, its contact and the tasks it is on. Lists load
+50 at a time (**Show more**).
+
+**View** (in a file's "…" menu and its pane) opens an image or PDF in a large viewer with **Open
+in new tab** and **Download**. Any other type is download only: View is disabled and says so,
+and the file is never rendered in the browser. A file's name on a task, on the contact page's
+Files card and on the timeline opens the same viewer (or downloads); Cmd/Ctrl-click opens it in
+a new tab.
 
 Who sees what: your My files are yours; Team files and anything that belongs to a contact are
 seen by every member; a file on a task is seen by whoever can see the task.

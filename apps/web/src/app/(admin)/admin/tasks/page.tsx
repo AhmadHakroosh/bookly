@@ -502,7 +502,7 @@ async function TaskDetail({
           <TaskFiles
             taskId={t.id}
             contactId={t.contactId}
-            files={files.map((f) => ({ id: f.id, name: f.name, size: f.size }))}
+            files={files.map((f) => ({ id: f.id, name: f.name, mime: f.mime, size: f.size }))}
           />
         )}
         <section aria-labelledby="comments-heading" className="space-y-3 border-t pt-5">

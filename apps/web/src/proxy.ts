@@ -29,10 +29,13 @@ const CLOUD = process.env.TENANCY === "multi";
 /**
  * Paths that stay on the host they were requested on. The admin and auth pages need the session
  * cookie, which is scoped to the root domain; meeting rooms recognise the host the same way.
+ * Private files (`/files/<id>`) check that cookie too, so the admin's links must not be sent on
+ * to a custom domain, where the visitor is signed out.
  */
 const HOST_BOUND = [
   "/admin",
   "/api/",
+  "/files/",
   "/login",
   "/logout",
   "/forgot-password",

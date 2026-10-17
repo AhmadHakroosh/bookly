@@ -26,11 +26,12 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { AttachFiles } from "@/components/drive/attach-files";
+import { FileLink } from "@/components/drive/file-viewer";
 import { SubmitButton } from "@/components/submit-button";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
-import type { TimelineDay, TimelineItem } from "@/server/timeline";
+import type { FileRef, TimelineDay, TimelineItem } from "@/server/timeline";
 import { loadTimelineAction, replyFromTimelineAction, type ReplyState } from "./timeline-actions";
 
 const ICON: Record<string, LucideIcon> = {
@@ -59,9 +60,11 @@ const NOT_KEPT: Record<string, string> = {
   plan: "files come with Pro",
   "too large": "too large to keep",
   "storage full": "storage is full",
+  deleted: "deleted since",
 };
 
-function Attachments({ files }: { files: TimelineItem["attachments"] }) {
+/** An email's attachments: kept ones open in the viewer (or download), the rest say why not. */
+export function Attachments({ files }: { files: FileRef[] }) {
   if (!files.length) return null;
   return (
     <ul
@@ -72,12 +75,10 @@ function Attachments({ files }: { files: TimelineItem["attachments"] }) {
         <li key={i} className="inline-flex items-center gap-1">
           <PaperclipIcon className="size-3" aria-hidden />
           {f.fileId ? (
-            <a
-              href={`/files/${f.fileId}?download=1`}
+            <FileLink
+              file={{ id: f.fileId, name: f.filename, mime: f.mime }}
               className="text-foreground underline underline-offset-4"
-            >
-              {f.filename}
-            </a>
+            />
           ) : (
             <span>
               {f.filename}
@@ -211,14 +212,12 @@ function Entry({
         )}
         {item.file && (
           <p className="mt-0.5 flex flex-wrap gap-x-3 text-xs">
-            <a
-              href={`/files/${item.file.id}`}
-              target="_blank"
-              rel="noreferrer"
+            <FileLink
+              file={{ id: item.file.id, name: item.file.name, mime: item.file.mime }}
               className="underline underline-offset-4"
             >
               Open file
-            </a>
+            </FileLink>
             {item.file.taskId && (
               <Link
                 href={`/admin/tasks?task=${item.file.taskId}`}

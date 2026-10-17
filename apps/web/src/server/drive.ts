@@ -74,14 +74,26 @@ export async function canSeeFile(v: Viewer, fileId: string): Promise<StoredFile 
 }
 
 /** Only these open in the browser; everything else downloads (never rendered on our origin). */
-export const PREVIEWABLE = new Set([
-  "image/png",
-  "image/jpeg",
-  "image/webp",
-  "image/gif",
-  "image/avif",
-  "application/pdf",
-]);
+export { PREVIEWABLE } from "@/lib/preview";
+
+/** The name and stored type of each file still in the drive, for the viewer (deleted ones drop out). */
+export async function fileTypes(
+  workspaceId: string,
+  ids: string[],
+): Promise<Map<string, { name: string; mime: string }>> {
+  if (!ids.length) return new Map();
+  const found = await db()
+    .select({ id: schema.files.id, name: schema.files.name, mime: schema.files.mime })
+    .from(schema.files)
+    .where(
+      and(
+        eq(schema.files.workspaceId, workspaceId),
+        inArray(schema.files.id, [...new Set(ids)]),
+        isNull(schema.files.deletedAt),
+      ),
+    );
+  return new Map(found.map((f) => [f.id, { name: f.name, mime: f.mime }]));
+}
 
 /** A MIME type safe to serve back: the upload allow-list as is, anything else as a download. */
 export const safeMime = (mime: string | null | undefined) => {
