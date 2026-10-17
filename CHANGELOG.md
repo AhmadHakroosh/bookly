@@ -4,6 +4,8 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 ## [Unreleased]
 
+## [0.20.0] - 2026-10-17
+
 ### Added
 
 - **Notes in the call.** On Bookly video, members in the call get a private **Notes** panel behind the `meeting_notes` flag (Pro and up, `meetingNotes`): notes save as you type, each keeps the moment it was written, and **Mark moment** (button, call controls or ⌘/Ctrl+Shift+M) drops a flagged timestamp. The recap reads the notes together with the transcript (quoted as your notes, commitments and marked moments weigh in for action items, notes win over the transcript), and every action item and the task it becomes says whether it came from your notes, the transcript or both; a call that was not transcribed gets a recap from the notes alone. The notes stay editable on the booking (**Your notes from the call**) and are posted to the contact's timeline as a note after the meeting (edits update it). Migration 0037 (`meeting_notes`)
@@ -554,7 +556,8 @@ First public release: the self-hostable scheduling platform with contacts, brief
 
 - The unused storage layer (`packages/storage`, `STORAGE_*` and `S3_*` variables, the MinIO service in Compose): nothing in Bookly uploads files; profile photos and logos are URLs
 
-[Unreleased]: https://github.com/AhmadHakroosh/bookly/compare/v0.19.0...HEAD
+[Unreleased]: https://github.com/AhmadHakroosh/bookly/compare/v0.20.0...HEAD
+[0.20.0]: https://github.com/AhmadHakroosh/bookly/compare/v0.19.0...v0.20.0
 [0.19.0]: https://github.com/AhmadHakroosh/bookly/compare/v0.18.3...v0.19.0
 [0.18.3]: https://github.com/AhmadHakroosh/bookly/compare/v0.18.2...v0.18.3
 [0.18.2]: https://github.com/AhmadHakroosh/bookly/compare/v0.18.1...v0.18.2
