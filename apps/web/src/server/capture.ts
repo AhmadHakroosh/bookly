@@ -161,7 +161,7 @@ export async function sendFollowUp(
     booking,
     "email_sent",
     `Follow-up: ${subject.trim()}`,
-    { subject: subject.trim(), body: signed, sentBy: booking.hostUserId },
+    { subject: subject.trim(), body: signed, sentBy: booking.hostUserId, written: true },
     { id: eventId },
   );
   return true;

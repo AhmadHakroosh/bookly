@@ -172,6 +172,7 @@ export async function sendOutreach(
       body,
       amountCents: input.amountCents ?? null,
       sentBy: hostUserId,
+      written: true,
       attachments: (sent?.files ?? []).map((f) => ({ filename: f.name, fileId: f.id })),
     },
   });
@@ -270,6 +271,58 @@ export async function sendTimelineReply(
     (root?.data as { subject?: string } | undefined)?.subject ?? d.subject ?? root?.summary ?? "";
   const subject = replySubject(rootSubject || "Our conversation");
   const to = parent.type === "email_received" && d.from ? d.from : c.email;
+  return deliverToContact(ws, c, hostUserId, {
+    subject,
+    body,
+    to,
+    fileIds,
+    parentId: rootId,
+    bookingId: parent.bookingId,
+    inReplyTo: parent.type === "email_received" ? (d.messageId ?? null) : null,
+  });
+}
+
+/**
+ * A new email to a contact from Messages: its own subject and thread on the timeline, with the
+ * same signed Reply-To, attachments and links as a timeline reply.
+ */
+export async function sendGuestEmail(
+  ws: Workspace,
+  c: Contact,
+  hostUserId: string,
+  input: { subject: string; text: string; fileIds?: string[] },
+): Promise<{ ok: true; id: string } | { error: string }> {
+  if (c.emailOptOut) return { error: "This contact has unsubscribed from your emails." };
+  const body = input.text.trim().slice(0, 8000);
+  if (!body) return { error: "Write your message first." };
+  const subject = input.subject.trim().slice(0, 200) || `A message from ${ws.name}`;
+  return deliverToContact(ws, c, hostUserId, {
+    subject,
+    body,
+    to: c.email,
+    fileIds: input.fileIds ?? [],
+    parentId: null,
+    bookingId: null,
+    inReplyTo: null,
+  });
+}
+
+/** Sends one personal email to a contact and logs it on their timeline (and so in Messages). */
+async function deliverToContact(
+  ws: Workspace,
+  c: Contact,
+  hostUserId: string,
+  m: {
+    subject: string;
+    body: string;
+    to: string;
+    fileIds: string[];
+    parentId: string | null;
+    bookingId: string | null;
+    inReplyTo: string | null;
+  },
+): Promise<{ ok: true; id: string }> {
+  const { subject, body, to, fileIds, inReplyTo } = m;
   const [host, user] = await Promise.all([
     getProfileByUser(ws.id, hostUserId),
     db().query.users.findFirst({
@@ -288,7 +341,6 @@ export async function sendTimelineReply(
     signedBy: host?.displayName ?? ws.name,
   });
   const id = crypto.randomUUID();
-  const inReplyTo = parent.type === "email_received" ? (d.messageId ?? null) : null;
   await sendEmail({
     to,
     subject,
@@ -299,20 +351,31 @@ export async function sendTimelineReply(
     ...(inReplyTo ? { headers: { "In-Reply-To": inReplyTo, References: inReplyTo } } : {}),
     ...(sent?.attachments.length ? { attachments: sent.attachments } : {}),
   });
-  await logContactEvent(ws.id, c.id, "email_sent", `Reply: ${subject}`, {
-    id,
-    parentId: rootId,
-    bookingId: parent.bookingId,
-    data: {
-      kind: "reply",
-      subject,
-      body: signed,
-      sentBy: hostUserId,
-      to,
-      attachments: (sent?.files ?? []).map((f) => ({ filename: f.name, fileId: f.id })),
+  await logContactEvent(
+    ws.id,
+    c.id,
+    "email_sent",
+    m.parentId ? `Reply: ${subject}` : `Email: ${subject}`,
+    {
+      id,
+      parentId: m.parentId,
+      bookingId: m.bookingId,
+      data: {
+        kind: m.parentId ? "reply" : "message",
+        subject,
+        body: signed,
+        sentBy: hostUserId,
+        written: true,
+        to,
+        attachments: (sent?.files ?? []).map((f) => ({ filename: f.name, fileId: f.id })),
+      },
     },
-  });
+  );
   if (sent?.files.length) await recordSentFiles(ws, id, sent.files, hostUserId);
-  noteToCrm(ws, c.id, `Reply by ${host?.displayName ?? ws.name}: ${subject}\n\n${body}`);
+  noteToCrm(
+    ws,
+    c.id,
+    `${m.parentId ? "Reply" : "Email"} by ${host?.displayName ?? ws.name}: ${subject}\n\n${body}`,
+  );
   return { ok: true, id };
 }

@@ -49,6 +49,16 @@ export function visibleFiles(v: Viewer, opts: { trash?: boolean } = {}) {
     where l.file_id = ${f.id} and l.target_type = 'task'
     ${seesAllTasks(v) ? sql`` : sql`and t.user_id = ${v.userId}`}
   )`;
+  // Shared in Messages: a note on a guest's conversation (every member) or a team thread (its people).
+  const linkedThread = sql`exists (
+    select 1 from ${schema.fileLinks} l
+    join ${schema.threadMessages} m on m.id = l.target_id
+    join ${schema.threads} th on th.id = m.thread_id
+    where l.file_id = ${f.id} and l.target_type = 'thread_message'
+    and (th.kind = 'guest' or exists (
+      select 1 from ${schema.threadParticipants} p where p.thread_id = th.id and p.user_id = ${v.userId}
+    ))
+  )`;
   return and(
     eq(f.workspaceId, v.ws.id),
     eq(f.kind, "attachment"),
@@ -59,6 +69,7 @@ export function visibleFiles(v: Viewer, opts: { trash?: boolean } = {}) {
       inArray(f.space, ["team", "contact"]),
       isNotNull(f.contactId),
       linkedTask,
+      linkedThread,
     ),
   )!;
 }

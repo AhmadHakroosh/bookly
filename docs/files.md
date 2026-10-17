@@ -24,7 +24,8 @@ Files card and on the timeline opens the same viewer (or downloads); Cmd/Ctrl-cl
 a new tab.
 
 Who sees what: your My files are yours; Team files and anything that belongs to a contact are
-seen by every member; a file on a task is seen by whoever can see the task.
+seen by every member; a file on a task is seen by whoever can see the task; a file attached to a
+message is seen by everyone in that conversation (`docs/messages.md`).
 
 ## Guests' attachments
 

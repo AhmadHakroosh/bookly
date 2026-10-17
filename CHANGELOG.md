@@ -4,6 +4,20 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 ## [Unreleased]
 
+### Added
+
+- **Messages.** A Messages page (Admin → Messages) behind the `messages` flag with a Beta badge. **One conversation per client**, seen by every member: their emails in and out (everything that was an email on their timeline, automatic ones included), what they wrote when booking, and **internal notes** with @-mentions the client never sees (Team). **Write to the client** from the conversation: an email from you with the signed Reply-To, so their answer comes back to the same conversation; leave the subject empty to answer their latest email, or give one to start a new thread; files from the drive go with it. **Team threads** (Team): a subject, the people in it and optionally the contact it is about; only participants see it, @-mentions bring people in, **Add people** adds more. Inbox, Unread, Clients, Team and Closed; search; keyset "Show more"; **Close thread** / **Reopen thread** (a client writing reopens). Gates `guestMessages` (Pro+) and `teamMessages` (Team+); attachments follow `attachments`
+- Unread counts: per member read marks; automatic emails never make a conversation unread. The count shows in the sidebar and on a new **Messages** Home card, and updates live over the notifications stream (`event: messages`), which also refreshes an open Messages page
+- Notifications **Team message** (`message.posted`) and **Mentioned in Messages** (`message.mentioned`)
+- **Open in Messages** on a contact's page; the landing page shows Messages once the flag is on for everyone
+- Contacts with emails on their timeline start with a conversation (migration 0036 backfills them, nothing unread). Conversations, notes and team threads are in the workspace export
+
+### Changed
+
+- The @-mention textarea of task comments is a shared component (`MentionTextarea`), used by notes and team messages too
+- Files attached to a message are visible to everyone in that conversation; uploads from a message without a contact go to My files
+- The notifications docs list every kind (guest replied, task mentions and the two message kinds were missing)
+
 ## [0.18.3] - 2026-10-17
 
 ### Security

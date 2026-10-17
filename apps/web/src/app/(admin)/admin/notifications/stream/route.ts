@@ -1,4 +1,5 @@
 import { hasFlag } from "@/server/flags";
+import { canGuest, canTeam, messagesPulse } from "@/server/messages";
 import {
   decodeCursor,
   encodeCursor,
@@ -13,8 +14,9 @@ import { getCurrentWorkspace } from "@/server/workspace";
 /*
  * The bell's live feed (Server-Sent Events). The table is the fan-out: each open admin tab holds
  * one stream that checks the member's rows every few seconds and sends what is new plus the
- * unread count when it changes. A stream lives under a minute (serverless limits); EventSource
- * reconnects by itself with Last-Event-ID, so nothing is missed between two streams.
+ * unread count when it changes (and, with Messages, their unread count and newest activity).
+ * A stream lives under a minute (serverless limits); EventSource reconnects by itself with
+ * Last-Event-ID, so nothing is missed between two streams.
  */
 
 export const maxDuration = 60;
@@ -37,6 +39,9 @@ export async function GET(req: Request) {
   if (!session || !role || !ws) return new Response("Sign in first.", { status: 401 });
   if (!(await hasFlag(ws, "notifications"))) return new Response("Not enabled.", { status: 404 });
   const userId = session.user.id;
+  // Messages (0.19.0) ride this stream: their unread count and newest activity, when they move.
+  const messagesOn =
+    (await hasFlag(ws, "messages")) && (canGuest(ws) || canTeam(ws)) ? { userId, ws } : null;
   let cursor = decodeCursor(req.headers.get("last-event-id")) ?? (await streamStart(ws.id, userId));
   const enc = new TextEncoder();
   const stream = new ReadableStream<Uint8Array>({
@@ -46,6 +51,7 @@ export async function GET(req: Request) {
         write(`${id ? `id: ${id}\n` : ""}event: ${event}\ndata: ${JSON.stringify(data)}\n\n`);
       write("retry: 3000\n\n");
       let lastCount = -1;
+      let lastPulse = "";
       const started = Date.now();
       try {
         while (!req.signal.aborted && Date.now() - started < WINDOW_MS) {
@@ -53,6 +59,12 @@ export async function GET(req: Request) {
           for (const r of rows) {
             cursor = { createdAt: r.createdAt.toISOString(), id: r.id };
             send("notification", toClient(r), encodeCursor(r));
+          }
+          if (messagesOn) {
+            const pulse = await messagesPulse(messagesOn);
+            const key = `${pulse.unread}|${pulse.latest}`;
+            if (key !== lastPulse) send("messages", pulse);
+            lastPulse = key;
           }
           const count = await unreadCount(ws.id, userId);
           if (count !== lastCount) send("count", { unread: count });

@@ -83,12 +83,13 @@ and notifies whoever sent the email ("Guest replied"). Its email channel forward
 the guest as Reply-To, so the host still has it in their inbox and can answer from there or from
 the timeline (**Reply**, logged as `contact.email_replied`; the email threads in the guest's mail
 client). Auto-replies are ignored, a repeated delivery is a no-op, and a forged address fails its
-signature. Attachment names are shown; the files themselves are not kept yet (they arrive with
-messages). On Free, or when the inbound domain is not set up, replies go to the host's own
+signature. Attachments are kept in the contact's folder (`docs/files.md`). On Free, or when the inbound domain is not set up, replies go to the host's own
 address as before. **Settings → Emails → Guest replies** shows where replies go and lets owners
 and admins switch it off (`settings.guest_replies.disabled`): new emails then carry the
 sender's own address, while replies to emails sent while it was on still reach the timeline
-(and are forwarded), so nothing is lost when the setting or the plan changes.
+(and are forwarded), so nothing is lost when the setting or the plan changes. Every email on
+the timeline is also the contact's conversation in Messages, where the team writes to them and
+leaves internal notes (`docs/messages.md`); **Open in Messages** on the contact's page opens it.
 
 Setup (self-hosting): in Resend, add receiving on a subdomain (e.g. `reply.example.com`) and put
 its MX record in your DNS (the subdomain keeps your main mail where it is); create a webhook for

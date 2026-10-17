@@ -7,6 +7,7 @@ import {
   CheckSquareIcon,
   CreditCardIcon,
   InboxIcon,
+  MessagesSquareIcon,
   UsersIcon,
   type LucideIcon,
 } from "lucide-react";
@@ -21,6 +22,7 @@ import {
   upcomingThisWeek,
   type HomeScope,
 } from "@/server/home";
+import { listThreads, unreadThreads } from "@/server/messages";
 import { listNotifications, unreadCount } from "@/server/notifications";
 import { formatPrice, paymentsReady } from "@/server/payments";
 
@@ -252,6 +254,34 @@ async function NotificationsCard({ scope, userId }: { scope: HomeScope; userId: 
   );
 }
 
+async function MessagesCard({ scope, userId }: { scope: HomeScope; userId: string }) {
+  const v = { ws: scope.ws, userId };
+  const [unread, { rows }] = await Promise.all([
+    unreadThreads(v),
+    listThreads(v, { box: "unread" }),
+  ]);
+  return (
+    <CardShell href="/admin/messages" title="Messages" icon={MessagesSquareIcon}>
+      <Big>{unread}</Big>
+      {unread === 0 ? (
+        <Sub>All caught up. New emails from clients and team threads land here.</Sub>
+      ) : (
+        <>
+          <Sub>{plural(unread, "unread conversation")}</Sub>
+          <ul className="mt-1 space-y-0.5">
+            {rows.slice(0, 3).map((r) => (
+              <li key={r.id} className="truncate text-foreground">
+                {r.title}
+                {r.preview && <span className="text-muted-foreground"> · {r.preview}</span>}
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
+    </CardShell>
+  );
+}
+
 const Slot = ({ children }: { children: ReactNode }) => (
   <Suspense fallback={<CardSkeleton />}>{children}</Suspense>
 );
@@ -262,6 +292,7 @@ export function HomeCards({
   manager,
   since,
   notifications = false,
+  messages = false,
   taskBoard = false,
 }: {
   scope: HomeScope;
@@ -270,6 +301,8 @@ export function HomeCards({
   since: Date | null;
   /** The notifications card, once that flag is on for the workspace. */
   notifications?: boolean;
+  /** The messages card: the flag is on and the plan has guest or team messages. */
+  messages?: boolean;
   /** The task board is on: the tasks card links to it. */
   taskBoard?: boolean;
 }) {
@@ -287,6 +320,11 @@ export function HomeCards({
       <Slot>
         <TasksCard scope={scope} userId={userId} manager={manager} board={taskBoard} />
       </Slot>
+      {messages && (
+        <Slot>
+          <MessagesCard scope={scope} userId={userId} />
+        </Slot>
+      )}
       {notifications && (
         <Slot>
           <NotificationsCard scope={scope} userId={userId} />

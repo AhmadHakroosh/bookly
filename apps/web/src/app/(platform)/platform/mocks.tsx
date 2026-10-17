@@ -759,3 +759,55 @@ export function DriveMock() {
     </BrowserFrame>
   );
 }
+
+/** Messages: one conversation per client, emails in and out with an internal note between. */
+export function MessagesMock() {
+  const threads: [string, string, boolean][] = [
+    ["Lina Farah", "Great, see you then!", true],
+    ["Launch plan", "Second thought: ship Monday.", false],
+    ["Omar Haddad", "Thanks for the recap.", false],
+  ];
+  return (
+    <BrowserFrame url="acme.bookly-app.io/admin/messages">
+      <div className="grid grid-cols-[130px_1fr] gap-3 p-4 text-xs">
+        <div className="space-y-1">
+          {threads.map(([name, preview, unread]) => (
+            <div
+              key={name}
+              className={`rounded px-2 py-1.5 ${name === "Lina Farah" ? "bg-muted" : ""}`}
+            >
+              <p className={`truncate ${unread ? "font-semibold" : ""}`}>{name}</p>
+              <p className="truncate text-muted-foreground">{preview}</p>
+            </div>
+          ))}
+        </div>
+        <div className="min-w-0 space-y-2">
+          <div className="rounded-lg border p-2">
+            <p className="text-muted-foreground">
+              <span className="font-medium text-foreground">Lina Farah</span> · When booking
+            </p>
+            <p>Could we talk about pricing?</p>
+          </div>
+          <div className="rounded-lg border bg-muted/40 p-2">
+            <p className="text-muted-foreground">
+              <span className="font-medium text-foreground">Sam</span> · Email sent
+            </p>
+            <p>Yes, pricing is on the agenda.</p>
+          </div>
+          <div className="rounded-lg border border-amber-300/60 bg-amber-50/60 p-2 dark:bg-amber-950/20">
+            <p className="text-muted-foreground">
+              <span className="font-medium text-foreground">Rana</span> · Internal note
+            </p>
+            <p>@Sam she asked about pricing twice; offer the pack.</p>
+          </div>
+          <div className="rounded-lg border p-2">
+            <p className="text-muted-foreground">
+              <span className="font-medium text-foreground">Lina Farah</span> · Email received
+            </p>
+            <p>Great, see you then!</p>
+          </div>
+        </div>
+      </div>
+    </BrowserFrame>
+  );
+}

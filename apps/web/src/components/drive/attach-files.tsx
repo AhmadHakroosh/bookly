@@ -8,11 +8,12 @@ import { UploadButton } from "@/components/drive/upload-button";
 import { formatSize } from "@/lib/upload-client";
 
 /**
- * Files to send with an email: picked from the drive or uploaded into the contact's folder.
- * Each one becomes a hidden `fileId` input of the surrounding form; the server sends them as
- * attachments while they fit (10 MB) and as 7-day links after that.
+ * Files to send with an email or a message: picked from the drive or uploaded (into the
+ * contact's folder, or My files when there is no contact). Each one becomes a hidden `fileId`
+ * input of the surrounding form; emails carry them as attachments while they fit (10 MB) and
+ * as 7-day links after that.
  */
-export function AttachFiles({ contactId }: { contactId: string }) {
+export function AttachFiles({ contactId }: { contactId: string | null }) {
   const [files, setFiles] = useState<{ id: string; name: string; size: number }[]>([]);
   const add = (more: { id: string; name: string; size: number }[]) =>
     setFiles((prev) => [...prev, ...more.filter((m) => !prev.some((p) => p.id === m.id))]);
@@ -48,7 +49,7 @@ export function AttachFiles({ contactId }: { contactId: string }) {
           onPick={(picked: ClientFile[]) => add(picked)}
         />
         <UploadButton
-          target={{ contactId }}
+          target={contactId ? { contactId } : { space: "personal" }}
           variant="outline"
           size="sm"
           label="Upload"

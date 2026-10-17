@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { GitHubIcon } from "@/components/brand/logo";
+import { useMessagesUnread } from "@/lib/messages-live";
 import {
   BookOpenIcon,
   CalendarClockIcon,
@@ -15,6 +16,7 @@ import {
   GlobeIcon,
   LifeBuoyIcon,
   HomeIcon,
+  MessagesSquareIcon,
   LayoutGridIcon,
   PlugIcon,
   FolderIcon,
@@ -27,7 +29,25 @@ import {
   type LucideIcon,
 } from "lucide-react";
 
-type Item = { href: string; label: string; icon: LucideIcon; external?: boolean };
+type Item = {
+  href: string;
+  label: string;
+  icon: LucideIcon;
+  external?: boolean;
+  /** Messages: the unread count, kept live by the notification stream. */
+  unread?: number;
+};
+
+function UnreadBadge({ initial }: { initial: number }) {
+  const n = useMessagesUnread(initial);
+  if (!n) return null;
+  return (
+    <span className="ml-auto rounded-full bg-primary px-1.5 text-xs font-medium text-primary-foreground tabular-nums">
+      {n > 99 ? "99+" : n}
+      <span className="sr-only"> unread</span>
+    </span>
+  );
+}
 type Group = { label: string; icon: LucideIcon; items: Item[] };
 
 /**
@@ -86,11 +106,14 @@ export function AdminNav({
   manager = false,
   tasks = false,
   files = false,
+  messages = null,
   supportHref = "https://github.com/AhmadHakroosh/bookly/issues",
 }: {
   cloud?: boolean;
   /** The drive is enabled (its feature flag): adds Files after Tasks / Contacts. */
   files?: boolean;
+  /** Messages are enabled and on the plan: adds Messages after Contacts, with the unread count. */
+  messages?: { unread: number } | null;
   /** The task board is enabled (its feature flag): adds Tasks after Contacts. */
   tasks?: boolean;
   /** Owner or admin: shows the Workspace group. */
@@ -102,7 +125,7 @@ export function AdminNav({
   const active = (href: string) =>
     href === "/admin" ? pathname === href : pathname.startsWith(href);
   const scheduling =
-    tasks || files
+    tasks || files || messages
       ? GROUPS.map((g, i) =>
           i === 0
             ? {
@@ -111,6 +134,16 @@ export function AdminNav({
                   it.href === "/admin/contacts"
                     ? [
                         it,
+                        ...(messages
+                          ? [
+                              {
+                                href: "/admin/messages",
+                                label: "Messages",
+                                icon: MessagesSquareIcon,
+                                unread: messages.unread,
+                              },
+                            ]
+                          : []),
                         ...(tasks
                           ? [{ href: "/admin/tasks", label: "Tasks", icon: SquareKanbanIcon }]
                           : []),
@@ -156,6 +189,7 @@ export function AdminNav({
                   <Link href={it.href} className={itemClass(active(it.href))}>
                     <it.icon className="size-4 shrink-0" aria-hidden />
                     {it.label}
+                    {it.unread !== undefined && <UnreadBadge initial={it.unread} />}
                   </Link>
                 )}
               </li>

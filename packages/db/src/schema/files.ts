@@ -99,7 +99,7 @@ export const files = pgTable(
 export type StoredFile = typeof files.$inferSelect;
 
 /** What a file is linked to besides its folder: a task, a timeline entry, a booking. */
-export type FileLinkTarget = "task" | "contact_event" | "booking";
+export type FileLinkTarget = "task" | "contact_event" | "booking" | "thread_message";
 
 export const fileLinks = pgTable(
   "file_links",

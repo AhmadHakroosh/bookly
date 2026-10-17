@@ -80,4 +80,11 @@ describe("plans", () => {
     expect(planFor("sharedFolders")).toBe("team");
     expect(UNLIMITED.attachments && UNLIMITED.sharedFolders).toBe(true);
   });
+  it("messages: client conversations from Pro, team threads and internal notes on Team", () => {
+    expect(PLANS.free.limits.guestMessages).toBe(false);
+    expect(planFor("guestMessages")).toBe("pro");
+    expect(PLANS.pro.limits.teamMessages).toBe(false);
+    expect(planFor("teamMessages")).toBe("team");
+    expect(UNLIMITED.guestMessages && UNLIMITED.teamMessages).toBe(true);
+  });
 });
