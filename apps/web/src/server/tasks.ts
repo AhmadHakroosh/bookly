@@ -408,11 +408,13 @@ export async function listPage(
   if (filters.statusIds?.length) conds.push(inArray(schema.tasks.statusId, filters.statusIds));
   if (cursor)
     conds.push(
-      sql`(${due}, ${schema.tasks.createdAt}, ${schema.tasks.id}) > (${cursor.due}::timestamptz, ${cursor.createdAt}::timestamptz, ${cursor.id})`,
+      // Millisecond precision on both sides (the cursor is a JS date), so the last row of the
+      // previous page is not repeated.
+      sql`(${due}, date_trunc('milliseconds', ${schema.tasks.createdAt}), ${schema.tasks.id}) > (${cursor.due}::timestamptz, ${cursor.createdAt}::timestamptz, ${cursor.id})`,
     );
   const rows = await base()
     .where(and(...conds))
-    .orderBy(due, asc(schema.tasks.createdAt), asc(schema.tasks.id))
+    .orderBy(due, sql`date_trunc('milliseconds', ${schema.tasks.createdAt})`, asc(schema.tasks.id))
     .limit(limit + 1);
   const page = rows.slice(0, limit).map(flatten);
   return {

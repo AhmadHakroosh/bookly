@@ -264,6 +264,10 @@ export async function notificationsAfter(
   after: NotificationCursor,
   limit = 20,
 ): Promise<Notification[]> {
+  // Postgres keeps microseconds, a cursor (a JS date) only milliseconds: compare at millisecond
+  // precision, or the row the cursor came from counts as "after" it and is sent again on every
+  // reconnect (which showed the same desktop notification over and over).
+  const ms = sql`date_trunc('milliseconds', ${schema.notifications.createdAt})`;
   const at = new Date(after.createdAt);
   return db()
     .select()
@@ -271,13 +275,10 @@ export async function notificationsAfter(
     .where(
       and(
         mine(workspaceId, userId),
-        or(
-          gt(schema.notifications.createdAt, at),
-          and(eq(schema.notifications.createdAt, at), gt(schema.notifications.id, after.id)),
-        ),
+        or(sql`${ms} > ${at}`, and(sql`${ms} = ${at}`, gt(schema.notifications.id, after.id))),
       ),
     )
-    .orderBy(schema.notifications.createdAt, schema.notifications.id)
+    .orderBy(ms, schema.notifications.id)
     .limit(limit);
 }
 
@@ -286,8 +287,15 @@ export async function streamStart(
   workspaceId: string,
   userId: string,
 ): Promise<NotificationCursor> {
-  const { rows } = await listNotifications(workspaceId, userId, { limit: 1 });
-  const n = rows[0];
+  // The newest row in the stream's own order (milliseconds, then id), so nothing that existed
+  // before the stream opened is sent as new.
+  const ms = sql`date_trunc('milliseconds', ${schema.notifications.createdAt})`;
+  const [n] = await db()
+    .select({ createdAt: schema.notifications.createdAt, id: schema.notifications.id })
+    .from(schema.notifications)
+    .where(mine(workspaceId, userId))
+    .orderBy(desc(ms), desc(schema.notifications.id))
+    .limit(1);
   return n
     ? { createdAt: n.createdAt.toISOString(), id: n.id }
     : { createdAt: new Date(0).toISOString(), id: "" };

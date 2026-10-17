@@ -17,8 +17,10 @@ self.addEventListener("push", (event) => {
   event.waitUntil(
     self.registration.showNotification(data.title || "Bookly", {
       body: data.body || "",
-      icon: "/logo-mark.png",
-      badge: "/logo-mark.png",
+      // The logo as the notification's picture, and a white silhouette for Android's status bar.
+      // The big "app" icon is the operating system's choice: the browser, or Bookly once installed.
+      icon: "/notification-icon.png",
+      badge: "/notification-badge.png",
       // The notification id: a redelivered push replaces the first instead of stacking.
       tag: data.id || undefined,
       data: { url: data.url || "/admin" },

@@ -87,10 +87,23 @@ export function NotificationBell({
     });
   }, [pushKey]);
 
+  // Ids already announced on this page: a notification is shown on the desktop at most once,
+  // and never when it is already read or more than a few minutes old.
+  const announced = useRef(new Set<string>());
   const onNotification = useCallback((n: ClientNotification) => {
     setItems((prev) => (prev ? [n, ...prev.filter((x) => x.id !== n.id)] : prev));
-    if (!pushActive.current && document.visibilityState === "hidden" && desktop.current.has(n.kind))
+    const fresh = Date.now() - new Date(n.createdAt).getTime() < 5 * 60_000;
+    if (
+      !pushActive.current &&
+      document.visibilityState === "hidden" &&
+      desktop.current.has(n.kind) &&
+      !n.read &&
+      fresh &&
+      !announced.current.has(n.id)
+    ) {
+      announced.current.add(n.id);
       void showLocal(n.title, n.body, n.link ?? "/admin", n.id);
+    }
   }, []);
 
   // The live feed: one EventSource while the tab is visible (or hidden without push), polling

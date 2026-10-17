@@ -4,6 +4,15 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 ## [Unreleased]
 
+### Fixed
+
+- The same desktop notification kept appearing every minute or so, even after it was closed and read: the live notification stream resumed from a timestamp in milliseconds while the database keeps microseconds, so the newest notification counted as new on every reconnect and an open, hidden tab showed it again. The stream now compares at millisecond precision, and the bell never shows a notification on the desktop twice (nor one already read or older than a few minutes)
+- The task list's "Show more" could repeat the last task of the previous page for the same reason
+
+### Changed
+
+- Desktop notifications use a purpose-made Bookly icon (192 px) and a monochrome badge for Android's status bar; the admin app manifest gains the 192 px icon. The big icon on a computer stays the browser's unless Bookly is installed as an app (docs/notifications.md)
+
 ## [0.18.0] - 2026-10-17
 
 ### Added
