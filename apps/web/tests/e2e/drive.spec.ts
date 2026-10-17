@@ -7,10 +7,15 @@ const PDF = Buffer.from("%PDF-1.4\n1 0 obj<<>>endobj\ntrailer<<>>\n%%EOF\n");
 const run = Date.now().toString(36).slice(-5);
 
 /** Picks files through the page's "Upload" button (the file chooser, after hydration). */
-async function upload(page: Page, button: ReturnType<Page["getByRole"]>, name: string) {
+async function upload(
+  page: Page,
+  button: ReturnType<Page["getByRole"]>,
+  name: string,
+  file = { mimeType: "application/pdf", buffer: PDF },
+) {
   await page.waitForLoadState("networkidle");
   const [chooser] = await Promise.all([page.waitForEvent("filechooser"), button.click()]);
-  await chooser.setFiles({ name, mimeType: "application/pdf", buffer: PDF });
+  await chooser.setFiles({ name, ...file });
   await expect(page.getByText(`${name} uploaded`)).toBeVisible({ timeout: 15_000 });
 }
 
@@ -52,11 +57,17 @@ test.describe("files", () => {
     await page.getByRole("link", { name: folder }).click();
     await expect(page.getByRole("link", { name: renamed })).toBeVisible();
 
-    // The pane previews the PDF and says where the file is.
+    // The pane previews the PDF; "View" opens it large, with a way out to a new tab.
     await page.getByRole("link", { name: renamed }).click();
     const pane = page.locator('[data-slot="sheet-content"]');
     await expect(pane.getByRole("heading", { name: renamed, level: 1 })).toBeVisible();
     await expect(pane.locator(`iframe[title="${renamed}"]`)).toBeVisible();
+    await pane.getByRole("button", { name: "View", exact: true }).click();
+    const viewer = page.locator('[data-slot="dialog-content"]');
+    await expect(viewer.locator(`iframe[title="${renamed}"]`)).toBeVisible();
+    await expect(viewer.getByRole("button", { name: "Open in new tab" })).toBeVisible();
+    await page.keyboard.press("Escape");
+    await expect(viewer).toHaveCount(0);
     await page.keyboard.press("Escape");
 
     await menu(page, renamed).click();
@@ -76,6 +87,30 @@ test.describe("files", () => {
     await expect(page.getByText("Restored")).toBeVisible();
     await page.goto("/admin/files?view=recent");
     await expect(page.getByRole("link", { name: renamed })).toBeVisible();
+  });
+
+  test("a type the browser can't show is download only", async ({ page }) => {
+    const file = `notes-${run}.txt`;
+    await page.goto("/admin/files?view=my");
+    await upload(page, page.getByRole("button", { name: "Upload", exact: true }), file, {
+      mimeType: "text/plain",
+      buffer: Buffer.from("Agenda\n"),
+    });
+    await menu(page, file).click();
+    await expect(page.getByRole("menuitem", { name: /^View/ })).toHaveAttribute(
+      "aria-disabled",
+      "true",
+    );
+    await expect(page.getByRole("menuitem", { name: "Download", exact: true })).toBeVisible();
+    await page.keyboard.press("Escape");
+    await page.getByRole("link", { name: file }).click();
+    const pane = page.locator('[data-slot="sheet-content"]');
+    await expect(pane.getByRole("button", { name: "View", exact: true })).toBeDisabled();
+    await expect(pane.getByText("No preview for this type of file.")).toBeVisible();
+    await expect(pane.getByRole("button", { name: "Download" })).toHaveAttribute(
+      "href",
+      /\?download=1$/,
+    );
   });
 
   test("a file on a contact's task lands in their folder and timeline, and goes out with a follow-up", async ({

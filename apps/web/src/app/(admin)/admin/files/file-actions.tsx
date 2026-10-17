@@ -8,6 +8,7 @@ import {
   DownloadIcon,
   EyeIcon,
   FolderInputIcon,
+  InfoIcon,
   MoreHorizontalIcon,
   PencilIcon,
   RotateCcwIcon,
@@ -15,6 +16,7 @@ import {
   UserRoundIcon,
 } from "lucide-react";
 import { Dropdown } from "@/components/dropdown";
+import { FileViewer } from "@/components/drive/file-viewer";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
@@ -25,6 +27,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
+import { previewKind } from "@/lib/preview";
 import {
   listFoldersAction,
   moveFileAction,
@@ -240,22 +243,27 @@ function ContactDialog({
   );
 }
 
-/** The "…" menu of one file row (or the pane): open, download, rename, move, contact, delete. */
+/**
+ * The "…" menu of one file row (or the pane): view, details, download, rename, move, contact,
+ * delete. "View" opens the viewer for images and PDFs and is disabled for anything else.
+ */
 export function FileActions({
   file,
-  openHref,
+  detailsHref,
   canWrite,
   canTeam,
   trashed = false,
 }: {
-  file: { id: string; name: string; contactId: string | null };
-  openHref: string;
+  file: { id: string; name: string; mime: string; contactId: string | null };
+  /** The file's pane; left out inside the pane itself. */
+  detailsHref?: string;
   canWrite: boolean;
   canTeam: boolean;
   trashed?: boolean;
 }) {
-  const [dialog, setDialog] = useState<"rename" | "move" | "contact" | null>(null);
+  const [dialog, setDialog] = useState<"view" | "rename" | "move" | "contact" | null>(null);
   const { run } = useRun();
+  const viewable = previewKind(file) !== null;
   if (trashed)
     return (
       <div className="flex gap-1">
@@ -289,10 +297,19 @@ export function FileActions({
           <MoreHorizontalIcon />
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-52">
-          <DropdownMenuItem render={<Link href={openHref} scroll={false} />}>
+          <DropdownMenuItem disabled={!viewable} onClick={() => setDialog("view")}>
             <EyeIcon className="size-4" aria-hidden />
-            Open
+            View
+            {!viewable && (
+              <span className="ml-auto text-xs text-muted-foreground">Download only</span>
+            )}
           </DropdownMenuItem>
+          {detailsHref && (
+            <DropdownMenuItem render={<Link href={detailsHref} scroll={false} />}>
+              <InfoIcon className="size-4" aria-hidden />
+              Details
+            </DropdownMenuItem>
+          )}
           <DropdownMenuItem render={<a href={`/files/${file.id}?download=1`} />}>
             <DownloadIcon className="size-4" aria-hidden />
             Download
@@ -323,6 +340,9 @@ export function FileActions({
           )}
         </DropdownMenuContent>
       </DropdownMenu>
+      {dialog === "view" && (
+        <FileViewer file={file} open onOpenChange={(o) => !o && setDialog(null)} />
+      )}
       {dialog === "rename" && (
         <RenameDialog
           open

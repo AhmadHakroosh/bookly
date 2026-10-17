@@ -8,6 +8,19 @@ config({ path: ["../../.env.local", "../../.env"] });
 const dev = process.env.NODE_ENV === "development";
 
 /**
+ * The S3 endpoint's origin (and its bucket subdomains): the browser uploads straight to it with
+ * a presigned URL, and the file viewer frames the presigned link `/files/<id>` redirects to.
+ */
+const storage = (() => {
+  try {
+    const { protocol, host } = new URL(process.env.S3_ENDPOINT ?? "");
+    return ` ${protocol}//${host} ${protocol}//*.${host}`;
+  } catch {
+    return "";
+  }
+})();
+
+/**
  * Security headers. The CSP is deliberately concrete: only the hosts Bookly talks to. Add a
  * host here if you self-host a provider (e.g. an S3 endpoint that serves avatars).
  */
@@ -20,8 +33,9 @@ const csp = [
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob: https:",
   "font-src 'self' data:",
-  "connect-src 'self' https://*.daily.co wss://*.daily.co https://*.dailywebrtc.com wss://*.dailywebrtc.com https://*.dailywebrtc.net wss://*.dailywebrtc.net https://*.pluot.blue wss://*.pluot.blue https://*.banuba.cloud https://api.stripe.com https://*.sentry.io https://*.ingest.sentry.io",
-  "frame-src https://*.daily.co https://js.stripe.com https://checkout.stripe.com",
+  `connect-src 'self' https://*.daily.co wss://*.daily.co https://*.dailywebrtc.com wss://*.dailywebrtc.com https://*.dailywebrtc.net wss://*.dailywebrtc.net https://*.pluot.blue wss://*.pluot.blue https://*.banuba.cloud https://api.stripe.com https://*.sentry.io https://*.ingest.sentry.io${storage}`,
+  // 'self' and storage: the file viewer frames PDFs from /files/<id> and where it redirects.
+  `frame-src 'self' https://*.daily.co https://js.stripe.com https://checkout.stripe.com${storage}`,
   "media-src 'self' blob: https://*.daily.co",
   "worker-src 'self' blob:",
   // Booking pages may be embedded on customers' sites (?embed=1); admin routes set X-Frame-Options.

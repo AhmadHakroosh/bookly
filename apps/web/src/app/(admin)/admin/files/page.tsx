@@ -16,6 +16,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { BetaBadge } from "@/components/beta-badge";
+import { FileViewButtons } from "@/components/drive/file-viewer";
 import { UploadButton } from "@/components/drive/upload-button";
 import { BookingsSkeleton } from "@/components/skeletons/pages";
 import { Input } from "@/components/ui/input";
@@ -257,8 +258,8 @@ function FileRows({
               {fmtDateTime(f.deletedAt ?? f.updatedAt ?? f.readyAt ?? f.createdAt, tz)}
             </span>
             <FileActions
-              file={{ id: f.id, name: f.name, contactId: f.contactId }}
-              openHref={open}
+              file={{ id: f.id, name: f.name, mime: f.mime, contactId: f.contactId }}
+              detailsHref={open}
               canWrite={f.space !== "personal" || f.uploadedBy === userId}
               canTeam={canTeam}
               trashed={trashed}
@@ -598,8 +599,7 @@ async function FilePane({
         <div className="flex items-start justify-between gap-3 pr-8">
           <h1 className="min-w-0 text-lg font-semibold tracking-tight break-words">{file.name}</h1>
           <FileActions
-            file={{ id: file.id, name: file.name, contactId: file.contactId }}
-            openHref={`/files/${file.id}`}
+            file={{ id: file.id, name: file.name, mime: file.mime, contactId: file.contactId }}
             canWrite={file.space !== "personal" || file.uploadedBy === v.userId}
             canTeam={canTeam}
           />
@@ -612,15 +612,9 @@ async function FilePane({
             className="max-h-96 w-full rounded-lg border object-contain"
           />
         ) : file.mime === "application/pdf" ? (
-          <iframe src={src} title={file.name} className="h-96 w-full rounded-lg border" />
-        ) : (
-          <a
-            href={`${src}?download=1`}
-            className="inline-flex text-sm underline underline-offset-4"
-          >
-            Download ({formatBytes(file.size)})
-          </a>
-        )}
+          <iframe src={src} title={file.name} className="h-96 w-full rounded-lg border bg-white" />
+        ) : null}
+        <FileViewButtons file={{ id: file.id, name: file.name, mime: file.mime }} />
         <dl className="grid grid-cols-[110px_1fr] gap-y-1.5 text-sm">
           <dt className="text-muted-foreground">Size</dt>
           <dd>{formatBytes(file.size)}</dd>

@@ -4,6 +4,16 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 ## [Unreleased]
 
+### Added
+
+- **File viewer.** View (in a file's menu and pane) opens images and PDFs in a large dialog with **Open in new tab** and **Download**; other types are download only, with View disabled and the reason shown. File names on tasks, on the contact page's Files card and on the timeline open the viewer (or download)
+
+### Fixed
+
+- File links opened "Not found" on a workspace with its own domain: `/files/<id>` was sent on to the custom domain, where the admin is signed out. It now stays on the host it was opened from
+- PDFs did not show in the file pane, and uploads to S3/R2 from the browser could be blocked: the Content-Security-Policy now allows the storage endpoint (`connect-src`, `frame-src`) and the app's own frames
+- A guest's reply in the timeline's side pane said "Attachments (not kept)" even when the attachments were kept; it now lists them like the timeline does, as links to the files, or with the reason one was not kept (including files deleted since)
+
 ## [0.18.1] - 2026-10-17
 
 ### Fixed

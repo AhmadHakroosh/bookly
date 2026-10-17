@@ -35,12 +35,19 @@ import { BookingBriefSkeleton } from "@/components/skeletons/pages";
 import { hasFlag } from "@/server/flags";
 import { inboundOn } from "@/server/inbound";
 import { hasFeature } from "@/server/limits";
-import { tidy, timelineEntry, timelineWindow } from "@/server/timeline";
+import {
+  addFileTypes,
+  attachmentsOf,
+  tidy,
+  timelineEntry,
+  timelineWindow,
+} from "@/server/timeline";
 import { BookingDetail } from "../../bookings/booking-detail";
 import { BookingPane } from "../../bookings/booking-pane";
 import { EntrySheet, PaneReply } from "./entry-pane";
-import { TimelineView } from "./timeline-view";
+import { Attachments, TimelineView } from "./timeline-view";
 import { formatBytes } from "@bookly/cloud";
+import { FileLink } from "@/components/drive/file-viewer";
 import { UploadButton } from "@/components/drive/upload-button";
 import { listContactFiles, type Viewer } from "@/server/drive";
 import { getProfileByUser } from "@/server/scheduling";
@@ -319,12 +326,7 @@ async function ContactFiles({ viewer, contactId }: { viewer: Viewer; contactId: 
           {latest.map((f) => (
             <li key={f.id} className="flex items-center gap-2">
               <span className="min-w-0 flex-1 truncate">
-                <Link
-                  href={`/admin/files?contact=${contactId}&file=${f.id}`}
-                  className="hover:underline"
-                >
-                  {f.name}
-                </Link>
+                <FileLink file={f} className="hover:underline" />
               </span>
               <span className="text-xs text-muted-foreground">
                 {f.source === "email" || f.source === "message" || f.source === "booking"
@@ -391,19 +393,20 @@ async function EntryPane({
     );
   const items = email ? thread : [entry];
   const last = items[items.length - 1]!;
+  const files = items.map((e) => ({ attachments: attachmentsOf(e.data), file: null }));
+  await addFileTypes(workspaceId, files);
   return (
     <EntrySheet title={entry.summary} closeHref={closeHref}>
       <div className="space-y-5">
         <h1 className="text-lg font-semibold tracking-tight">{entry.summary}</h1>
         <ol className="space-y-4">
-          {items.map((e) => {
+          {items.map((e, i) => {
             const d = e.data as {
               subject?: string;
               body?: string;
               full?: string;
               from?: string;
               to?: string;
-              attachments?: { filename: string; size?: number | null }[];
             };
             return (
               <li
@@ -428,11 +431,7 @@ async function EntryPane({
                     <p className="mt-1 break-words whitespace-pre-line">{tidy(d.full)}</p>
                   </details>
                 )}
-                {d.attachments?.length ? (
-                  <p className="mt-2 text-xs text-muted-foreground">
-                    Attachments (not kept): {d.attachments.map((a) => a.filename).join(", ")}
-                  </p>
-                ) : null}
+                <Attachments files={files[i]!.attachments} />
               </li>
             );
           })}

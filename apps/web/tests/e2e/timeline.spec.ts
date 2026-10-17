@@ -164,6 +164,19 @@ test("a guest's reply lands under the email it answers, and the host answers fro
   await expect(attachments).not.toContainText("logo.png");
   await expect(admin.getByRole("region", { name: "Files" })).toContainText("agenda.pdf");
 
+  // A kept PDF opens in the viewer, with a way out to a new tab.
+  await admin.waitForLoadState("networkidle");
+  await attachments.getByRole("link", { name: "agenda.pdf" }).click();
+  const viewer = admin.locator('[data-slot="dialog-content"]');
+  await expect(viewer.getByRole("heading", { name: "agenda.pdf" })).toBeVisible();
+  await expect(viewer.locator('iframe[title="agenda.pdf"]')).toBeVisible();
+  await expect(viewer.getByRole("button", { name: "Open in new tab" })).toHaveAttribute(
+    "href",
+    /^\/files\/[0-9a-f-]+$/,
+  );
+  await admin.keyboard.press("Escape");
+  await expect(viewer).toHaveCount(0);
+
   // The host answers from the timeline; the answer joins the thread.
   await admin.waitForLoadState("networkidle");
   await admin.getByRole("button", { name: "Reply" }).first().click();
@@ -235,4 +248,7 @@ test("a guest's reply lands under the email it answers, and the host answers fro
   ).toBeVisible();
   await pane.getByText("Show the quoted text").first().click();
   await expect(pane.getByText(/Your booking is confirmed/)).toBeVisible();
+  // Its attachments are listed as they are: the kept one links to the file.
+  await expect(pane.getByRole("link", { name: "agenda.pdf" })).toBeVisible();
+  await expect(pane).not.toContainText("not kept");
 });

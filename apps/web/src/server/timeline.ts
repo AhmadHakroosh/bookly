@@ -40,14 +40,65 @@ export type TimelineItem = {
   body: string | null;
   from: string | null;
   /** With `fileId` when the file was kept (Files), `reason` when it was not. */
-  attachments: { filename: string; fileId: string | null; reason: string | null }[];
+  attachments: FileRef[];
   /** "file" entries: the file and the task it was added to. */
-  file: { id: string; taskId: string | null } | null;
+  file: { id: string; taskId: string | null; name: string; mime: string | null } | null;
   answers: Record<string, string> | null;
   /** Meeting entries: the booking with links to its recap and transcript. */
   meeting: { title: string; status: string; recap: boolean; transcript: boolean } | null;
   replies: TimelineItem[];
 };
+
+/** An email attachment on an entry; `mime` is the kept file's stored type, for the viewer. */
+export type FileRef = {
+  filename: string;
+  fileId: string | null;
+  reason: string | null;
+  mime: string | null;
+};
+
+/** The attachments recorded on an email entry's data. */
+export function attachmentsOf(data: unknown): FileRef[] {
+  const list = (data as { attachments?: unknown } | null)?.attachments;
+  if (!Array.isArray(list)) return [];
+  return (list as { filename?: string; fileId?: string | null; reason?: string | null }[]).map(
+    (a) => ({
+      filename: a.filename ?? "attachment",
+      fileId: a.fileId ?? null,
+      reason: a.reason ?? null,
+      mime: null,
+    }),
+  );
+}
+
+/**
+ * Fills in the stored type of every file the entries point at, so the viewer knows what it can
+ * show; a file deleted since then loses its link.
+ */
+export async function addFileTypes(
+  workspaceId: string,
+  items: Pick<TimelineItem, "attachments" | "file">[],
+) {
+  const ids = items.flatMap((it) => [
+    ...it.attachments.flatMap((a) => (a.fileId ? [a.fileId] : [])),
+    ...(it.file ? [it.file.id] : []),
+  ]);
+  if (!ids.length) return;
+  const { fileTypes } = await import("./drive");
+  const found = await fileTypes(workspaceId, ids);
+  for (const it of items) {
+    for (const a of it.attachments) {
+      if (!a.fileId) continue;
+      const f = found.get(a.fileId);
+      if (f) a.mime = f.mime;
+      else Object.assign(a, { fileId: null, reason: "deleted" });
+    }
+    if (it.file) {
+      const f = found.get(it.file.id);
+      it.file = f ? { ...it.file, ...f } : null;
+    }
+  }
+}
 
 export type TimelineDay = { day: string; label: string; items: TimelineItem[] };
 
@@ -173,16 +224,11 @@ function shape(e: ContactEvent, tz: string): TimelineItem {
     subject: str(d.subject),
     body: tidy(str(d.body)),
     from: displayName(str(d.from)),
-    attachments: Array.isArray(d.attachments)
-      ? (
-          d.attachments as { filename?: string; fileId?: string | null; reason?: string | null }[]
-        ).map((a) => ({
-          filename: a.filename ?? "attachment",
-          fileId: a.fileId ?? null,
-          reason: a.reason ?? null,
-        }))
-      : [],
-    file: e.type === "file" && str(d.fileId) ? { id: str(d.fileId)!, taskId: str(d.taskId) } : null,
+    attachments: attachmentsOf(d),
+    file:
+      e.type === "file" && str(d.fileId)
+        ? { id: str(d.fileId)!, taskId: str(d.taskId), name: str(d.name) ?? "file", mime: null }
+        : null,
     answers:
       d.answers && typeof d.answers === "object" && Object.keys(d.answers).length
         ? (d.answers as Record<string, string>)
@@ -242,7 +288,7 @@ async function enrich(rows: ContactEvent[], tz: string): Promise<TimelineItem[]>
   const booking = new Map(bookings.map((b) => [b.id, b]));
   const hasRecap = new Set(recaps.map((r) => r.bookingId));
   const hasTranscript = new Set(transcripts.map((t) => t.bookingId));
-  return rows.map((r) => {
+  const items = rows.map((r) => {
     const it = shape(r, tz);
     it.replies = byParent.get(r.id) ?? [];
     const b = r.bookingId && MEETING_TYPES.has(r.type) ? booking.get(r.bookingId) : undefined;
@@ -255,6 +301,8 @@ async function enrich(rows: ContactEvent[], tz: string): Promise<TimelineItem[]>
       };
     return it;
   });
+  await addFileTypes(rows[0]!.workspaceId, [...items, ...items.flatMap((it) => it.replies)]);
+  return items;
 }
 
 /** One entry with its whole thread, for the side pane. */
