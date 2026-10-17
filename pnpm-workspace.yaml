@@ -11,36 +11,36 @@ allowBuilds:
 
 catalog:
   # runtime
-  next: 16.3.8
+  next: 16.4.0
   react: 19.3.0
   react-dom: 19.3.0
-  zod: ^4.6.5
-  drizzle-orm: ^0.45.3
+  zod: ^4.6.7
+  drizzle-orm: ^0.45.4
   pg: ^8.23.1
   better-auth: ^1.7.7
   "@better-auth/drizzle-adapter": ^1.7.7
   "@better-auth/passkey": ^1.7.7
-  pg-boss: ^12.35.1
+  pg-boss: ^12.37.1
   pino: ^10.3.1
-  resend: ^6.31.0
-  nodemailer: ^10.0.13
-  "@aws-sdk/client-s3": ^3.1136.0
-  "@aws-sdk/s3-request-presigner": ^3.1136.0
+  resend: ^6.32.1
+  nodemailer: ^10.1.0
+  "@aws-sdk/client-s3": ^3.1150.0
+  "@aws-sdk/s3-request-presigner": ^3.1150.0
   sharp: ^0.35.5
   # dev
   typescript: npm:@typescript/typescript6@^6.0.2
   "@typescript/native": npm:typescript@^7.0.2
-  "@types/node": ^24.13.5
+  "@types/node": ^24.19.2
   "@types/pg": ^8.23.1
   "@types/nodemailer": ^8.0.2
   drizzle-kit: ^0.31.11
   eslint: ^9.39.5
-  prettier: ^3.9.9
+  prettier: ^3.9.10
   prettier-plugin-tailwindcss: ^0.8.1
-  turbo: ^2.11.6
+  turbo: ^2.11.7
   tsx: ^4.23.15
-  vitest: ^5.0.3
-  dotenv: ^18.0.5
+  vitest: ^5.0.4
+  dotenv: ^18.0.7
 
 minimumReleaseAgeExclude:
   - "@turbo/darwin-64@2.11.2"
