@@ -4,6 +4,7 @@ import { useState, type ReactNode } from "react";
 import { DownloadIcon, ExternalLinkIcon, EyeIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Spinner } from "@/components/ui/spinner";
 import { previewKind } from "@/lib/preview";
 import { cn } from "@/lib/utils";
 
@@ -23,6 +24,8 @@ export function FileViewer({
   onOpenChange: (open: boolean) => void;
 }) {
   const kind = previewKind(file);
+  // The file streams from /files/<id>: say so until the browser has it.
+  const [loaded, setLoaded] = useState(false);
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="flex h-[90dvh] w-[calc(100%-2rem)] max-w-6xl flex-col gap-3 sm:max-w-6xl">
@@ -50,12 +53,31 @@ export function FileViewer({
             </Button>
           </div>
         </DialogHeader>
-        <div className="min-h-0 flex-1 overflow-hidden rounded-lg border bg-muted/30">
+        <div className="relative min-h-0 flex-1 overflow-hidden rounded-lg border bg-muted/30">
+          {kind && !loaded && (
+            <p
+              className="absolute inset-0 flex items-center justify-center gap-2 text-sm text-muted-foreground"
+              role="status"
+            >
+              <Spinner /> Loading {file.name}…
+            </p>
+          )}
           {kind === "image" ? (
             // eslint-disable-next-line @next/next/no-img-element -- a private file behind /files, not a static asset
-            <img src={fileUrl(file.id)} alt={file.name} className="size-full object-contain" />
+            <img
+              src={fileUrl(file.id)}
+              alt={file.name}
+              className="size-full object-contain"
+              onLoad={() => setLoaded(true)}
+              onError={() => setLoaded(true)}
+            />
           ) : kind === "pdf" ? (
-            <iframe src={fileUrl(file.id)} title={file.name} className="size-full bg-white" />
+            <iframe
+              src={fileUrl(file.id)}
+              title={file.name}
+              className="size-full bg-white"
+              onLoad={() => setLoaded(true)}
+            />
           ) : (
             <p className="p-6 text-sm text-muted-foreground">
               This type of file can&apos;t be shown here. Download it to open it.

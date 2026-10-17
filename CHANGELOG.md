@@ -4,6 +4,14 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 ## [Unreleased]
 
+### Changed
+
+- **Side panes open and close at once.** Bookings, tasks, files, conversations and timeline entries used to wait for the server to re-render the whole page before the pane moved (and React held a pane's content back for about 300 ms after it arrived). A click now opens the pane straight away with a skeleton and fetches its content in the background; closing it (Escape, the backdrop, the close button) needs no request. Previous / next (and J / K) in the booking pane work the same way. One shared `PaneHost` and a click handler for pane links (`components/pane.tsx`) replace the five pane wrappers. Measured on a local build: the pane shows in about 15 ms instead of about 350 ms, with its content after about 50 ms
+- Opening a conversation renders the page once instead of three times (it is marked read while the pane renders), 16 database statements instead of 66; the unread count and members' profiles are read once per request
+- Lighter animations: no full-screen backdrop blur behind panes and dialogs (a plain dim), panes slide on transform and opacity only, slightly faster in and faster out, and not at all with reduced motion
+- Ticking a task done shows it done the moment it is pressed; the file viewer says it is loading while the file streams
+- Production functions run in `cle1`, next to the database (`us-east-2`), instead of `iad1`
+
 ## [0.20.0] - 2026-10-17
 
 ### Added

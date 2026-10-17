@@ -1,4 +1,5 @@
 import "server-only";
+import { cache } from "react";
 import { and, asc, desc, eq, ilike, inArray, isNotNull, isNull, or, schema, sql } from "@bookly/db";
 import type { Contact, ContactEventType, Thread, Workspace } from "@bookly/db/schema";
 import { db } from "@/lib/db";
@@ -51,13 +52,16 @@ const unread = (userId: string) => sql<boolean>`(
   )
 )`;
 
-export async function unreadThreads(v: Viewer): Promise<number> {
+/** The sidebar, the page and Home all ask: counted once per request (the workspace is cached too). */
+const unreadCount = cache(async (ws: Workspace, userId: string): Promise<number> => {
   const [row] = await db()
     .select({ n: sql<number>`count(*)::int` })
     .from(t)
-    .where(and(visibleThreads(v), isNull(t.closedAt), unread(v.userId)));
+    .where(and(visibleThreads({ ws, userId }), isNull(t.closedAt), unread(userId)));
   return row?.n ?? 0;
-}
+});
+
+export const unreadThreads = (v: Viewer) => unreadCount(v.ws, v.userId);
 
 /** For the live stream: the unread count and the newest activity, so tabs refresh when either moves. */
 export async function messagesPulse(v: Viewer): Promise<{ unread: number; latest: string | null }> {

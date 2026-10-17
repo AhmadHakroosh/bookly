@@ -2,12 +2,13 @@ import Link from "next/link";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
+import { PaneHost } from "@/components/pane";
+import { TaskToggleButton } from "@/components/task-buttons";
 import { PLANS, planFor } from "@bookly/cloud";
 import { and, eq, schema, sql } from "@bookly/db";
 import type { TaskFilters } from "@bookly/db/schema";
 import { BetaBadge } from "@/components/beta-badge";
 import { TasksSkeleton } from "@/components/skeletons/pages";
-import { SubmitButton } from "@/components/submit-button";
 import { db } from "@/lib/db";
 import { cardOf } from "@/lib/task-card";
 import {
@@ -187,8 +188,8 @@ async function TasksPage({ searchParams }: PageProps<"/admin/tasks">) {
         />
       )}
 
-      {taskId && (
-        <Suspense fallback={null}>
+      <PaneHost param="task" id={taskId ?? null} label="Task">
+        {taskId && (
           <TaskDetail
             workspaceId={ws.id}
             taskId={taskId}
@@ -200,8 +201,8 @@ async function TasksPage({ searchParams }: PageProps<"/admin/tasks">) {
             commentsBefore={one(sp.before)}
             earlierHref={(cursor) => hrefFor({ task: taskId, before: cursor })}
           />
-        </Suspense>
-      )}
+        )}
+      </PaneHost>
     </div>
   );
 }
@@ -317,17 +318,10 @@ async function ListSection({
             return (
               <li key={r.id} className="flex items-center gap-3 px-3 py-2.5 text-sm">
                 <form action={toggleTask.bind(null, r.id, !card.done, "/admin/tasks")}>
-                  <SubmitButton
-                    variant="ghost"
-                    size="icon-sm"
-                    aria-label={`${card.done ? "Reopen" : "Mark done"}: ${r.title}`}
-                    className={cn(
-                      "rounded-full border",
-                      card.done && "bg-primary text-primary-foreground",
-                    )}
-                  >
-                    {card.done ? "✓" : ""}
-                  </SubmitButton>
+                  <TaskToggleButton
+                    label={`${card.done ? "Reopen" : "Mark done"}: ${r.title}`}
+                    done={card.done}
+                  />
                 </form>
                 <Link
                   href={hrefFor({ task: r.id })}

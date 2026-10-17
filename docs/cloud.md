@@ -213,7 +213,9 @@ video `https://meet.bookly-app.io`, `www` redirected to the apex by the proxy.
    `meet.bookly-app.io`. Vercel issues the wildcard certificate.
 2. **Project.** Root Directory `apps/web`, Node 24, install with pnpm, Production Branch
    `release` (see "Environments"). `apps/web/vercel.json` keeps a daily `/api/cron/tick` as the
-   safety net behind QStash. Create a custom environment `staging` (Settings → Environments)
+   safety net behind QStash, and runs functions in `cle1` (Cleveland), the same AWS region as
+   the Neon database (`us-east-2`): a page makes a few dozen queries, and each one crossing
+   regions would add a round trip. Create a custom environment `staging` (Settings → Environments)
    tracking the `main` branch, with `staging.bookly-app.io` and `*.staging.bookly-app.io` as its
    domains.
 3. **Environment.** Import `.env.cloud` from the repository root (it is git-ignored and carries

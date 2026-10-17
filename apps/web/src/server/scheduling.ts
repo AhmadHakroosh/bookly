@@ -1,3 +1,4 @@
+import { cache } from "react";
 import "server-only";
 import { formatPhone, looksLikePhone } from "@/lib/phone";
 import { createHash } from "node:crypto";
@@ -50,16 +51,13 @@ export async function getProfileByUsername(
   );
 }
 
-export async function getProfileByUser(
-  workspaceId: string,
-  userId: string,
-): Promise<Profile | null> {
-  return (
+/** A member's profile; asked for by the layout, the page and its parts, so read once per request. */
+export const getProfileByUser = cache(
+  async (workspaceId: string, userId: string): Promise<Profile | null> =>
     (await db().query.profiles.findFirst({
       where: and(eq(schema.profiles.workspaceId, workspaceId), eq(schema.profiles.userId, userId)),
-    })) ?? null
-  );
-}
+    })) ?? null,
+);
 
 export async function listProfiles(workspaceId: string): Promise<Profile[]> {
   "use cache";
