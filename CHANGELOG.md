@@ -4,6 +4,8 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 ## [Unreleased]
 
+## [0.17.1] - 2026-10-17
+
 ### Added
 
 - **Settings → Emails → Guest replies**: where replies to the workspace's emails go (each contact's timeline, or the sender's own address, with the reason: switched off, needs Pro, no inbound domain on this server, not enabled for the workspace yet), and a switch for owners and admins (logged as `settings.guest_replies.enabled` / `disabled`)
@@ -479,7 +481,8 @@ First public release: the self-hostable scheduling platform with contacts, brief
 
 - The unused storage layer (`packages/storage`, `STORAGE_*` and `S3_*` variables, the MinIO service in Compose): nothing in Bookly uploads files; profile photos and logos are URLs
 
-[Unreleased]: https://github.com/AhmadHakroosh/bookly/compare/v0.17.0...HEAD
+[Unreleased]: https://github.com/AhmadHakroosh/bookly/compare/v0.17.1...HEAD
+[0.17.1]: https://github.com/AhmadHakroosh/bookly/compare/v0.17.0...v0.17.1
 [0.17.0]: https://github.com/AhmadHakroosh/bookly/compare/v0.16.0...v0.17.0
 [0.16.0]: https://github.com/AhmadHakroosh/bookly/compare/v0.15.0...v0.16.0
 [0.15.0]: https://github.com/AhmadHakroosh/bookly/compare/v0.14.0...v0.15.0
