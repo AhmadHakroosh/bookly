@@ -273,16 +273,6 @@ export async function getFileAnywhere(id: string): Promise<StoredFile | null> {
   return (await db().query.files.findFirst({ where: eq(schema.files.id, id) })) ?? null;
 }
 
-/** A short-lived direct download URL (S3) or null when the app must stream it (local). */
-export async function downloadUrl(
-  file: StoredFile,
-  disposition: "inline" | "attachment" = "attachment",
-): Promise<string | null> {
-  const storage = getStorage();
-  if (!storage.presign) return null;
-  return storage.presignGet(file.key, { filename: file.name, contentType: file.mime, disposition });
-}
-
 export async function removeFile(
   file: StoredFile,
   opts: { silent?: boolean; actor?: AuditActor } = {},

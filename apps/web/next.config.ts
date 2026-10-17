@@ -9,7 +9,7 @@ const dev = process.env.NODE_ENV === "development";
 
 /**
  * The S3 endpoint's origin (and its bucket subdomains): the browser uploads straight to it with
- * a presigned URL, and the file viewer frames the presigned link `/files/<id>` redirects to.
+ * a presigned PUT URL. Downloads never go there: `/files/<id>` streams private files itself.
  */
 const storage = (() => {
   try {
@@ -34,8 +34,8 @@ const csp = [
   "img-src 'self' data: blob: https:",
   "font-src 'self' data:",
   `connect-src 'self' https://*.daily.co wss://*.daily.co https://*.dailywebrtc.com wss://*.dailywebrtc.com https://*.dailywebrtc.net wss://*.dailywebrtc.net https://*.pluot.blue wss://*.pluot.blue https://*.banuba.cloud https://api.stripe.com https://*.sentry.io https://*.ingest.sentry.io${storage}`,
-  // 'self' and storage: the file viewer frames PDFs from /files/<id> and where it redirects.
-  `frame-src 'self' https://*.daily.co https://js.stripe.com https://checkout.stripe.com${storage}`,
+  // 'self': the file viewer frames PDFs from /files/<id>.
+  "frame-src 'self' https://*.daily.co https://js.stripe.com https://checkout.stripe.com",
   "media-src 'self' blob: https://*.daily.co",
   "worker-src 'self' blob:",
   // Booking pages may be embedded on customers' sites (?embed=1); admin routes set X-Frame-Options.
@@ -105,7 +105,25 @@ const nextConfig: NextConfig = {
   },
   async headers() {
     return [
-      { source: "/(.*)", headers: securityHeaders },
+      // Every page; /files/<id> has its own set below (the page CSP's object-src 'none' and
+      // friends would stop the browser's own PDF viewer).
+      { source: "/((?!files/).*)", headers: securityHeaders },
+      {
+        source: "/files/:id",
+        headers: [
+          { key: "Content-Security-Policy", value: "frame-ancestors 'self'" },
+          { key: "X-Content-Type-Options", value: "nosniff" },
+          { key: "Referrer-Policy", value: "no-referrer" },
+          ...(dev
+            ? []
+            : [
+                {
+                  key: "Strict-Transport-Security",
+                  value: "max-age=63072000; includeSubDomains; preload",
+                },
+              ]),
+        ],
+      },
       // The admin and platform pages are never meant to be framed.
       { source: "/admin/:path*", headers: [{ key: "X-Frame-Options", value: "DENY" }] },
       { source: "/console/:path*", headers: [{ key: "X-Frame-Options", value: "DENY" }] },

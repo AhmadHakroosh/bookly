@@ -23,7 +23,7 @@ const menu = (page: Page, name: string) =>
   page.getByRole("button", { name: `Actions for ${name}` });
 
 test.describe("files", () => {
-  test("My files: folder, upload, rename, move, trash and restore", async ({ page }) => {
+  test("My files: folder, upload, rename, move, trash and restore", async ({ browser, page }) => {
     const folder = `Contracts ${run}`;
     const file = `proposal-${run}.pdf`;
     const renamed = `proposal-${run}-v2.pdf`;
@@ -66,6 +66,23 @@ test.describe("files", () => {
     const viewer = page.locator('[data-slot="dialog-content"]');
     await expect(viewer.locator(`iframe[title="${renamed}"]`)).toBeVisible();
     await expect(viewer.getByRole("button", { name: "Open in new tab" })).toBeVisible();
+    // A private file is streamed to a member (never a redirect to a bucket URL anyone could
+    // copy), and the same address gives nothing to someone signed out.
+    const src = new URL(
+      (await viewer.getByRole("button", { name: "Open in new tab" }).getAttribute("href"))!,
+      page.url(),
+    ).toString();
+    const mine = await page.request.get(src, { maxRedirects: 0 });
+    expect(mine.status()).toBe(200);
+    expect(mine.headers()["content-type"]).toBe("application/pdf");
+    expect(mine.headers()["cache-control"]).toBe("private, no-store");
+    // An explicitly empty session: contexts otherwise inherit this file's signed-in state.
+    const stranger = await browser.newContext({ storageState: { cookies: [], origins: [] } });
+    expect(await stranger.cookies()).toEqual([]);
+    const theirs = await stranger.request.get(src, { maxRedirects: 0 });
+    expect(theirs.status()).toBe(404);
+    expect(await stranger.request.get(`${src}?download=1`, { maxRedirects: 0 })).not.toBeOK();
+    await stranger.close();
     await page.keyboard.press("Escape");
     await expect(viewer).toHaveCount(0);
     await page.keyboard.press("Escape");

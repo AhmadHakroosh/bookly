@@ -61,7 +61,11 @@ files show on the email's timeline entry.
 Gates are `attachments` and `sharedFolders` in `packages/cloud`, checked on the server. Every
 file counts towards the storage quota (Free 1 GB, Pro 20 GB, Team 20 GB per seat pooled), which
 is checked before an upload starts. Bytes go through the storage driver (R2 / S3 / local disk,
-`docs/self-hosting.md`); uploads go straight to the bucket with a presigned URL.
+`docs/self-hosting.md`); uploads go straight to the bucket with a presigned URL. Downloads
+and previews are streamed by the app from `/files/<id>`, which checks on every request that
+the viewer is signed in to the workspace and may see the file, so a copied link opens nothing
+for anyone else. The one exception is the signed link sent with an email for a file too large
+to attach: it opens that file for 7 days without signing in, as the email's recipient needs.
 
 ## Activity log
 
