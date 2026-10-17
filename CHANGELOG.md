@@ -4,6 +4,8 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 ## [Unreleased]
 
+## [0.19.0] - 2026-10-17
+
 ### Added
 
 - **Messages.** A Messages page (Admin → Messages) behind the `messages` flag with a Beta badge. **One conversation per client**, seen by every member: their emails in and out (everything that was an email on their timeline, automatic ones included), what they wrote when booking, and **internal notes** with @-mentions the client never sees (Team). **Write to the client** from the conversation: an email from you with the signed Reply-To, so their answer comes back to the same conversation; leave the subject empty to answer their latest email, or give one to start a new thread; files from the drive go with it. **Team threads** (Team): a subject, the people in it and optionally the contact it is about; only participants see it, @-mentions bring people in, **Add people** adds more. Inbox, Unread, Clients, Team and Closed; search; keyset "Show more"; **Close thread** / **Reopen thread** (a client writing reopens). Gates `guestMessages` (Pro+) and `teamMessages` (Team+); attachments follow `attachments`
@@ -539,7 +541,8 @@ First public release: the self-hostable scheduling platform with contacts, brief
 
 - The unused storage layer (`packages/storage`, `STORAGE_*` and `S3_*` variables, the MinIO service in Compose): nothing in Bookly uploads files; profile photos and logos are URLs
 
-[Unreleased]: https://github.com/AhmadHakroosh/bookly/compare/v0.18.3...HEAD
+[Unreleased]: https://github.com/AhmadHakroosh/bookly/compare/v0.19.0...HEAD
+[0.19.0]: https://github.com/AhmadHakroosh/bookly/compare/v0.18.3...v0.19.0
 [0.18.3]: https://github.com/AhmadHakroosh/bookly/compare/v0.18.2...v0.18.3
 [0.18.2]: https://github.com/AhmadHakroosh/bookly/compare/v0.18.1...v0.18.2
 [0.18.1]: https://github.com/AhmadHakroosh/bookly/compare/v0.18.0...v0.18.1
