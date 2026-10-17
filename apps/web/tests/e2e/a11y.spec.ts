@@ -27,6 +27,8 @@ test("admin Home, bookings, tasks and notifications have no axe violations", asy
     "/admin/tasks?view=all&layout=board",
     "/admin/tasks?view=all&layout=list",
     "/admin/notifications",
+    "/admin/files?view=my",
+    "/admin/files?view=contacts",
   ]) {
     await page.goto(path);
     await page.waitForLoadState("networkidle");

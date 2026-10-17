@@ -35,7 +35,13 @@ export interface StorageDriver {
   ): Promise<PresignedPut>;
   presignGet(
     key: string,
-    opts?: { expiresIn?: number; filename?: string; contentType?: string },
+    opts?: {
+      expiresIn?: number;
+      filename?: string;
+      contentType?: string;
+      /** "attachment" (default with a filename) downloads; "inline" lets the browser show it. */
+      disposition?: "inline" | "attachment";
+    },
   ): Promise<string>;
 }
 
@@ -180,7 +186,12 @@ class S3Driver implements StorageDriver {
   }
   async presignGet(
     key: string,
-    opts: { expiresIn?: number; filename?: string; contentType?: string } = {},
+    opts: {
+      expiresIn?: number;
+      filename?: string;
+      contentType?: string;
+      disposition?: "inline" | "attachment";
+    } = {},
   ) {
     const { GetObjectCommand } = await import("@aws-sdk/client-s3");
     const { getSignedUrl } = await import("@aws-sdk/s3-request-presigner");
@@ -190,7 +201,7 @@ class S3Driver implements StorageDriver {
         Bucket: this.bucket,
         Key: safeKey(key),
         ...(opts.filename && {
-          ResponseContentDisposition: `attachment; filename="${opts.filename.replace(/["\r\n]/g, "")}"`,
+          ResponseContentDisposition: `${opts.disposition ?? "attachment"}; filename="${opts.filename.replace(/["\r\n]/g, "")}"`,
         }),
         ...(opts.contentType && { ResponseContentType: opts.contentType }),
       }),

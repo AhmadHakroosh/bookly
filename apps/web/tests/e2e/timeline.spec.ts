@@ -35,12 +35,33 @@ function svixHeaders(body: string) {
 }
 
 let resend: Server;
+const PDF = Buffer.from("%PDF-1.4\n1 0 obj<<>>endobj\ntrailer<<>>\n%%EOF\n");
 const received = new Map<string, unknown>();
 
 test.beforeAll(async () => {
   resend = createServer((req, res) => {
-    const id = decodeURIComponent(req.url?.split("/").pop() ?? "");
-    const email = received.get(id);
+    const parts = (req.url ?? "").split("?")[0]!.split("/").filter(Boolean).map(decodeURIComponent);
+    // GET /dl/<attachment id>: the bytes behind a download_url.
+    if (parts[0] === "dl") {
+      res.writeHead(200, { "content-type": "application/pdf" });
+      return res.end(PDF);
+    }
+    // GET /emails/receiving/<id>/attachments: each attachment with a download_url.
+    if (parts.at(-1) === "attachments") {
+      const email = received.get(parts.at(-2)!) as { attachments?: { id: string }[] } | undefined;
+      res.writeHead(email ? 200 : 404, { "content-type": "application/json" });
+      return res.end(
+        JSON.stringify({
+          object: "list",
+          has_more: false,
+          data: (email?.attachments ?? []).map((a) => ({
+            ...a,
+            download_url: `http://localhost:3999/dl/${a.id}`,
+          })),
+        }),
+      );
+    }
+    const email = received.get(parts.at(-1)!);
     res.writeHead(email ? 200 : 404, { "content-type": "application/json" });
     res.end(JSON.stringify(email ?? { error: "not found" }));
   });
@@ -86,7 +107,21 @@ test("a guest's reply lands under the email it answers, and the host answers fro
     message_id: "<guest-1@example.com>",
     headers: {},
     attachments: [
-      { id: "a1", filename: "agenda.pdf", content_type: "application/pdf", size: 1200 },
+      {
+        id: "a1",
+        filename: "agenda.pdf",
+        content_type: "application/pdf",
+        content_disposition: "attachment",
+        size: PDF.length,
+      },
+      // A signature image sent inline: never kept.
+      {
+        id: "a2",
+        filename: "logo.png",
+        content_type: "image/png",
+        content_disposition: "inline",
+        size: 900,
+      },
     ],
   });
   const body = JSON.stringify({
@@ -122,7 +157,12 @@ test("a guest's reply lands under the email it answers, and the host answers fro
   const replies = admin.getByRole("list", { name: "Replies" }).first();
   await expect(replies).toContainText("Looking forward to it! Can we also cover pricing?");
   await expect(replies).not.toContainText("Your booking is confirmed");
-  await expect(replies.getByRole("list", { name: "Attachments" })).toContainText("agenda.pdf");
+  // The attachment was kept: a link to the file, and it is in the contact's folder; the inline
+  // signature image was skipped.
+  const attachments = replies.getByRole("list", { name: "Attachments" });
+  await expect(attachments.getByRole("link", { name: "agenda.pdf" })).toBeVisible();
+  await expect(attachments).not.toContainText("logo.png");
+  await expect(admin.getByRole("region", { name: "Files" })).toContainText("agenda.pdf");
 
   // The host answers from the timeline; the answer joins the thread.
   await admin.waitForLoadState("networkidle");

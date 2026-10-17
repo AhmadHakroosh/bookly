@@ -21,10 +21,11 @@ export const FLAGS = {
   notifications: "In-app and desktop notifications (0.15.0)",
   task_board: "Task board with workspace-defined statuses (0.16.0)",
   timeline_v2: "Contact timeline v2 with inbound replies (0.17.0)",
-  messages: "Team and guest conversations (0.18.0)",
-  meeting_notes: "In-meeting host notes (0.19.0)",
-  session_packs: "Session packs and balances (0.20.0)",
-  guest_portal: "Guest portal (0.21.0)",
+  files: "Files: the drive, contact folders, attachments on tasks (0.18.0)",
+  messages: "Team and guest conversations (0.19.0)",
+  meeting_notes: "In-meeting host notes (0.20.0)",
+  session_packs: "Session packs and balances (0.21.0)",
+  guest_portal: "Guest portal (0.22.0)",
 } as const;
 
 export type FlagKey = keyof typeof FLAGS;

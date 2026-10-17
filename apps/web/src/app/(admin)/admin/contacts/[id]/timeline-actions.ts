@@ -48,6 +48,7 @@ export async function replyFromTimelineAction(
     parentId,
     session.user.id,
     String(formData.get("body") ?? ""),
+    formData.getAll("fileId").map(String).slice(0, 20),
   );
   if ("error" in r) return r;
   await audit({

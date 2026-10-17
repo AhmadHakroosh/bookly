@@ -4,6 +4,18 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 ## [Unreleased]
 
+### Added
+
+- **Files.** A drive in the sidebar (Admin → Files): My files (yours alone, nested folders), Team folders (Team plan), a folder per contact (what they sent and what is ours), Recent, search, and a 30-day Trash with restore. Upload several at once straight to storage (quota checked first), new folder, rename, move, "Belongs to…" a contact, delete; a side pane previews images and PDFs (everything else downloads) and shows where a file came from, its contact and its tasks. Keyset "Show more" everywhere. Behind the `files` flag with a Beta badge; Pro and up (`attachments`), Team folders on Team (`sharedFolders`)
+- **Guests' attachments are kept** in their contact's folder, linked to the email they came with, and shown as links on the timeline (inline signature images are skipped; files over 25 MB, a full quota or a plan without Files keep the name with the reason)
+- **Files on tasks**: upload to a task (it goes into the drive, the task's contact folder when it has one, and the task) or link files from the drive; a file linked to a contact, or to a task of a contact, shows on the contact's timeline with links to the file and the task
+- **Send files**: proposals, payment requests, follow-ups and timeline replies can attach files from the drive or upload them; up to 10 MB go as attachments, the rest as 7-day links; sent files show on the email's timeline entry
+- A contact's page has a Files card with their latest files, upload and a link to their folder; the landing page shows the drive once the flag is on for everyone
+
+### Changed
+
+- `/files/<id>` follows the drive's visibility (someone's My files stay theirs), serves trashed files as gone, opens only images and PDFs inline (`?download=1` forces a download), and accepts signed 7-day links (`?t=`) for files sent by email
+
 ## [0.17.1] - 2026-10-17
 
 ### Added

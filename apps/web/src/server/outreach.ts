@@ -13,6 +13,7 @@ import { platformFeeCents, platformFeePercent } from "./connect";
 import { destinationCharge, formatPrice, paymentsFor, stripe } from "./payments";
 import { unsubscribePostUrl, unsubscribeUrl } from "./unsubscribe";
 import { getProfileByUser } from "./scheduling";
+import { filesForEmail, linksText, recordSentFiles } from "./drive";
 import { replyToFor } from "./inbound";
 import { notify } from "./notifications";
 
@@ -116,6 +117,8 @@ export async function sendOutreach(
     followUpDays?: number;
     /** Stripe Checkout URL for a payment request; drives the "Pay securely" button. */
     payLink?: string;
+    /** Drive files to send along (attachments while they fit, signed links after). */
+    fileIds?: string[];
   },
 ) {
   if (c.emailOptOut) throw new OptedOutError();
@@ -127,7 +130,10 @@ export async function sendOutreach(
     }),
   ]);
   const subject = input.subject.trim().slice(0, 200);
-  const body = input.body.trim().slice(0, 8000);
+  const sent = input.fileIds?.length
+    ? await filesForEmail({ userId: hostUserId, ws }, input.fileIds, await publicBaseUrl(ws))
+    : null;
+  const body = `${input.body.trim().slice(0, 8000)}${linksText(sent?.links ?? [])}`;
   const mail = await renderOutreach(
     ws,
     c,
@@ -145,6 +151,7 @@ export async function sendOutreach(
     html: mail.html,
     replyTo: await replyToFor(ws, eventId, user?.email),
     fromName: host?.displayName ?? ws.name,
+    ...(sent?.attachments.length ? { attachments: sent.attachments } : {}),
     // One-click unsubscribe (RFC 8058): mailbox providers show their own button and POST here.
     headers: {
       "List-Unsubscribe": `<${unsub}>`,
@@ -159,8 +166,16 @@ export async function sendOutreach(
         : `Payment requested${input.amountCents ? ` (${formatPrice(input.amountCents, input.currency ?? "usd")})` : ""}`;
   await logContactEvent(ws.id, c.id, "email_sent", `${label}: ${subject}`, {
     id: eventId,
-    data: { kind, subject, body, amountCents: input.amountCents ?? null, sentBy: hostUserId },
+    data: {
+      kind,
+      subject,
+      body,
+      amountCents: input.amountCents ?? null,
+      sentBy: hostUserId,
+      attachments: (sent?.files ?? []).map((f) => ({ filename: f.name, fileId: f.id })),
+    },
   });
+  if (sent?.files.length) await recordSentFiles(ws, eventId, sent.files, hostUserId);
   noteToCrm(ws, c.id, `${label} by ${host?.displayName ?? ws.name}: ${subject}\n\n${body}`);
   const days = input.followUpDays ?? 5;
   if (days > 0)
@@ -231,6 +246,7 @@ export async function sendTimelineReply(
   parentEventId: string,
   hostUserId: string,
   text: string,
+  fileIds: string[] = [],
 ): Promise<{ ok: true; id: string } | { error: string }> {
   if (c.emailOptOut) return { error: "This contact has unsubscribed from your emails." };
   const body = text.trim().slice(0, 8000);
@@ -261,7 +277,10 @@ export async function sendTimelineReply(
       columns: { email: true },
     }),
   ]);
-  const signed = `${body}\n\n${host?.displayName ?? ws.name}`;
+  const sent = fileIds.length
+    ? await filesForEmail({ userId: hostUserId, ws }, fileIds, await publicBaseUrl(ws))
+    : null;
+  const signed = `${body}${linksText(sent?.links ?? [])}\n\n${host?.displayName ?? ws.name}`;
   const mail = await letterMail({
     brand: brandFor(ws),
     subject,
@@ -278,13 +297,22 @@ export async function sendTimelineReply(
     replyTo: await replyToFor(ws, id, user?.email),
     fromName: host?.displayName ?? ws.name,
     ...(inReplyTo ? { headers: { "In-Reply-To": inReplyTo, References: inReplyTo } } : {}),
+    ...(sent?.attachments.length ? { attachments: sent.attachments } : {}),
   });
   await logContactEvent(ws.id, c.id, "email_sent", `Reply: ${subject}`, {
     id,
     parentId: rootId,
     bookingId: parent.bookingId,
-    data: { kind: "reply", subject, body: signed, sentBy: hostUserId, to },
+    data: {
+      kind: "reply",
+      subject,
+      body: signed,
+      sentBy: hostUserId,
+      to,
+      attachments: (sent?.files ?? []).map((f) => ({ filename: f.name, fileId: f.id })),
+    },
   });
+  if (sent?.files.length) await recordSentFiles(ws, id, sent.files, hostUserId);
   noteToCrm(ws, c.id, `Reply by ${host?.displayName ?? ws.name}: ${subject}\n\n${body}`);
   return { ok: true, id };
 }

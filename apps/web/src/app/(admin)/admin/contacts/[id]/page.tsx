@@ -18,6 +18,7 @@ import {
   XCircleIcon,
   type LucideIcon,
   BanknoteIcon,
+  FileIcon,
 } from "lucide-react";
 import { BackLink } from "@/components/links";
 import { notFound } from "next/navigation";
@@ -39,6 +40,9 @@ import { BookingDetail } from "../../bookings/booking-detail";
 import { BookingPane } from "../../bookings/booking-pane";
 import { EntrySheet, PaneReply } from "./entry-pane";
 import { TimelineView } from "./timeline-view";
+import { formatBytes } from "@bookly/cloud";
+import { UploadButton } from "@/components/drive/upload-button";
+import { listContactFiles, type Viewer } from "@/server/drive";
 import { getProfileByUser } from "@/server/scheduling";
 import { requireStaff } from "@/server/session";
 import { getCurrentWorkspace } from "@/server/workspace";
@@ -67,6 +71,7 @@ const ICON: Record<string, LucideIcon> = {
   capture: NotebookPenIcon,
   task: SquareCheckIcon,
   payment: BanknoteIcon,
+  file: FileIcon,
 };
 
 async function ContactPage({ params, searchParams }: PageProps<"/admin/contacts/[id]">) {
@@ -89,6 +94,7 @@ async function ContactPage({ params, searchParams }: PageProps<"/admin/contacts/
     listOpenTasks(ws.id, { contactId: c.id }),
   ]);
   const entryId = typeof sp.entry === "string" ? sp.entry : null;
+  const filesOn = (await hasFlag(ws, "files")) && hasFeature(ws, "attachments");
   const now = new Date();
   const upcoming = bookings.filter(
     (b) => b.endAt > now && (b.status === "confirmed" || b.status === "pending"),
@@ -186,6 +192,7 @@ async function ContactPage({ params, searchParams }: PageProps<"/admin/contacts/
                   contactId={c.id}
                   initial={firstWindow}
                   canReply={canReply}
+                  filesOn={filesOn}
                 />
               </>
             ) : (
@@ -243,8 +250,14 @@ async function ContactPage({ params, searchParams }: PageProps<"/admin/contacts/
             initial={(await searchParams).compose === "followup" ? "followUp" : null}
             optedOut={c.emailOptOut}
             stripe={paymentsReady(ws)}
+            filesOn={filesOn}
           />
           <TaskList tasks={tasks} tz={tz} path={`/admin/contacts/${c.id}`} contactId={c.id} />
+          {filesOn && (
+            <Suspense fallback={null}>
+              <ContactFiles viewer={{ userId: session.user.id, ws }} contactId={c.id} />
+            </Suspense>
+          )}
           {/* Keyed by the stored values: a send or stage change refreshes the page with new
               defaults, and uncontrolled inputs must remount to pick them up. */}
           <ContactDetailsForm
@@ -269,11 +282,63 @@ async function ContactPage({ params, searchParams }: PageProps<"/admin/contacts/
             entryId={entryId}
             tz={tz}
             canReply={canReply}
+            filesOn={filesOn}
             closeHref={`/admin/contacts/${c.id}`}
           />
         </Suspense>
       )}
     </div>
+  );
+}
+
+/** The contact's folder on their page: the latest files, upload, and a link to the whole folder. */
+async function ContactFiles({ viewer, contactId }: { viewer: Viewer; contactId: string }) {
+  const { files, next } = await listContactFiles(viewer, contactId, "all");
+  const latest = [...files]
+    .sort((a, b) => +(b.readyAt ?? b.createdAt) - +(a.readyAt ?? a.createdAt))
+    .slice(0, 8);
+  return (
+    <section className="rounded-xl border p-4" aria-labelledby="contact-files">
+      <div className="flex items-center justify-between gap-2">
+        <h2 id="contact-files" className="text-base font-semibold tracking-tight">
+          Files
+        </h2>
+        <Link
+          href={`/admin/files?contact=${contactId}`}
+          className="text-xs underline underline-offset-4"
+        >
+          Open folder{files.length ? ` (${files.length}${next ? "+" : ""})` : ""}
+        </Link>
+      </div>
+      {latest.length === 0 ? (
+        <p className="mt-2 text-sm text-muted-foreground">
+          Files they send you and files you keep for them land here.
+        </p>
+      ) : (
+        <ul className="mt-2 space-y-1 text-sm">
+          {latest.map((f) => (
+            <li key={f.id} className="flex items-center gap-2">
+              <span className="min-w-0 flex-1 truncate">
+                <Link
+                  href={`/admin/files?contact=${contactId}&file=${f.id}`}
+                  className="hover:underline"
+                >
+                  {f.name}
+                </Link>
+              </span>
+              <span className="text-xs text-muted-foreground">
+                {f.source === "email" || f.source === "message" || f.source === "booking"
+                  ? "from them"
+                  : formatBytes(f.size)}
+              </span>
+            </li>
+          ))}
+        </ul>
+      )}
+      <div className="mt-3">
+        <UploadButton target={{ contactId }} variant="outline" size="sm" />
+      </div>
+    </section>
   );
 }
 
@@ -289,6 +354,7 @@ async function EntryPane({
   entryId,
   tz,
   canReply,
+  filesOn,
   closeHref,
 }: {
   workspaceId: string;
@@ -296,6 +362,7 @@ async function EntryPane({
   entryId: string;
   tz: string;
   canReply: boolean;
+  filesOn: boolean;
   closeHref: string;
 }) {
   const found = await timelineEntry(workspaceId, contactId, entryId);
@@ -370,7 +437,9 @@ async function EntryPane({
             );
           })}
         </ol>
-        {canReply && email && <PaneReply contactId={contactId} parentId={last.id} />}
+        {canReply && email && (
+          <PaneReply contactId={contactId} parentId={last.id} filesOn={filesOn} />
+        )}
       </div>
     </EntrySheet>
   );

@@ -251,6 +251,10 @@ export async function deleteTask(workspaceId: string, id: string) {
   await db()
     .delete(schema.tasks)
     .where(and(eq(schema.tasks.id, id), eq(schema.tasks.workspaceId, workspaceId)));
+  // Files stay in the drive; only their link to the task goes.
+  await db()
+    .delete(schema.fileLinks)
+    .where(and(eq(schema.fileLinks.targetType, "task"), eq(schema.fileLinks.targetId, id)));
 }
 
 /** One email per host listing tasks that became overdue (sent once per task). Called from the tick. */

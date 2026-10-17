@@ -41,6 +41,8 @@ import { getCurrentWorkspace } from "@/server/workspace";
 import { toggleTask } from "../scheduling-actions";
 import { Board, type Column } from "./board";
 import { StatusEditor } from "./status-editor";
+import { TaskFiles } from "./task-files";
+import { taskFiles } from "@/server/drive";
 import { CommentForm, DeleteTaskButton, NewTaskButton, TaskEditForm, TaskPane } from "./task-forms";
 import { TasksToolbar } from "./toolbar";
 
@@ -429,7 +431,9 @@ async function TaskDetail({
         <p className="text-sm text-muted-foreground">This task was deleted or is not yours.</p>
       </TaskPane>
     );
-  const [statuses, people, comments, booking] = await Promise.all([
+  const ws = await getCurrentWorkspace();
+  const filesOn = !!ws && (await hasFlag(ws, "files")) && hasFeature(ws, "attachments");
+  const [statuses, people, comments, booking, files] = await Promise.all([
     ensureStatuses(workspaceId),
     listProfiles(workspaceId),
     listComments(workspaceId, taskId, { before: decodeCommentCursor(commentsBefore) }),
@@ -442,6 +446,7 @@ async function TaskDetail({
           columns: { id: true, attendeeName: true, startAt: true },
         })
       : null,
+    filesOn && ws ? taskFiles({ userId: viewerId, ws }, taskId) : Promise.resolve([]),
   ]);
   const name = new Map(people.map((p) => [p.userId, p.displayName]));
   const others = people
@@ -493,6 +498,13 @@ async function TaskDetail({
           canBoard={canBoard}
           canAssign={canAssign}
         />
+        {filesOn && (
+          <TaskFiles
+            taskId={t.id}
+            contactId={t.contactId}
+            files={files.map((f) => ({ id: f.id, name: f.name, size: f.size }))}
+          />
+        )}
         <section aria-labelledby="comments-heading" className="space-y-3 border-t pt-5">
           <h2 id="comments-heading" className="text-base font-semibold tracking-tight">
             Comments

@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import { resolveTarget } from "@/server/drive";
 import { createUpload } from "@/server/files";
+import { hasFlag } from "@/server/flags";
 import { LimitError } from "@/server/limits";
 import { getSession, getStaffRole } from "@/server/session";
 import { getCurrentWorkspace } from "@/server/workspace";
@@ -11,6 +13,15 @@ const body = z.object({
   mime: z.string().trim().min(3).max(100),
   size: z.number().int().positive(),
   owner: z.object({ type: z.string().max(40), id: z.string().max(80) }).optional(),
+  /** Drive uploads (0.18.0): where the file goes; the server checks and resolves it. */
+  drive: z
+    .object({
+      space: z.enum(["personal", "team"]).optional(),
+      folderId: z.string().max(80).nullish(),
+      contactId: z.string().max(80).nullish(),
+      taskId: z.string().max(80).nullish(),
+    })
+    .optional(),
 });
 
 /**
@@ -30,7 +41,16 @@ export async function POST(req: Request) {
   const parsed = body.safeParse(await req.json().catch(() => null));
   if (!parsed.success) return NextResponse.json({ error: "Invalid request." }, { status: 400 });
   try {
-    const ticket = await createUpload({ ws, ...parsed.data, userId: session.user.id });
+    const { drive, ...rest } = parsed.data;
+    if (drive && (rest.kind !== "attachment" || !(await hasFlag(ws, "files"))))
+      return NextResponse.json(
+        { error: "Files are not enabled for this workspace." },
+        { status: 404 },
+      );
+    const placement = drive
+      ? await resolveTarget({ userId: session.user.id, ws }, drive)
+      : undefined;
+    const ticket = await createUpload({ ws, ...rest, userId: session.user.id, drive: placement });
     return NextResponse.json({ id: ticket.file.id, upload: ticket.upload });
   } catch (e) {
     const status = e instanceof LimitError ? 402 : 400;

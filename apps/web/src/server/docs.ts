@@ -18,6 +18,7 @@ const ORDER = [
   "scheduling",
   "contacts",
   "tasks",
+  "files",
   "integrations",
   "zoom",
   "payments",

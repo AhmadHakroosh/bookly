@@ -33,6 +33,7 @@ import {
   NotificationsMock,
   TaskBoardMock,
   TimelineMock,
+  DriveMock,
 } from "./mocks";
 import { EmailMock, FollowUpMock, LiveTranscriptMock, RoutingMock, SeatsMock } from "./mocks-more";
 import { PlanGrid } from "./plan-card";
@@ -445,6 +446,7 @@ export default function LandingPage() {
         <GatedNotificationsFeature />
         <GatedTaskBoardFeature />
         <GatedTimelineFeature />
+        <GatedFilesFeature />
       </Suspense>
 
       <Section className="border-t">
@@ -748,6 +750,29 @@ async function GatedTimelineFeature() {
       >
         The contact page is the memory of the relationship: what was booked, what was said, what was
         promised and what was paid, without digging through an inbox.
+      </Feature>
+    </Section>
+  );
+}
+
+/** The drive in the tour, once Files is on for every workspace. */
+async function GatedFilesFeature() {
+  if (!(await flagOnForEveryone("files"))) return null;
+  return (
+    <Section className="border-t">
+      <Feature
+        eyebrow="Files"
+        title="Every file a client sends, in their folder."
+        mock={<DriveMock />}
+        bullets={[
+          "Attachments on their replies are kept, linked to the email they came with",
+          "A drive for you and your team, and a folder for every contact",
+          "Add files to tasks; they land in the contact's folder and timeline",
+          "Send files with a proposal or a reply, straight from the drive",
+        ]}
+      >
+        No more digging through an inbox for the contract they sent last month: it is in their
+        folder, next to the conversation it came with.
       </Feature>
     </Section>
   );

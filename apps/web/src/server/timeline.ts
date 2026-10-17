@@ -39,7 +39,10 @@ export type TimelineItem = {
   subject: string | null;
   body: string | null;
   from: string | null;
-  attachments: { filename: string }[];
+  /** With `fileId` when the file was kept (Files), `reason` when it was not. */
+  attachments: { filename: string; fileId: string | null; reason: string | null }[];
+  /** "file" entries: the file and the task it was added to. */
+  file: { id: string; taskId: string | null } | null;
   answers: Record<string, string> | null;
   /** Meeting entries: the booking with links to its recap and transcript. */
   meeting: { title: string; status: string; recap: boolean; transcript: boolean } | null;
@@ -171,10 +174,15 @@ function shape(e: ContactEvent, tz: string): TimelineItem {
     body: tidy(str(d.body)),
     from: displayName(str(d.from)),
     attachments: Array.isArray(d.attachments)
-      ? (d.attachments as { filename?: string }[]).map((a) => ({
+      ? (
+          d.attachments as { filename?: string; fileId?: string | null; reason?: string | null }[]
+        ).map((a) => ({
           filename: a.filename ?? "attachment",
+          fileId: a.fileId ?? null,
+          reason: a.reason ?? null,
         }))
       : [],
+    file: e.type === "file" && str(d.fileId) ? { id: str(d.fileId)!, taskId: str(d.taskId) } : null,
     answers:
       d.answers && typeof d.answers === "object" && Object.keys(d.answers).length
         ? (d.answers as Record<string, string>)
