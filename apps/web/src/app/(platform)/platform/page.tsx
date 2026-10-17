@@ -35,6 +35,7 @@ import {
   TimelineMock,
   DriveMock,
   MessagesMock,
+  NotesMock,
 } from "./mocks";
 import { EmailMock, FollowUpMock, LiveTranscriptMock, RoutingMock, SeatsMock } from "./mocks-more";
 import { PlanGrid } from "./plan-card";
@@ -449,6 +450,7 @@ export default function LandingPage() {
         <GatedTimelineFeature />
         <GatedFilesFeature />
         <GatedMessagesFeature />
+        <GatedNotesFeature />
       </Suspense>
 
       <Section className="border-t">
@@ -798,6 +800,29 @@ async function GatedMessagesFeature() {
       >
         No more forwarding emails to a colleague or asking in a chat app who answered: the whole
         team sees the conversation, and notes stay beside it.
+      </Feature>
+    </Section>
+  );
+}
+
+/** In-meeting notes in the tour, once they are on for every workspace. */
+async function GatedNotesFeature() {
+  if (!(await flagOnForEveryone("meeting_notes"))) return null;
+  return (
+    <Section className="border-t">
+      <Feature
+        eyebrow="Notes in the call"
+        title="Your own notes, the transcript and the recap in one place."
+        mock={<NotesMock />}
+        bullets={[
+          "Private notes beside the call, each stamped with the moment you wrote it",
+          "Mark a moment with one click or a shortcut, and come back to it later",
+          "The recap reads your notes with the transcript; your notes win when they disagree",
+          "Every action item says whether it came from your notes, the transcript or both",
+        ]}
+      >
+        Write the thing you would have scribbled on paper, and it ends up where it belongs: in the
+        recap, as a task, and on the client&apos;s timeline.
       </Feature>
     </Section>
   );

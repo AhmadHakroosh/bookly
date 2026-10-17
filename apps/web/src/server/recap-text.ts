@@ -21,6 +21,8 @@ export const recapSchema = z.object({
         title: z.string().min(1).max(200),
         owner: z.enum(["me", "them"]).default("me"),
         dueInDays: z.number().int().min(0).max(365).nullable().default(null),
+        /** Where it came from: the host's own notes, the transcript, or both (0.20.0). */
+        source: z.enum(["notes", "transcript", "both"]).default("transcript"),
         ...evidence,
       }),
     )
@@ -57,7 +59,7 @@ export const recapSchema = z.object({
 export type Recap = z.infer<typeof recapSchema>;
 
 export const RECAP_SYSTEM = `You turn the transcript of a consultant's client call into a recap the consultant will review and act on. Reply with JSON only, matching:
-{"summary": string (3-5 sentences), "decisions": [{"text", "t": seconds|null, "quote": string|null}], "actions": [{"title", "owner": "me"|"them", "dueInDays": int|null, "t", "quote"}], "openQuestions": string[], "objections": [{"text", "t", "quote"}], "covered": [{"asked", "covered": bool, "note"}], "nextStep": string, "suggestedStage": "lead"|"active"|"won"|"lost"|null, "temperature": "warm"|"neutral"|"cool"|null, "followUp": {"subject","body"}|null, "attendeeRecap": {"subject","body"}|null}
+{"summary": string (3-5 sentences), "decisions": [{"text", "t": seconds|null, "quote": string|null}], "actions": [{"title", "owner": "me"|"them", "dueInDays": int|null, "source": "notes"|"transcript"|"both", "t", "quote"}], "openQuestions": string[], "objections": [{"text", "t", "quote"}], "covered": [{"asked", "covered": bool, "note"}], "nextStep": string, "suggestedStage": "lead"|"active"|"won"|"lost"|null, "temperature": "warm"|"neutral"|"cool"|null, "followUp": {"subject","body"}|null, "attendeeRecap": {"subject","body"}|null}
 Rules:
 - "me" is the consultant (host), "them" the client (attendee). Put what THEY promised under actions with owner "them", phrased as what they will do.
 - t is the transcript timestamp in seconds of the supporting line; quote is a short verbatim excerpt (max 20 words). Use null when unsure. Never invent quotes.
@@ -67,7 +69,9 @@ Rules:
 - suggestedStage only when the relationship clearly moved (agreement → won, clear no → lost, ongoing work → active), else null. temperature is your read of the client's enthusiasm.
 - followUp: a short, warm first-person email from the consultant to the client recapping decisions and next steps; no placeholders, no sign-off name.
 - attendeeRecap: a neutral, client-facing recap (summary, decisions, who does what by when) the consultant could forward as-is; no internal remarks, no sign-off name.
-- Only include what the transcript supports. Empty arrays are fine.`;
+- The consultant's own notes from the call may follow the transcript (or come instead of it). They are the consultant's words, written during the call: when the summary uses one, quote it and say it is from their notes ("your note: …"). A note that states a commitment ("send the proposal by Friday") or a marked moment is a strong signal for an action item. When a note and the transcript disagree, the note wins.
+- source on every action: "notes" when it comes from the notes only, "transcript" when only from what was said, "both" when the notes and the transcript support it. For a note, t is the note's [mm:ss] stamp (null when it has none) and quote is the note's text.
+- Only include what the transcript and the notes support. Empty arrays are fine.`;
 
 /** Parses the model's reply even when it wraps the JSON in prose or code fences. */
 export function parseRecap(raw: string): Recap | null {

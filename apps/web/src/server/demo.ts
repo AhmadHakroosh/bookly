@@ -68,6 +68,7 @@ export async function seedDemo() {
       { key: "timeline_v2", description: "Contact timeline v2 with guest replies", state: "on" },
       { key: "files", description: "Files: the drive and contact folders", state: "on" },
       { key: "messages", description: "Team and guest conversations", state: "on" },
+      { key: "meeting_notes", description: "In-meeting host notes", state: "on" },
     ])
     .onConflictDoUpdate({ target: schema.featureFlags.key, set: { state: "on" } });
   const env = loadEnv();

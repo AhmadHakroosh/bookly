@@ -13,6 +13,7 @@ import {
   useVideoTrack,
 } from "@daily-co/daily-react";
 import {
+  FlagIcon,
   HandIcon,
   MaximizeIcon,
   MessageSquareIcon,
@@ -20,6 +21,7 @@ import {
   MicOffIcon,
   MinimizeIcon,
   MonitorUpIcon,
+  NotebookPenIcon,
   PhoneOffIcon,
   PictureInPicture2Icon,
   SettingsIcon,
@@ -51,7 +53,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { EffectsPopover, rememberNoiseCancellation } from "./effects";
 import { REACTIONS } from "./messages";
 
-export type Panel = "chat" | "people" | null;
+export type Panel = "chat" | "people" | "notes" | null;
 
 /** The control bar: media toggles, share, hand, reactions, panels, settings, leave. */
 export function Tray({
@@ -59,6 +61,7 @@ export function Tray({
   onPanel,
   unread,
   waitingCount,
+  notes,
   onReaction,
   onLeave,
   stageRef,
@@ -67,6 +70,8 @@ export function Tray({
   onPanel: (p: Panel) => void;
   unread: number;
   waitingCount: number;
+  /** The member's in-meeting notes are on: Notes and Mark moment buttons. */
+  notes: { onMark: () => void; count: number } | null;
   onReaction: (emoji: string) => void;
   onLeave: () => void;
   stageRef: RefObject<HTMLDivElement | null>;
@@ -208,6 +213,21 @@ export function Tray({
       >
         <MessageSquareIcon />
       </TrayButton>
+      {notes && (
+        <>
+          <TrayButton
+            label="Notes"
+            active={panel === "notes"}
+            highlight={panel === "notes"}
+            onClick={() => onPanel("notes")}
+          >
+            <NotebookPenIcon />
+          </TrayButton>
+          <TrayButton label="Mark moment (⌘/Ctrl+Shift+M)" onClick={notes.onMark}>
+            <FlagIcon />
+          </TrayButton>
+        </>
+      )}
       <TrayButton
         label="People"
         active={panel === "people"}

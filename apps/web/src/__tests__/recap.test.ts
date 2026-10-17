@@ -20,6 +20,7 @@ describe("recap parsing", () => {
       title: "Share docs",
       owner: "them",
       dueInDays: null,
+      source: "transcript",
       t: null,
       quote: null,
     });

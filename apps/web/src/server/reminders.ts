@@ -17,6 +17,7 @@ import { sendTelemetryPing } from "./telemetry";
 import { ensureDailyWebhook } from "./daily-webhook";
 import { trackBooking } from "./contacts";
 import { purgeTrash } from "./drive";
+import { postDueNotes } from "./meeting-notes";
 import { replyToFor } from "./inbound";
 import { notify, pruneNotifications, wantsEmail } from "./notifications";
 import { textAttendee } from "./notify";
@@ -206,6 +207,7 @@ export async function sendDueReminders(
   await sweepPendingFiles(now).catch((e) => console.error("[files] sweep failed", e));
   await pruneNotifications(now).catch((e) => console.error("[notifications] prune failed", e));
   await purgeTrash(now).catch((e) => console.error("[drive] trash purge failed", e));
+  await postDueNotes(now).catch((e) => console.error("[notes] posting failed", e));
   await reconcileSeats(now).catch((e) => console.error("[billing] seat reconcile failed", e));
   await sendTelemetryPing(now).catch((e) => console.error("[telemetry] failed", e));
   await ensureDailyWebhook().catch((e) => console.error("[daily] webhook", e));

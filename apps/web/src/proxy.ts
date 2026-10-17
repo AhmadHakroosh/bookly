@@ -151,7 +151,8 @@ export async function proxy(request: NextRequest) {
 
   // Bookly video on its own host (MEET_URL, e.g. meet.example.com): /<room> → /meet/<room>.
   const mh = meetHost();
-  if (mh && host === mh && !pathname.startsWith("/meet/")) {
+  // Its API calls (live transcript, notes) keep their paths.
+  if (mh && host === mh && !pathname.startsWith("/meet/") && !pathname.startsWith("/api/")) {
     const url = request.nextUrl.clone();
     url.pathname = pathname === "/" ? "/meet" : `/meet${pathname}`;
     return NextResponse.rewrite(url);

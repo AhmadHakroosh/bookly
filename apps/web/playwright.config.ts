@@ -35,6 +35,8 @@ export default defineConfig({
       APP_URL: `http://localhost:${port}`,
       EMAIL_PROVIDER: "console",
       JOBS_WORKER: "false",
+      // Specs call the tick (/api/cron/tick); a test server never pings the real update check.
+      TELEMETRY: "off",
       // Guest replies: tests sign webhook calls with this secret and stand in for Resend's API.
       INBOUND_EMAIL_DOMAIN: "reply.bookly.test",
       RESEND_WEBHOOK_SECRET: `whsec_${Buffer.from("e2e-webhook-secret-0123456789").toString("base64")}`,

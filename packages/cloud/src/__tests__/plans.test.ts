@@ -87,4 +87,10 @@ describe("plans", () => {
     expect(planFor("teamMessages")).toBe("team");
     expect(UNLIMITED.guestMessages && UNLIMITED.teamMessages).toBe(true);
   });
+  it("in-meeting notes from Pro (where Bookly video and capture start), everywhere self-hosted", () => {
+    expect(PLANS.free.limits.meetingNotes).toBe(false);
+    expect(planFor("meetingNotes")).toBe("pro");
+    expect(planFor("meetingNotes")).toBe(planFor("booklyVideo"));
+    expect(UNLIMITED.meetingNotes).toBe(true);
+  });
 });

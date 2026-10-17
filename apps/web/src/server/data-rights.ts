@@ -43,6 +43,7 @@ export async function exportWorkspace(ws: Workspace) {
     routingForms,
     transcripts,
     recaps,
+    meetingNotes,
     waitlist,
     integrations,
     webhooks,
@@ -81,6 +82,7 @@ export async function exportWorkspace(ws: Workspace) {
     q.routingForms.findMany({ where: byWs(schema.routingForms) }),
     q.meetingTranscripts.findMany({ where: byWs(schema.meetingTranscripts) }),
     q.meetingRecaps.findMany({ where: byWs(schema.meetingRecaps) }),
+    q.meetingNotes.findMany({ where: byWs(schema.meetingNotes) }),
     q.waitlistEntries.findMany({ where: byWs(schema.waitlistEntries) }),
     q.integrations.findMany({
       where: byWs(schema.integrations),
@@ -146,6 +148,7 @@ export async function exportWorkspace(ws: Workspace) {
     routingForms,
     transcripts,
     recaps,
+    meetingNotes,
     waitlist,
     integrations,
     webhooks,

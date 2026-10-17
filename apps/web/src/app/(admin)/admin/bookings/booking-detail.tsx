@@ -18,8 +18,10 @@ import { listOpenTasks } from "@/server/capture";
 import { contactTimeline } from "@/server/contacts";
 import { CaptureForm } from "./[id]/capture-form";
 import { AttendeeRecap } from "./[id]/attendee-recap";
+import { BookingNotes } from "./[id]/booking-notes";
 import { RecapPanel } from "./[id]/recap-panel";
 import { TranscriptPanel } from "./[id]/transcript-panel";
+import { notesOn } from "@/server/meeting-notes";
 import { getRecap, recapOf } from "@/server/recaps";
 import { getTranscript } from "@/server/transcripts";
 import { getProfileByUser, locationLabel } from "@/server/scheduling";
@@ -64,6 +66,10 @@ export async function BookingDetail({ id, inPane = false }: { id: string; inPane
       })
     : null;
   const past = b.endAt <= new Date() || b.status === "completed" || b.status === "no_show";
+  // In-meeting notes (Bookly video): the member's own, still editable after the call.
+  const room = (b.meetingRef as { room?: string } | null)?.room;
+  const notesHere =
+    b.meetingProvider === "daily" && !!room && b.startAt <= new Date() && (await notesOn(ws));
   const session = await sessionSummary(b, et ?? null);
   return (
     <div className={inPane ? "space-y-5" : "max-w-2xl space-y-6"}>
@@ -180,6 +186,7 @@ export async function BookingDetail({ id, inPane = false }: { id: string; inPane
         bookingId={b.id}
         title="Action items"
       />
+      {notesHere && <BookingNotes room={room!} />}
       {recapRow && (
         // Anchors for the contact timeline's "Recap" and "Transcript" links.
         <div id="recap" className="scroll-mt-20">

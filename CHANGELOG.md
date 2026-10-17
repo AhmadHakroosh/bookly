@@ -4,6 +4,19 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 ## [Unreleased]
 
+### Added
+
+- **Notes in the call.** On Bookly video, members in the call get a private **Notes** panel behind the `meeting_notes` flag (Pro and up, `meetingNotes`): notes save as you type, each keeps the moment it was written, and **Mark moment** (button, call controls or ⌘/Ctrl+Shift+M) drops a flagged timestamp. The recap reads the notes together with the transcript (quoted as your notes, commitments and marked moments weigh in for action items, notes win over the transcript), and every action item and the task it becomes says whether it came from your notes, the transcript or both; a call that was not transcribed gets a recap from the notes alone. The notes stay editable on the booking (**Your notes from the call**) and are posted to the contact's timeline as a note after the meeting (edits update it). Migration 0037 (`meeting_notes`)
+- The landing page shows notes in the call once the flag is on for everyone
+
+### Fixed
+
+- On a dedicated meeting host (`MEET_URL`), the call page's API calls were rewritten into `/meet/…` and failed, so live transcript lines from the meeting page never reached Bookly there (Daily's stored transcript still did). `/api/` paths now keep their path on the meeting host, and the live-transcript endpoint finds the room's booking without a workspace host
+
+### Changed
+
+- The e2e server runs with `TELEMETRY=off`
+
 ## [0.19.0] - 2026-10-17
 
 ### Added

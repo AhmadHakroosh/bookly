@@ -8,6 +8,7 @@ import { fmtDateTime } from "@/lib/time";
 import { createMeetingToken, dailyConfigured, dailyRoomUrl } from "@/server/integrations";
 import { getSession } from "@/server/session";
 import { and, eq as eqq } from "@bookly/db";
+import { notesOn } from "@/server/meeting-notes";
 import { getProfileByUser } from "@/server/scheduling";
 import { captureEnabled, encryptedLocation } from "@/server/transcripts";
 import { Logo, LogoMark } from "@/components/brand/logo";
@@ -74,6 +75,8 @@ async function MeetPage({ params, searchParams }: PageProps<"/meet/[room]">) {
   const signInUrl = `${loadEnv().APP_URL.replace(/\/$/, "")}/login?next=${encodeURIComponent(`/meet/${room}`)}`;
   let token: string | null = null;
   let initialName = "";
+  // In-meeting notes: members only (they join as the room's owner), on a plan and flag with notes.
+  let notes = false;
   try {
     if (session) {
       const member = ws
@@ -96,6 +99,7 @@ async function MeetPage({ params, searchParams }: PageProps<"/meet/[room]">) {
           isOwner: true,
           expiresAt: new Date(b.endAt.getTime() + 2 * 3600_000),
         });
+        notes = !!ws && (await notesOn(ws));
       }
     } else if (typeof sp.t === "string" && sp.t === b.manageToken) {
       initialName = b.attendeeName;
@@ -155,6 +159,7 @@ async function MeetPage({ params, searchParams }: PageProps<"/meet/[room]">) {
         attendeeName={b.attendeeName}
         initialName={initialName}
         needsName={!token}
+        notes={notes}
       />
     </div>
   );
