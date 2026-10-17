@@ -40,7 +40,10 @@ has Web Push keys, subscribes the browser so notifications arrive with every Boo
 (the service worker is `/sw.js`, scoped to `/admin`; it caches nothing). Without keys, an open
 but hidden tab shows them itself. Each browser is listed with a **Remove** button. The admin is
 installable as an app (`/admin.webmanifest`, start URL `/admin`); on iPhone and iPad, Web Push
-needs Bookly added to the Home Screen first.
+needs Bookly added to the Home Screen first. Notifications carry Bookly's logo as their picture (and a white
+silhouette in Android's status bar); the larger "app" icon is chosen by the operating system:
+it is the browser's for a website, and Bookly's once Bookly is installed as an app (Chrome or
+Edge: the install icon in the address bar, or the menu → Install Bookly).
 
 Web Push keys, once per install (self-hosting): `npx web-push generate-vapid-keys`, then set
 `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY` and `VAPID_SUBJECT` (`mailto:` you). Changing the keys

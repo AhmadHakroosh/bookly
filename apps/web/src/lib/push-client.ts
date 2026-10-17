@@ -103,13 +103,14 @@ export async function showLocal(title: string, body: string | null, url: string,
   if (reg) {
     await reg.showNotification(title, {
       body: body ?? "",
-      icon: "/logo-mark.png",
+      icon: "/notification-icon.png",
+      badge: "/notification-badge.png",
       tag,
       data: { url },
     });
     return;
   }
-  const n = new Notification(title, { body: body ?? "", icon: "/logo-mark.png", tag });
+  const n = new Notification(title, { body: body ?? "", icon: "/notification-icon.png", tag });
   n.onclick = () => {
     window.focus();
     window.location.assign(url);
