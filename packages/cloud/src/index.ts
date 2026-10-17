@@ -46,6 +46,10 @@ export type Limits = {
   taskAssignment: boolean;
   /** Guest replies land on the contact's timeline (signed Reply-To), and hosts reply from there. */
   inboundEmail: boolean;
+  /** The drive: My files, contact folders, guests' attachments kept, files sent from the drive. */
+  attachments: boolean;
+  /** Folders shared with the whole team. */
+  sharedFolders: boolean;
 };
 
 export const GIB = 1024 ** 3;
@@ -103,6 +107,10 @@ export const PLANS: Record<PlanId, Plan> = {
       taskAssignment: false,
 
       inboundEmail: false,
+
+      attachments: false,
+
+      sharedFolders: false,
     },
     highlights: [
       "Contacts, briefings and the daily Home page",
@@ -144,6 +152,10 @@ export const PLANS: Record<PlanId, Plan> = {
       taskAssignment: false,
 
       inboundEmail: true,
+
+      attachments: true,
+
+      sharedFolders: false,
     },
     highlights: [
       "Auto-capture: transcripts, AI recaps, tasks (5 hours a month, then $3 an hour)",
@@ -191,6 +203,10 @@ export const PLANS: Record<PlanId, Plan> = {
       taskAssignment: true,
 
       inboundEmail: true,
+
+      attachments: true,
+
+      sharedFolders: true,
       storagePerSeat: true,
     },
     highlights: [
@@ -232,6 +248,10 @@ export const UNLIMITED: Limits = {
   taskAssignment: true,
 
   inboundEmail: true,
+
+  attachments: true,
+
+  sharedFolders: true,
 };
 
 /** The workspace's storage budget in bytes: flat, or per billed seat and pooled. */
@@ -328,7 +348,9 @@ export type FeatureLimit =
   | "activityExport"
   | "taskBoard"
   | "taskAssignment"
-  | "inboundEmail";
+  | "inboundEmail"
+  | "attachments"
+  | "sharedFolders";
 
 /** True when adding one more of `what` stays within the limit. */
 export function withinLimit(limits: Limits, what: CountableLimit, current: number): boolean {
@@ -355,6 +377,8 @@ export const FEATURE_LABELS: Record<FeatureLimit, string> = {
   taskBoard: "Task board and custom statuses",
   taskAssignment: "Assigning tasks to teammates",
   inboundEmail: "Guest replies on the timeline",
+  attachments: "Files and contact folders",
+  sharedFolders: "Folders shared with the team",
 };
 
 /** First plan (cheapest) that allows `what`. */

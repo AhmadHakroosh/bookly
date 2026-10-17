@@ -5,6 +5,7 @@ import { ArrowLeftIcon, SendIcon } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { ActionButton } from "@/components/action-button";
+import { AttachFiles } from "@/components/drive/attach-files";
 import {
   Dialog,
   DialogContent,
@@ -37,6 +38,7 @@ const SERVER_KIND = {
  */
 export function Outreach({
   contactId,
+  filesOn = false,
   proposal,
   payment,
   followUp,
@@ -45,6 +47,8 @@ export function Outreach({
   optedOut = false,
 }: {
   contactId: string;
+  /** Files are on (flag + plan): attach from the drive or upload. */
+  filesOn?: boolean;
   proposal: T;
   payment: T;
   followUp: T;
@@ -215,6 +219,7 @@ export function Outreach({
               className="w-40"
             />
           </label>
+          {filesOn && <AttachFiles contactId={contactId} />}
           <ActionButton action={showPreview}>Preview email</ActionButton>
         </form>
       )}

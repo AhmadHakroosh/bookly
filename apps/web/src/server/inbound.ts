@@ -354,6 +354,18 @@ export async function receiveReply(
       },
     },
   );
+  // Files on: keep the attachments in the contact's folder, and record each one on the entry.
+  if ((email.attachments ?? []).length && (await hasFlag(ws, "files"))) {
+    const { keepReceivedAttachments } = await import("./drive");
+    const kept = await keepReceivedAttachments(ws, data.email_id, event.contactId, id);
+    if (kept.length)
+      await db()
+        .update(schema.contactEvents)
+        .set({
+          data: sql`jsonb_set(${schema.contactEvents.data}, '{attachments}', ${JSON.stringify(kept)}::jsonb)`,
+        })
+        .where(eq(schema.contactEvents.id, id));
+  }
   // They answered: the "follow up if nobody replies" date has done its job.
   await updateContact(ws.id, event.contactId, { nextFollowUpAt: null });
 

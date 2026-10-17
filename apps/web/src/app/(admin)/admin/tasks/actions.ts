@@ -194,6 +194,10 @@ export async function deleteTaskAction(taskId: string): Promise<ActionResult> {
   const t = await visibleTask(c, taskId);
   if (!t) return { error: "That task is not yours to delete." };
   await db().delete(schema.tasks).where(eq(schema.tasks.id, t.id));
+  // The files stay in the drive; only their link to this task goes.
+  await db()
+    .delete(schema.fileLinks)
+    .where(and(eq(schema.fileLinks.targetType, "task"), eq(schema.fileLinks.targetId, t.id)));
   await audit({ action: "task.deleted", target: { type: "task", id: t.id, label: t.title } });
   refresh();
   return { ok: true };

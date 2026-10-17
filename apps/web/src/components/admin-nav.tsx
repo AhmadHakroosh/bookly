@@ -17,6 +17,7 @@ import {
   HomeIcon,
   LayoutGridIcon,
   PlugIcon,
+  FolderIcon,
   SettingsIcon,
   SquareKanbanIcon,
   SplitIcon,
@@ -84,9 +85,12 @@ export function AdminNav({
   cloud = false,
   manager = false,
   tasks = false,
+  files = false,
   supportHref = "https://github.com/AhmadHakroosh/bookly/issues",
 }: {
   cloud?: boolean;
+  /** The drive is enabled (its feature flag): adds Files after Tasks / Contacts. */
+  files?: boolean;
   /** The task board is enabled (its feature flag): adds Tasks after Contacts. */
   tasks?: boolean;
   /** Owner or admin: shows the Workspace group. */
@@ -97,20 +101,29 @@ export function AdminNav({
   const pathname = usePathname();
   const active = (href: string) =>
     href === "/admin" ? pathname === href : pathname.startsWith(href);
-  const scheduling = tasks
-    ? GROUPS.map((g, i) =>
-        i === 0
-          ? {
-              ...g,
-              items: g.items.flatMap((it) =>
-                it.href === "/admin/contacts"
-                  ? [it, { href: "/admin/tasks", label: "Tasks", icon: SquareKanbanIcon }]
-                  : [it],
-              ),
-            }
-          : g,
-      )
-    : GROUPS;
+  const scheduling =
+    tasks || files
+      ? GROUPS.map((g, i) =>
+          i === 0
+            ? {
+                ...g,
+                items: g.items.flatMap((it) =>
+                  it.href === "/admin/contacts"
+                    ? [
+                        it,
+                        ...(tasks
+                          ? [{ href: "/admin/tasks", label: "Tasks", icon: SquareKanbanIcon }]
+                          : []),
+                        ...(files
+                          ? [{ href: "/admin/files", label: "Files", icon: FolderIcon }]
+                          : []),
+                      ]
+                    : [it],
+                ),
+              }
+            : g,
+        )
+      : GROUPS;
   const groups = manager ? [...scheduling, WORKSPACE(cloud)] : scheduling;
   const itemClass = (on: boolean) =>
     `flex items-center gap-2 rounded-md px-2 py-1.5 ${on ? "bg-muted font-medium text-foreground" : "text-muted-foreground hover:bg-muted/60 hover:text-foreground"}`;

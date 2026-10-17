@@ -28,6 +28,11 @@ export async function bookFirstSlot(
   opts: { guests?: string[] } = {},
 ) {
   const date = upcomingWeekday();
+  // Every guest is a different person: give each booking its own address, so the suite's
+  // bookings do not add up against the public-form limit (10 per 10 minutes per visitor).
+  await page.setExtraHTTPHeaders({
+    "x-forwarded-for": `10.${Math.floor(Math.random() * 250)}.${Math.floor(Math.random() * 250)}.${Math.floor(Math.random() * 250)}`,
+  });
   await page.goto(`/${DEMO.username}/intro-call?tz=UTC&month=${date.slice(0, 7)}&date=${date}`);
   const slot = page.locator('a[href*="slot="]').first();
   await expect(slot).toBeVisible();

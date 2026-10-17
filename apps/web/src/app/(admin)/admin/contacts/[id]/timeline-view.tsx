@@ -7,6 +7,7 @@ import {
   ArrowRightIcon,
   BanknoteIcon,
   CalendarCheckIcon,
+  FileIcon,
   CalendarClockIcon,
   CalendarIcon,
   CalendarXIcon,
@@ -24,6 +25,7 @@ import {
   UserXIcon,
   type LucideIcon,
 } from "lucide-react";
+import { AttachFiles } from "@/components/drive/attach-files";
 import { SubmitButton } from "@/components/submit-button";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -48,11 +50,18 @@ const ICON: Record<string, LucideIcon> = {
   capture: NotebookPenIcon,
   task: SquareCheckIcon,
   payment: BanknoteIcon,
+  file: FileIcon,
 };
 
 const isEmail = (t: string) => t === "email_sent" || t === "email_received";
 
-function Attachments({ files }: { files: { filename: string }[] }) {
+const NOT_KEPT: Record<string, string> = {
+  plan: "files come with Pro",
+  "too large": "too large to keep",
+  "storage full": "storage is full",
+};
+
+function Attachments({ files }: { files: TimelineItem["attachments"] }) {
   if (!files.length) return null;
   return (
     <ul
@@ -62,7 +71,19 @@ function Attachments({ files }: { files: { filename: string }[] }) {
       {files.map((f, i) => (
         <li key={i} className="inline-flex items-center gap-1">
           <PaperclipIcon className="size-3" aria-hidden />
-          {f.filename}
+          {f.fileId ? (
+            <a
+              href={`/files/${f.fileId}?download=1`}
+              className="text-foreground underline underline-offset-4"
+            >
+              {f.filename}
+            </a>
+          ) : (
+            <span>
+              {f.filename}
+              {f.reason ? ` (${NOT_KEPT[f.reason] ?? "not kept"})` : ""}
+            </span>
+          )}
         </li>
       ))}
     </ul>
@@ -73,10 +94,12 @@ function ReplyForm({
   contactId,
   parentId,
   onDone,
+  filesOn,
 }: {
   contactId: string;
   parentId: string;
   onDone: () => void;
+  filesOn: boolean;
 }) {
   const [state, action] = useActionState(async (prev: ReplyState, fd: FormData) => {
     const r = await replyFromTimelineAction(contactId, parentId, prev, fd);
@@ -90,6 +113,7 @@ function ReplyForm({
   return (
     <form action={action} className="mt-2 space-y-2">
       <Textarea name="body" rows={4} required maxLength={8000} aria-label="Your reply" autoFocus />
+      {filesOn && <AttachFiles contactId={contactId} />}
       <div className="flex gap-2">
         <SubmitButton size="sm" pendingText="Sending…">
           Send reply
@@ -121,11 +145,13 @@ function Entry({
   contactId,
   entryHref,
   canReply,
+  filesOn,
 }: {
   item: TimelineItem;
   contactId: string;
   entryHref: (id: string) => string;
   canReply: boolean;
+  filesOn: boolean;
 }) {
   const [replying, setReplying] = useState(false);
   const Icon = ICON[item.type] ?? CircleIcon;
@@ -183,6 +209,26 @@ function Entry({
             ))}
           </dl>
         )}
+        {item.file && (
+          <p className="mt-0.5 flex flex-wrap gap-x-3 text-xs">
+            <a
+              href={`/files/${item.file.id}`}
+              target="_blank"
+              rel="noreferrer"
+              className="underline underline-offset-4"
+            >
+              Open file
+            </a>
+            {item.file.taskId && (
+              <Link
+                href={`/admin/tasks?task=${item.file.taskId}`}
+                className="underline underline-offset-4"
+              >
+                Open task
+              </Link>
+            )}
+          </p>
+        )}
         {isEmail(item.type) && <Email item={item} />}
         <Attachments files={item.attachments} />
         {item.replies.length > 0 && (
@@ -221,6 +267,7 @@ function Entry({
         )}
         {replying && (
           <ReplyForm
+            filesOn={filesOn}
             contactId={contactId}
             parentId={item.replies[item.replies.length - 1]?.id ?? item.id}
             onDone={() => setReplying(false)}
@@ -240,10 +287,13 @@ export function TimelineView({
   contactId,
   initial,
   canReply,
+  filesOn = false,
 }: {
   contactId: string;
   initial: { days: TimelineDay[]; next: string | null };
   canReply: boolean;
+  /** Files are on: replies can carry files from the drive. */
+  filesOn?: boolean;
 }) {
   const [days, setDays] = useState(initial.days);
   const [next, setNext] = useState(initial.next);
@@ -301,6 +351,7 @@ export function TimelineView({
                 contactId={contactId}
                 entryHref={entryHref}
                 canReply={canReply}
+                filesOn={filesOn}
               />
             ))}
           </ol>

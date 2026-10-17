@@ -66,6 +66,7 @@ export async function seedDemo() {
       { key: "notifications", description: "In-app and desktop notifications", state: "on" },
       { key: "task_board", description: "Task board with workspace-defined statuses", state: "on" },
       { key: "timeline_v2", description: "Contact timeline v2 with guest replies", state: "on" },
+      { key: "files", description: "Files: the drive and contact folders", state: "on" },
     ])
     .onConflictDoUpdate({ target: schema.featureFlags.key, set: { state: "on" } });
   const env = loadEnv();

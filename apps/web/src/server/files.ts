@@ -158,6 +158,14 @@ export async function createUpload(opts: {
   userId: string | null;
   owner?: FileOwner;
   visibility?: FileVisibility;
+  /** Drive placement, already resolved and permission-checked by the caller (server/drive.ts). */
+  drive?: {
+    space: "personal" | "team" | "contact";
+    folderId: string | null;
+    contactId: string | null;
+    source: "upload" | "task";
+    sourceId: string | null;
+  };
 }): Promise<UploadTicket> {
   const check = checkUpload(opts.kind, opts.mime, opts.size, opts.name);
   if (!check.ok) throw new Error(check.error);
@@ -179,6 +187,7 @@ export async function createUpload(opts: {
       uploadedBy: opts.userId,
       ownerType: opts.owner?.type ?? null,
       ownerId: opts.owner?.id ?? null,
+      ...(opts.drive ?? {}),
     })
     .returning();
   const storage = getStorage();
@@ -265,10 +274,13 @@ export async function getFileAnywhere(id: string): Promise<StoredFile | null> {
 }
 
 /** A short-lived direct download URL (S3) or null when the app must stream it (local). */
-export async function downloadUrl(file: StoredFile): Promise<string | null> {
+export async function downloadUrl(
+  file: StoredFile,
+  disposition: "inline" | "attachment" = "attachment",
+): Promise<string | null> {
   const storage = getStorage();
   if (!storage.presign) return null;
-  return storage.presignGet(file.key, { filename: file.name, contentType: file.mime });
+  return storage.presignGet(file.key, { filename: file.name, contentType: file.mime, disposition });
 }
 
 export async function removeFile(

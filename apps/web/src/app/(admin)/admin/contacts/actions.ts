@@ -101,6 +101,7 @@ export async function sendProposal(id: string, formData: FormData): Promise<Send
     await sendOutreach(ws, c, session.user.id, "proposal", {
       ...t,
       followUpDays: Number(formData.get("followUpDays")) || 0,
+      fileIds: formData.getAll("fileId").map(String).slice(0, 20),
     });
   } catch (e) {
     if (e instanceof OptedOutError) return { error: e.message };
@@ -136,6 +137,7 @@ export async function sendFollowUp(id: string, formData: FormData): Promise<Send
     await sendOutreach(ws, c, session.user.id, "checkIn", {
       ...t,
       followUpDays: Number(formData.get("followUpDays")) || 0,
+      fileIds: formData.getAll("fileId").map(String).slice(0, 20),
     });
   } catch (e) {
     if (e instanceof OptedOutError) return { error: e.message };
@@ -188,6 +190,7 @@ export async function sendPaymentRequest(id: string, formData: FormData): Promis
       amountCents,
       currency,
       followUpDays: Number(formData.get("followUpDays")) || 0,
+      fileIds: formData.getAll("fileId").map(String).slice(0, 20),
     });
   } catch (e) {
     if (e instanceof OptedOutError) return { error: e.message };

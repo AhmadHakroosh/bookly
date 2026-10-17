@@ -73,4 +73,11 @@ describe("plans", () => {
     expect(planFor("inboundEmail")).toBe("pro");
     expect(UNLIMITED.inboundEmail).toBe(true);
   });
+  it("files from Pro (within the storage quota), team-shared folders on Team", () => {
+    expect(PLANS.free.limits.attachments).toBe(false);
+    expect(planFor("attachments")).toBe("pro");
+    expect(PLANS.pro.limits.sharedFolders).toBe(false);
+    expect(planFor("sharedFolders")).toBe("team");
+    expect(UNLIMITED.attachments && UNLIMITED.sharedFolders).toBe(true);
+  });
 });

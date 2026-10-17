@@ -715,3 +715,47 @@ export function TimelineMock() {
     </BrowserFrame>
   );
 }
+
+/** The drive: spaces on the left, a contact's folder with what they sent and what is ours. */
+export function DriveMock() {
+  const files: [string, string, string][] = [
+    ["signed-agreement.pdf", "from Lina, with her reply", "2.1 MB"],
+    ["brand-guidelines.zip", "from Lina", "14 MB"],
+    ["pilot-proposal.pdf", "sent with the proposal", "380 KB"],
+    ["kickoff-notes.docx", "on the task “Prepare kick-off”", "64 KB"],
+  ];
+  return (
+    <BrowserFrame url="acme.bookly-app.io/admin/files">
+      <div className="grid grid-cols-[110px_1fr] gap-3 p-4 text-xs">
+        <div className="space-y-1 text-muted-foreground">
+          {["My files", "Team", "Contacts", "Recent", "Trash"].map((n) => (
+            <p
+              key={n}
+              className={`rounded px-2 py-1 ${n === "Contacts" ? "bg-muted font-medium text-foreground" : ""}`}
+            >
+              {n}
+            </p>
+          ))}
+        </div>
+        <div className="min-w-0 space-y-2">
+          <p>
+            <span className="text-muted-foreground">Contacts /</span>{" "}
+            <span className="font-medium">Lina Farah</span>
+          </p>
+          <div className="divide-y rounded-lg border">
+            {files.map(([name, meta, size]) => (
+              <div key={name} className="flex items-center gap-2 px-2.5 py-2">
+                <FileTextIcon className="size-3.5 shrink-0 text-muted-foreground" />
+                <div className="min-w-0 flex-1">
+                  <p className="truncate font-medium">{name}</p>
+                  <p className="truncate text-muted-foreground">{meta}</p>
+                </div>
+                <span className="text-muted-foreground">{size}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </BrowserFrame>
+  );
+}

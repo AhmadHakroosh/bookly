@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { afterDriveUpload } from "@/server/drive";
 import { completeUpload, fileUrl } from "@/server/files";
 import { getSession, getStaffRole } from "@/server/session";
 import { getCurrentWorkspace } from "@/server/workspace";
@@ -15,6 +16,8 @@ export async function POST(_req: Request, ctx: RouteContext<"/api/uploads/[id]/c
     return NextResponse.json({ error: "Sign in first." }, { status: 401 });
   try {
     const file = await completeUpload(ws, id);
+    // Drive files: link to the task they were uploaded on, and show on the contact's timeline.
+    if (file.space) await afterDriveUpload({ userId: session.user.id, ws }, file);
     return NextResponse.json({
       id: file.id,
       url: fileUrl(file.id),

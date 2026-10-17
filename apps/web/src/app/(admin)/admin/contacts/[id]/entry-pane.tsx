@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useActionState, useEffect, type ReactNode } from "react";
 import { toast } from "sonner";
+import { AttachFiles } from "@/components/drive/attach-files";
 import { SubmitButton } from "@/components/submit-button";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { Textarea } from "@/components/ui/textarea";
@@ -33,7 +34,15 @@ export function EntrySheet({
 }
 
 /** Reply at the bottom of a thread in the pane. */
-export function PaneReply({ contactId, parentId }: { contactId: string; parentId: string }) {
+export function PaneReply({
+  contactId,
+  parentId,
+  filesOn = false,
+}: {
+  contactId: string;
+  parentId: string;
+  filesOn?: boolean;
+}) {
   const [state, action] = useActionState(
     replyFromTimelineAction.bind(null, contactId, parentId),
     {} as ReplyState,
@@ -52,6 +61,7 @@ export function PaneReply({ contactId, parentId }: { contactId: string; parentId
         aria-label="Your reply"
         placeholder="Write your reply"
       />
+      {filesOn && <AttachFiles contactId={contactId} />}
       <SubmitButton pendingText="Sending…">Send reply</SubmitButton>
     </form>
   );

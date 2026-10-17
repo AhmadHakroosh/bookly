@@ -41,7 +41,9 @@ async function AdminShell({ children }: { children: React.ReactNode }) {
     getCurrentWorkspace(),
     getStaffRole(),
   ]);
-  const tasks = workspace ? await hasFlag(workspace, "task_board") : false;
+  const [tasks, files] = workspace
+    ? await Promise.all([hasFlag(workspace, "task_board"), hasFlag(workspace, "files")])
+    : [false, false];
   if (!session) redirect("/login?next=/admin");
   if (!role) redirect("/login?error=staff");
 
@@ -96,6 +98,7 @@ async function AdminShell({ children }: { children: React.ReactNode }) {
                     cloud={isCloud()}
                     manager={isManager(role)}
                     tasks={tasks}
+                    files={files}
                     supportHref={supportHref}
                   />
                 </div>
@@ -131,6 +134,7 @@ async function AdminShell({ children }: { children: React.ReactNode }) {
             cloud={isCloud()}
             manager={isManager(role)}
             tasks={tasks}
+            files={files}
             supportHref={supportHref}
           />
         </aside>
