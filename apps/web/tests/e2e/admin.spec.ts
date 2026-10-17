@@ -130,7 +130,8 @@ test.describe("admin", () => {
     await expect(admin).toHaveURL(/cal=month/);
     let block = calendar.locator('a[href*="booking="]', { hasText: "Calendar Guest" });
     if ((await block.count()) === 0) {
-      await calendar.getByRole("link", { name: /Next month/ }).click();
+      // A Button rendered as a link: Base UI gives it the button role, so match its label.
+      await calendar.getByLabel(/Next month/).click();
       block = calendar.locator('a[href*="booking="]', { hasText: "Calendar Guest" });
     }
     await block.first().click();

@@ -30,6 +30,12 @@ export type WorkspaceSettings = {
   blockedEmails?: string[];
   /** Settings → General: the workspace does not want features that are still in beta. */
   betaOptOut?: boolean;
+  /**
+   * Settings → Emails: guests' replies land on the contact's timeline (Pro and up, with the
+   * inbound domain configured). Absent = on. Off = new emails carry the host's own Reply-To;
+   * replies to emails already sent with a timeline address still arrive.
+   */
+  guestReplies?: boolean;
   /** CRM sync: contacts and meeting notes are pushed here (API key is encrypted at rest). */
   crm?: { provider: "hubspot" | "pipedrive"; apiKey: string; companyDomain?: string } | null;
   /** Opt-in: include coarse usage counts in the daily update check (self-hosted only). */

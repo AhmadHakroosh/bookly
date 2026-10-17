@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 process.env.DATABASE_URL ??= "postgres://test:test@localhost:5432/test";
 process.env.AUTH_SECRET ??= "test-secret-test-secret-test";
 import {
+  cleanReplyText,
   htmlToText,
   isAutoReply,
   readReplyAddress,
@@ -102,6 +103,9 @@ describe("reading replies", () => {
     expect(htmlToText("<p>Hi&nbsp;there</p><p>Line&amp;two<br>three</p><style>x{}</style>")).toBe(
       "Hi there\nLine&two\nthree",
     );
+  });
+  it("drops Apple Mail's attachment placeholder and zero-width marks", () => {
+    expect(cleanReplyText("Thanks\uFFFC see attached\u200B")).toBe("Thanks see attached");
   });
   it("recognises auto-replies", () => {
     expect(isAutoReply({ subject: "Out of office: back Monday", headers: {} })).toBe(true);

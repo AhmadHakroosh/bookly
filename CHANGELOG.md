@@ -4,6 +4,19 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 ## [Unreleased]
 
+### Added
+
+- **Settings → Emails → Guest replies**: where replies to the workspace's emails go (each contact's timeline, or the sender's own address, with the reason: switched off, needs Pro, no inbound domain on this server, not enabled for the workspace yet), and a switch for owners and admins (logged as `settings.guest_replies.enabled` / `disabled`)
+
+### Changed
+
+- A reply to an email sent with a timeline address is always filed and forwarded, even after guest replies are switched off or the plan changes, so no reply is lost
+
+### Fixed
+
+- The box shown in some guest replies (Apple Mail's placeholder for an inline attachment, and zero-width marks) is removed from the reply text
+- The unread count on the notification bell has enough contrast (dark text on the brand colour)
+
 ## [0.17.0] - 2026-10-17
 
 ### Added
