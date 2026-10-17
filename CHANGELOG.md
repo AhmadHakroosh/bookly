@@ -4,6 +4,8 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 ## [Unreleased]
 
+## [0.20.1] - 2026-10-17
+
 ### Changed
 
 - **Side panes open and close at once.** Bookings, tasks, files, conversations and timeline entries used to wait for the server to re-render the whole page before the pane moved (and React held a pane's content back for about 300 ms after it arrived). A click now opens the pane straight away with a skeleton and fetches its content in the background; closing it (Escape, the backdrop, the close button) needs no request. Previous / next (and J / K) in the booking pane work the same way. One shared `PaneHost` and a click handler for pane links (`components/pane.tsx`) replace the five pane wrappers. Measured on a local build: the pane shows in about 15 ms instead of about 350 ms, with its content after about 50 ms
@@ -564,7 +566,8 @@ First public release: the self-hostable scheduling platform with contacts, brief
 
 - The unused storage layer (`packages/storage`, `STORAGE_*` and `S3_*` variables, the MinIO service in Compose): nothing in Bookly uploads files; profile photos and logos are URLs
 
-[Unreleased]: https://github.com/AhmadHakroosh/bookly/compare/v0.20.0...HEAD
+[Unreleased]: https://github.com/AhmadHakroosh/bookly/compare/v0.20.1...HEAD
+[0.20.1]: https://github.com/AhmadHakroosh/bookly/compare/v0.20.0...v0.20.1
 [0.20.0]: https://github.com/AhmadHakroosh/bookly/compare/v0.19.0...v0.20.0
 [0.19.0]: https://github.com/AhmadHakroosh/bookly/compare/v0.18.3...v0.19.0
 [0.18.3]: https://github.com/AhmadHakroosh/bookly/compare/v0.18.2...v0.18.3
