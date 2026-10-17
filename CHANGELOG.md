@@ -4,6 +4,8 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 ## [Unreleased]
 
+## [0.18.1] - 2026-10-17
+
 ### Fixed
 
 - The same desktop notification kept appearing every minute or so, even after it was closed and read: the live notification stream resumed from a timestamp in milliseconds while the database keeps microseconds, so the newest notification counted as new on every reconnect and an open, hidden tab showed it again. The stream now compares at millisecond precision, and the bell never shows a notification on the desktop twice (nor one already read or older than a few minutes)
@@ -504,7 +506,8 @@ First public release: the self-hostable scheduling platform with contacts, brief
 
 - The unused storage layer (`packages/storage`, `STORAGE_*` and `S3_*` variables, the MinIO service in Compose): nothing in Bookly uploads files; profile photos and logos are URLs
 
-[Unreleased]: https://github.com/AhmadHakroosh/bookly/compare/v0.18.0...HEAD
+[Unreleased]: https://github.com/AhmadHakroosh/bookly/compare/v0.18.1...HEAD
+[0.18.1]: https://github.com/AhmadHakroosh/bookly/compare/v0.18.0...v0.18.1
 [0.18.0]: https://github.com/AhmadHakroosh/bookly/compare/v0.17.1...v0.18.0
 [0.17.1]: https://github.com/AhmadHakroosh/bookly/compare/v0.17.0...v0.17.1
 [0.17.0]: https://github.com/AhmadHakroosh/bookly/compare/v0.16.0...v0.17.0
