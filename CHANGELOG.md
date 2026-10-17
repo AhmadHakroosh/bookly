@@ -4,6 +4,8 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 ## [Unreleased]
 
+## [0.18.3] - 2026-10-17
+
 ### Security
 
 - **Private files could be opened by anyone holding a copied link.** `/files/<id>` answered a signed-in member with a redirect to a presigned storage URL valid for 5 minutes; "Open in new tab" showed that URL, and anyone given it could open the file without signing in until it expired. Private files are now streamed by the app itself, which checks the session, the workspace and the drive's visibility on every request (`private, no-store`, `no-referrer`, `noindex`), so no bucket URL reaches a browser. Public files (photos, logos, backgrounds) are unchanged; signed 7-day links in emails still open the one file they were sent for
@@ -523,7 +525,8 @@ First public release: the self-hostable scheduling platform with contacts, brief
 
 - The unused storage layer (`packages/storage`, `STORAGE_*` and `S3_*` variables, the MinIO service in Compose): nothing in Bookly uploads files; profile photos and logos are URLs
 
-[Unreleased]: https://github.com/AhmadHakroosh/bookly/compare/v0.18.2...HEAD
+[Unreleased]: https://github.com/AhmadHakroosh/bookly/compare/v0.18.3...HEAD
+[0.18.3]: https://github.com/AhmadHakroosh/bookly/compare/v0.18.2...v0.18.3
 [0.18.2]: https://github.com/AhmadHakroosh/bookly/compare/v0.18.1...v0.18.2
 [0.18.1]: https://github.com/AhmadHakroosh/bookly/compare/v0.18.0...v0.18.1
 [0.18.0]: https://github.com/AhmadHakroosh/bookly/compare/v0.17.1...v0.18.0
