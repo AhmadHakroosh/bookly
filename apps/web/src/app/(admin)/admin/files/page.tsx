@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
+import { PaneHost } from "@/components/pane";
 import { PLANS, planFor } from "@bookly/cloud";
 import {
   ClockIcon,
@@ -202,8 +203,8 @@ async function FilesPage({ searchParams }: PageProps<"/admin/files">) {
           </Suspense>
         </section>
       </div>
-      {one(sp.file) && (
-        <Suspense fallback={null}>
+      <PaneHost param="file" id={one(sp.file) ?? null} label="File">
+        {one(sp.file) && (
           <FilePane
             v={v}
             fileId={one(sp.file)!}
@@ -211,8 +212,8 @@ async function FilesPage({ searchParams }: PageProps<"/admin/files">) {
             tz={tz}
             canTeam={canTeam}
           />
-        </Suspense>
-      )}
+        )}
+      </PaneHost>
     </div>
   );
 }

@@ -1,4 +1,4 @@
-import { BookingBriefSkeleton, BookingsSkeleton } from "@/components/skeletons/pages";
+import { BookingsSkeleton } from "@/components/skeletons/pages";
 import { cookies } from "next/headers";
 import { BetaBadge } from "@/components/beta-badge";
 import { Button } from "@/components/ui/button";
@@ -27,6 +27,7 @@ import { BookingsCalendar, collapse } from "./calendar-view";
 import { ViewToggle } from "./view-controls";
 import Link from "next/link";
 import { Suspense } from "react";
+import { PaneHost } from "@/components/pane";
 import { CheckIcon, ClockIcon, UsersIcon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { SubmitButton } from "@/components/submit-button";
@@ -662,24 +663,24 @@ async function BookingsWorkspace({
         />
       )}
 
-      {bookingId && (
-        <BookingPane
-          title={
-            paneBooking
-              ? `${paneBooking.eventTitle ?? "Meeting"} with ${paneBooking.attendeeName}`
-              : "Booking"
-          }
-          closeHref={hrefFor({ booking: null })}
-          prevHref={at > 0 ? open(order[at - 1]!) : null}
-          nextHref={at >= 0 && at < order.length - 1 ? open(order[at + 1]!) : null}
-          fullHref={`/admin/bookings/${bookingId}`}
-          position={at >= 0 ? `${at + 1} of ${order.length}` : null}
-        >
-          <Suspense fallback={<BookingBriefSkeleton />}>
+      <PaneHost param="booking" id={bookingId ?? null} label="Booking">
+        {bookingId && (
+          <BookingPane
+            title={
+              paneBooking
+                ? `${paneBooking.eventTitle ?? "Meeting"} with ${paneBooking.attendeeName}`
+                : "Booking"
+            }
+            closeHref={hrefFor({ booking: null })}
+            prevHref={at > 0 ? open(order[at - 1]!) : null}
+            nextHref={at >= 0 && at < order.length - 1 ? open(order[at + 1]!) : null}
+            fullHref={`/admin/bookings/${bookingId}`}
+            position={at >= 0 ? `${at + 1} of ${order.length}` : null}
+          >
             <BookingDetail id={bookingId} inPane />
-          </Suspense>
-        </BookingPane>
-      )}
+          </BookingPane>
+        )}
+      </PaneHost>
     </div>
   );
 }

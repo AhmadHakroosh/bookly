@@ -1,36 +1,21 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { useActionState, useEffect, type ReactNode } from "react";
 import { toast } from "sonner";
 import { AttachFiles } from "@/components/drive/attach-files";
 import { SubmitButton } from "@/components/submit-button";
-import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { Textarea } from "@/components/ui/textarea";
 import { replyFromTimelineAction, type ReplyState } from "./timeline-actions";
 
-/** A timeline entry in a right-hand pane, addressed by `?entry=<id>`. */
+/** A timeline entry's content in the right-hand pane (`PaneHost`, `?entry=<id>`). */
 export function EntrySheet({
-  title,
-  closeHref,
   children,
 }: {
-  title: string;
-  closeHref: string;
+  title?: string;
+  closeHref?: string;
   children: ReactNode;
 }) {
-  const router = useRouter();
-  return (
-    <Sheet open onOpenChange={(open) => !open && router.push(closeHref, { scroll: false })}>
-      <SheetContent
-        side="right"
-        className="w-full gap-0 overflow-y-auto data-[side=right]:sm:max-w-xl"
-      >
-        <SheetTitle className="sr-only">{title}</SheetTitle>
-        <div className="p-5">{children}</div>
-      </SheetContent>
-    </Sheet>
-  );
+  return <div className="p-5">{children}</div>;
 }
 
 /** Reply at the bottom of a thread in the pane. */

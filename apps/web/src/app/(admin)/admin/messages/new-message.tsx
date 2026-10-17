@@ -5,6 +5,7 @@ import { useActionState, useEffect, useState, useTransition } from "react";
 import { toast } from "sonner";
 import { PenSquareIcon, XIcon } from "lucide-react";
 import { MentionTextarea, type MentionPerson } from "@/components/mention-textarea";
+import { openPane } from "@/components/pane";
 import { SubmitButton } from "@/components/submit-button";
 import { Button } from "@/components/ui/button";
 import {
@@ -112,7 +113,7 @@ function PickClient({ onDone }: { onDone: () => void }) {
       const r = await openGuestThreadAction(c.id);
       if (r.error || !r.threadId) return void toast.error(r.error ?? "Could not open it.");
       onDone();
-      router.push(`/admin/messages?thread=${r.threadId}`, { scroll: false });
+      openPane(`/admin/messages?thread=${r.threadId}`, router.refresh);
     });
   return (
     <div className="space-y-2">
@@ -160,7 +161,7 @@ function TeamThreadForm({ people, onDone }: { people: MentionPerson[]; onDone: (
     if (state.error) toast.error(state.error);
     else if (state.ok && state.threadId) {
       onDone();
-      router.push(`/admin/messages?thread=${state.threadId}`, { scroll: false });
+      openPane(`/admin/messages?thread=${state.threadId}`, router.refresh);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps -- runs once per result
   }, [state]);

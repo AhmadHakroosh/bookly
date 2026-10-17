@@ -86,6 +86,8 @@ test.describe("files", () => {
     await page.keyboard.press("Escape");
     await expect(viewer).toHaveCount(0);
     await page.keyboard.press("Escape");
+    // The pane closes at once (no request) and is gone after its slide-out.
+    await expect(pane).toHaveCount(0);
 
     await menu(page, renamed).click();
     await page.getByRole("menuitem", { name: "Move to trash" }).click();

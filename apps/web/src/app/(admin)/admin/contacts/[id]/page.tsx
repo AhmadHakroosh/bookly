@@ -23,6 +23,7 @@ import {
 import { BackLink } from "@/components/links";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
+import { PaneHost } from "@/components/pane";
 import { CONTACT_STAGES } from "@bookly/db/schema";
 import { Badge } from "@/components/ui/badge";
 import { SubmitButton } from "@/components/submit-button";
@@ -31,7 +32,6 @@ import { TaskList } from "@/components/task-list";
 import { listOpenTasks } from "@/server/capture";
 import { contactBookings, contactTimeline, getContact } from "@/server/contacts";
 import { PLANS, planFor } from "@bookly/cloud";
-import { BookingBriefSkeleton } from "@/components/skeletons/pages";
 import { hasFlag } from "@/server/flags";
 import { inboundOn } from "@/server/inbound";
 import { hasFeature } from "@/server/limits";
@@ -287,8 +287,8 @@ async function ContactPage({ params, searchParams }: PageProps<"/admin/contacts/
           />
         </aside>
       </div>
-      {v2 && entryId && (
-        <Suspense fallback={null}>
+      <PaneHost param="entry" id={v2 ? (entryId ?? null) : null} label="Timeline entry">
+        {v2 && entryId && (
           <EntryPane
             workspaceId={ws.id}
             contactId={c.id}
@@ -298,8 +298,8 @@ async function ContactPage({ params, searchParams }: PageProps<"/admin/contacts/
             filesOn={filesOn}
             closeHref={`/admin/contacts/${c.id}`}
           />
-        </Suspense>
-      )}
+        )}
+      </PaneHost>
     </div>
   );
 }
@@ -392,9 +392,7 @@ async function EntryPane({
         fullHref={`/admin/bookings/${entry.bookingId}`}
         position={null}
       >
-        <Suspense fallback={<BookingBriefSkeleton />}>
-          <BookingDetail id={entry.bookingId} inPane />
-        </Suspense>
+        <BookingDetail id={entry.bookingId} inPane />
       </BookingPane>
     );
   const items = email ? thread : [entry];

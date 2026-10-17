@@ -17,7 +17,6 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { MentionTextarea } from "@/components/mention-textarea";
-import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { Textarea } from "@/components/ui/textarea";
 import {
   addCommentAction,
@@ -36,28 +35,15 @@ function useResultToast(state: ActionResult, ok?: string) {
   }, [state, ok]);
 }
 
-/** A task in a right-hand pane over the board or list, addressed by `?task=<id>`. */
+/** A task's content in the right-hand pane (`PaneHost`, `?task=<id>`). */
 export function TaskPane({
-  title,
-  closeHref,
   children,
 }: {
-  title: string;
-  closeHref: string;
+  title?: string;
+  closeHref?: string;
   children: ReactNode;
 }) {
-  const router = useRouter();
-  return (
-    <Sheet open onOpenChange={(open) => !open && router.push(closeHref, { scroll: false })}>
-      <SheetContent
-        side="right"
-        className="w-full gap-0 overflow-y-auto data-[side=right]:sm:max-w-xl"
-      >
-        <SheetTitle className="sr-only">{title}</SheetTitle>
-        <div className="p-5">{children}</div>
-      </SheetContent>
-    </Sheet>
-  );
+  return <div className="p-5">{children}</div>;
 }
 
 /** Title, description, status, assignee and due date of one task. */

@@ -215,18 +215,6 @@ export async function setClosedAction(threadId: string, closed: boolean): Promis
   return { ok: true };
 }
 
-/** Called when a member opens a thread. */
-export async function markReadAction(threadId: string): Promise<MessageResult> {
-  // audit: read-only — a member's read mark is their own view state, not workspace data
-  const v = await viewer();
-  if (!v) return { error: "Messages are not enabled for this workspace." };
-  const d = await threadDetails(v, threadId);
-  if (!d) return { error: "That thread is gone." };
-  await markThreadRead(v, d.thread.id);
-  refresh();
-  return { ok: true };
-}
-
 /** Contact search for "New message". */
 export async function findContactsAction(q: string) {
   // audit: read-only — contact search for the new-message dialog

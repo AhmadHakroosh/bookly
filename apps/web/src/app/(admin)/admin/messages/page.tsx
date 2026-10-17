@@ -11,6 +11,7 @@ import {
   UsersIcon,
 } from "lucide-react";
 import { BetaBadge } from "@/components/beta-badge";
+import { PaneHost } from "@/components/pane";
 import { BookingsSkeleton } from "@/components/skeletons/pages";
 import { Input } from "@/components/ui/input";
 import { fmtDateTime } from "@/lib/time";
@@ -23,6 +24,7 @@ import {
   canGuest,
   canTeam,
   listThreads,
+  markThreadRead,
   threadDetails,
   threadItems,
   unreadThreads,
@@ -96,6 +98,11 @@ async function MessagesPage({ searchParams }: PageProps<"/admin/messages">) {
     return `/admin/messages${s ? `?${s}` : ""}`;
   };
   const threadId = one(sp.thread);
+  // The open thread counts as read (it is marked so while the pane renders).
+  const shownUnread = Math.max(
+    0,
+    unread - (list.rows.some((r) => r.id === threadId && r.unread) ? 1 : 0),
+  );
   const others = people
     .filter((p) => p.userId !== session.user.id)
     .map((p) => ({ id: p.userId, name: p.displayName }));
@@ -109,7 +116,7 @@ async function MessagesPage({ searchParams }: PageProps<"/admin/messages">) {
             Messages {beta && <BetaBadge />}
           </h1>
           <p className="text-sm text-muted-foreground">
-            {unread ? `${unread} unread` : "All caught up"}
+            {shownUnread ? `${shownUnread} unread` : "All caught up"}
           </p>
         </div>
         <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
@@ -158,8 +165,8 @@ async function MessagesPage({ searchParams }: PageProps<"/admin/messages">) {
               >
                 <Icon className="size-4" aria-hidden />
                 {label}
-                {b === "unread" && unread > 0 && (
-                  <span className="ml-auto text-xs tabular-nums">{unread}</span>
+                {b === "unread" && shownUnread > 0 && (
+                  <span className="ml-auto text-xs tabular-nums">{shownUnread}</span>
                 )}
               </Link>
             );
@@ -185,6 +192,8 @@ async function MessagesPage({ searchParams }: PageProps<"/admin/messages">) {
             <ul className="divide-y rounded-xl border" aria-label="Conversations">
               {list.rows.map((r) => {
                 const Icon = r.kind === "guest" ? UserRoundIcon : UsersIcon;
+                // The open thread is being read right now.
+                if (r.id === threadId) r.unread = false;
                 return (
                   <li key={r.id}>
                     <Link
@@ -231,8 +240,13 @@ async function MessagesPage({ searchParams }: PageProps<"/admin/messages">) {
           )}
         </section>
       </div>
-      {threadId && (
-        <Suspense fallback={null}>
+      <PaneHost
+        param="thread"
+        id={threadId ?? null}
+        label="Conversation"
+        className="data-[side=right]:sm:max-w-2xl"
+      >
+        {threadId && (
           <ThreadPane
             v={v}
             id={threadId}
@@ -242,8 +256,8 @@ async function MessagesPage({ searchParams }: PageProps<"/admin/messages">) {
             tz={tz}
             people={others}
           />
-        </Suspense>
-      )}
+        )}
+      </PaneHost>
     </div>
   );
 }
@@ -266,6 +280,8 @@ async function ThreadPane({
   people: { id: string; name: string }[];
 }) {
   const d = await threadDetails(v, id);
+  // Opening a thread reads it, in the same render (no second round trip).
+  if (d) await markThreadRead(v, d.thread.id);
   if (!d)
     return (
       <ThreadSheet title="Conversation not found" closeHref={closeHref} threadId={null}>

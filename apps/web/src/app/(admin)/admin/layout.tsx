@@ -4,6 +4,7 @@ import { Suspense } from "react";
 import { auth } from "@/lib/auth";
 import { AccountMenu } from "@/components/account-menu";
 import { AdminNav } from "@/components/admin-nav";
+import { PaneLinks } from "@/components/pane";
 import { NotificationBell } from "@/components/notification-bell";
 import { UpdateNotice } from "@/components/update-notice";
 import { WorkspaceSwitcher } from "@/components/workspace-switcher";
@@ -149,6 +150,7 @@ async function AdminShell({ children }: { children: React.ReactNode }) {
             supportHref={supportHref}
           />
         </aside>
+        <PaneLinks />
         <main className="min-w-0 flex-1 px-4 py-8 lg:px-8">
           <div className="admin-page mx-auto max-w-6xl">
             {workspace?.suspendedAt && (
