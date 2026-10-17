@@ -31,6 +31,8 @@ export type CallProps = {
   initialName: string;
   /** No token: the visitor types a name and knocks. */
   needsName: boolean;
+  /** A signed-in member with in-meeting notes on their plan: the notes panel and Mark moment. */
+  notes?: boolean;
 };
 
 /**
@@ -207,7 +209,12 @@ function CallUi(props: CallProps) {
               : "End-to-end encrypted call: audio and video go directly between the two of you once connected."}
         </p>
       )}
-      <Room hostName={props.hostName} onLeave={() => void call?.leave()} />
+      <Room
+        hostName={props.hostName}
+        room={props.room}
+        notesEnabled={!!props.notes}
+        onLeave={() => void call?.leave()}
+      />
       {props.capture && (
         <Captions lines={captions} hostName={props.hostName} attendeeName={props.attendeeName} />
       )}

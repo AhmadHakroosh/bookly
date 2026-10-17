@@ -36,6 +36,31 @@ Event types on Bookly video (except end-to-end encrypted ones, which are peer-to
 
 In cloud mode auto-capture is a Pro feature with a monthly budget of transcribed minutes (Pro 300 per workspace, 5 hours; Team 480 per member, 8 hours, pooled across the workspace), shown as hours in the UI; the budget shows under Billing. Past it, transcription continues at $3 an hour, billed by the minute, on the next invoice unless the host switches overage off, in which case it does not start once the budget is used up (`docs/cloud.md`). Transcripts are deleted after the retention period (90 days by default; `settings.capture.retentionDays`), summaries and tasks stay. Bookly video needs a paid Daily plan (transcription billed by Daily per participant minute); external calls need a Recall.ai account (billed per bot hour).
 
+## Notes in the call
+
+On Bookly video, a member in the call (signed in, so they join as the room's owner) gets a
+**Notes** panel, behind the `meeting_notes` flag and on Pro and up (`meetingNotes`; Bookly video
+starts on Pro). Notes are private to whoever wrote them and save themselves as you type. Each
+note keeps the moment it was written, so the recap lines it up with what was said then. **Mark
+moment** (in the panel and the call's controls, or ⌘/Ctrl+Shift+M, even while typing) drops a
+flagged timestamp you can label later.
+
+After the call:
+
+- **The recap reads the notes with the transcript.** The assistant is told which lines are
+  yours: it quotes them as your notes in the summary, treats a commitment ("send the proposal by
+  Friday") or a marked moment as a strong signal for an action item, and lets your notes win
+  where they disagree with the transcript. Each action item says whether it came from **your
+  notes**, the **transcript** or **both**, and so does the task it becomes. A call that was not
+  transcribed still gets a recap from the notes alone when the assistant is configured.
+- **The notes stay on the booking** (**Your notes from the call**), where you can still edit
+  them; **Regenerate** on the recap uses the edits.
+- **They land on the contact's timeline** as a note, about ten minutes after the meeting ends;
+  later edits update that same entry.
+
+Saving the first note is in the activity log (`meeting.notes_started`); the autosaves after it
+are not. Notes are part of the workspace export with the booking.
+
 ## After the meeting: capture
 
 On a booking's page (`Admin → Bookings → Notes`), paste your notes or a transcript and press **Capture**. With the assistant configured it extracts a summary, decisions, action items with due dates (yours and theirs), a next step, a stage suggestion and a follow-up email draft; without it, your notes become the summary and every line starting with `- ` becomes a task. Tasks live on the booking and the contact, can be completed or removed, and an overdue task is nudged once by email (and text, if enabled). With the task board on, they also land on Admin → Tasks ([tasks.md](tasks.md)). A clear outcome moves the contact's stage (won / lost / active). The follow-up draft can be edited and sent from Bookly with your address as reply-to; it lands on the timeline like every other email.

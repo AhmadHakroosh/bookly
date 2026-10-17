@@ -16,6 +16,8 @@ import { logContactEvent, setStage, trackBooking, noteToCrm } from "./contacts";
 import { notify, wantsEmail } from "./notifications";
 import { parseRecap, RECAP_SYSTEM, type Recap } from "./recap-text";
 import { getProfileByUser } from "./scheduling";
+import { bookingNotes } from "./meeting-notes";
+import { notesForRecap } from "./notes-text";
 import { languageNames, renderTranscript } from "./transcript-text";
 import { detectedLanguages, getTranscript } from "./transcripts";
 import { emitEvent } from "./webhooks";
@@ -31,8 +33,9 @@ export async function getRecap(bookingId: string): Promise<MeetingRecap | null> 
 export const recapOf = (r: MeetingRecap | null) => (r ? (r.recap as Recap) : null);
 
 /**
- * Builds the recap from the transcript with the meeting's context (answers, contact, stage).
- * Requires the assistant; without it the host uses the transcript with manual capture.
+ * Builds the recap from the transcript and the host's in-meeting notes (either may be missing,
+ * not both) with the meeting's context (answers, contact, stage). Requires the assistant;
+ * without it the host uses the transcript with manual capture.
  */
 export async function generateRecap(
   ws: Workspace,
@@ -40,13 +43,14 @@ export async function generateRecap(
   eventType: EventType | null,
 ): Promise<MeetingRecap | null> {
   if (!assistantConfigured()) return null;
-  const transcript = await getTranscript(booking.id);
-  if (!transcript || !transcript.segments.length) return null;
+  const [transcript, notes] = await Promise.all([getTranscript(booking.id), bookingNotes(booking)]);
+  const said = transcript?.segments.length ? transcript : null;
+  if (!said && !notes.length) return null;
   const contact = booking.contactId
     ? await db().query.contacts.findFirst({ where: eq(schema.contacts.id, booking.contactId) })
     : null;
   const host = await getProfileByUser(ws.id, booking.hostUserId);
-  const languages = detectedLanguages(transcript.segments);
+  const languages = said ? detectedLanguages(said.segments) : [];
   const asked = (eventType?.questions ?? [])
     .map((q) => ({ label: q.label, answer: (booking.answers[q.id] ?? "").trim() }))
     .filter((q) => q.answer);
@@ -65,7 +69,12 @@ export async function generateRecap(
       : languages.length === 1
         ? `The call was in ${languageNames(languages)}; write the recap, follow-up and attendee recap in that language.`
         : "",
-    `Transcript:\n${renderTranscript(transcript.segments, { host: host?.displayName ?? "Host", attendee: booking.attendeeName }).slice(0, 60000)}`,
+    said
+      ? `Transcript:\n${renderTranscript(said.segments, { host: host?.displayName ?? "Host", attendee: booking.attendeeName }).slice(0, 60000)}`
+      : "There is no transcript of this call: work from the consultant's notes only.",
+    notes.length
+      ? `The consultant's own notes from the call (their words, timestamped on the transcript's clock):\n${notesForRecap(notes, said?.startedAt ?? null).slice(0, 20000)}`
+      : "",
   ]
     .filter(Boolean)
     .join("\n\n");
@@ -154,6 +163,17 @@ export async function notifyRecapReady(
 
 /* ---------------- One-click actions ---------------- */
 
+const ORIGIN = {
+  notes: "From your notes",
+  transcript: "From the transcript",
+  both: "From your notes and the transcript",
+} as const;
+
+/** What a task made from an action item says about where it came from. */
+export function taskOrigin(a: Recap["actions"][number]): string {
+  return `${ORIGIN[a.source ?? "transcript"]} of the call.${a.quote ? `\n\n“${a.quote}”` : ""}`;
+}
+
 /** Creates tasks for the chosen action items (indexes); idempotent per item. */
 export async function acceptRecapActions(
   ws: Workspace,
@@ -177,6 +197,7 @@ export async function acceptRecapActions(
       bookingId: booking.id,
       dueAt: dueDate(a.dueInDays),
       assignedBy: actorId ?? null,
+      description: taskOrigin(a),
     });
     done[String(i)] = t.id;
     created.push(t);

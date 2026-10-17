@@ -652,6 +652,39 @@ export const meetingRecaps = pgTable(
   ],
 );
 
+/** One line of a member's notes in a call: written at `at`; a marked moment may have no text. */
+export type MeetingNoteEntry = { id: string; at: string; text: string; moment?: boolean };
+
+/**
+ * In-meeting notes (0.20.0): one row per member per booking, private to its author. The
+ * entries are timestamped so the recap can line them up with the transcript; once the meeting
+ * is over they are posted to the contact's timeline as a note (`contactEventId`), and edits
+ * after that update the same entry.
+ */
+export const meetingNotes = pgTable(
+  "meeting_notes",
+  {
+    id: id(),
+    workspaceId: text("workspace_id")
+      .notNull()
+      .references(() => workspaces.id, { onDelete: "cascade" }),
+    bookingId: text("booking_id")
+      .notNull()
+      .references(() => bookings.id, { onDelete: "cascade" }),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    entries: jsonb("entries").$type<MeetingNoteEntry[]>().notNull().default([]),
+    contactEventId: text("contact_event_id"),
+    postedAt: timestamp("posted_at", { withTimezone: true }),
+    ...timestamps,
+  },
+  (t) => [
+    uniqueIndex("meeting_notes_booking_user_idx").on(t.bookingId, t.userId),
+    index("meeting_notes_unposted_idx").on(t.postedAt),
+  ],
+);
+
 /* ---------------- Waitlist ---------------- */
 
 /**
@@ -698,6 +731,7 @@ export type Contact = typeof contacts.$inferSelect;
 export type Task = typeof tasks.$inferSelect;
 export type MeetingTranscript = typeof meetingTranscripts.$inferSelect;
 export type MeetingRecap = typeof meetingRecaps.$inferSelect;
+export type MeetingNotes = typeof meetingNotes.$inferSelect;
 export type ContactEvent = typeof contactEvents.$inferSelect;
 export type TaskStatus = typeof taskStatuses.$inferSelect;
 export type TaskComment = typeof taskComments.$inferSelect;

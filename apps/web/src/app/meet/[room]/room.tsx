@@ -22,15 +22,40 @@ import { Button } from "@/components/ui/button";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { gridColumns, messageId, parseCallMessage, tileWidth, type CallMessage } from "./messages";
 import { initials } from "./messages";
+import { NotesPanel, useMeetingNotes } from "./notes";
 import { ChatPanel, PeoplePanel, ReactionsOverlay, type Reaction } from "./panels";
 import { Tray, type Panel } from "./tray";
 
 /** The call itself: stage (tiles or screen share), side panel, tray, remote audio. */
-export function Room({ hostName, onLeave }: { hostName: string; onLeave: () => void }) {
+export function Room({
+  hostName,
+  room,
+  notesEnabled,
+  onLeave,
+}: {
+  hostName: string;
+  room: string;
+  /** In-meeting notes for this member (signed in, on a plan with notes). */
+  notesEnabled: boolean;
+  onLeave: () => void;
+}) {
   const call = useDaily();
   const localId = useLocalSessionId();
   const localName = useParticipantProperty(localId, "user_name");
   const isOwner = useParticipantProperty(localId, "owner") === true;
+  const canNote = notesEnabled && isOwner;
+  const notes = useMeetingNotes(room, canNote);
+  const [marked, setMarked] = useState(false);
+  const markMoment = useCallback(() => {
+    notes.mark();
+    setMarked(true);
+    setTimeout(() => setMarked(false), 1800);
+  }, [notes]);
+  // Read by the keyboard handler, which is set up once.
+  const markRef = useRef(markMoment);
+  useEffect(() => {
+    markRef.current = markMoment;
+  }, [markMoment]);
   const [panel, setPanel] = useState<Panel>(null);
   // Read by the app-message handler (an event callback) to count unread chat lines.
   const panelRef = useRef<Panel>(null);
@@ -79,10 +104,16 @@ export function Room({ hostName, onLeave }: { hostName: string; onLeave: () => v
   const { waitingParticipants, grantAccess, denyAccess } = useWaitingParticipants();
   const waiting = isOwner ? waitingParticipants : [];
 
-  // Keyboard: ⌘/Ctrl+D mic, ⌘/Ctrl+E camera (the same as the common conferencing apps).
+  // Keyboard: ⌘/Ctrl+D mic, ⌘/Ctrl+E camera (the same as the common conferencing apps);
+  // ⌘/Ctrl+Shift+M marks a moment in the notes, even while typing one.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (!(e.metaKey || e.ctrlKey) || !call) return;
+      if (canNote && e.shiftKey && e.key.toLowerCase() === "m") {
+        e.preventDefault();
+        markRef.current();
+        return;
+      }
       const target = e.target as HTMLElement | null;
       if (target && /^(INPUT|TEXTAREA)$/.test(target.tagName)) return;
       if (e.key.toLowerCase() === "d") {
@@ -95,7 +126,7 @@ export function Room({ hostName, onLeave }: { hostName: string; onLeave: () => v
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [call]);
+  }, [call, canNote]);
 
   const { ejectDate } = useRoomExp();
   const [minutesLeft, setMinutesLeft] = useState<number | null>(null);
@@ -142,10 +173,20 @@ export function Room({ hostName, onLeave }: { hostName: string; onLeave: () => v
             <Stage localId={localId} hostName={hostName} />
             <ReactionsOverlay items={reactions} />
           </div>
+          {marked && (
+            <p
+              className="absolute top-3 left-1/2 z-20 -translate-x-1/2 rounded-full bg-amber-500/90 px-3 py-1 text-xs font-medium text-neutral-950"
+              role="status"
+            >
+              Moment marked
+            </p>
+          )}
           {panel && (
             <aside className="absolute inset-y-0 right-0 z-10 flex w-full max-w-sm flex-col border-l bg-background md:static md:w-80">
               {panel === "chat" ? (
                 <ChatPanel messages={messages} onSend={sendChat} onClose={() => setPanel(null)} />
+              ) : panel === "notes" && canNote ? (
+                <NotesPanel notes={notes} onClose={() => setPanel(null)} />
               ) : (
                 <PeoplePanel
                   localId={localId}
@@ -164,6 +205,7 @@ export function Room({ hostName, onLeave }: { hostName: string; onLeave: () => v
           onPanel={openPanel}
           unread={unread}
           waitingCount={waiting.length}
+          notes={canNote ? { onMark: markMoment, count: notes.entries.length } : null}
           onReaction={sendReaction}
           onLeave={onLeave}
           stageRef={stageRef}

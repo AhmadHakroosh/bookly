@@ -811,3 +811,47 @@ export function MessagesMock() {
     </BrowserFrame>
   );
 }
+
+/** In-meeting notes: the host's private notes beside the call, and where they end up. */
+export function NotesMock() {
+  const notes: [string, string, boolean][] = [
+    ["10:04", "Budget approved for Q1", false],
+    ["10:12", "Pricing question", true],
+    ["10:19", "Send the proposal by Friday", false],
+  ];
+  return (
+    <BrowserFrame url="meet.bookly-app.io/b-7k2m">
+      <div className="grid grid-cols-[1fr_170px] gap-3 p-4 text-xs">
+        <div className="grid grid-cols-2 gap-2">
+          {["Lina Farah", "You"].map((n) => (
+            <div
+              key={n}
+              className="flex aspect-video items-end rounded-lg bg-muted p-1.5 text-muted-foreground"
+            >
+              {n}
+            </div>
+          ))}
+          <div className="col-span-2 rounded-lg border p-2">
+            <p className="text-muted-foreground">Recap · action item</p>
+            <p>
+              Send the proposal by Friday{" "}
+              <span className="rounded border px-1 text-muted-foreground">Your notes</span>
+            </p>
+          </div>
+        </div>
+        <div className="space-y-1.5 rounded-lg border p-2">
+          <p className="font-medium">Your notes</p>
+          {notes.map(([t, text, moment]) => (
+            <p key={t} className="flex gap-1.5">
+              <span className="font-mono text-muted-foreground">{t}</span>
+              <span>
+                {moment ? "⚑ " : ""}
+                {text}
+              </span>
+            </p>
+          ))}
+        </div>
+      </div>
+    </BrowserFrame>
+  );
+}

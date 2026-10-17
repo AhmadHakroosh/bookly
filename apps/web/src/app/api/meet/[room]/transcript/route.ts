@@ -3,8 +3,13 @@ import { z } from "zod";
 import { eq, schema } from "@bookly/db";
 import { db } from "@/lib/db";
 import { rateLimit } from "@/server/ratelimit";
-import { appendLiveSegments, bookingForRoom, captureEnabled } from "@/server/transcripts";
-import { getCurrentWorkspace } from "@/server/workspace";
+import {
+  appendLiveSegments,
+  bookingForRoom,
+  bookingForRoomAnywhere,
+  captureEnabled,
+} from "@/server/transcripts";
+import { getCurrentWorkspace, getWorkspaceById } from "@/server/workspace";
 
 const body = z.object({
   segments: z
@@ -19,15 +24,21 @@ const body = z.object({
     .max(200),
 });
 
-/** The meeting page posts live, speaker-labelled transcription lines here while the call runs. */
+/**
+ * The meeting page posts live, speaker-labelled transcription lines here while the call runs.
+ * On a workspace host the room is looked up in that workspace; on the dedicated meeting host
+ * (MEET_URL, no workspace) the room name identifies its booking on its own.
+ */
 export async function POST(req: Request, ctx: RouteContext<"/api/meet/[room]/transcript">) {
-  const ws = await getCurrentWorkspace();
   const { room } = await ctx.params;
-  if (!ws || !/^b-[a-z0-9]+$/.test(room))
+  if (!/^b-[a-z0-9]+$/.test(room))
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   if (!(await rateLimit(`live:${room}`, 120, 60_000)).ok)
     return NextResponse.json({ error: "Too many" }, { status: 429 });
-  const b = await bookingForRoom(ws.id, room);
+  const host = await getCurrentWorkspace();
+  const b = host ? await bookingForRoom(host.id, room) : await bookingForRoomAnywhere(room);
+  const ws = host ?? (b ? await getWorkspaceById(b.workspaceId) : null);
+  if (!ws) return NextResponse.json({ error: "Not found" }, { status: 404 });
   if (!b || b.transcriptStatus === "deleted")
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   const et = b.eventTypeId

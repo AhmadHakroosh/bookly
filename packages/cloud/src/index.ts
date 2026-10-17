@@ -54,6 +54,8 @@ export type Limits = {
   guestMessages: boolean;
   /** Messages: threads between members (free-standing or about a contact) and internal notes. */
   teamMessages: boolean;
+  /** Private notes in Bookly video calls with marked moments, fed to the recap and action items. */
+  meetingNotes: boolean;
 };
 
 export const GIB = 1024 ** 3;
@@ -118,6 +120,8 @@ export const PLANS: Record<PlanId, Plan> = {
       guestMessages: false,
 
       teamMessages: false,
+
+      meetingNotes: false,
     },
     highlights: [
       "Contacts, briefings and the daily Home page",
@@ -166,6 +170,8 @@ export const PLANS: Record<PlanId, Plan> = {
       guestMessages: true,
 
       teamMessages: false,
+
+      meetingNotes: true,
     },
     highlights: [
       "Auto-capture: transcripts, AI recaps, tasks (5 hours a month, then $3 an hour)",
@@ -220,6 +226,8 @@ export const PLANS: Record<PlanId, Plan> = {
       guestMessages: true,
 
       teamMessages: true,
+
+      meetingNotes: true,
       storagePerSeat: true,
     },
     highlights: [
@@ -267,6 +275,7 @@ export const UNLIMITED: Limits = {
   sharedFolders: true,
   guestMessages: true,
   teamMessages: true,
+  meetingNotes: true,
 };
 
 /** The workspace's storage budget in bytes: flat, or per billed seat and pooled. */
@@ -367,7 +376,8 @@ export type FeatureLimit =
   | "attachments"
   | "sharedFolders"
   | "guestMessages"
-  | "teamMessages";
+  | "teamMessages"
+  | "meetingNotes";
 
 /** True when adding one more of `what` stays within the limit. */
 export function withinLimit(limits: Limits, what: CountableLimit, current: number): boolean {
@@ -398,6 +408,7 @@ export const FEATURE_LABELS: Record<FeatureLimit, string> = {
   sharedFolders: "Folders shared with the team",
   guestMessages: "Messages with your clients",
   teamMessages: "Team threads and internal notes",
+  meetingNotes: "Notes during Bookly video calls",
 };
 
 /** First plan (cheapest) that allows `what`. */

@@ -26,6 +26,12 @@ function Evidence({ t, quote }: { t: number | null; quote: string | null }) {
   );
 }
 
+const SOURCE = {
+  notes: "Your notes",
+  transcript: "Transcript",
+  both: "Notes + transcript",
+} as const;
+
 /** The recap review: everything the assistant found, each with a one-click action. */
 export function RecapPanel({
   bookingId,
@@ -43,6 +49,8 @@ export function RecapPanel({
   const r = row.recap as Recap;
   const accepted = row.accepted.tasks ?? {};
   const pending = r.actions.map((_, i) => i).filter((i) => !accepted[String(i)]);
+  // Recaps made with in-meeting notes say where each action item came from.
+  const withNotes = r.actions.some((a) => a.source === "notes" || a.source === "both");
   const temp = r.temperature;
   const stageMove = r.suggestedStage && r.suggestedStage !== currentStage;
   return (
@@ -154,6 +162,11 @@ export function RecapPanel({
                         {" "}
                         · in {a.dueInDays} day{a.dueInDays === 1 ? "" : "s"}
                       </span>
+                    )}
+                    {withNotes && (
+                      <Badge variant="outline" className="ml-2 align-middle text-[11px]">
+                        {SOURCE[a.source ?? "transcript"]}
+                      </Badge>
                     )}
                     <Evidence t={a.t} quote={a.quote} />
                   </span>

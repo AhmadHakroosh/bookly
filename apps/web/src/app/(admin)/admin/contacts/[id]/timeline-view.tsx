@@ -229,6 +229,11 @@ function Entry({
           </p>
         )}
         {isEmail(item.type) && <Email item={item} />}
+        {item.type === "note" && item.body && (
+          <p className="mt-1 rounded-lg border bg-muted/20 px-3 py-2 text-sm break-words whitespace-pre-line">
+            {item.body}
+          </p>
+        )}
         <Attachments files={item.attachments} />
         {item.replies.length > 0 && (
           <ol className="mt-2 space-y-2 border-l-2 pl-3" aria-label="Replies">
