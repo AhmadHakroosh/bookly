@@ -4,6 +4,11 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 ## [Unreleased]
 
+### Security
+
+- **Private files could be opened by anyone holding a copied link.** `/files/<id>` answered a signed-in member with a redirect to a presigned storage URL valid for 5 minutes; "Open in new tab" showed that URL, and anyone given it could open the file without signing in until it expired. Private files are now streamed by the app itself, which checks the session, the workspace and the drive's visibility on every request (`private, no-store`, `no-referrer`, `noindex`), so no bucket URL reaches a browser. Public files (photos, logos, backgrounds) are unchanged; signed 7-day links in emails still open the one file they were sent for
+- The storage endpoint is no longer allowed in `frame-src`; `/files/<id>` responses carry their own minimal headers so the browser's PDF viewer works
+
 ## [0.18.2] - 2026-10-17
 
 ### Added

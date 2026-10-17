@@ -1,5 +1,5 @@
 import { PREVIEWABLE, canSeeFile, readFileToken } from "@/server/drive";
-import { downloadUrl, getFileAnywhere } from "@/server/files";
+import { getFileAnywhere } from "@/server/files";
 import { getStorage } from "@bookly/storage";
 import { getSession, getStaffRole } from "@/server/session";
 import { getCurrentWorkspace } from "@/server/workspace";
@@ -8,8 +8,9 @@ import { getCurrentWorkspace } from "@/server/workspace";
  * `/files/<id>`: the one address every stored file has. Public files (avatars, logos,
  * backgrounds) are streamed with a year-long immutable cache, so the edge serves repeats and
  * the id never changes meaning (a new upload is a new id). Private files need a member of the
- * owning workspace and come back as a redirect to a short-lived bucket URL, so the bytes never
- * pass through a function; on the local driver the app streams them itself.
+ * owning workspace who may see the file (or a signed link sent by email), checked on every
+ * request, and are streamed by the app itself: never a redirect to a presigned bucket URL,
+ * which anyone holding it could open, signed in or not, until it expired.
  */
 export async function GET(req: Request, ctx: RouteContext<"/files/[id]">) {
   const { id } = await ctx.params;
@@ -49,8 +50,6 @@ export async function GET(req: Request, ctx: RouteContext<"/files/[id]">) {
     if (file.space && !(await canSeeFile({ userId: session.user.id, ws }, file.id)))
       return new Response("Not found", { status: 404 });
   }
-  const direct = await downloadUrl(file, inline ? "inline" : "attachment");
-  if (direct) return Response.redirect(direct, 302);
   const body = await getStorage().stream(file.key);
   return new Response(body, {
     headers: {
@@ -59,6 +58,8 @@ export async function GET(req: Request, ctx: RouteContext<"/files/[id]">) {
       "content-disposition": disposition,
       "cache-control": "private, no-store",
       "x-content-type-options": "nosniff",
+      "x-robots-tag": "noindex, nofollow",
+      "referrer-policy": "no-referrer",
     },
   });
 }

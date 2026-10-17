@@ -83,8 +83,9 @@ logos up to 1024 px, metadata stripped), recorded in the `files` table and serve
   mounts the `uploads-data` volume at `/app/data/uploads`). Back it up with the database.
 - `s3`: any S3-compatible bucket: Cloudflare R2, AWS S3, MinIO, Backblaze. Set `S3_BUCKET`,
   `S3_ENDPOINT`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY` (`S3_REGION` is `auto` for R2,
-  `S3_FORCE_PATH_STYLE=true` for R2 and MinIO). Large private files, when later features add
-  them, go straight to the bucket with presigned URLs and come back the same way.
+  `S3_FORCE_PATH_STYLE=true` for R2 and MinIO). Uploads go straight to the bucket with a
+  presigned PUT URL; downloads of private files are streamed by the app from `/files/<id>`,
+  which checks the viewer on every request, so no bucket URL ever reaches a browser.
 
 Self-hosted installs have no storage quota. Every upload and deletion is in the activity log.
 
@@ -172,4 +173,4 @@ hand.
 
 - **Errors**: set `SENTRY_DSN` (server) and `NEXT_PUBLIC_SENTRY_DSN` (browser) and Bookly reports exceptions from pages, API routes, the cron tick and the browser to Sentry. Add `SENTRY_ORG`, `SENTRY_PROJECT` and `SENTRY_AUTH_TOKEN` at build time to upload source maps. Leave them unset and nothing is sent anywhere.
 - **Metrics**: set `METRICS_TOKEN` and scrape `GET /api/metrics` (see `docs/cloud.md`).
-- **Security headers**: every response carries a Content-Security-Policy limited to Bookly's own origin plus Daily, Stripe and Sentry, `X-Content-Type-Options`, `Referrer-Policy`, a `Permissions-Policy` that grants camera and microphone only to the call page, and HSTS in production. Booking pages may be embedded on HTTPS sites; the admin and console send `X-Frame-Options: DENY`. The origin of `S3_ENDPOINT` (read at build time) is added to `connect-src` and `frame-src`, so browsers can upload to the bucket with presigned URLs and the file viewer can show PDFs from it; the bucket's CORS must allow `PUT` and `GET` from your admin host. If you serve avatars or uploads from another host, add it to `img-src` in `apps/web/next.config.ts`.
+- **Security headers**: every response carries a Content-Security-Policy limited to Bookly's own origin plus Daily, Stripe and Sentry, `X-Content-Type-Options`, `Referrer-Policy`, a `Permissions-Policy` that grants camera and microphone only to the call page, and HSTS in production. Booking pages may be embedded on HTTPS sites; the admin and console send `X-Frame-Options: DENY`. The origin of `S3_ENDPOINT` (read at build time) is added to `connect-src` so browsers can upload to the bucket with presigned URLs; the bucket's CORS must allow `PUT` from your admin host. `/files/<id>` responses carry their own headers (`frame-ancestors 'self'`, `nosniff`, `no-referrer`) so the browser's PDF viewer works. If you serve avatars or uploads from another host, add it to `img-src` in `apps/web/next.config.ts`.

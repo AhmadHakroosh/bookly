@@ -199,7 +199,9 @@ database and Stripe test keys; it shares the QStash, Daily, Anthropic and OAuth 
 Uploads go to Cloudflare R2 (`STORAGE_DRIVER=s3`, the `S3_*` variables): the `bookly-prod`
 bucket in production, `bookly-staging` on staging and previews. There is no custom domain on
 the buckets (the zone stays on Vercel for the wildcard subdomains); public files are proxied
-at `/files/<id>` and cached at the edge, private ones are presigned.
+at `/files/<id>` and cached at the edge; private ones are streamed by the app at the same
+address after checking the session and the drive's visibility on every request (never a
+presigned download URL, which anyone holding it could open).
 
 ## Deploying on Vercel (bookly-app.io)
 
