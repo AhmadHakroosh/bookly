@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useActionState, useEffect, useRef, useState, useTransition, type ReactNode } from "react";
+import { useActionState, useEffect, useState, useTransition, type ReactNode } from "react";
 import { toast } from "sonner";
 import { PlusIcon, Trash2Icon } from "lucide-react";
 import { DatePicker } from "@/components/date-picker";
@@ -16,6 +16,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { MentionTextarea } from "@/components/mention-textarea";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -169,92 +170,20 @@ export function DeleteTaskButton({ taskId, closeHref }: { taskId: string; closeH
 export function CommentForm({ taskId, people }: { taskId: string; people: Option[] }) {
   const [state, action] = useActionState(addCommentAction.bind(null, taskId), {} as ActionResult);
   const [text, setText] = useState("");
-  const [query, setQuery] = useState<string | null>(null);
-  const [highlight, setHighlight] = useState(0);
-  const ref = useRef<HTMLTextAreaElement>(null);
   useResultToast(state);
-
-  const matches =
-    query === null
-      ? []
-      : people.filter((p) => p.name.toLowerCase().includes(query.toLowerCase())).slice(0, 6);
-
-  const onChange = (value: string, caret: number) => {
-    setText(value);
-    const before = value.slice(0, caret);
-    const m = /(^|\s)@([^\s@]{0,30})$/.exec(before);
-    setQuery(m && people.length ? m[2]! : null);
-    setHighlight(0);
-  };
-
-  const insert = (p: Option) => {
-    const el = ref.current;
-    const caret = el?.selectionStart ?? text.length;
-    const before = text.slice(0, caret).replace(/@([^\s@]{0,30})$/, `@${p.name} `);
-    const next = before + text.slice(caret);
-    setText(next);
-    setQuery(null);
-    requestAnimationFrame(() => {
-      el?.focus();
-      el?.setSelectionRange(before.length, before.length);
-    });
-  };
-
   return (
     <form action={action} className="space-y-2">
-      <div className="relative">
-        <Textarea
-          ref={ref}
-          name="body"
-          value={text}
-          rows={3}
-          maxLength={4000}
-          aria-label="Comment"
-          placeholder={
-            people.length ? "Add a comment. Type @ to mention a teammate." : "Add a comment"
-          }
-          onChange={(e) => onChange(e.target.value, e.target.selectionStart)}
-          onKeyDown={(e) => {
-            if (!matches.length) return;
-            if (e.key === "Escape") return setQuery(null);
-            const step = e.key === "ArrowDown" ? 1 : e.key === "ArrowUp" ? -1 : 0;
-            if (step) {
-              e.preventDefault();
-              setHighlight((h) => (h + step + matches.length) % matches.length);
-            } else if (e.key === "Enter" || e.key === "Tab") {
-              e.preventDefault();
-              insert(matches[highlight]!);
-            }
-          }}
-          aria-autocomplete="list"
-          aria-controls={matches.length ? `mentions-${taskId}` : undefined}
-          aria-activedescendant={matches.length ? `mention-${taskId}-${highlight}` : undefined}
-        />
-        {matches.length > 0 && (
-          <ul
-            id={`mentions-${taskId}`}
-            role="listbox"
-            aria-label="Teammates"
-            className="absolute top-full left-0 z-10 mt-1 w-56 overflow-hidden rounded-lg border bg-popover text-sm shadow-md"
-          >
-            {matches.map((p, i) => (
-              <li
-                key={p.id}
-                id={`mention-${taskId}-${i}`}
-                role="option"
-                aria-selected={i === highlight}
-                onMouseDown={(e) => {
-                  e.preventDefault();
-                  insert(p);
-                }}
-                className={`cursor-pointer px-3 py-1.5 ${i === highlight ? "bg-muted" : ""}`}
-              >
-                {p.name}
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
+      <MentionTextarea
+        id={taskId}
+        name="body"
+        value={text}
+        onValueChange={setText}
+        people={people}
+        ariaLabel="Comment"
+        placeholder={
+          people.length ? "Add a comment. Type @ to mention a teammate." : "Add a comment"
+        }
+      />
       <SubmitButton variant="outline" pendingText="Posting…" disabled={!text.trim()}>
         Comment
       </SubmitButton>

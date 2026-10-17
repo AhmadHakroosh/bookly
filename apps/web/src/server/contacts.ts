@@ -130,6 +130,16 @@ export async function logContactEvent(
       .where(eq(schema.contacts.id, contactId));
   } catch (e) {
     console.error("[contacts] event failed", e);
+    return;
+  }
+  // Emails and booking-page notes are the guest's conversation in Messages too.
+  const data = opts.data ?? {};
+  try {
+    const { contactActivity, isConversationEvent } = await import("./messages");
+    if (isConversationEvent(type, data))
+      await contactActivity(workspaceId, contactId, { type, summary, data });
+  } catch (e) {
+    console.error("[messages] conversation update failed", e);
   }
 }
 

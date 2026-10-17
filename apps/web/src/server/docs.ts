@@ -19,6 +19,7 @@ const ORDER = [
   "contacts",
   "tasks",
   "files",
+  "messages",
   "integrations",
   "zoom",
   "payments",

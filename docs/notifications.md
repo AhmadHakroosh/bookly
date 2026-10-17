@@ -21,8 +21,12 @@ What creates one, and the defaults:
 | Starting soon (1 h)   | off       | on      | on (the reminder, with brief) |
 | Recap ready           | on        | on      | on                            |
 | Payment received      | on        | on      | off                           |
+| Guest replied         | on        | on      | on (forwards the reply)       |
 | Task assigned to you  | on        | on      | off                           |
+| Mentioned in a task   | on        | on      | off                           |
 | Task overdue          | on        | off     | off                           |
+| Team message          | on        | on      | off                           |
+| Mentioned in Messages | on        | on      | on                            |
 
 Each member changes these under **Admin → Personal → Notifications → What you hear about**;
 the email column also governs the host copies Bookly always sent (booking, cancellation,
@@ -162,3 +166,6 @@ Placeholders: `{name}` `{host}` `{event}` `{when}` `{where}` `{duration}` `{book
 the defaults, and each template has a Preview link that renders it with sample data. The
 follow-up after a meeting is set per event type; proposals and payment requests have their own
 templates on the same page.
+
+The live stream also carries Messages' unread count and newest activity (`event: messages`),
+so the sidebar count and an open Messages page update without a reload (`docs/messages.md`).

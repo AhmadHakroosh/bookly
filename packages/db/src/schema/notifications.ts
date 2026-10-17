@@ -9,7 +9,7 @@ const id = () =>
     .$defaultFn(() => crypto.randomUUID());
 
 /**
- * What a notification is about. The list grows with the product (messages arrive with item 7);
+ * What a notification is about. The list grows with the product (messages arrived with item 8);
  * labels, defaults and the text/Slack event each kind maps to live in the app's
  * `server/notifications.ts`.
  */
@@ -24,7 +24,9 @@ export type NotificationKind =
   | "email.replied"
   | "task.assigned"
   | "task.mentioned"
-  | "task.overdue";
+  | "task.overdue"
+  | "message.posted"
+  | "message.mentioned";
 
 /**
  * One notification for one member of one workspace: the bell, the panel and the Home card read

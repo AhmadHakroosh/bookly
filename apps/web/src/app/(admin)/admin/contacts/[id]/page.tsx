@@ -45,11 +45,13 @@ import {
 import { BookingDetail } from "../../bookings/booking-detail";
 import { BookingPane } from "../../bookings/booking-pane";
 import { EntrySheet, PaneReply } from "./entry-pane";
+import { OpenConversationButton } from "../../messages/open-conversation";
 import { Attachments, TimelineView } from "./timeline-view";
 import { formatBytes } from "@bookly/cloud";
 import { FileLink } from "@/components/drive/file-viewer";
 import { UploadButton } from "@/components/drive/upload-button";
 import { listContactFiles, type Viewer } from "@/server/drive";
+import { canGuest } from "@/server/messages";
 import { getProfileByUser } from "@/server/scheduling";
 import { requireStaff } from "@/server/session";
 import { getCurrentWorkspace } from "@/server/workspace";
@@ -102,6 +104,7 @@ async function ContactPage({ params, searchParams }: PageProps<"/admin/contacts/
   ]);
   const entryId = typeof sp.entry === "string" ? sp.entry : null;
   const filesOn = (await hasFlag(ws, "files")) && hasFeature(ws, "attachments");
+  const messagesOn = (await hasFlag(ws, "messages")) && canGuest(ws);
   const now = new Date();
   const upcoming = bookings.filter(
     (b) => b.endAt > now && (b.status === "confirmed" || b.status === "pending"),
@@ -174,7 +177,10 @@ async function ContactPage({ params, searchParams }: PageProps<"/admin/contacts/
             </div>
           )}
           <div>
-            <h2 className="text-base font-semibold tracking-tight">Timeline</h2>
+            <div className="flex items-center justify-between gap-2">
+              <h2 className="text-base font-semibold tracking-tight">Timeline</h2>
+              {messagesOn && <OpenConversationButton contactId={c.id} />}
+            </div>
             <form action={addNote.bind(null, c.id)} className="mt-2 flex gap-2">
               <input
                 name="text"

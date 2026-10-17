@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { hasFlag } from "@/server/flags";
+import { canGuest, canTeam, unreadThreads } from "@/server/messages";
 import { KIND_KEYS, channelsFor, unreadCount } from "@/server/notifications";
 import { isCloud, listUserWorkspaces, platformUrl } from "@/server/platform";
 import { vapidPublicKey } from "@/server/push";
@@ -41,11 +42,19 @@ async function AdminShell({ children }: { children: React.ReactNode }) {
     getCurrentWorkspace(),
     getStaffRole(),
   ]);
-  const [tasks, files] = workspace
-    ? await Promise.all([hasFlag(workspace, "task_board"), hasFlag(workspace, "files")])
-    : [false, false];
+  const [tasks, files, messagesFlag] = workspace
+    ? await Promise.all([
+        hasFlag(workspace, "task_board"),
+        hasFlag(workspace, "files"),
+        hasFlag(workspace, "messages"),
+      ])
+    : [false, false, false];
   if (!session) redirect("/login?next=/admin");
   if (!role) redirect("/login?error=staff");
+  const messages =
+    workspace && messagesFlag && (canGuest(workspace) || canTeam(workspace))
+      ? { unread: await unreadThreads({ userId: session.user.id, ws: workspace }) }
+      : null;
 
   const signOut = async () => {
     "use server";
@@ -99,6 +108,7 @@ async function AdminShell({ children }: { children: React.ReactNode }) {
                     manager={isManager(role)}
                     tasks={tasks}
                     files={files}
+                    messages={messages}
                     supportHref={supportHref}
                   />
                 </div>
@@ -135,6 +145,7 @@ async function AdminShell({ children }: { children: React.ReactNode }) {
             manager={isManager(role)}
             tasks={tasks}
             files={files}
+            messages={messages}
             supportHref={supportHref}
           />
         </aside>

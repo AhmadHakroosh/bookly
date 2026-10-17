@@ -50,6 +50,10 @@ export type Limits = {
   attachments: boolean;
   /** Folders shared with the whole team. */
   sharedFolders: boolean;
+  /** Messages: one conversation per contact (their emails in and out), answered by the team. */
+  guestMessages: boolean;
+  /** Messages: threads between members (free-standing or about a contact) and internal notes. */
+  teamMessages: boolean;
 };
 
 export const GIB = 1024 ** 3;
@@ -111,6 +115,9 @@ export const PLANS: Record<PlanId, Plan> = {
       attachments: false,
 
       sharedFolders: false,
+      guestMessages: false,
+
+      teamMessages: false,
     },
     highlights: [
       "Contacts, briefings and the daily Home page",
@@ -156,6 +163,9 @@ export const PLANS: Record<PlanId, Plan> = {
       attachments: true,
 
       sharedFolders: false,
+      guestMessages: true,
+
+      teamMessages: false,
     },
     highlights: [
       "Auto-capture: transcripts, AI recaps, tasks (5 hours a month, then $3 an hour)",
@@ -207,6 +217,9 @@ export const PLANS: Record<PlanId, Plan> = {
       attachments: true,
 
       sharedFolders: true,
+      guestMessages: true,
+
+      teamMessages: true,
       storagePerSeat: true,
     },
     highlights: [
@@ -252,6 +265,8 @@ export const UNLIMITED: Limits = {
   attachments: true,
 
   sharedFolders: true,
+  guestMessages: true,
+  teamMessages: true,
 };
 
 /** The workspace's storage budget in bytes: flat, or per billed seat and pooled. */
@@ -350,7 +365,9 @@ export type FeatureLimit =
   | "taskAssignment"
   | "inboundEmail"
   | "attachments"
-  | "sharedFolders";
+  | "sharedFolders"
+  | "guestMessages"
+  | "teamMessages";
 
 /** True when adding one more of `what` stays within the limit. */
 export function withinLimit(limits: Limits, what: CountableLimit, current: number): boolean {
@@ -379,6 +396,8 @@ export const FEATURE_LABELS: Record<FeatureLimit, string> = {
   inboundEmail: "Guest replies on the timeline",
   attachments: "Files and contact folders",
   sharedFolders: "Folders shared with the team",
+  guestMessages: "Messages with your clients",
+  teamMessages: "Team threads and internal notes",
 };
 
 /** First plan (cheapest) that allows `what`. */

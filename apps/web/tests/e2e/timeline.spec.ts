@@ -1,8 +1,8 @@
-import { createHmac } from "node:crypto";
-import { createServer, type Server } from "node:http";
+import type { Server } from "node:http";
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
 import { bookFirstSlot, STORAGE } from "./helpers";
+import { PDF, replyAddress, startFakeResend, svixHeaders } from "./resend-fake";
 
 /*
  * The contact timeline v2 with a guest reply end to end: a booking's confirmation is on the
@@ -11,61 +11,11 @@ import { bookFirstSlot, STORAGE } from "./helpers";
  * confirmation with the quoted history cut off; the host answers from the timeline.
  */
 
-const WEBHOOK_SECRET = Buffer.from("e2e-webhook-secret-0123456789");
-const DOMAIN = "reply.bookly.test";
-
-/** The address Bookly put on the email logged as entry `id` (same recipe as server/inbound.ts). */
-function replyAddress(id: string) {
-  const secret = process.env.AUTH_SECRET;
-  if (!secret) throw new Error("AUTH_SECRET must be set for this test (the server signs with it)");
-  const sig = createHmac("sha256", secret).update(`reply:${id}`).digest("hex").slice(0, 16);
-  return `r-${id.replace(/-/g, "")}-${sig}@${DOMAIN}`;
-}
-
-function svixHeaders(body: string) {
-  const id = `msg_${Date.now()}`;
-  const ts = String(Math.floor(Date.now() / 1000));
-  const sig = createHmac("sha256", WEBHOOK_SECRET).update(`${id}.${ts}.${body}`).digest("base64");
-  return {
-    "svix-id": id,
-    "svix-timestamp": ts,
-    "svix-signature": `v1,${sig}`,
-    "content-type": "application/json",
-  };
-}
-
 let resend: Server;
-const PDF = Buffer.from("%PDF-1.4\n1 0 obj<<>>endobj\ntrailer<<>>\n%%EOF\n");
 const received = new Map<string, unknown>();
 
 test.beforeAll(async () => {
-  resend = createServer((req, res) => {
-    const parts = (req.url ?? "").split("?")[0]!.split("/").filter(Boolean).map(decodeURIComponent);
-    // GET /dl/<attachment id>: the bytes behind a download_url.
-    if (parts[0] === "dl") {
-      res.writeHead(200, { "content-type": "application/pdf" });
-      return res.end(PDF);
-    }
-    // GET /emails/receiving/<id>/attachments: each attachment with a download_url.
-    if (parts.at(-1) === "attachments") {
-      const email = received.get(parts.at(-2)!) as { attachments?: { id: string }[] } | undefined;
-      res.writeHead(email ? 200 : 404, { "content-type": "application/json" });
-      return res.end(
-        JSON.stringify({
-          object: "list",
-          has_more: false,
-          data: (email?.attachments ?? []).map((a) => ({
-            ...a,
-            download_url: `http://localhost:3999/dl/${a.id}`,
-          })),
-        }),
-      );
-    }
-    const email = received.get(parts.at(-1)!);
-    res.writeHead(email ? 200 : 404, { "content-type": "application/json" });
-    res.end(JSON.stringify(email ?? { error: "not found" }));
-  });
-  await new Promise<void>((r) => resend.listen(3999, r));
+  resend = await startFakeResend(received);
 });
 test.afterAll(() => resend.close());
 

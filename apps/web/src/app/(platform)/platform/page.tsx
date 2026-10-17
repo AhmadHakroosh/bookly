@@ -34,6 +34,7 @@ import {
   TaskBoardMock,
   TimelineMock,
   DriveMock,
+  MessagesMock,
 } from "./mocks";
 import { EmailMock, FollowUpMock, LiveTranscriptMock, RoutingMock, SeatsMock } from "./mocks-more";
 import { PlanGrid } from "./plan-card";
@@ -447,6 +448,7 @@ export default function LandingPage() {
         <GatedTaskBoardFeature />
         <GatedTimelineFeature />
         <GatedFilesFeature />
+        <GatedMessagesFeature />
       </Suspense>
 
       <Section className="border-t">
@@ -773,6 +775,29 @@ async function GatedFilesFeature() {
       >
         No more digging through an inbox for the contract they sent last month: it is in their
         folder, next to the conversation it came with.
+      </Feature>
+    </Section>
+  );
+}
+
+/** Messages in the tour, once they are on for every workspace. */
+async function GatedMessagesFeature() {
+  if (!(await flagOnForEveryone("messages"))) return null;
+  return (
+    <Section className="border-t">
+      <Feature
+        eyebrow="Messages"
+        title="One conversation per client, shared by the team."
+        mock={<MessagesMock />}
+        bullets={[
+          "Their emails in and out, and what they wrote when booking, in one thread",
+          "Write from Bookly; their reply comes back to the same conversation",
+          "Internal notes and @-mentions the client never sees (Team)",
+          "Team threads about a client or anything else, with unread counts and live updates",
+        ]}
+      >
+        No more forwarding emails to a colleague or asking in a chat app who answered: the whole
+        team sees the conversation, and notes stay beside it.
       </Feature>
     </Section>
   );

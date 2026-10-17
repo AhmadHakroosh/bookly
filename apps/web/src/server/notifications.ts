@@ -88,6 +88,16 @@ export const KINDS: Record<NotificationKind, KindInfo> = {
     hint: "A teammate @-mentioned you in a task comment.",
     defaults: { inApp: true, desktop: true, email: false },
   },
+  "message.posted": {
+    label: "Team message",
+    hint: "A teammate wrote in a team thread you are in, or added you to one.",
+    defaults: { inApp: true, desktop: true, email: false },
+  },
+  "message.mentioned": {
+    label: "Mentioned in Messages",
+    hint: "A teammate @-mentioned you in a team thread or an internal note.",
+    defaults: { inApp: true, desktop: true, email: true },
+  },
   "task.overdue": {
     label: "Task overdue",
     hint: "One of your tasks passed its due date.",

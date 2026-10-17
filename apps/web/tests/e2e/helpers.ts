@@ -25,7 +25,7 @@ export async function signIn(page: Page) {
 export async function bookFirstSlot(
   page: Page,
   attendee: { name: string; email: string },
-  opts: { guests?: string[] } = {},
+  opts: { guests?: string[]; notes?: string } = {},
 ) {
   const date = upcomingWeekday();
   // Every guest is a different person: give each booking its own address, so the suite's
@@ -40,6 +40,7 @@ export async function bookFirstSlot(
   await page.getByLabel("Name", { exact: true }).fill(attendee.name);
   await page.getByLabel("Email", { exact: true }).fill(attendee.email);
   if (opts.guests) await page.locator('textarea[name="guests"]').fill(opts.guests.join("\n"));
+  if (opts.notes) await page.locator('textarea[name="notes"]').fill(opts.notes);
   // Answer every booking question the event type asks (required ones block the form).
   for (const q of await page.locator('[name^="q_"]').all()) {
     const tag = await q.evaluate((el) => el.tagName.toLowerCase());

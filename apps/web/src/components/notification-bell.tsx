@@ -6,6 +6,7 @@ import { useCallback, useEffect, useRef, useState, useTransition } from "react";
 import {
   AlarmClockIcon,
   AtSignIcon,
+  MessagesSquareIcon,
   BanknoteIcon,
   BellIcon,
   CalendarClockIcon,
@@ -28,6 +29,7 @@ import {
 } from "@/app/(admin)/admin/notifications/feed-actions";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { publishMessages } from "@/lib/messages-live";
 import { currentSubscription, pushSupport, showLocal } from "@/lib/push-client";
 import { ago } from "@/lib/time";
 import { cn } from "@/lib/utils";
@@ -45,6 +47,8 @@ const ICONS: Record<string, LucideIcon> = {
   "task.assigned": UserCheckIcon,
   "task.mentioned": AtSignIcon,
   "task.overdue": ClockAlertIcon,
+  "message.posted": MessagesSquareIcon,
+  "message.mentioned": AtSignIcon,
 };
 
 const POLL_MS = 60_000;
@@ -124,6 +128,8 @@ export function NotificationBell({
       es.addEventListener("notification", (e) =>
         onNotification(JSON.parse((e as MessageEvent).data)),
       );
+      // Messages ride the same stream: the nav badge and the Messages page listen.
+      es.addEventListener("messages", (e) => publishMessages(JSON.parse((e as MessageEvent).data)));
       es.onerror = () => {
         // CONNECTING = the stream ended normally and the browser reconnects; CLOSED = refused.
         if (es?.readyState === EventSource.CLOSED) {
