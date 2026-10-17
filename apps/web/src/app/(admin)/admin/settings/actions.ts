@@ -221,6 +221,25 @@ async function setJoinPings(on: boolean): Promise<SettingsState> {
   return { ok: true };
 }
 
+/** Settings → Emails: guests' replies to the timeline, or to the host's own address. */
+export async function setGuestRepliesAction(on: boolean): Promise<SettingsState> {
+  const { error } = await assertManager();
+  if (error) return { error };
+  const ws = await getCurrentWorkspace();
+  if (!ws) return { error: "No workspace" };
+  await db()
+    .update(schema.workspaces)
+    .set({ settings: { ...ws.settings, guestReplies: on } })
+    .where(eq(schema.workspaces.id, ws.id));
+  await audit({
+    action: `settings.guest_replies.${on ? "enabled" : "disabled"}`,
+    target: { type: "workspace", id: ws.id, label: ws.name },
+  });
+  refreshWorkspace(ws.id);
+  revalidatePath("/admin", "layout");
+  return { ok: true };
+}
+
 const deleteSchema = z.object({ confirm: z.string().trim() });
 
 /** Owner-only, irreversible. The typed slug guards against a slip; the cascade does the rest. */

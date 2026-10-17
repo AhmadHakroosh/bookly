@@ -583,7 +583,7 @@ export function NotificationsMock() {
           <span className="font-semibold">Acme Advisory</span>
           <span className="relative flex size-7 items-center justify-center rounded-md bg-muted">
             <BellIcon className="size-4" />
-            <span className="absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-(--brand) px-1 text-[10px] font-semibold text-white">
+            <span className="absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-(--brand) px-1 text-[10px] font-semibold text-neutral-950">
               2
             </span>
           </span>

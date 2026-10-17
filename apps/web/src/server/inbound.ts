@@ -50,8 +50,23 @@ export function readReplyAddress(address: string, domain: string): string | null
 export const inboundDomain = () => loadEnv().INBOUND_EMAIL_DOMAIN?.trim().toLowerCase() || null;
 
 /** Whether this workspace's outbound mail should carry signed reply addresses right now. */
+export type GuestRepliesStatus = "on" | "off" | "plan" | "unconfigured" | "unavailable";
+
+/**
+ * Where replies to this workspace's emails go, for Settings → Emails: "on" (the timeline),
+ * "off" (switched off by the workspace), "plan" (needs Pro), "unconfigured" (no inbound domain
+ * on this server) or "unavailable" (the timeline v2 flag is not on for the workspace).
+ */
+export async function guestRepliesStatus(ws: Workspace): Promise<GuestRepliesStatus> {
+  if (!inboundDomain()) return "unconfigured";
+  if (!(await hasFlag(ws, "timeline_v2"))) return "unavailable";
+  if (!hasFeature(ws, "inboundEmail")) return "plan";
+  return ws.settings.guestReplies === false ? "off" : "on";
+}
+
+/** Whether new emails from this workspace should carry signed reply addresses right now. */
 export async function inboundOn(ws: Workspace) {
-  return !!inboundDomain() && hasFeature(ws, "inboundEmail") && (await hasFlag(ws, "timeline_v2"));
+  return (await guestRepliesStatus(ws)) === "on";
 }
 
 /**
@@ -207,6 +222,13 @@ export function stripQuoted(text: string): string {
   return kept || text.trim();
 }
 
+/**
+ * Drops characters that show as boxes: U+FFFC is where Apple Mail's text part had an inline
+ * attachment, and zero-width marks are invisible noise.
+ */
+export const cleanReplyText = (text: string) =>
+  text.replace(/[\uFFFC\u200B\u200C\u200D\uFEFF]/g, "");
+
 /** Auto-replies (out of office, delivery reports) are kept off the timeline. */
 export function isAutoReply(email: Pick<ReceivedEmail, "headers" | "subject">) {
   const h = Object.fromEntries(
@@ -293,13 +315,17 @@ export async function receiveReply(
   const thread = await threadOf(eventId);
   if (!thread) return { ignored: "unknown thread" };
   const { event, ws } = thread;
-  if (!(await inboundOn(ws))) return { ignored: "guest replies are off for this workspace" };
+  // No plan, flag or switch check here: this address was handed out while replies were on, and
+  // a reply to it must not vanish because the setting changed since. It is filed and forwarded.
   if (await alreadyReceived(event.contactId, data.email_id)) return { ignored: "already received" };
   const email = await fetchReceived(data.email_id);
   if (!email) throw new Error("could not fetch the received email");
   if (isAutoReply(email)) return { ignored: "auto-reply" };
 
-  const full = (email.text ?? (email.html ? htmlToText(email.html) : "")).slice(0, 50_000);
+  const full = cleanReplyText(email.text ?? (email.html ? htmlToText(email.html) : "")).slice(
+    0,
+    50_000,
+  );
   const body = stripQuoted(full).slice(0, 20_000);
   const id = crypto.randomUUID();
   const rootId = event.parentId ?? event.id;

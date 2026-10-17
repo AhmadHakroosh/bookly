@@ -137,6 +137,48 @@ test("a guest's reply lands under the email it answers, and the host answers fro
     "Yes, pricing is on the agenda.",
   );
 
+  // Settings → Emails shows where replies go; switching it off hides Reply on the timeline, and a
+  // reply to an email sent while it was on still arrives.
+  const contactUrl = new URL(admin.url()).pathname;
+  await admin.goto("/admin/settings/emails");
+  const section = admin.getByRole("region", { name: "Guest replies" });
+  await expect(section.getByRole("status").first()).toContainText(
+    "land on each contact's timeline",
+  );
+  await section.getByRole("button", { name: "Turn off" }).click();
+  await expect(section.getByRole("status").first()).toContainText("sender's own address");
+  const laterId = `em_${Date.now()}_2`;
+  received.set(laterId, {
+    ...(received.get(emailId) as object),
+    id: laterId,
+    text: "One more thing: send the agenda?",
+    message_id: "<guest-2@example.com>",
+    attachments: [],
+  });
+  const laterBody = JSON.stringify({
+    type: "email.received",
+    data: { email_id: laterId, from: "reply-guest@example.com", to: [replyAddress(entryId)] },
+  });
+  const later = await request.post("/api/webhooks/resend", {
+    data: laterBody,
+    headers: svixHeaders(laterBody),
+  });
+  expect(await later.json()).toMatchObject({ ok: true });
+  await admin.goto(contactUrl);
+  await expect(admin.getByRole("list", { name: "Replies" }).first()).toContainText(
+    "send the agenda?",
+  );
+  await expect(admin.getByRole("button", { name: "Reply" })).toHaveCount(0);
+  await admin.goto("/admin/settings/emails");
+  await admin
+    .getByRole("region", { name: "Guest replies" })
+    .getByRole("button", { name: "Turn on" })
+    .click();
+  await expect(
+    admin.getByRole("region", { name: "Guest replies" }).getByRole("status").first(),
+  ).toContainText("timeline");
+  await admin.goto(contactUrl);
+
   // The timeline, with a thread and the reply box closed, has no accessibility violations.
   await admin.reload();
   await admin.waitForLoadState("networkidle");
@@ -149,8 +191,8 @@ test("a guest's reply lands under the email it answers, and the host answers fro
   await admin.goto(`${new URL(admin.url()).pathname}?entry=${entryId}`);
   const pane = admin.locator('[data-slot="sheet-content"]');
   await expect(
-    pane.getByText("From Reply Guest <reply-guest@example.com>", { exact: false }),
+    pane.getByText("From Reply Guest <reply-guest@example.com>", { exact: false }).first(),
   ).toBeVisible();
-  await pane.getByText("Show the quoted text").click();
+  await pane.getByText("Show the quoted text").first().click();
   await expect(pane.getByText(/Your booking is confirmed/)).toBeVisible();
 });
