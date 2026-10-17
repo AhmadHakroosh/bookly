@@ -4,6 +4,8 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 ## [Unreleased]
 
+## [0.18.0] - 2026-10-17
+
 ### Added
 
 - **Files.** A drive in the sidebar (Admin → Files): My files (yours alone, nested folders), Team folders (Team plan), a folder per contact (what they sent and what is ours), Recent, search, and a 30-day Trash with restore. Upload several at once straight to storage (quota checked first), new folder, rename, move, "Belongs to…" a contact, delete; a side pane previews images and PDFs (everything else downloads) and shows where a file came from, its contact and its tasks. Keyset "Show more" everywhere. Behind the `files` flag with a Beta badge; Pro and up (`attachments`), Team folders on Team (`sharedFolders`)
@@ -493,7 +495,8 @@ First public release: the self-hostable scheduling platform with contacts, brief
 
 - The unused storage layer (`packages/storage`, `STORAGE_*` and `S3_*` variables, the MinIO service in Compose): nothing in Bookly uploads files; profile photos and logos are URLs
 
-[Unreleased]: https://github.com/AhmadHakroosh/bookly/compare/v0.17.1...HEAD
+[Unreleased]: https://github.com/AhmadHakroosh/bookly/compare/v0.18.0...HEAD
+[0.18.0]: https://github.com/AhmadHakroosh/bookly/compare/v0.17.1...v0.18.0
 [0.17.1]: https://github.com/AhmadHakroosh/bookly/compare/v0.17.0...v0.17.1
 [0.17.0]: https://github.com/AhmadHakroosh/bookly/compare/v0.16.0...v0.17.0
 [0.16.0]: https://github.com/AhmadHakroosh/bookly/compare/v0.15.0...v0.16.0
