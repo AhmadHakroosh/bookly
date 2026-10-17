@@ -4,6 +4,8 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 ## [Unreleased]
 
+## [0.18.2] - 2026-10-17
+
 ### Added
 
 - **File viewer.** View (in a file's menu and pane) opens images and PDFs in a large dialog with **Open in new tab** and **Download**; other types are download only, with View disabled and the reason shown. File names on tasks, on the contact page's Files card and on the timeline open the viewer (or download)
@@ -516,7 +518,8 @@ First public release: the self-hostable scheduling platform with contacts, brief
 
 - The unused storage layer (`packages/storage`, `STORAGE_*` and `S3_*` variables, the MinIO service in Compose): nothing in Bookly uploads files; profile photos and logos are URLs
 
-[Unreleased]: https://github.com/AhmadHakroosh/bookly/compare/v0.18.1...HEAD
+[Unreleased]: https://github.com/AhmadHakroosh/bookly/compare/v0.18.2...HEAD
+[0.18.2]: https://github.com/AhmadHakroosh/bookly/compare/v0.18.1...v0.18.2
 [0.18.1]: https://github.com/AhmadHakroosh/bookly/compare/v0.18.0...v0.18.1
 [0.18.0]: https://github.com/AhmadHakroosh/bookly/compare/v0.17.1...v0.18.0
 [0.17.1]: https://github.com/AhmadHakroosh/bookly/compare/v0.17.0...v0.17.1
