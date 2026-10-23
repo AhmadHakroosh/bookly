@@ -6,6 +6,8 @@ import { db } from "@/lib/db";
 /** Uptime check: 200 when the app can reach Postgres, 503 otherwise. No auth, no details. */
 export async function GET() {
   await connection();
+  console.log("Node.js runtime:", process.version);
+
   try {
     await db().execute(sql`select 1`);
     return NextResponse.json({ ok: true }, { headers: { "Cache-Control": "no-store" } });
