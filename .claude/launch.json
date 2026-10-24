@@ -6,6 +6,20 @@
       "runtimeExecutable": "pnpm",
       "runtimeArgs": ["--filter", "@bookly/web", "dev"],
       "port": 3002
+    },
+    {
+      "name": "bookly-web-cloud",
+      "runtimeExecutable": "env",
+      "runtimeArgs": [
+        "TENANCY=multi",
+        "APP_URL=http://localhost:3002",
+        "ROOT_DOMAIN=localhost:3002",
+        "pnpm",
+        "--filter",
+        "@bookly/web",
+        "dev"
+      ],
+      "port": 3002
     }
   ]
 }

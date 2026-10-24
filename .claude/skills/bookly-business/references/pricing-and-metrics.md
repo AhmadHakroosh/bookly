@@ -12,6 +12,19 @@ assumptions. Replace them with real invoices before using them in a decision.
 | Cloud Pro / Team | Terms, monthly or yearly            | Core with plan limits, managed video and capture                                                            | Subscription + capture overage                   |
 | Enterprise       | Order form + ELv2 license key + DPA | Core + commercial modules (SSO, SCIM, hiring compliance, ATS/HRIS connectors, residency, audit export), SLA | Annual contract                                  |
 
+## Seat and limit decisions (2026-10-24)
+
+- **Collaborator seat** (reviewers, interviewers, viewers; no hosting, no pipeline ownership):
+  2 included on Free, 5 included on Pro and Team, then $6 a month ($60 a year) each; not counted
+  toward Team's two-seat minimum; unlimited self-hosted. `billedSeats` excludes collaborators
+  within the allowance.
+- **Stage rules:** hiring rules free on every plan; client-pipeline rules 3 on Free, unlimited on
+  Pro and Team (`stageRules: number | null`).
+- **Opportunities:** Free keeps one open opportunity (drafts free).
+- **License seat overage:** warn only in 1.0.
+- **Development keys:** self-serve 30-day trial keys for signed-in users; production keys with an
+  order form.
+
 ## Cost model per workspace per month (fill with real numbers)
 
 | Cost driver                                 | Unit                                       | Source of truth        |

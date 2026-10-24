@@ -83,7 +83,7 @@ The hiring solution adds high-stakes paths. Minimum coverage before the flag lea
 
 ## Deliverables
 
-- Tests in the same PR as the change. Test plans for larger slices in the PR description or in
+- Tests in the same branch as the change. Test plans for larger slices in the merge commit or in
   `planning/v2/test-plans/` (git-ignored).
 - A short verdict on PRs you review: pass / pass with notes / block, with the failing case.
 

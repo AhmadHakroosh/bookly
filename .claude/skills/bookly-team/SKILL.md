@@ -58,7 +58,8 @@ conflicts between them, and make sure the result ships with code, docs, legal co
 
 ## Standing rules
 
-- Work on `v2` or a branch cut from it (`v2-<area>-<topic>`); PRs target `v2`.
+- Work on a branch cut from `v2` (`v2-<area>-<topic>`); when done and verified, merge it into
+  `v2` without a PR (`--no-ff`), push, and continue with the next slice.
 - Nothing user-visible ships without `docs/` and `CHANGELOG.md` (Unreleased).
 - Unfinished features ship behind a flag (`hasFlag`) to a beta cohort first.
 - Legal outputs are drafts for qualified counsel; say so on every legal deliverable.
