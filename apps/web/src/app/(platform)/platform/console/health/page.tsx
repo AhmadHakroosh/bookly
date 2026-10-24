@@ -17,10 +17,7 @@ async function HealthPage() {
         {checks.map((c) => (
           <li key={c.name} className="flex items-start gap-3 p-3">
             {c.ok ? (
-              <CheckCircle2Icon
-                className="mt-0.5 size-4 shrink-0 text-emerald-500"
-                aria-label="OK"
-              />
+              <CheckCircle2Icon className="mt-0.5 size-4 shrink-0 text-success" aria-label="OK" />
             ) : (
               <XCircleIcon
                 className="mt-0.5 size-4 shrink-0 text-destructive"

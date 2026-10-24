@@ -1,4 +1,5 @@
 import { ImageResponse } from "next/og";
+import { MARK, MARK_BOX, WORDMARK, WORDMARK_BOTTOM, WORDMARK_WIDTH } from "@/components/brand/logo";
 
 /**
  * Social card for the marketing host, served at /og (the segment-level opengraph-image file
@@ -7,6 +8,10 @@ import { ImageResponse } from "next/og";
 export const OG_SIZE = { width: 1200, height: 630 };
 
 const STEPS = ["Booked", "Briefed", "Captured", "Recapped", "Followed up"];
+
+/** Night, and Bookly Orange lifted for text on it (6.8:1); the mark keeps Bookly Orange. */
+const BG = "#121110";
+const ORANGE = "#F0794A";
 
 /**
  * `?title=` puts a page's own title on the card (pricing, docs, legal pages) instead of the
@@ -25,19 +30,26 @@ export function GET(req: Request) {
         flexDirection: "column",
         justifyContent: "space-between",
         padding: 72,
-        background: "linear-gradient(135deg, #0a0a0a 0%, #171412 100%)",
+        background: BG,
         color: "#fafafa",
         fontFamily: "sans-serif",
       }}
     >
       <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
-        <svg width="64" height="64" viewBox="0 0 64 64" fill="none">
-          <rect x="17" y="27" width="36" height="30" rx="12" stroke="#fafafa" strokeWidth="6" />
-          <path d="M17 7v22" stroke="#fafafa" strokeWidth="6" strokeLinecap="round" />
-          <circle cx="17" cy="42" r="5.5" fill="#e8965a" />
-          <path d="M17 42h29" stroke="#e8965a" strokeWidth="6" strokeLinecap="round" />
+        {/* The gap between the bubbles is the b's outline in the background colour. */}
+        <svg width="64" height="64" viewBox={MARK_BOX}>
+          <path d={MARK.replyBody} fill="#F5B6A0" />
+          <path d={MARK.replyTail} fill="#F5B6A0" />
+          <path d={MARK.b} fill={BG} stroke={BG} strokeWidth="5" strokeLinejoin="round" />
+          <path d={MARK.b} fill="#E85D2C" />
         </svg>
-        <div style={{ fontSize: 40, fontWeight: 700, letterSpacing: -1 }}>Bookly</div>
+        <svg
+          height="46"
+          width={(46 * WORDMARK_WIDTH) / WORDMARK_BOTTOM}
+          viewBox={`0 0 ${WORDMARK_WIDTH} ${WORDMARK_BOTTOM}`}
+        >
+          <path d={WORDMARK} fill="#fafafa" />
+        </svg>
         <div
           style={{
             marginLeft: "auto",
@@ -61,7 +73,7 @@ export function GET(req: Request) {
             fontWeight: 700,
             letterSpacing: title ? -1 : -2,
             lineHeight: 1.05,
-            color: "#e8965a",
+            color: ORANGE,
           }}
         >
           {title ? "Bookly" : "Bookly handles the rest."}
@@ -84,7 +96,7 @@ export function GET(req: Request) {
                 fontSize: 24,
               }}
             >
-              <div style={{ width: 10, height: 10, borderRadius: 999, background: "#e8965a" }} />
+              <div style={{ width: 10, height: 10, borderRadius: 999, background: ORANGE }} />
               {s}
             </div>
             {i < STEPS.length - 1 && <div style={{ color: "#555", fontSize: 24 }}>→</div>}

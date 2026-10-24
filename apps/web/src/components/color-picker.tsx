@@ -14,7 +14,7 @@ export const COLOR_PRESETS = [
   "#059669",
   "#65a30d",
   "#ca8a04",
-  "#e8965a",
+  "#e85d2c",
   "#ea580c",
   "#dc2626",
   "#db2777",

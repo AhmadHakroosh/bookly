@@ -38,7 +38,7 @@ const brandingSchema = z.object({
   accent: z
     .string()
     .trim()
-    .regex(/^#[0-9a-fA-F]{6}$/, "Use a hex colour like #e8965a")
+    .regex(/^#[0-9a-fA-F]{6}$/, "Use a hex colour like #e85d2c")
     .or(z.literal(""))
     .default(""),
 });

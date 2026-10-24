@@ -156,12 +156,7 @@ export function Prejoin({
               />
             )}
           </div>
-          <Button
-            type="submit"
-            size="lg"
-            disabled={!canJoin}
-            className="bg-brand text-white hover:bg-brand/90"
-          >
+          <Button type="submit" size="lg" disabled={!canJoin}>
             {needsName ? "Ask to join" : "Join call"}
           </Button>
         </div>

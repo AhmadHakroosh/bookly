@@ -4,6 +4,27 @@ The few rules every screen follows, so new work reads like the rest of Bookly. T
 live in `apps/web/src/components/ui` (shadcn/ui v4 on Base UI); this file records the decisions
 behind them.
 
+## Colour: one orange for show, one for text
+
+Every colour is a token in `globals.css` (light and `.dark`); components never carry raw hex.
+The palette comes from the v1.0 product concepts; values and contrast checks live in
+`.claude/skills/bookly-design-system/references/tokens.md`.
+
+| Token                                       | Light         | Use                                                         |
+| ------------------------------------------- | ------------- | ----------------------------------------------------------- |
+| `brand`                                     | Bookly Orange | The mark, fills, icons, progress, timeline dots, large type |
+| `primary`                                   | Ember         | Primary buttons (white label), orange text and links        |
+| `accent`, `sidebar-accent`                  | Peach         | Active nav item, selected rows and cards (Ember text)       |
+| `ink`                                       | Ink           | The dark button and reversed surfaces                       |
+| `background` / `card`                       | Paper / white | Page / cards and popovers                                   |
+| `sidebar`, `muted`, `secondary`             | Sand          | Sidebar, quiet surfaces                                     |
+| `success`, `warning`, `info`, `destructive` | semantic      | Status only, with `-muted` fills for chips                  |
+
+Bookly Orange never carries small text: white on it is 3.48:1. Status is never brand orange:
+"Due today", "Feedback missing" and overdue counts are `warning` or `destructive`. A workspace's
+own colour replaces `primary` and `ring` on its public pages (`accentVars` in
+`server/brand.ts`), so public UI uses `primary`, not `brand`, for anything interactive.
+
 ## Buttons: one scale
 
 Every button is the `Button` component. There are no hand-rolled `<button className="h-8 …">`
@@ -19,8 +40,10 @@ elements; a link that looks like a button is `<Button nativeButton={false} rende
 
 Text is `font-semibold`. Icons inside a button carry `data-icon="inline-start"` or
 `"inline-end"` so the padding on that side tightens; the icon is 16 px (20 px on `lg`).
-Variants: `default` (primary), `outline` (secondary), `ghost` (tertiary, in rows and menus),
-`destructive`, `secondary`, `link`.
+Variants: `default` (primary, Ember), `ink` (the dark button: "Join meeting", "Create"),
+`outline` (secondary), `ghost` (tertiary, in rows and menus), `destructive`, `secondary`, `link`.
+Still one primary per page: `default` or `ink`, not both. Badges add `success`, `warning` and
+`info` for status chips.
 
 Form controls share the 40 px default height: `Input`, `Select`, `DatePicker`, `NumberField`,
 `ColorPicker`, `HandleField`, and, through a base rule in `globals.css`, every native text

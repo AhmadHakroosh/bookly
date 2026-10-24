@@ -219,7 +219,7 @@ function ColumnView({
         <span
           className={cn(
             "ml-auto text-xs tabular-nums",
-            over ? "font-medium text-amber-600 dark:text-amber-400" : "text-muted-foreground",
+            over ? "font-medium text-warning" : "text-muted-foreground",
           )}
           title={over ? `More than the ${status.wipLimit} this column should hold` : undefined}
         >

@@ -21,7 +21,7 @@ function Check({ ok, label, detail }: { ok: boolean; label: string; detail: stri
   return (
     <li className="flex items-start gap-3 p-3">
       <span
-        className={`mt-1.5 size-2.5 shrink-0 rounded-full ${ok ? "bg-emerald-500" : "bg-destructive"}`}
+        className={`mt-1.5 size-2.5 shrink-0 rounded-full ${ok ? "bg-success" : "bg-destructive"}`}
         aria-label={ok ? "OK" : "Attention"}
       />
       <div className="min-w-0 flex-1 sm:flex sm:items-start sm:gap-3">
