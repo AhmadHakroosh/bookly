@@ -11,6 +11,8 @@ import { draftResponse, publishedSchema, startDraftResponse, touchDraft } from "
 import { rateLimit } from "./ratelimit";
 import { clientIp } from "./request";
 import { getCurrentWorkspace } from "./workspace";
+import { applicationWindow } from "./hiring/apply-text";
+import { closeGraceMinutes } from "./hiring/hiring-text";
 
 /*
  * File questions on public forms (ADR 0004): anyone with the form can upload, so every step
@@ -36,10 +38,35 @@ const TOKEN = "x-form-token";
 /** The workspace, the published form and (when the token opens one) the draft. */
 async function context(req: Request, formId: string) {
   const ws = await getCurrentWorkspace();
-  if (!ws || !(await hasFlag(ws, "forms_v2"))) throw new FormUploadError("Not found.", 404);
+  if (!ws) throw new FormUploadError("Not found.", 404);
   const published = await publishedSchema(ws.id, formId);
   if (!published) throw new FormUploadError("Not found.", 404);
   const draft = await draftResponse(ws.id, formId, req.headers.get(TOKEN));
+  // An opportunity's application form takes files with `hiring`, while it takes applications;
+  // every other form with `forms_v2`.
+  const opp = await db().query.opportunities.findFirst({
+    where: and(
+      eq(schema.opportunities.workspaceId, ws.id),
+      eq(schema.opportunities.formId, formId),
+    ),
+  });
+  if (opp) {
+    const cohort = await db().query.opportunityCohorts.findFirst({
+      where: and(
+        eq(schema.opportunityCohorts.opportunityId, opp.id),
+        eq(schema.opportunityCohorts.isDefault, true),
+      ),
+    });
+    const window = applicationWindow({
+      status: opp.status,
+      opensAt: cohort?.opensAt ?? null,
+      closesAt: cohort?.closesAt ?? null,
+      graceMinutes: closeGraceMinutes(opp.settings),
+      draftStartedAt: draft?.createdAt ?? null,
+    });
+    if (!(await hasFlag(ws, "hiring")) || window === "closed" || window === "scheduled")
+      throw new FormUploadError("Applications aren't open.", 409);
+  } else if (!(await hasFlag(ws, "forms_v2"))) throw new FormUploadError("Not found.", 404);
   return { ws, published, draft };
 }
 

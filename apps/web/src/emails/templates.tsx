@@ -101,7 +101,9 @@ export function LetterEmail({
       footer={
         <>
           <Text style={styles.muted}>
-            Sent by {signedBy} via {brand.name}. Reply to this email to answer them directly.
+            Sent by {signedBy}
+            {brand.name !== signedBy ? ` via ${brand.name}` : ""}. Reply to this email to answer
+            them directly.
           </Text>
           {address && <Text style={{ ...styles.muted, marginTop: "6px" }}>{address}</Text>}
           {unsubscribeUrl && (

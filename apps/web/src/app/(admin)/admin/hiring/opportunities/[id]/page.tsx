@@ -1,7 +1,13 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { Suspense } from "react";
-import { CalendarIcon, ClipboardCheckIcon, InboxIcon, PencilIcon } from "lucide-react";
+import {
+  CalendarIcon,
+  ClipboardCheckIcon,
+  ExternalLinkIcon,
+  InboxIcon,
+  PencilIcon,
+} from "lucide-react";
 import { cn } from "cn";
 import { eq, schema } from "@bookly/db";
 import { BetaBadge } from "@/components/beta-badge";
@@ -15,7 +21,9 @@ import { KanbanBoard, KanbanColumn, KanbanList } from "@/components/ui/kanban";
 import { PageHeader } from "@/components/ui/page-header";
 import { StatusChip } from "@/components/ui/status-chip";
 import { db } from "@/lib/db";
+import { draftCount, previewToken } from "@/server/hiring/apply";
 import { opportunityCounts, stageTotals } from "@/server/hiring/queries";
+import { publicBaseUrl } from "@/server/urls";
 import { loadSetup, type Setup } from "@/server/hiring/setup";
 import {
   candidateLabel,
@@ -52,9 +60,11 @@ async function OpportunityPage({
   if (!setup) notFound();
   const opp = setup.opportunity;
   const tab: Tab = TABS.some((t) => t.id === sp.tab) ? (sp.tab as Tab) : "pipeline";
-  const [counts, totals] = await Promise.all([
+  const [counts, totals, drafts, base] = await Promise.all([
     opportunityCounts(c.actor, id),
     stageTotals(c.actor, id),
+    draftCount(c.actor, id),
+    publicBaseUrl(c.ws),
   ]);
   const b = setup.basics;
   const s = opportunityStatus(opp.status, b.opensAt);
@@ -68,12 +78,12 @@ async function OpportunityPage({
     sp.published === "scheduled" && b.opensAt
       ? `${opp.title} opens on ${fmt(b.opensAt)} (${b.timezone}). The application page shows an "Opens soon" notice until then.`
       : sp.published
-        ? `${opp.title} is open. Its application page goes live with the next hiring beta release.`
+        ? `${opp.title} is open. Share the application page to start receiving applications.`
         : null;
   const n = (k: number, w: string) => `${k} ${w}${k === 1 ? "" : "s"}`;
   return (
     <div className="space-y-6">
-      <PublishedToast message={published} />
+      <PublishedToast message={published} link={`${base}/apply/${opp.slug}`} />
       <PageHeader
         title={opp.title}
         badge={
@@ -88,6 +98,21 @@ async function OpportunityPage({
         actions={
           setup.canConfigure && (
             <>
+              {/* hiring.png's outline action: the live page, or the full preview of a draft. */}
+              <Button
+                variant="outline"
+                nativeButton={false}
+                render={
+                  <a
+                    href={`${base}/apply/${opp.slug}${opp.status === "draft" ? `?preview=${previewToken(opp.id)}` : ""}`}
+                    target="_blank"
+                    rel="noreferrer"
+                  />
+                }
+              >
+                {opp.status === "draft" ? "Open full preview" : "View application page"}
+                <ExternalLinkIcon data-icon="inline-end" />
+              </Button>
               {opp.status === "draft" ? (
                 <Button
                   variant="ink"
@@ -145,7 +170,7 @@ async function OpportunityPage({
           </p>
         </div>
       </PageHeader>
-      {tab === "pipeline" && <Pipeline setup={setup} totals={totals} />}
+      {tab === "pipeline" && <Pipeline setup={setup} totals={totals} drafts={drafts} />}
       {tab === "interviews" && <Interviews setup={setup} />}
       {tab === "review-plan" && <ReviewPlan setup={setup} />}
       {tab === "team" && <Team ctx={c} setup={setup} />}
@@ -153,12 +178,24 @@ async function OpportunityPage({
   );
 }
 
-function Pipeline({ setup, totals }: { setup: Setup; totals: Map<string, number> }) {
+function Pipeline({
+  setup,
+  totals,
+  drafts,
+}: {
+  setup: Setup;
+  totals: Map<string, number>;
+  drafts: number;
+}) {
   const open = setup.stages.filter((s) => !isFinal(s.category));
   const outcomes = setup.stages.filter((s) => isFinal(s.category));
   const any = [...totals.values()].some(Boolean);
   return (
     <div className="space-y-4">
+      {/* Drafts never reach the team: only how many there are. */}
+      {drafts > 0 && (
+        <p className="text-sm text-muted-foreground">{drafts} started, not submitted</p>
+      )}
       {!any && (
         <EmptyState
           size="sm"
