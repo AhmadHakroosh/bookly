@@ -418,7 +418,11 @@ async function LegacyBookings({ past }: { past: boolean }) {
   if (!ws) return null;
   const mine = role !== "owner" && role !== "admin";
   const [rows, profile, waitlist] = await Promise.all([
-    listBookings(ws.id, { upcoming: !past, userId: mine ? session.user.id : undefined }),
+    listBookings(ws.id, {
+      upcoming: !past,
+      userId: mine ? session.user.id : undefined,
+      viewer: session.user.id,
+    }),
     getProfileByUser(ws.id, session.user.id),
     past ? Promise.resolve([]) : listWaitlist(ws.id, mine ? session.user.id : undefined),
   ]);
@@ -485,6 +489,7 @@ async function BookingsWorkspace({
   cookieMode?: string;
 }) {
   const [{ session, role }, ws] = await Promise.all([requireStaff(), getCurrentWorkspace()]);
+  const viewer = session.user.id;
   if (!ws) return null;
   const manager = isManager(role);
   const profile = await getProfileByUser(ws.id, session.user.id);
@@ -532,10 +537,10 @@ async function BookingsWorkspace({
   let waitlist: Waits = [];
   if (mode === "calendar") {
     const range = viewRange(cal, date, tz);
-    ({ rows, capped } = await listBookingsRange(ws.id, { ...range, hostUserId }));
+    ({ rows, capped } = await listBookingsRange(ws.id, { ...range, hostUserId, viewer }));
   } else {
     [{ rows, next }, waitlist] = await Promise.all([
-      listBookingsPage(ws.id, { past, hostUserId, cursor }),
+      listBookingsPage(ws.id, { past, hostUserId, cursor, viewer }),
       past ? Promise.resolve([] as Waits) : listWaitlist(ws.id, hostUserId),
     ]);
   }

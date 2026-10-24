@@ -2,6 +2,7 @@ import "server-only";
 import { and, asc, desc, eq, gt, gte, lt, lte, or, schema, sql } from "@bookly/db";
 import type { Booking } from "@bookly/db/schema";
 import { db } from "@/lib/db";
+import { bookingsVisibleTo, redactInterview } from "./access/hiring";
 
 /*
  * Bookings for the list and calendar views: each row carries its event type's title, seats and
@@ -27,9 +28,10 @@ const select = {
   hostName: schema.profiles.displayName,
 };
 
-function base() {
+/** The row query; `viewer` decides which interviews are shown in full (ADR 0005). */
+function base(viewer: string | null) {
   return db()
-    .select(select)
+    .select({ ...select, hidden: sql<boolean>`not ${bookingsVisibleTo(viewer)}` })
     .from(schema.bookings)
     .leftJoin(schema.eventTypes, eq(schema.eventTypes.id, schema.bookings.eventTypeId))
     .leftJoin(schema.contacts, eq(schema.contacts.id, schema.bookings.contactId))
@@ -49,14 +51,18 @@ const flatten = (r: {
   eventColor: string | null;
   contactCompany: string | null;
   hostName: string | null;
-}): ViewBooking => ({
-  ...r.b,
-  eventTitle: r.eventTitle,
-  eventSeats: r.eventSeats,
-  eventColor: r.eventColor,
-  contactCompany: r.contactCompany,
-  hostName: r.hostName,
-});
+  hidden: boolean;
+}): ViewBooking => {
+  const row: ViewBooking = {
+    ...r.b,
+    eventTitle: r.eventTitle,
+    eventSeats: r.eventSeats,
+    eventColor: r.eventColor,
+    contactCompany: r.contactCompany,
+    hostName: r.hostName,
+  };
+  return r.hidden ? { ...redactInterview(row), eventTitle: "Interview" } : row;
+};
 
 export type ListCursor = { startAt: string; id: string };
 
@@ -86,6 +92,8 @@ export async function listBookingsPage(
     cursor?: ListCursor | null;
     limit?: number;
     now?: Date;
+    /** Who is looking; interviews they may not see show as "Interview" (ADR 0005). */
+    viewer?: string | null;
   },
 ): Promise<{ rows: ViewBooking[]; next: string | null }> {
   const now = opts.now ?? new Date();
@@ -108,7 +116,7 @@ export async function listBookingsPage(
       )!,
     );
   }
-  const rows = await base()
+  const rows = await base(opts.viewer ?? null)
     .where(and(...conds))
     .orderBy(
       opts.past ? desc(schema.bookings.startAt) : asc(schema.bookings.startAt),
@@ -126,7 +134,7 @@ export const RANGE_CAP = 600;
 /** Bookings that overlap [from, to), cancelled and rescheduled ones left out. */
 export async function listBookingsRange(
   workspaceId: string,
-  opts: { from: Date; to: Date; hostUserId?: string },
+  opts: { from: Date; to: Date; hostUserId?: string; viewer?: string | null },
 ): Promise<{ rows: ViewBooking[]; capped: boolean }> {
   const conds = [
     eq(schema.bookings.workspaceId, workspaceId),
@@ -135,7 +143,7 @@ export async function listBookingsRange(
     sql`${schema.bookings.status} not in ('cancelled', 'rescheduled')`,
   ];
   if (opts.hostUserId) conds.push(eq(schema.bookings.hostUserId, opts.hostUserId));
-  const rows = await base()
+  const rows = await base(opts.viewer ?? null)
     .where(and(...conds))
     .orderBy(asc(schema.bookings.startAt), asc(schema.bookings.id))
     .limit(RANGE_CAP + 1);

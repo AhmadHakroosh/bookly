@@ -15,6 +15,7 @@ import type {
 } from "@bookly/db/schema";
 import { loadEnv } from "@bookly/config";
 import { db } from "@/lib/db";
+import { bookingsVisibleTo, redactInterview } from "./access/hiring";
 import { addDays } from "@/lib/time";
 import {
   computeSlots,
@@ -501,7 +502,13 @@ export async function getBookingByToken(token: string): Promise<Booking | null> 
 
 export async function listBookings(
   workspaceId: string,
-  opts: { userId?: string; upcoming?: boolean; limit?: number } = {},
+  opts: {
+    userId?: string;
+    upcoming?: boolean;
+    limit?: number;
+    /** Who is looking; interviews they may not see show as "Interview" (ADR 0005). */
+    viewer?: string | null;
+  } = {},
 ): Promise<
   (Booking & {
     eventTitle: string | null;
@@ -519,6 +526,7 @@ export async function listBookings(
       eventTitle: schema.eventTypes.title,
       eventSeats: schema.eventTypes.seats,
       contactCompany: schema.contacts.company,
+      hidden: sql<boolean>`not ${bookingsVisibleTo(opts.viewer ?? null)}`,
     })
     .from(schema.bookings)
     .leftJoin(schema.eventTypes, eq(schema.eventTypes.id, schema.bookings.eventTypeId))
@@ -526,12 +534,15 @@ export async function listBookings(
     .where(and(...conds))
     .orderBy(opts.upcoming === false ? desc(schema.bookings.startAt) : asc(schema.bookings.startAt))
     .limit(opts.limit ?? 200);
-  return rows.map((r) => ({
-    ...r.b,
-    eventTitle: r.eventTitle,
-    eventSeats: r.eventSeats,
-    contactCompany: r.contactCompany,
-  }));
+  return rows.map((r) => {
+    const row = {
+      ...r.b,
+      eventTitle: r.eventTitle,
+      eventSeats: r.eventSeats,
+      contactCompany: r.contactCompany,
+    };
+    return r.hidden ? { ...redactInterview(row), eventTitle: "Interview" } : row;
+  });
 }
 
 export const LOCATION_TYPES = [

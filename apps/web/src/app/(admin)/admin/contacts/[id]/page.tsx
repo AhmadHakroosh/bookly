@@ -30,7 +30,7 @@ import { SubmitButton } from "@/components/submit-button";
 import { fmtDateTime } from "@/lib/time";
 import { TaskList } from "@/components/task-list";
 import { listOpenTasks } from "@/server/capture";
-import { contactBookings, contactTimeline, getContact } from "@/server/contacts";
+import { contactBookings, contactTimeline, contactVisible, getContact } from "@/server/contacts";
 import { PLANS, planFor } from "@bookly/cloud";
 import { hasFlag } from "@/server/flags";
 import { inboundOn } from "@/server/inbound";
@@ -94,15 +94,16 @@ async function ContactPage({ params, searchParams }: PageProps<"/admin/contacts/
   if (!ws) return null;
   const tz = (await getProfileByUser(ws.id, session.user.id))?.timezone ?? ws.timezone;
   const c = await getContact(ws.id, id);
-  if (!c) notFound();
+  // People who exist only as candidates open only for their team (ADR 0005).
+  if (!c || !(await contactVisible(ws.id, c.id, session.user.id))) notFound();
   const stages = await stageChoices(ws);
   const sp = await searchParams;
   const v2 = await hasFlag(ws, "timeline_v2");
   const canReply = v2 && hasFeature(ws, "inboundEmail") && (await inboundOn(ws));
   const [events, firstWindow, bookings, tasks] = await Promise.all([
-    v2 ? Promise.resolve([]) : contactTimeline(c.id),
-    v2 ? timelineWindow(ws.id, c.id, tz) : Promise.resolve(null),
-    contactBookings(c.id),
+    v2 ? Promise.resolve([]) : contactTimeline(c.id, 100, session.user.id),
+    v2 ? timelineWindow(ws.id, c.id, tz, null, undefined, session.user.id) : Promise.resolve(null),
+    contactBookings(c.id, session.user.id),
     listOpenTasks(ws.id, { contactId: c.id }),
   ]);
   const entryId = typeof sp.entry === "string" ? sp.entry : null;
@@ -297,6 +298,7 @@ async function ContactPage({ params, searchParams }: PageProps<"/admin/contacts/
             workspaceId={ws.id}
             contactId={c.id}
             entryId={entryId}
+            viewer={session.user.id}
             tz={tz}
             canReply={canReply}
             filesOn={filesOn}
@@ -364,6 +366,7 @@ async function EntryPane({
   workspaceId,
   contactId,
   entryId,
+  viewer,
   tz,
   canReply,
   filesOn,
@@ -372,12 +375,13 @@ async function EntryPane({
   workspaceId: string;
   contactId: string;
   entryId: string;
+  viewer: string;
   tz: string;
   canReply: boolean;
   filesOn: boolean;
   closeHref: string;
 }) {
-  const found = await timelineEntry(workspaceId, contactId, entryId);
+  const found = await timelineEntry(workspaceId, contactId, entryId, viewer);
   if (!found)
     return (
       <EntrySheet title="Entry not found" closeHref={closeHref}>

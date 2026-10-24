@@ -54,6 +54,7 @@ async function AdminHome() {
       upcoming: true,
       userId: mine ? session.user.id : undefined,
       limit: 60,
+      viewer: session.user.id,
     }),
     staleContacts(workspace.id),
     listOpenTasks(workspace.id, { userId: session.user.id, limit: 30 }),
