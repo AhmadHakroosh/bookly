@@ -74,7 +74,7 @@ export default function DpaPage() {
         dependency audits in CI. The software is open source, so the customer can inspect exactly
         how data is handled.
       </p>
-      <h2>6. Sub-processors</h2>
+      <h2 id="sub-processors">6. Sub-processors</h2>
       <p>
         The customer authorises the sub-processors below. Each is bound by a written agreement with
         obligations no weaker than this one. Bookly will publish changes to this list here at least

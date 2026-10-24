@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { CheckIcon, SparklesIcon } from "lucide-react";
+import { CheckIcon, SproutIcon, UserRoundIcon, UsersIcon } from "lucide-react";
 import {
   monthlyEquivalent,
   monthsFreeYearly,
@@ -71,7 +71,13 @@ export function PriceLine({ plan: p, interval }: { plan: Plan; interval: Billing
   );
 }
 
-/** One plan, the same on the landing page and the pricing page: featured highlights stand out. */
+const PLAN_ICON = { free: SproutIcon, pro: UserRoundIcon, team: UsersIcon } as const;
+
+/**
+ * One plan, the same on the landing page and the pricing page, drawn as the Pricing concept:
+ * an orange icon, the name and who it is for, the price, ticks, and the action at the bottom.
+ * Pro is the highlighted card (Peach with an orange border); featured highlights are bold.
+ */
 export function PlanCard({
   plan: p,
   interval = "month",
@@ -85,30 +91,25 @@ export function PlanCard({
   heading?: "h2" | "h3";
 }) {
   const pro = p.id === "pro";
+  const Icon = PLAN_ICON[p.id];
   return (
     <div
-      className={`flex flex-col rounded-2xl border bg-background p-6 ${pro ? "border-(--brand) ring-1 ring-(--brand)" : ""} ${className}`}
+      className={`flex flex-col rounded-2xl border p-6 ${pro ? "border-(--brand)/60 bg-accent ring-1 ring-(--brand)/40" : "bg-card"} ${className}`}
     >
-      <div className="flex items-center justify-between gap-3">
-        <H className="text-lg font-semibold tracking-tight">{p.name}</H>
+      <div className="flex items-start justify-between gap-3">
+        <Icon className="size-6 text-(--brand)" aria-hidden />
         {pro && <Badge>Most popular</Badge>}
       </div>
-      <p className="text-sm text-muted-foreground">{p.tagline}</p>
+      <H className="mt-3 text-2xl font-bold tracking-tight">{p.name}</H>
+      <p className="mt-1 text-sm text-muted-foreground">{p.tagline}</p>
       <PriceLine plan={p} interval={interval} />
-      <ul className="mt-6 flex-1 space-y-2 text-sm">
+      <ul className="mt-6 flex-1 space-y-2.5 text-sm">
         {p.highlights.map((h) => {
           const strong = p.featured.includes(h);
           return (
-            <li
-              key={h}
-              className={`flex gap-2 ${strong ? "font-medium" : "text-muted-foreground"}`}
-            >
-              {strong ? (
-                <SparklesIcon className="mt-0.5 size-4 shrink-0 text-(--brand)" aria-hidden />
-              ) : (
-                <CheckIcon className="mt-0.5 size-4 shrink-0 text-(--brand)/70" aria-hidden />
-              )}
-              <span className={strong ? "text-foreground" : ""}>{h}</span>
+            <li key={h} className={`flex gap-2 ${strong ? "font-semibold" : ""}`}>
+              <CheckIcon className="mt-0.5 size-4 shrink-0 text-(--brand)" aria-hidden />
+              <span>{h}</span>
             </li>
           );
         })}

@@ -11,6 +11,8 @@ import { publicBaseUrl } from "@/server/urls";
 import { getCurrentWorkspace } from "@/server/workspace";
 import { latestReleaseDate } from "@/server/release";
 import { SITE } from "@/app/(platform)/platform/site";
+import { SOLUTIONS } from "@/app/(platform)/platform/solutions/solutions";
+import { COMPARISONS } from "@/app/(platform)/platform/compare/data";
 
 /** The marketing site's pages (cloud platform host). */
 async function marketingSitemap(base: string): Promise<MetadataRoute.Sitemap> {
@@ -18,9 +20,27 @@ async function marketingSitemap(base: string): Promise<MetadataRoute.Sitemap> {
   // Pages that change with releases carry the last release date; the rest carry no lastmod
   // rather than a made-up one, which search engines learn to ignore.
   const released = (await latestReleaseDate()) ?? undefined;
+  // The v2 marketing pages carry the date they last changed meaningfully.
+  const site = new Date(`${SITE.updated}T00:00:00Z`);
   const pages: MetadataRoute.Sitemap = [
     { url: `${base}/`, changeFrequency: "weekly", priority: 1 },
+    { url: `${base}/product`, lastModified: site, changeFrequency: "monthly", priority: 0.9 },
     { url: `${base}/pricing`, changeFrequency: "monthly", priority: 0.9 },
+    ...SOLUTIONS.map((s) => ({
+      url: `${base}${s.slug === "consultants" ? "/solutions" : `/solutions/${s.slug}`}`,
+      lastModified: site,
+      changeFrequency: "monthly" as const,
+      priority: 0.8,
+    })),
+    { url: `${base}/trust`, lastModified: site, changeFrequency: "monthly", priority: 0.7 },
+    { url: `${base}/resources`, lastModified: released, changeFrequency: "weekly", priority: 0.6 },
+    { url: `${base}/compare`, lastModified: site, changeFrequency: "monthly", priority: 0.6 },
+    ...COMPARISONS.map((c) => ({
+      url: `${base}/compare/${c.slug}`,
+      lastModified: new Date(`${c.verified}T00:00:00Z`),
+      changeFrequency: "monthly" as const,
+      priority: 0.6,
+    })),
     { url: `${base}/about`, changeFrequency: "yearly", priority: 0.5 },
     { url: `${base}/contact`, changeFrequency: "yearly", priority: 0.5 },
     { url: `${base}/press`, changeFrequency: "yearly", priority: 0.4 },
