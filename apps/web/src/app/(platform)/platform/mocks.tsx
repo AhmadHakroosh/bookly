@@ -794,7 +794,7 @@ export function MessagesMock() {
             </p>
             <p>Yes, pricing is on the agenda.</p>
           </div>
-          <div className="rounded-lg border border-amber-300/60 bg-amber-50/60 p-2 dark:bg-amber-950/20">
+          <div className="rounded-lg border border-amber-300/60 bg-amber-50/60 p-2">
             <p className="text-muted-foreground">
               <span className="font-medium text-foreground">Rana</span> · Internal note
             </p>

@@ -1,7 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Suspense } from "react";
-import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
 import { TopProgress } from "@/components/top-progress";
 import "./globals.css";
@@ -17,34 +16,27 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#faf8f4" },
-    { media: "(prefers-color-scheme: dark)", color: "#121110" },
-  ],
+  // Light only (founder, 2026-10-25): Paper, whatever the system prefers.
+  themeColor: "#faf8f4",
+  colorScheme: "light",
   width: "device-width",
   initialScale: 1,
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html
-      lang="en"
-      suppressHydrationWarning
-      className={`${sans.variable} ${mono.variable} h-full antialiased`}
-    >
+    <html lang="en" className={`${sans.variable} ${mono.variable} h-full antialiased`}>
       <body
         // Browser extensions (Grammarly and friends) add attributes here before hydration.
         suppressHydrationWarning
         className="flex min-h-full flex-col bg-background font-sans text-foreground"
       >
-        <ThemeProvider>
-          <Suspense fallback={null}>
-            <TopProgress />
-          </Suspense>
-          {/* Everything below depends on the request host (tenant), so it streams in. */}
-          <Suspense fallback={null}>{children}</Suspense>
-          <Toaster />
-        </ThemeProvider>
+        <Suspense fallback={null}>
+          <TopProgress />
+        </Suspense>
+        {/* Everything below depends on the request host (tenant), so it streams in. */}
+        <Suspense fallback={null}>{children}</Suspense>
+        <Toaster />
       </body>
     </html>
   );

@@ -6,7 +6,7 @@ behind them.
 
 ## Colour: one orange for show, one for text
 
-Every colour is a token in `globals.css` (light and `.dark`); components never carry raw hex.
+Every colour is a token in `globals.css`; components never carry raw hex.
 The palette comes from the v1.0 product concepts; values and contrast checks live in
 `.claude/skills/bookly-design-system/references/tokens.md`.
 
@@ -22,8 +22,10 @@ The palette comes from the v1.0 product concepts; values and contrast checks liv
 
 Hover states are solid tokens, never a see-through fill: `primary-hover` darkens Ember and
 `ink-hover` lifts Ink a step, so a label keeps its contrast while the pointer is on it. Bookly is
-light only (founder, 2026-10-25): the app ignores a dark system setting and offers no theme
-toggle; the `.dark` values left in `globals.css` are for reversed brand uses only.
+light only (founder, 2026-10-25): there is no dark theme, no `.dark` tokens, no `dark:`
+utilities and no theme toggle, and pages declare `color-scheme: light`. A dark surface is a
+brand use (the logo tiles on `/press`, a CTA band) drawn with `ink`, never a theme. Video tiles
+stay dark because video is.
 
 Bookly Orange never carries small text: white on it is 3.48:1. Status is never brand orange:
 "Due today", "Feedback missing" and overdue counts are `warning` or `destructive`. A workspace's

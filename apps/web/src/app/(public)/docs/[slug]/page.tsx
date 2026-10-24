@@ -37,7 +37,7 @@ async function DocPage({ params }: PageProps<"/docs/[slug]">) {
         </nav>
         {/* Repository markdown, written by maintainers: rendered as-is. */}
         <article
-          className="docs-prose prose mt-4 max-w-none prose-neutral dark:prose-invert prose-headings:scroll-mt-24 prose-headings:tracking-tight prose-h1:text-3xl prose-h2:mt-10 prose-h2:border-b prose-h2:pb-2 prose-h2:text-xl prose-h3:text-base prose-a:underline-offset-4 prose-code:rounded prose-code:bg-muted prose-code:px-1 prose-code:py-0.5 prose-code:text-[0.85em] prose-code:font-normal prose-code:before:content-none prose-code:after:content-none prose-pre:rounded-xl prose-pre:border prose-pre:bg-muted prose-pre:text-xs prose-pre:text-foreground prose-table:text-sm prose-th:text-left prose-img:rounded-xl"
+          className="docs-prose prose mt-4 max-w-none prose-neutral prose-headings:scroll-mt-24 prose-headings:tracking-tight prose-h1:text-3xl prose-h2:mt-10 prose-h2:border-b prose-h2:pb-2 prose-h2:text-xl prose-h3:text-base prose-a:underline-offset-4 prose-code:rounded prose-code:bg-muted prose-code:px-1 prose-code:py-0.5 prose-code:text-[0.85em] prose-code:font-normal prose-code:before:content-none prose-code:after:content-none prose-pre:rounded-xl prose-pre:border prose-pre:bg-muted prose-pre:text-xs prose-pre:text-foreground prose-table:text-sm prose-th:text-left prose-img:rounded-xl"
           dangerouslySetInnerHTML={{ __html: doc.html }}
         />
         <div className="mt-10 flex flex-wrap items-center justify-between gap-3 border-t pt-6 text-sm">

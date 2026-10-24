@@ -84,7 +84,7 @@ export function WorkspaceSwitcher({
         render={
           <Button
             variant="outline"
-            className={cn(CARD, "justify-start dark:bg-card")}
+            className={cn(CARD, "justify-start")}
             aria-label={`Workspace: ${current.name}. Switch workspace`}
           />
         }

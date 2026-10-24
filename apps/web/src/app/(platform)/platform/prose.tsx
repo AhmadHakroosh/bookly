@@ -19,7 +19,7 @@ export function Prose({
         {lede && <p className="mt-3 text-lg text-muted-foreground">{lede}</p>}
         {updated && <p className="mt-2 text-xs text-muted-foreground">Last updated {updated}</p>}
       </header>
-      <div className="prose max-w-none prose-neutral dark:prose-invert prose-headings:scroll-mt-20 prose-headings:font-semibold prose-headings:tracking-tight prose-a:underline-offset-4">
+      <div className="prose max-w-none prose-neutral prose-headings:scroll-mt-20 prose-headings:font-semibold prose-headings:tracking-tight prose-a:underline-offset-4">
         {children}
       </div>
     </div>
