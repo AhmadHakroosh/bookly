@@ -143,6 +143,7 @@ async function MessagesPage({ searchParams }: PageProps<"/admin/messages">) {
               canTeam={team}
               teamPlan={PLANS[planFor("teamMessages")].name}
               people={others}
+              defaultOpen={one(sp.new) === "1"}
             />
           </>
         }

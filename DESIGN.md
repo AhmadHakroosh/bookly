@@ -27,8 +27,9 @@ utilities and no theme toggle, and pages declare `color-scheme: light`. A dark s
 brand use (the logo tiles on `/press`, a CTA band) drawn with `ink`, never a theme. Video tiles
 stay dark because video is.
 
-Bookly Orange never carries small text: white on it is 3.48:1. Status is never brand orange:
-"Due today", "Feedback missing" and overdue counts are `warning` or `destructive`. A workspace's
+Bookly Orange never carries small text: white on it is 3.48:1. Status is never Bookly Orange:
+"Due today", "Feedback missing" and overdue dates are `warning`, which is Ember, as the concepts
+draw them (on its own tint for chips, 4.92:1); failures and deletions are `destructive`. A workspace's
 own colour replaces `primary` and `ring` on its public pages (`accentVars` in
 `server/brand.ts`), so public UI uses `primary`, not `brand`, for anything interactive.
 
@@ -90,7 +91,7 @@ navigable, named and searchable.
 
 1. `PageHeader`: the title (the page's one `h1`, a noun), an optional badge (`BetaBadge`,
    `StatusChip`), one line of context, and at most two actions on the right: outline, then the
-   primary (`default` or `ink`).
+   primary (`default` or `ink`). Home's primary is `SplitButton` "+ Create ▾".
 2. Optionally a `StatStrip` of counts right under it ("3 meetings today").
 3. The content: lists, an `Agenda`, a `KanbanBoard`; an `EmptyState` when there is nothing yet.
 4. Side panes (`PaneHost`) open over the page and start with a `PaneHeader`.
@@ -111,6 +112,18 @@ Built on Base UI and the tokens; all in `components/ui`. The operator console ha
 | `AvatarStack`                                             | People on a meeting or a panel, "+N" past three; screen readers hear the names once.                                                                                 |
 | `Progress`                                                | Bookly Orange on Sand, always labelled ("2 of 3 submitted").                                                                                                         |
 | `EmptyState`                                              | An icon in the mark's speech bubble, a title that says what will be here, how it fills, and the action.                                                              |
+| `SplitButton`                                             | The header's primary with a menu ("+ Create ▾"): split with `href`/`onClick`, one menu button without.                                                               |
+| `SegmentedTabs`                                           | Pill tabs with counts that switch a list's view ("Upcoming (4) · Past · Requests (1)"); links, so the view is in the address.                                        |
+| `JourneyStrip`                                            | Booked → Prepared → Met → Followed up → Paid on every contact (D3); done, current and to-do steps, each linking to its record.                                       |
+| `Timeline`, `TimelineEntry`                               | A contact's history: coloured icon per kind, time, what happened, a View link.                                                                                       |
+| `ActionList`, `ActionItem`                                | "Next actions": the suggested step in Peach, the rest as plain rows.                                                                                                 |
+| `ChecklistRow`                                            | A task with its checkbox, who it is for, and the due date (Ember when today or late).                                                                                |
+| `ListRow`                                                 | A person in a list: picture, name, subject, preview, time, unread dot; actions sit outside the link.                                                                 |
+| `FileRow`, `FileTypeIcon`                                 | A file with its coloured type icon (PDF red, doc blue, sheet green), one line and the date.                                                                          |
+| `AttentionStrip`, `AttentionItem`                         | "Needs attention": what waits on the team, and the link that deals with it.                                                                                          |
+| `RecapCard`                                               | "Recap ready" in Peach with the action (Ember, not the concept's Bookly Orange fill, for contrast).                                                                  |
+| `UsageBar`                                                | A plan limit and its use; Ember at the limit.                                                                                                                        |
+| `VideoTile`, `CallControls`, `CallControl`                | The call: dark video tiles with names, labelled controls, a red End.                                                                                                 |
 | `Kbd`                                                     | Keys and shortcuts.                                                                                                                                                  |
 
 ## Pointers

@@ -109,9 +109,10 @@
   --success: oklch(0.5 0.12 150);
   --success-foreground: oklch(1 0 0);
   --success-muted: oklch(0.955 0.03 150);
-  --warning: oklch(0.52 0.11 75);
+  /* Warnings are Ember, as the concepts draw "Due today" and "Feedback missing" (4.92 on the tint). */
+  --warning: oklch(0.535 0.167 37.9);
   --warning-foreground: oklch(1 0 0);
-  --warning-muted: oklch(0.96 0.045 88);
+  --warning-muted: oklch(0.96 0.025 45);
   --info: oklch(0.5 0.13 250);
   --info-foreground: oklch(1 0 0);
   --info-muted: oklch(0.96 0.02 250);

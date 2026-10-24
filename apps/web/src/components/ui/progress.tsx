@@ -16,6 +16,7 @@ function Progress({
   valueText,
   showValue = false,
   hideLabel = false,
+  tone = "brand",
   className,
 }: {
   value: number | null;
@@ -25,6 +26,8 @@ function Progress({
   showValue?: boolean;
   /** Keep the label for screen readers only, when the text around the bar already says it. */
   hideLabel?: boolean;
+  /** `warning` (Ember) once a limit is reached; brand otherwise. */
+  tone?: "brand" | "warning";
   className?: string;
 }) {
   return (
@@ -46,7 +49,9 @@ function Progress({
         <span />
       )}
       <ProgressPrimitive.Track className="col-span-2 h-2 overflow-hidden rounded-full bg-muted">
-        <ProgressPrimitive.Indicator className="rounded-full bg-brand" />
+        <ProgressPrimitive.Indicator
+          className={cn("rounded-full", tone === "warning" ? "bg-warning" : "bg-brand")}
+        />
       </ProgressPrimitive.Track>
     </ProgressPrimitive.Root>
   );
