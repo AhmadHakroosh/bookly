@@ -4,6 +4,11 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 ## [Unreleased]
 
+### Security
+
+- **Next.js 16.4.1.** Fixes two critical and one high advisory in 16.3.8: remote code execution through `use cache` functions that return typed arrays (GHSA-673q-mjm6-r5xr), remote code execution in image optimization through an old `sharp` (GHSA-2464-fhr4-w9xw; Bookly already pinned `sharp` 0.35.5) and a CPU denial of service against Server Actions (GHSA-p3m5-59mp-jv5r). Self-hosters should rebuild their image
+- Development-only packages are pinned to their patched releases through pnpm overrides: `vite` 8.3.3+ (reached through vitest, never served) and `hono` 4.13.11+ and `ip-address` 10.7.4+ (reached through the `shadcn` CLI)
+
 ### Changed
 
 - **Contact stages live in a pipeline.** Each workspace gets a "Clients" pipeline with the familiar stages (Lead, Active, Won, Lost), and every contact points at its stage; nothing looks different yet, but this is what lets stages be renamed, reordered and extended, and what hiring pipelines build on. Every stage change is recorded with who made it, for time-in-stage reports later. Migration 0038 creates the tables and fills them for existing contacts; a check on start-up fills anything missed. The old `stage` value is still written and stays in API responses through 1.0.x; it goes in 1.1
