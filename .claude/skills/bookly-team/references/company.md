@@ -94,6 +94,30 @@ context), scheduling engine, messages, tasks, files, capture/recaps, notificatio
   checklist") are data, so a customer can model a fellowship, a hiring loop or an admissions
   round without code. The architect owns the model (`pipeline_stages` + stage modules config).
 
+### Hiring decisions taken by the specialists (2026-10-24)
+
+The founder delegated the open questions of the hiring specs and ADRs 0001–0006; full record in
+`planning/v2/decisions/2026-10-24-hiring-and-platform.md`. The cross-cutting ones:
+
+- **X1 No numbers that rank people.** Per-criterion rating distributions and recommendations in
+  words; no averages, totals or weighted scores, never a sort by rating; no calculated or
+  quiz-style form fields.
+- **X2 Requirements flag, a person decides.** Unmet eligibility requirements mark an
+  application for a human; a bulk "Not selected: doesn't meet requirement" action records the
+  decider. Nothing is rejected automatically.
+- **X3 Collaborator seat** for reviewers, interviewers and viewers: 2 included on Free, 5 on
+  Pro and Team, then $6 a month each; outside Team's two-seat minimum; unlimited self-hosted.
+  External reviewers are collaborators (no magic-link reviewers in v1).
+- **X4 Retention for people not admitted:** 6 months after the cycle's last decision; 12 months
+  for job and internship opportunities (US 29 CFR 1602.14); configurable 30 days–24 months.
+- **X5 Applicants are 16 or older.** Under-16 opportunities need a separate decision.
+- **X6 Compliance and open core:** what one customer needs to run a lawful selection process is
+  core (notice, data rights, per-opportunity retention, accommodations, separate self-ID,
+  independent reviews, attributed decisions, audit log); organisation-scale compliance
+  programmes are ELv2 (adverse-impact/EEO reporting, LL 144 exports, anonymised review,
+  per-region policy sets, confidential opportunities, works-council packs).
+- ADRs 0001–0006 are **Accepted**; the legacy contact stage column is dropped in **1.1**.
+
 ### Hiring guardrails (non-negotiable)
 
 - AI may summarise, extract, schedule and draft. **AI never ranks, scores, rejects or recommends
@@ -195,13 +219,13 @@ an outlined orange "b"; v2 replaces it with the 02 mark in Bookly Orange.
 
 Draft boundary (legal + product own it; see `bookly-legal-licensing`):
 
-| Core (AGPL)                                                                        | Commercial (ELv2, source-available)                                                                                   |
-| ---------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
-| Scheduling, booking pages, routing, payments, calendars, video                     | SSO (SAML/OIDC), SCIM, directory sync                                                                                 |
-| People/contacts, pipelines, messages, tasks, files, notifications                  | Advanced roles/permissions, org-wide multi-workspace admin                                                            |
-| Hiring basics: opportunities, applications, stages, interviews, reviews, decisions | Hiring compliance: anonymised review, EEO/adverse-impact reports, LL 144 audit support, retention policies per region |
-| Capture + AI recaps (own key), API v1, webhooks, custom domains                    | ATS/HRIS connectors (Greenhouse, Lever, Workday, Personio, BambooHR)                                                  |
-| Self-host, `TENANCY=single`                                                        | Cloud plans/billing (`packages/cloud`), audit export, data residency, SLAs                                            |
+| Core (AGPL)                                                                        | Commercial (ELv2, source-available)                                                                                                            |
+| ---------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| Scheduling, booking pages, routing, payments, calendars, video                     | SSO (SAML/OIDC), SCIM, directory sync                                                                                                          |
+| People/contacts, pipelines, messages, tasks, files, notifications                  | Advanced roles/permissions, org-wide multi-workspace admin                                                                                     |
+| Hiring basics: opportunities, applications, stages, interviews, reviews, decisions | Hiring compliance programmes: anonymised review, EEO/adverse-impact reports, LL 144 audit exports, per-region retention policy sets (canon X6) |
+| Capture + AI recaps (own key), API v1, webhooks, custom domains                    | ATS/HRIS connectors (Greenhouse, Lever, Workday, Personio, BambooHR)                                                                           |
+| Self-host, `TENANCY=single`                                                        | Cloud plans/billing (`packages/cloud`), audit export, data residency, SLAs                                                                     |
 
 ## Engineering canon
 

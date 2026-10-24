@@ -35,9 +35,16 @@ regulated provider without deciding to.
 3. Decisions: a person chooses; batch decisions for cohorts record each person's outcome and
    the decider.
 4. Candidate notice and the hiring organisation's identity on every application page.
-5. Retention: candidate data in a closed opportunity deleted after a configurable period
-   (default to counsel's recommendation per region), with a warning before deletion and an
-   export option.
+5. Retention: candidate data of people not admitted is deleted 6 months after the cycle's last
+   decision (12 months for job and internship opportunities, for US employers' one-year
+   record-keeping duty under 29 CFR 1602.14), configurable 30 days–24 months, with a warning
+   before deletion and an export option. Decided 2026-10-24; counsel confirms per region.
 6. Self-ID and accommodations: optional, separate, access-restricted.
 7. A candidate-facing status page and a way to withdraw an application (which triggers deletion
    rules).
+8. Minimum age 16 on every application page and in the terms; internship and admissions templates
+   carry a required "I am 16 or older" confirmation (decided 2026-10-24).
+9. Deletion requests: coordinator queue with the 30-day deadline, reminders at day 7 and 21,
+   automatic deletion at day 30 unless a legal hold reason is recorded; the candidate gets a
+   receipt with the date (decided 2026-10-24).
+10. Eligibility requirements flag for a human; nothing is rejected automatically (Art. 22).
