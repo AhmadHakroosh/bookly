@@ -15,7 +15,8 @@
         "TENANCY",
         "EMAIL_*",
         "RESEND_API_KEY",
-        "SMTP_*"
+        "SMTP_*",
+        "REALTIME_*"
       ]
     },
     "dev": { "cache": false, "persistent": true },

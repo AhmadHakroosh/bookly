@@ -7,6 +7,7 @@ import { canSeeFile } from "./drive";
 import { hasFlag } from "./flags";
 import { hasFeature, LimitError } from "./limits";
 import { notify } from "./notifications";
+import { channels, publish } from "./realtime";
 import { listProfiles } from "./scheduling";
 import { parseMentions } from "./tasks";
 import { addFileTypes, attachmentsOf, displayName, tidy, type FileRef } from "./timeline";
@@ -22,6 +23,8 @@ import { addFileTypes, attachmentsOf, displayName, tidy, type FileRef } from "./
  *   (creator, the people added, anyone @-mentioned) see it.
  * Gates: `guestMessages` (Pro) for guest threads, `teamMessages` (Team) for team threads and
  * notes; the `messages` flag decides whether any of it exists yet.
+ * Realtime first (ADR 0007): every write tells the open tabs of whoever sees the thread, and
+ * members hear about messages through `notify()`, which emails only when they are not here.
  */
 
 export type Viewer = { userId: string; ws: Workspace };
@@ -76,6 +79,23 @@ export async function messagesPulse(v: Viewer): Promise<{ unread: number; latest
       .where(visibleThreads(v)),
   ]);
   return { unread: counts?.n ?? 0, latest: latest?.at ?? null };
+}
+
+/**
+ * Tells the open tabs of everyone who sees this thread that it moved: every member for a guest
+ * thread, the participants for a team thread. Tabs then ask for their own unread count.
+ */
+async function threadMoved(workspaceId: string, thread: Pick<Thread, "id" | "kind">) {
+  const to =
+    thread.kind === "guest"
+      ? [channels.members(workspaceId)]
+      : (
+          await db()
+            .select({ userId: schema.threadParticipants.userId })
+            .from(schema.threadParticipants)
+            .where(eq(schema.threadParticipants.threadId, thread.id))
+        ).map((p) => channels.member(workspaceId, p.userId));
+  await publish(to, "messages", { threadId: thread.id });
 }
 
 /* ---------------- Guest threads follow the contact's timeline ---------------- */
@@ -144,6 +164,7 @@ export async function contactActivity(
       ...(fromGuest ? { closedAt: null } : {}),
     })
     .where(eq(t.id, thread.id));
+  await threadMoved(workspaceId, thread);
 }
 
 /* ---------------- Reading ---------------- */
@@ -448,6 +469,8 @@ export async function markThreadRead(v: Viewer, threadId: string) {
       target: [schema.threadReads.threadId, schema.threadReads.userId],
       set: { readAt: new Date() },
     });
+  // The member's other tabs drop the unread badge too.
+  await publish([channels.member(v.ws.id, v.userId)], "messages", { threadId });
 }
 
 /* ---------------- Writing ---------------- */
@@ -555,6 +578,7 @@ export async function postTeamMessage(
       link: `/admin/messages?thread=${d.thread.id}`,
       dedupeKey: `thread-message:${m.id}:${userId}`,
     });
+  await threadMoved(v.ws.id, d.thread);
   return m;
 }
 
@@ -573,6 +597,7 @@ export async function addNote(v: Viewer, d: ThreadDetails, body: string, fileIds
       link: `/admin/messages?thread=${d.thread.id}`,
       dedupeKey: `thread-message:${m.id}:${userId}`,
     });
+  await threadMoved(v.ws.id, d.thread);
   return m;
 }
 
@@ -633,6 +658,7 @@ export async function addParticipants(v: Viewer, d: ThreadDetails, userIds: stri
       link: `/admin/messages?thread=${d.thread.id}`,
       dedupeKey: `thread-added:${d.thread.id}:${userId}`,
     });
+  if (added.length) await threadMoved(v.ws.id, d.thread);
   return added;
 }
 
@@ -641,4 +667,5 @@ export async function setClosed(v: Viewer, d: ThreadDetails, closed: boolean) {
     .update(t)
     .set({ closedAt: closed ? new Date() : null })
     .where(eq(t.id, d.thread.id));
+  await threadMoved(v.ws.id, d.thread);
 }

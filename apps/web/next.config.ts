@@ -21,6 +21,22 @@ const storage = (() => {
 })();
 
 /**
+ * Realtime (ADR 0007). With REALTIME_PORT the app runs its socket server in-process and browsers
+ * reach it at /realtime on the app's own origin (the Next server proxies the upgrade to the
+ * rewrite's destination), so `connect-src 'self'` covers it. A standalone server named by an
+ * absolute REALTIME_URL is added to connect-src. Both are read at build time.
+ */
+const realtimePort = process.env.REALTIME_PORT;
+const realtimeOrigin = (() => {
+  try {
+    const { protocol, host } = new URL(process.env.REALTIME_URL ?? "");
+    return protocol === "ws:" || protocol === "wss:" ? ` ${protocol}//${host}` : "";
+  } catch {
+    return "";
+  }
+})();
+
+/**
  * Security headers. The CSP is deliberately concrete: only the hosts Bookly talks to. Add a
  * host here if you self-host a provider (e.g. an S3 endpoint that serves avatars).
  */
@@ -33,7 +49,7 @@ const csp = [
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob: https:",
   "font-src 'self' data:",
-  `connect-src 'self' https://*.daily.co wss://*.daily.co https://*.dailywebrtc.com wss://*.dailywebrtc.com https://*.dailywebrtc.net wss://*.dailywebrtc.net https://*.pluot.blue wss://*.pluot.blue https://*.banuba.cloud https://api.stripe.com https://*.sentry.io https://*.ingest.sentry.io${storage}`,
+  `connect-src 'self' https://*.daily.co wss://*.daily.co https://*.dailywebrtc.com wss://*.dailywebrtc.com https://*.dailywebrtc.net wss://*.dailywebrtc.net https://*.pluot.blue wss://*.pluot.blue https://*.banuba.cloud https://api.stripe.com https://*.sentry.io https://*.ingest.sentry.io${storage}${realtimeOrigin}`,
   // 'self': the file viewer frames PDFs from /files/<id>.
   "frame-src 'self' https://*.daily.co https://js.stripe.com https://checkout.stripe.com",
   "media-src 'self' blob: https://*.daily.co",
@@ -81,8 +97,9 @@ const nextConfig: NextConfig = {
     "@bookly/db",
     "@bookly/email",
     "@bookly/jobs",
+    "@bookly/realtime",
   ],
-  serverExternalPackages: ["pg", "pg-boss", "nodemailer", "sharp", "shiki"],
+  serverExternalPackages: ["pg", "pg-boss", "nodemailer", "sharp", "shiki", "ws"],
   outputFileTracingRoot: new URL("../../", import.meta.url).pathname,
   // The in-app manual reads the repo's docs/ at runtime (see src/server/docs.ts).
   outputFileTracingIncludes: {
@@ -102,6 +119,15 @@ const nextConfig: NextConfig = {
       // API keys and webhooks moved under Settings → Integrations (0.11.0).
       { source: "/admin/api", destination: "/admin/settings/integrations", permanent: true },
     ];
+  },
+  async rewrites() {
+    return {
+      beforeFiles: realtimePort
+        ? [{ source: "/realtime", destination: `http://127.0.0.1:${realtimePort}/realtime` }]
+        : [],
+      afterFiles: [],
+      fallback: [],
+    };
   },
   async headers() {
     return [

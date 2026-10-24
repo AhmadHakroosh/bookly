@@ -66,7 +66,8 @@ Restore with `gunzip -c file.sql.gz | docker compose exec -T postgres psql -U bo
 
 - **Logs:** `docker compose logs -f app`. Email in `console` mode prints here.
 - **Background jobs:** the container runs a pg-boss worker (reminders, retries) using the same database; nothing else to deploy. Set `JOBS_WORKER=false` only on serverless.
-- **Scaling:** the app is stateless; run several replicas behind a load balancer with one Postgres.
+- **Realtime:** the container also runs Bookly's websocket server for the bell and Messages (see [Realtime](#realtime-bell-and-messages)); nothing else to deploy.
+- **Scaling:** the app is stateless; run several replicas behind a load balancer with one Postgres. Realtime events reach every replica through Postgres.
 - **Health:** `GET /api/domains/check?host=<APP_URL host>` returns 200 when the app and database are up.
 
 ## 6. Environment reference
@@ -117,6 +118,40 @@ npx web-push generate-vapid-keys
 Set `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY` and `VAPID_SUBJECT` (`mailto:you@example.com`) and
 restart. Keep the pair: new keys invalidate every browser's subscription. Browsers need HTTPS
 (localhost is exempt). See [notifications.md](notifications.md#in-bookly-on-the-desktop-by-email-beta).
+
+## Realtime (bell and Messages)
+
+Bookly delivers notifications and Messages to open tabs first, and emails, pushes or texts
+members only when they are not in Bookly ([notifications.md](notifications.md)). The Docker
+image does this on its own:
+
+- The app runs a websocket server inside its process on `127.0.0.1:3003` (`REALTIME_PORT`,
+  set in the image). It is not published: browsers connect to `/realtime` on the address they
+  already use for the admin, and the app hands the connection over. Caddy (the `tls` profile)
+  and most reverse proxies pass websockets through as is; with nginx, add
+  `proxy_set_header Upgrade $http_upgrade; proxy_set_header Connection "upgrade";` for
+  `/realtime`.
+- Events travel through Postgres (`LISTEN`/`NOTIFY` on the channel `bookly_realtime`), so every
+  replica delivers to its own tabs, and presence (who has Bookly open) is the table
+  `realtime_connections`. No Redis and no third-party account.
+- A tab authenticates with a one-minute ticket signed with `AUTH_SECRET` (from the member's
+  session, for the workspace of the host they are on) and reconnects every hour with a fresh
+  one. Tabs whose socket cannot connect fall back to Server-Sent Events, which keep presence
+  too, so delivery works either way; only the latency and the database load differ.
+
+With `pnpm dev`, set `REALTIME_PORT=3003` in `.env.local` (the `bookly-web` launch
+configurations do). If you build the image yourself with another port, set `REALTIME_PORT` at
+build time and at run time to the same value: the build bakes the `/realtime` hand-over.
+
+**Running the socket server on its own** (large installs, or hosts like Vercel that cannot hold
+connections): `node packages/realtime/src/bin.ts` with `DATABASE_URL` (or
+`REALTIME_DATABASE_URL`: a direct, unpooled connection, since `LISTEN` does not survive a
+transaction pooler such as Neon's), `AUTH_SECRET` and `REALTIME_PORT` (default 3003). Its
+`GET /health` answers `{ ok, connections, listening }`. Point the app at it with
+`REALTIME_URL=wss://realtime.example.com` (set at build time too: it is added to the
+Content-Security-Policy) and leave `REALTIME_PORT` unset in the app. Without either, the app
+uses Server-Sent Events only, which is what a Vercel deployment does until it has a socket
+server.
 
 ## Guest replies (optional)
 
@@ -197,4 +232,4 @@ hand.
 
 - **Errors**: set `SENTRY_DSN` (server) and `NEXT_PUBLIC_SENTRY_DSN` (browser) and Bookly reports exceptions from pages, API routes, the cron tick and the browser to Sentry. Add `SENTRY_ORG`, `SENTRY_PROJECT` and `SENTRY_AUTH_TOKEN` at build time to upload source maps. Leave them unset and nothing is sent anywhere.
 - **Metrics**: set `METRICS_TOKEN` and scrape `GET /api/metrics` (see `docs/cloud.md`).
-- **Security headers**: every response carries a Content-Security-Policy limited to Bookly's own origin plus Daily, Stripe and Sentry, `X-Content-Type-Options`, `Referrer-Policy`, a `Permissions-Policy` that grants camera and microphone only to the call page, and HSTS in production. Booking pages may be embedded on HTTPS sites; the admin and console send `X-Frame-Options: DENY`. The origin of `S3_ENDPOINT` (read at build time) is added to `connect-src` so browsers can upload to the bucket with presigned URLs; the bucket's CORS must allow `PUT` from your admin host. `/files/<id>` responses carry their own headers (`frame-ancestors 'self'`, `nosniff`, `no-referrer`) so the browser's PDF viewer works. If you serve avatars or uploads from another host, add it to `img-src` in `apps/web/next.config.ts`.
+- **Security headers**: every response carries a Content-Security-Policy limited to Bookly's own origin (which covers the `/realtime` websocket; an absolute `REALTIME_URL` read at build time is added to `connect-src`) plus Daily, Stripe and Sentry, `X-Content-Type-Options`, `Referrer-Policy`, a `Permissions-Policy` that grants camera and microphone only to the call page, and HSTS in production. Booking pages may be embedded on HTTPS sites; the admin and console send `X-Frame-Options: DENY`. The origin of `S3_ENDPOINT` (read at build time) is added to `connect-src` so browsers can upload to the bucket with presigned URLs; the bucket's CORS must allow `PUT` from your admin host. `/files/<id>` responses carry their own headers (`frame-ancestors 'self'`, `nosniff`, `no-referrer`) so the browser's PDF viewer works. If you serve avatars or uploads from another host, add it to `img-src` in `apps/web/next.config.ts`.

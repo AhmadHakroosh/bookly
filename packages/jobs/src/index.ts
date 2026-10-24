@@ -33,6 +33,8 @@ export type Jobs = {
   "pipeline.rule": { runId: string };
   /** Scheduled: stage-rule runs that are due and whose job never arrived. */
   "pipeline.rules": Record<string, never>;
+  /** A connected member's notification, once its grace period is over (ADR 0007). */
+  "notifications.fallback": { id: string };
 };
 
 export const JOB_NAMES = [
@@ -48,6 +50,7 @@ export const JOB_NAMES = [
   "pipelines.backfill",
   "pipeline.rule",
   "pipeline.rules",
+  "notifications.fallback",
 ] as const satisfies readonly (keyof Jobs)[];
 
 export type JobName = keyof Jobs;

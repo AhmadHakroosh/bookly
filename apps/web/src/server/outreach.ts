@@ -314,7 +314,11 @@ export async function sendGuestEmail(
   });
 }
 
-/** Sends one personal email to a contact and logs it on their timeline (and so in Messages). */
+/**
+ * Sends one personal email to a contact and logs it on their timeline (and so in Messages, whose
+ * open tabs hear about it). Guests get email whatever their presence: no guest page shows the
+ * conversation yet, and email stays their reply path (ADR 0007, slice R3 for the live surface).
+ */
 async function deliverToContact(
   ws: Workspace,
   c: Contact,

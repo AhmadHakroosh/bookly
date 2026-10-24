@@ -50,7 +50,8 @@ export type HostEvent = "onBooking" | "onCancel" | "onJoin" | "reminder1h";
 
 /**
  * Texts and Slack pings for a host who enabled `event` on Admin → Notifications. Called by
- * `notify()` in notifications.ts, which also handles the bell, desktop push and email.
+ * `notify()` in notifications.ts, which also handles the bell, desktop push and email, and
+ * sends these only when the host is not in Bookly (ADR 0007). Returns how many went out.
  */
 export async function notifyHost(
   workspaceId: string,
@@ -70,7 +71,7 @@ export async function notifyHost(
   });
   const prefs: HostNotifications = profile?.notifications ?? {};
   const enabled = prefs[event] ?? (event === "onJoin" || event === "onBooking");
-  if (!enabled) return;
+  if (!enabled) return 0;
   const jobs: Promise<unknown>[] = [];
   const channel = prefs.channel ?? "none";
   // Texts go only to a number the host has proved is theirs (Admin → Notifications).
@@ -84,6 +85,7 @@ export async function notifyHost(
     );
   if (prefs.slackWebhookUrl) jobs.push(slack(prefs.slackWebhookUrl, msg.text));
   await Promise.all(jobs);
+  return jobs.length;
 }
 
 export type { Profile };

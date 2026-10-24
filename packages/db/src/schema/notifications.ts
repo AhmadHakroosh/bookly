@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { index, pgTable, text, timestamp, uniqueIndex } from "drizzle-orm/pg-core";
+import { index, jsonb, pgTable, text, timestamp, uniqueIndex } from "drizzle-orm/pg-core";
 import { users } from "./auth";
 import { workspaces } from "./workspaces";
 
@@ -29,9 +29,25 @@ export type NotificationKind =
   | "message.mentioned"
   | "automation";
 
+/** A channel `notify()` used for a notification, besides the bell (ADR 0007). */
+export type DeliveryChannel = "socket" | "push" | "email" | "text";
+
+/**
+ * What `notify()` holds back while the member is connected, sent at `fallback_at` unless the
+ * notification was seen or read by then (ADR 0007).
+ */
+export type NotificationFallback = {
+  push?: boolean;
+  email?: { subject: string; text: string; html?: string; replyTo?: string };
+  text?: { event: string; text: string; bookingId?: string };
+  /** Listed as read from the start (a desktop-only kind): only being seen cancels it. */
+  seenOnly?: boolean;
+};
+
 /**
  * One notification for one member of one workspace: the bell, the panel and the Home card read
- * these; the live stream and Web Push announce them. `dedupeKey` makes a retried job a no-op.
+ * these; the live connection announces them, and the other channels are the fallback (ADR 0007).
+ * `dedupeKey` makes a retried job a no-op.
  */
 export const notifications = pgTable(
   "notifications",
@@ -50,6 +66,16 @@ export const notifications = pgTable(
     link: text("link"),
     dedupeKey: text("dedupe_key"),
     readAt: timestamp("read_at", { withTimezone: true }),
+    /** Shown in a visible tab, or as a desktop notification by a tab: cancels the fallback. */
+    seenAt: timestamp("seen_at", { withTimezone: true }),
+    /** When the held-back channels are due; null when nothing is pending. */
+    fallbackAt: timestamp("fallback_at", { withTimezone: true }),
+    fallback: jsonb("fallback").$type<NotificationFallback>(),
+    /** When each channel was used. */
+    delivery: jsonb("delivery")
+      .$type<Partial<Record<DeliveryChannel, string>>>()
+      .notNull()
+      .default({}),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [
@@ -59,6 +85,9 @@ export const notifications = pgTable(
       .where(sql`${t.readAt} is null`),
     uniqueIndex("notifications_dedupe_idx").on(t.userId, t.dedupeKey),
     index("notifications_created_idx").on(t.createdAt),
+    index("notifications_fallback_idx")
+      .on(t.fallbackAt)
+      .where(sql`${t.fallbackAt} is not null`),
   ],
 );
 

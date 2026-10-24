@@ -29,6 +29,7 @@ export async function register() {
   if (process.env.NEXT_RUNTIME !== "nodejs") return;
   if (process.env.SKIP_ENV_VALIDATION) return;
   if (process.env.NEXT_PHASE === "phase-production-build") return;
+  await startRealtime();
   try {
     const { jobDriver, runJob, ensureSchedules, SCHEDULES } = await import("@/server/jobs");
     // Until 1.1: every workspace has its client pipeline and every contact a stage (ADR 0001).
@@ -54,4 +55,28 @@ export async function register() {
   } catch (err) {
     console.error("[jobs] failed to start worker", err);
   }
+}
+
+/**
+ * The websocket server for the bell and Messages (ADR 0007), in this process when REALTIME_PORT
+ * is set (the Docker image sets 3003). It listens on 127.0.0.1 only; browsers reach it through
+ * the app's `/realtime` rewrite. Without it, tabs use the Server-Sent Events stream.
+ */
+async function startRealtime() {
+  // Repeated here so the Edge build drops the import below (Node's http and crypto).
+  if (process.env.NEXT_RUNTIME !== "nodejs") return;
+  const port = Number(process.env.REALTIME_PORT);
+  const g = globalThis as { __booklyRealtime?: Promise<unknown> };
+  if (!port || g.__booklyRealtime) return;
+  const databaseUrl = process.env.REALTIME_DATABASE_URL || process.env.DATABASE_URL;
+  const authSecret = process.env.AUTH_SECRET;
+  if (!databaseUrl || !authSecret) return;
+  g.__booklyRealtime = import("@bookly/realtime/server")
+    .then(({ startRealtimeServer }) => startRealtimeServer({ port, databaseUrl, authSecret }))
+    .then((s) => {
+      console.log(`[realtime] websocket server on 127.0.0.1:${s.port} (browsers: /realtime)`);
+      return s;
+    })
+    .catch((err) => console.error("[realtime] failed to start; tabs use Server-Sent Events", err));
+  await g.__booklyRealtime;
 }

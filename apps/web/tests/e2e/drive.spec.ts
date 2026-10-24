@@ -103,7 +103,8 @@ test.describe("files", () => {
     );
     await row.getByRole("button", { name: "Restore" }).click();
     await restored;
-    await expect(page.getByText("Restored")).toBeVisible();
+    // Exact: "Restore" + "Delete forever" on a row still leaving the list read as "Restored…".
+    await expect(page.getByText("Restored", { exact: true })).toBeVisible();
     await page.goto("/admin/files?view=recent");
     await expect(page.getByRole("link", { name: renamed })).toBeVisible();
   });

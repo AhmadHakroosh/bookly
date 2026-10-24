@@ -20,6 +20,7 @@ COPY packages/config/package.json packages/config/
 COPY packages/db/package.json packages/db/
 COPY packages/email/package.json packages/email/
 COPY packages/jobs/package.json packages/jobs/
+COPY packages/realtime/package.json packages/realtime/
 COPY packages/storage/package.json packages/storage/
 COPY packages/editions/package.json packages/editions/
 COPY packages/forms/package.json packages/forms/
@@ -32,12 +33,15 @@ RUN --mount=type=cache,id=pnpm-store,target=/pnpm/store \
 FROM deps AS build
 COPY . .
 ENV SKIP_ENV_VALIDATION=1
+# The websocket server runs in-process on this internal port; the build bakes the /realtime
+# rewrite to it (ADR 0007, docs/self-hosting.md). Keep it equal to the runner's.
+ENV REALTIME_PORT=3003
 RUN pnpm --filter @bookly/web build && pnpm --filter @bookly/db build:migrator
 
 # ---------- runner: the standalone server, migrations and docs; no toolchain ----------
 FROM node:24-alpine AS runner
 WORKDIR /app
-ENV NODE_ENV=production PORT=3000 HOSTNAME=0.0.0.0 NEXT_TELEMETRY_DISABLED=1
+ENV NODE_ENV=production PORT=3000 HOSTNAME=0.0.0.0 NEXT_TELEMETRY_DISABLED=1 REALTIME_PORT=3003
 RUN addgroup -S bookly && adduser -S bookly -G bookly && mkdir -p /app/data/uploads && chown bookly:bookly /app/data/uploads
 # Uploaded files with the local storage driver (mount a volume here).
 VOLUME /app/data/uploads

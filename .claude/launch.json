@@ -3,8 +3,8 @@
   "configurations": [
     {
       "name": "bookly-web",
-      "runtimeExecutable": "pnpm",
-      "runtimeArgs": ["--filter", "@bookly/web", "dev"],
+      "runtimeExecutable": "env",
+      "runtimeArgs": ["REALTIME_PORT=3003", "pnpm", "--filter", "@bookly/web", "dev"],
       "port": 3002
     },
     {
@@ -15,6 +15,7 @@
         "APP_URL=http://localhost:3002",
         "ROOT_DOMAIN=localhost:3002",
         "PLATFORM_ADMIN_EMAILS=demo@example.com",
+        "REALTIME_PORT=3003",
         "pnpm",
         "--filter",
         "@bookly/web",
