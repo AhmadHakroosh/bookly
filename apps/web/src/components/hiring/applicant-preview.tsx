@@ -134,7 +134,10 @@ function Frame({ children }: { children: React.ReactNode }) {
 function ApplicationPage({ data }: { data: PreviewData }) {
   const closes = day(data.closesAt, data.timezone);
   const decides = day(data.decidesBy, data.timezone);
-  const next = data.journey.stages.filter((s) => !isFinal(s.category));
+  // What an applicant sees, not the team's stages: "Under review" once, however many stages say it.
+  const next = data.journey.stages
+    .filter((s) => !isFinal(s.category))
+    .filter((s, i, all) => i === 0 || all[i - 1]!.label !== s.label);
   return (
     <Frame>
       <div>
@@ -211,7 +214,9 @@ function StatusPage({ data, stage }: { data: PreviewData; stage: JourneyStage })
           ))}
         </ul>
       )}
-      <p className="text-xs text-muted-foreground">Withdraw my application</p>
+      {!isFinal(stage.category) && (
+        <p className="text-xs text-muted-foreground">Withdraw my application</p>
+      )}
     </Frame>
   );
 }

@@ -14,16 +14,24 @@ export function StepRail({
   current,
   status,
   href,
+  row = false,
 }: {
   current: "start" | SetupStep;
   status?: Partial<Record<"start" | SetupStep, "done" | "needs_work">>;
   /** The link of a step; none before the draft exists. */
   href?: (step: SetupStep) => string;
+  /** A row above the content (the stage editor needs the width), else a column from `lg`. */
+  row?: boolean;
 }) {
   const steps = ["start", ...SETUP_STEPS] as const;
   return (
-    <nav aria-label="Setup steps">
-      <ol className="flex gap-1 overflow-x-auto pb-1 lg:flex-col lg:overflow-visible lg:pb-0">
+    <nav aria-label="Setup steps" className="min-w-0">
+      <ol
+        className={cn(
+          "flex gap-1 overflow-x-auto pb-1",
+          !row && "lg:flex-col lg:overflow-visible lg:pb-0",
+        )}
+      >
         {steps.map((s, i) => {
           const st: Status = s === current ? "todo" : (status?.[s] ?? "todo");
           const Icon =

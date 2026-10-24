@@ -129,17 +129,24 @@ export type EditorData = Omit<PanelData, "stage"> & {
 
 const on = (s: SetupStage, k: ModuleKind) => !!s.modules[k] && s.modules[k]?.enabled !== false;
 
-/** Desktop (≥1024 px) keeps the configuration beside the list; smaller screens open it in a sheet. */
-function useWide(query: string) {
-  return useSyncExternalStore(
+/**
+ * The editor's own width, not the window's: beside the app's sidebar a 1280 px window leaves
+ * less room than the spec's three regions need. Two regions from 720 px (list and
+ * configuration; below, the configuration opens in a sheet), three from 1120 px (the preview).
+ */
+function useRegions(ref: React.RefObject<HTMLDivElement | null>) {
+  const width = useSyncExternalStore(
     (cb) => {
-      const m = window.matchMedia(query);
-      m.addEventListener("change", cb);
-      return () => m.removeEventListener("change", cb);
+      const el = ref.current;
+      if (!el) return () => {};
+      const o = new ResizeObserver(cb);
+      o.observe(el);
+      return () => o.disconnect();
     },
-    () => window.matchMedia(query).matches,
-    () => true,
+    () => ref.current?.clientWidth ?? 1200,
+    () => 1200,
   );
+  return { wide: width >= 720, xwide: width >= 1120 };
 }
 
 /**
@@ -148,8 +155,8 @@ function useWide(query: string) {
  * change is saved at once and the problems that block publishing show where they are.
  */
 export function StageEditor({ data }: { data: EditorData }) {
-  const wide = useWide("(min-width: 1024px)");
-  const xwide = useWide("(min-width: 1280px)");
+  const root = useRef<HTMLDivElement>(null);
+  const { wide, xwide } = useRegions(root);
   const [selected, setSelected] = useState(
     data.stages.find((s) => s.key === data.initialStage)?.key ?? data.stages[0]?.key ?? "",
   );
@@ -179,7 +186,7 @@ export function StageEditor({ data }: { data: EditorData }) {
     />
   );
   return (
-    <div className="space-y-4">
+    <div ref={root} className="space-y-4">
       {problemCount > 0 && (
         <div
           role="status"
@@ -209,7 +216,14 @@ export function StageEditor({ data }: { data: EditorData }) {
           </ul>
         </div>
       )}
-      <div className="grid items-start gap-6 lg:grid-cols-[280px_minmax(0,1fr)] xl:grid-cols-[280px_minmax(0,1fr)_400px]">
+      <div
+        className={cn(
+          "grid items-start gap-6",
+          xwide
+            ? "grid-cols-[280px_minmax(0,1fr)_380px]"
+            : wide && "grid-cols-[260px_minmax(0,1fr)]",
+        )}
+      >
         <StageList data={data} selected={stage?.key ?? ""} onSelect={select} />
         {wide && <div className="min-w-0 rounded-xl border bg-card p-5">{config}</div>}
         {xwide && stage && (
@@ -708,9 +722,9 @@ function StageConfig({
   const criteria = (id: string | null) => data.scorecards.find((s) => s.id === id)?.criteria ?? 0;
   const eventTypes = new Map(data.eventTypes.map((e) => [e.value, e.label]));
   return (
-    <div className="space-y-6" aria-busy={pending}>
-      <div className="grid gap-4 sm:grid-cols-2">
-        <div className="sm:col-span-2">
+    <div className="@container space-y-6" aria-busy={pending}>
+      <div className="grid gap-4 @lg:grid-cols-2">
+        <div className="@lg:col-span-2">
           <label htmlFor="stage-name" className="mb-1 block text-xs font-medium">
             Stage name
           </label>

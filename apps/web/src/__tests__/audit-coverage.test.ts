@@ -8,6 +8,11 @@ import { describe, expect, it } from "vitest";
  *
  *   // audit: read-only — <why>
  *
+ * An action whose server module audits every write it makes (so other callers, such as API
+ * routes, cannot skip it) names that module instead, and the test checks the module audits:
+ *
+ *   // audit: by server/hiring/setup.ts
+ *
  * The test walks every `"use server"` file under `src/app` (plus the shared consent action),
  * takes each exported function's body, and fails when it neither audits nor is marked.
  * Operator console actions write to the operator log (`audit` from `@/server/ops`), which
@@ -88,7 +93,17 @@ function bodyStart(src: string, paren: number) {
   return -1;
 }
 
-const audits = (body: string) => /\baudit\w*\(/.test(body) || READ_ONLY.test(body);
+const DELEGATED = /audit:\s*by\s+(server\/[\w/.-]+\.ts)/g;
+/** Every module the body says audits for it exists and calls audit(). */
+const delegated = (body: string) => {
+  const mods = [...body.matchAll(DELEGATED)].map((m) => m[1]!);
+  return (
+    mods.length > 0 &&
+    mods.every((m) => /\baudit\(/.test(readFileSync(path.join(ROOT, m), "utf8")))
+  );
+};
+const audits = (body: string) =>
+  /\baudit\w*\(/.test(body) || READ_ONLY.test(body) || delegated(body);
 
 describe("audit coverage", () => {
   const files = actionFiles();

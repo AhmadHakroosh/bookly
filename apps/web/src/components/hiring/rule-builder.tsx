@@ -221,7 +221,10 @@ function RuleSentence({ rule, data }: { rule: SetupRule; data: PanelData }) {
           </>
         )}
         , <span className="font-medium">do</span>:{" "}
-        {rule.actions.map((a) => describe(a, data)).join(", then ")}.
+        {rule.actions
+          .map((a) => describe(a, data))
+          .join(", then ")
+          .replace(/[.!?]?$/, ".")}
       </p>
       {off && (
         <p className="text-xs text-destructive">

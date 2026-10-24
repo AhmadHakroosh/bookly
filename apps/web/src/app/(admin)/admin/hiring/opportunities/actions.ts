@@ -5,6 +5,7 @@ import { z } from "zod";
 import type { OpportunityRole, RuleAction, StageCategory } from "@bookly/db/schema";
 import { OPPORTUNITY_TYPES, STAGE_CATEGORIES } from "@bookly/db/schema";
 import { HiringAccessError } from "@/server/access";
+import { refreshWorkspace } from "@/server/cache";
 import { zonedToUtc } from "@/lib/time";
 import { inviteToTeam, removeInvite } from "@/server/hiring/invites";
 import {
@@ -61,6 +62,7 @@ async function attempt(fn: () => Promise<string | null | void>): Promise<{ error
 /* ---------------- Create ---------------- */
 
 export async function createOpportunityAction(template: string) {
+  // audit: by server/hiring/setup.ts
   const { ws, actor } = await ctx();
   if (!isTemplateId(template)) throw new Error("Unknown template.");
   const id = await createFromTemplate(actor, ws, template);
@@ -68,6 +70,7 @@ export async function createOpportunityAction(template: string) {
 }
 
 export async function copyOpportunityAction(sourceId: string, team: boolean) {
+  // audit: by server/hiring/setup.ts
   const { ws, actor } = await ctx();
   const id = await cloneOpportunity(actor, ws, sourceId, { team });
   redirect(setupPath(id, "basics", "copied=1"));
@@ -95,6 +98,7 @@ export async function saveBasicsAction(
   _prev: BasicsState,
   formData: FormData,
 ): Promise<BasicsState> {
+  // audit: by server/hiring/setup.ts
   const { actor } = await ctx();
   const tz = String(formData.get("timezone") ?? "UTC");
   const type = String(formData.get("type") ?? "custom");
@@ -132,6 +136,7 @@ export async function saveBasicsAction(
 /* ---------------- Stages ---------------- */
 
 export async function addStageAction(id: string, name: string, category: StageCategory) {
+  // audit: by server/hiring/setup.ts
   const { actor } = await ctx();
   if (!(STAGE_CATEGORIES as readonly string[]).includes(category))
     return { error: "Choose a category." };
@@ -139,6 +144,7 @@ export async function addStageAction(id: string, name: string, category: StageCa
 }
 
 export async function updateStageAction(id: string, stageId: string, patch: StagePatch) {
+  // audit: by server/hiring/setup.ts
   const { actor } = await ctx();
   const parsed = z
     .object({
@@ -153,16 +159,19 @@ export async function updateStageAction(id: string, stageId: string, patch: Stag
 }
 
 export async function reorderStagesAction(id: string, keys: string[]) {
+  // audit: by server/hiring/setup.ts
   const { actor } = await ctx();
   return attempt(() => reorderStages(actor, id, keys.map(String)));
 }
 
 export async function duplicateStageAction(id: string, stageId: string) {
+  // audit: by server/hiring/setup.ts
   const { actor } = await ctx();
   return attempt(() => duplicateStage(actor, id, stageId));
 }
 
 export async function removeStageAction(id: string, stageId: string, moveTo: string | null) {
+  // audit: by server/hiring/setup.ts
   const { actor } = await ctx();
   const r = await attempt(() => removeStage(actor, id, stageId, moveTo));
   if (!r.error) redirect(setupPath(id, "stages"));
@@ -179,18 +188,21 @@ export async function toggleModuleAction(
   kind: string,
   enabled: boolean,
 ) {
+  // audit: by server/hiring/setup.ts
   const { actor } = await ctx();
   if (!isKind(kind)) return { error: "Unknown module." };
   return attempt(() => saveModule(actor, id, stageId, kind, { enabled }));
 }
 
 export async function saveModuleAction(id: string, stageId: string, kind: string, config: unknown) {
+  // audit: by server/hiring/setup.ts
   const { actor } = await ctx();
   if (!isKind(kind)) return { error: "Unknown module." };
   return attempt(() => saveModule(actor, id, stageId, kind, { config }));
 }
 
 export async function saveMessageAction(id: string, stageId: string, draft: MessageDraft) {
+  // audit: by server/hiring/setup.ts
   const { actor } = await ctx();
   const parsed = z
     .object({
@@ -205,6 +217,7 @@ export async function saveMessageAction(id: string, stageId: string, draft: Mess
 }
 
 export async function deleteMessageAction(id: string, stageId: string, templateId: string) {
+  // audit: by server/hiring/setup.ts
   const { actor } = await ctx();
   return attempt(() => deleteMessage(actor, id, stageId, templateId));
 }
@@ -215,6 +228,7 @@ export async function saveRuleAction(
   ruleId: string | null,
   input: { name: string; on: "enter" | "leave"; tag: string; actions: RuleAction[] },
 ): Promise<{ problems?: string[] }> {
+  // audit: by server/hiring/setup.ts
   const { actor } = await ctx();
   try {
     const problems = await saveHiringRule(actor, id, stageId, ruleId, input);
@@ -226,6 +240,7 @@ export async function saveRuleAction(
 }
 
 export async function deleteRuleAction(id: string, ruleId: string) {
+  // audit: by server/hiring/setup.ts
   const { actor } = await ctx();
   return attempt(() => deleteHiringRule(actor, id, ruleId));
 }
@@ -235,14 +250,20 @@ export async function deleteRuleAction(id: string, ruleId: string) {
 const ROLES = ["coordinator", "reviewer", "interviewer", "viewer"] as const;
 
 export async function setTeamRoleAction(id: string, userId: string, role: OpportunityRole) {
-  const { actor } = await ctx();
+  // audit: by server/hiring/team.ts
+  const { ws, actor } = await ctx();
   if (!(ROLES as readonly string[]).includes(role)) return { error: "Choose a role." };
-  return attempt(() => setTeamRole(actor, id, userId, role));
+  const r = await attempt(() => setTeamRole(actor, id, userId, role));
+  refreshWorkspace(ws.id);
+  return r;
 }
 
 export async function removeTeamMemberAction(id: string, userId: string) {
-  const { actor } = await ctx();
-  return attempt(() => removeFromTeam(actor, id, userId));
+  // audit: by server/hiring/team.ts
+  const { ws, actor } = await ctx();
+  const r = await attempt(() => removeFromTeam(actor, id, userId));
+  refreshWorkspace(ws.id);
+  return r;
 }
 
 export type InviteState = { error?: string; done?: "member" | "invited"; at?: number };
@@ -254,6 +275,7 @@ export async function inviteAction(
   _prev: InviteState,
   formData: FormData,
 ): Promise<InviteState> {
+  // audit: by server/hiring/invites.ts
   const { ws, actor } = await ctx();
   const role = String(formData.get("role") ?? "reviewer") as OpportunityRole;
   if (!(ROLES as readonly string[]).includes(role)) return { error: "Choose a role." };
@@ -265,6 +287,7 @@ export async function inviteAction(
       String(formData.get("email") ?? ""),
       role,
     );
+    refreshWorkspace(ws.id);
     return "error" in r ? { error: r.error } : { done: r.added, at: Date.now() };
   } catch (e) {
     if (e instanceof HiringAccessError) return { error: e.message };
@@ -273,8 +296,11 @@ export async function inviteAction(
 }
 
 export async function removeInviteAction(id: string, inviteId: string) {
-  const { actor } = await ctx();
-  return attempt(() => removeInvite(actor, id, inviteId));
+  // audit: by server/hiring/invites.ts
+  const { ws, actor } = await ctx();
+  const r = await attempt(() => removeInvite(actor, id, inviteId));
+  refreshWorkspace(ws.id);
+  return r;
 }
 
 /* ---------------- Privacy ---------------- */
@@ -286,6 +312,7 @@ export async function savePrivacyAction(
   _prev: PrivacyState,
   formData: FormData,
 ): Promise<PrivacyState> {
+  // audit: by server/hiring/setup.ts
   const { actor } = await ctx();
   const r = await attempt(() =>
     savePrivacy(actor, id, {
@@ -306,6 +333,7 @@ export async function savePrivacyAction(
 export async function publishAction(
   id: string,
 ): Promise<PublishResult | { ok: false; reasons: string[] }> {
+  // audit: by server/hiring/setup.ts
   const { ws, actor } = await ctx();
   try {
     const r = await publishOpportunity(actor, ws, id);
@@ -319,6 +347,7 @@ export async function publishAction(
 }
 
 export async function closeOpportunityAction(id: string) {
+  // audit: by server/hiring/setup.ts
   const { actor } = await ctx();
   return attempt(() => closeOpportunity(actor, id));
 }
@@ -326,6 +355,7 @@ export async function closeOpportunityAction(id: string) {
 export async function archiveOpportunityAction(
   id: string,
 ): Promise<{ error?: string; unheard?: number }> {
+  // audit: by server/hiring/setup.ts
   const { actor } = await ctx();
   try {
     const r = await archiveOpportunity(actor, id);
@@ -338,6 +368,7 @@ export async function archiveOpportunityAction(
 }
 
 export async function discardDraftAction(id: string) {
+  // audit: by server/hiring/setup.ts
   const { actor } = await ctx();
   const r = await attempt(() => discardDraft(actor, id));
   if (!r.error) redirect("/admin/hiring/opportunities");

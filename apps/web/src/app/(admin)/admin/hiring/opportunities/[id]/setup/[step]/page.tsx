@@ -126,8 +126,13 @@ async function SetupPage({
   return (
     <div className="space-y-6">
       {header}
-      <div className="grid gap-6 lg:grid-cols-[12rem_minmax(0,1fr)]">
+      <div
+        className={
+          step === "stages" ? "space-y-6" : "grid gap-6 lg:grid-cols-[12rem_minmax(0,1fr)]"
+        }
+      >
         <StepRail
+          row={step === "stages"}
           current={step}
           status={stepStatus(setup.checklist, setup.basics)}
           href={(x) => setupPath(id, x)}
