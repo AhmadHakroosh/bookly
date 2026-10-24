@@ -109,3 +109,73 @@ export function stageProblems(
     problems.push("A pipeline needs at least one open stage.");
   return problems;
 }
+
+/* ---------------- Editing (Settings → Pipeline) ---------------- */
+
+/** A new stage's colour by category, so a stage is recognisable before anyone picks one. */
+export const STAGE_COLOR: Record<StageCategory, string> = {
+  open: "#71717a",
+  hold: "#ca8a04",
+  won: "#16a34a",
+  lost: "#dc2626",
+};
+
+type Live = Pick<StageTemplate, "key" | "name" | "category" | "color" | "isEntry"> & { id: string };
+
+/** The problems with the pipeline after editing one stage (empty = fine). */
+export function editProblems(
+  stages: Live[],
+  id: string,
+  patch: Partial<Pick<Live, "name" | "category" | "color" | "isEntry">>,
+): string[] {
+  const next = stages.map((s) =>
+    s.id === id ? { ...s, ...patch } : patch.isEntry ? { ...s, isEntry: false } : s,
+  );
+  return stageProblems(next);
+}
+
+/**
+ * Why a stage cannot be archived, or null. A stage with people in it needs somewhere to move
+ * them; the pipeline must keep an entry stage and an open stage.
+ */
+export function archiveProblem(
+  stages: Live[],
+  id: string,
+  inStage: number,
+  moveTo: string | null,
+): string | null {
+  const s = stages.find((x) => x.id === id);
+  if (!s) return "That stage no longer exists.";
+  if (s.isEntry) return "Choose another stage where new people start first.";
+  const rest = stages.filter((x) => x.id !== id);
+  if (!rest.some((x) => x.category === "open")) return "A pipeline needs at least one open stage.";
+  if (inStage > 0 && (!moveTo || moveTo === id || !rest.some((x) => x.id === moveTo)))
+    return `Move the ${inStage} ${inStage === 1 ? "person" : "people"} in this stage somewhere first.`;
+  return null;
+}
+
+/** The neighbour a stage swaps places with when moved up or down, or null at the end. */
+export function swapTarget<T extends { id: string }>(stages: T[], id: string, dir: "up" | "down") {
+  const i = stages.findIndex((s) => s.id === id);
+  const j = dir === "up" ? i - 1 : i + 1;
+  return i < 0 || j < 0 || j >= stages.length ? null : stages[j]!;
+}
+
+/**
+ * The stage a key names, for callers that still speak the classic values (the recap's and
+ * capture's suggestions, the first completed meeting): its own stage while it lives, else the
+ * first live stage of its kind, so "won" still lands after Won was archived. `lead` is the
+ * entry stage, `active` the first open stage after it.
+ */
+export function stageForKey<T extends { key: string; category: StageCategory; isEntry: boolean }>(
+  stages: T[],
+  key: string,
+): T | undefined {
+  const own = stages.find((s) => s.key === key);
+  if (own) return own;
+  const entry = stages.find((s) => s.isEntry) ?? stages[0];
+  if (key === "lead") return entry;
+  if (key === "active") return stages.find((s) => s.category === "open" && s !== entry) ?? entry;
+  if (key === "won" || key === "lost") return stages.find((s) => s.category === key);
+  return undefined;
+}

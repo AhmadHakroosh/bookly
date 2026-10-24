@@ -1,8 +1,9 @@
 "use server";
 
+import { stageChoices } from "@/server/pipelines";
+
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { CONTACT_STAGES, type ContactStage } from "@bookly/db/schema";
 import { brandForPreview } from "@/emails/brand";
 import { audit, diff } from "@/server/audit";
 import { paymentsReady } from "@/server/payments";
@@ -207,14 +208,15 @@ export async function sendPaymentRequest(id: string, formData: FormData): Promis
 export async function changeStage(id: string, formData: FormData) {
   const { ws, session } = await ctx();
   const stage = String(formData.get("stage") ?? "");
-  if (!(CONTACT_STAGES as readonly string[]).includes(stage)) return;
+  const { choices, keyOf } = await stageChoices(ws);
+  if (!choices.some((s) => s.key === stage)) return;
   const c = await getContact(ws.id, id);
-  if (!c || c.stage === stage) return;
-  await setStage(ws.id, id, stage as ContactStage, session.user.id);
+  if (!c || keyOf(c) === stage) return;
+  await setStage(ws.id, id, stage, session.user.id);
   await audit({
     action: "contact.stage_changed",
     target: contactTarget(c),
-    changes: { stage: { from: c.stage, to: stage } },
+    changes: { stage: { from: keyOf(c), to: stage } },
   });
   revalidatePath(`/admin/contacts/${id}`);
 }

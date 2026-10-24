@@ -8,6 +8,7 @@ import { db } from "@/lib/db";
 import { BRIEF_SYSTEM, factsForModel, plainBrief, type BriefFacts } from "./brief-text";
 import { listOpenTasks } from "./capture";
 import { contactTimeline, logContactEvent, trackBooking } from "./contacts";
+import { clientStages } from "./pipelines";
 import { getProfileByUser } from "./scheduling";
 
 export const assistantConfigured = () => !!loadEnv().ANTHROPIC_API_KEY;
@@ -23,7 +24,7 @@ async function gatherFacts(
   const c =
     contact ??
     (await trackBooking(workspace, booking, "booked", `Booked ${eventType?.title ?? "meeting"}`));
-  const [timeline, previous, host, openTasks] = await Promise.all([
+  const [timeline, previous, host, openTasks, stages] = await Promise.all([
     contactTimeline(c.id, 40),
     db()
       .select({
@@ -39,6 +40,7 @@ async function gatherFacts(
       .orderBy(asc(schema.bookings.startAt)),
     getProfileByUser(workspace.id, booking.hostUserId),
     listOpenTasks(workspace.id, { contactId: c.id, limit: 10 }),
+    clientStages(workspace.id),
   ]);
   const questions = (eventType?.questions ?? [])
     .map((q) => ({ label: q.label, answer: (booking.answers[q.id] ?? "").trim() }))
@@ -48,7 +50,7 @@ async function gatherFacts(
     booking,
     eventTitle: eventType?.title ?? "Meeting",
     questions,
-    contact: c,
+    contact: { ...c, stageName: stages.find((s) => s.id === c.stageId)?.name ?? null },
     timeline: timeline.filter((e) => e.bookingId !== booking.id || e.type !== "booked"),
     openTasks: openTasks.map((t) => t.title),
     previousMeetings: previous

@@ -24,7 +24,6 @@ import { BackLink } from "@/components/links";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { PaneHost } from "@/components/pane";
-import { CONTACT_STAGES } from "@bookly/db/schema";
 import { Badge } from "@/components/ui/badge";
 import { SubmitButton } from "@/components/submit-button";
 import { fmtDateTime } from "@/lib/time";
@@ -61,6 +60,7 @@ import { paymentsReady } from "@/server/payments";
 import { ContactDetailsForm } from "./details-form";
 import { Outreach } from "./outreach";
 import { Dropdown } from "@/components/dropdown";
+import { stageChoices } from "@/server/pipelines";
 
 export const metadata = { title: "Contact" };
 
@@ -93,6 +93,7 @@ async function ContactPage({ params, searchParams }: PageProps<"/admin/contacts/
   const tz = (await getProfileByUser(ws.id, session.user.id))?.timezone ?? ws.timezone;
   const c = await getContact(ws.id, id);
   if (!c) notFound();
+  const stages = await stageChoices(ws);
   const sp = await searchParams;
   const v2 = await hasFlag(ws, "timeline_v2");
   const canReply = v2 && hasFeature(ws, "inboundEmail") && (await inboundOn(ws));
@@ -143,12 +144,13 @@ async function ContactPage({ params, searchParams }: PageProps<"/admin/contacts/
             Stage
           </label>
           <Dropdown
+            // Remounts after a save: the picker is uncontrolled and its default moves.
+            key={stages.keyOf(c)}
             id="stage"
             name="stage"
-            defaultValue={c.stage}
-            className="w-36 capitalize"
-            contentClassName="capitalize"
-            options={CONTACT_STAGES.map((s) => ({ value: s, label: s }))}
+            defaultValue={stages.keyOf(c)}
+            className="w-36"
+            options={stages.choices.map((s) => ({ value: s.key, label: s.name }))}
           />
           <SubmitButton variant="outline">Update</SubmitButton>
         </form>

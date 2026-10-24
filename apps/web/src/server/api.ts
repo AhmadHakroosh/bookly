@@ -11,6 +11,7 @@ import type {
   Profile,
   Task,
   Workspace,
+  PipelineStage,
 } from "@bookly/db/schema";
 import { db } from "@/lib/db";
 import { apiBudget } from "@bookly/cloud";
@@ -152,7 +153,12 @@ export function serializeEventType(
   };
 }
 
-export function serializeContact(c: Contact) {
+/**
+ * A contact for the API and webhooks. `stage` is the classic value (lead, active, won, lost),
+ * kept through 1.0.x; `stageId` / `stageKey` / `stageName` are the client pipeline's stage
+ * (key and name when the caller passes the stage).
+ */
+export function serializeContact(c: Contact, stage?: Pick<PipelineStage, "key" | "name"> | null) {
   return {
     id: c.id,
     email: c.email,
@@ -161,6 +167,10 @@ export function serializeContact(c: Contact) {
     phone: c.phone,
     tags: c.tags,
     stage: c.stage,
+    stageId: c.stageId ?? null,
+    ...(stage !== undefined
+      ? { stageKey: stage?.key ?? null, stageName: stage?.name ?? null }
+      : {}),
     notes: c.notes,
     nextFollowUpAt: c.nextFollowUpAt?.toISOString() ?? null,
     lastActivityAt: c.lastActivityAt.toISOString(),

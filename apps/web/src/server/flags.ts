@@ -28,6 +28,7 @@ export const FLAGS = {
   guest_portal: "Guest portal (0.22.0)",
   forms_v2: "Booking and routing questions served from versioned forms (1.0, ADR 0004)",
   hiring: "Hiring: opportunities, applications, reviews and collaborators (1.0, ADR 0003)",
+  pipelines: "Contact stages from the client pipeline, and the pipeline editor (1.0, ADR 0001)",
 } as const;
 
 export type FlagKey = keyof typeof FLAGS;

@@ -16,7 +16,10 @@ export type BriefFacts = {
   contact: Pick<
     Contact,
     "name" | "email" | "company" | "stage" | "tags" | "notes" | "bookingsCount" | "createdAt"
-  >;
+  > & {
+    /** The client stage's name, when the contact has one ("Proposal sent"). */ stageName?:
+      string | null;
+  };
   /** Newest first. */
   timeline: Pick<ContactEvent, "type" | "summary" | "createdAt" | "data">[];
   previousMeetings: { title: string; startAt: Date; status: string }[];
@@ -32,7 +35,7 @@ export function plainBrief(f: BriefFacts, now = new Date()): string {
   const who = [f.contact.name || f.contact.email, f.contact.company].filter(Boolean).join(", ");
   const lines: string[] = [];
   lines.push(
-    `${who} · ${f.contact.stage}${f.contact.tags.length ? ` · ${f.contact.tags.join(", ")}` : ""}`,
+    `${who} · ${f.contact.stageName ?? f.contact.stage}${f.contact.tags.length ? ` · ${f.contact.tags.join(", ")}` : ""}`,
   );
   const past = f.previousMeetings.filter((m) => m.startAt < now);
   if (past.length) {
@@ -62,7 +65,7 @@ export function factsForModel(f: BriefFacts, now = new Date()): string {
   const rows = [
     `Meeting: ${f.eventTitle} on ${fmtDateTime(f.booking.startAt, f.tz)}`,
     `Contact: ${f.contact.name || "(no name)"} <${f.contact.email}>${f.contact.company ? `, ${f.contact.company}` : ""}`,
-    `Stage: ${f.contact.stage}; tags: ${f.contact.tags.join(", ") || "none"}; contact since ${fmtDateTime(f.contact.createdAt, f.tz)}; ${f.contact.bookingsCount} bookings`,
+    `Stage: ${f.contact.stageName ?? f.contact.stage}; tags: ${f.contact.tags.join(", ") || "none"}; contact since ${fmtDateTime(f.contact.createdAt, f.tz)}; ${f.contact.bookingsCount} bookings`,
     f.contact.notes ? `Host notes: ${f.contact.notes}` : "",
     f.questions.length
       ? `Booking answers:\n${f.questions.map((q) => `- ${q.label}: ${q.answer}`).join("\n")}`
