@@ -45,8 +45,7 @@ export default function DesignPage() {
   return (
     <div className="space-y-10">
       <p className="max-w-2xl text-sm text-muted-foreground">
-        The admin&apos;s building blocks with sample content. Switch the theme to check them in dark
-        mode.
+        The admin&apos;s building blocks with sample content, light only like the app.
       </p>
 
       <Section title="Page header">

@@ -261,8 +261,8 @@ test.describe("sign-up and tenants", () => {
     await page.goto(`${platformUrl}/console/installs`);
     await expect(page.getByRole("heading", { name: "Self-hosted installs" })).toBeVisible();
 
-    // The cloud shell (switcher open) and the console's design gallery, in both themes. Here
-    // rather than in a test of its own: sign-ins are rate limited.
+    // The cloud shell (switcher open) and the console's design gallery. Here rather than in a
+    // test of its own: sign-ins are rate limited.
     test.setTimeout(90_000);
     const scan = async (where: string) => {
       await page.waitForLoadState("networkidle");
@@ -275,16 +275,13 @@ test.describe("sign-up and tenants", () => {
         .analyze();
       expect(r.violations, `${where}: ${JSON.stringify(r.violations, null, 2)}`).toEqual([]);
     };
-    for (const colorScheme of ["light", "dark"] as const) {
-      await page.emulateMedia({ colorScheme });
-      await page.goto(`${tenantUrl(DEMO.username)}/admin`);
-      await page.getByRole("button", { name: /Switch workspace/ }).click();
-      await expect(page.getByRole("menu")).toBeVisible();
-      await scan(`workspace switcher (${colorScheme})`);
-      await page.goto(`${platformUrl}/console/design`);
-      await expect(page.getByRole("heading", { name: "Kanban" })).toBeVisible();
-      await scan(`/console/design (${colorScheme})`);
-    }
+    await page.goto(`${tenantUrl(DEMO.username)}/admin`);
+    await page.getByRole("button", { name: /Switch workspace/ }).click();
+    await expect(page.getByRole("menu")).toBeVisible();
+    await scan("workspace switcher");
+    await page.goto(`${platformUrl}/console/design`);
+    await expect(page.getByRole("heading", { name: "Kanban" })).toBeVisible();
+    await scan("/console/design");
   });
 });
 

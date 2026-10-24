@@ -7,7 +7,6 @@ import { ExternalLinkIcon, MenuIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SubmitButton } from "@/components/submit-button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { ThemeToggle } from "@/components/theme-toggle";
 import { GitHubIcon, Logo, LogoMark } from "@/components/brand/logo";
 import { auth } from "@/lib/auth";
 import { isPlatformAdmin } from "@/server/platform";
@@ -214,7 +213,6 @@ function Shell({ children }: { children: React.ReactNode }) {
             >
               <GitHubIcon className="size-4" />
             </a>
-            <ThemeToggle />
             <Suspense fallback={<span className="hidden h-8 w-16 sm:inline-block" aria-hidden />}>
               <SessionNav />
             </Suspense>

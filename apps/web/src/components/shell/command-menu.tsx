@@ -17,7 +17,7 @@ import { searchContactsAction, type JumpContact } from "@/app/(admin)/admin/sear
 import { Button } from "@/components/ui/button";
 import { Kbd } from "@/components/ui/kbd";
 import { cn } from "@/lib/utils";
-import { navGroups, type NavOptions } from "./nav";
+import { navPages, type NavOptions } from "./nav";
 
 type JumpItem = {
   id: string;
@@ -50,16 +50,14 @@ const SETTINGS: [string, string][] = [
 ];
 
 function jumpGroups(nav: NavOptions, bookingPageHref?: string | null): JumpGroup[] {
-  const pages = navGroups(nav).flatMap((g) =>
-    g.items.map((it) => ({
-      id: `page:${it.href}`,
-      label: it.label,
-      detail: g.label,
-      href: it.href,
-      icon: it.icon,
-      keywords: it.keywords,
-    })),
-  );
+  const pages = navPages(nav).map(({ item, solution }) => ({
+    id: `page:${item.href}`,
+    label: item.label,
+    detail: solution === "hiring" ? "Hiring" : undefined,
+    href: item.href,
+    icon: item.icon,
+    keywords: item.keywords,
+  }));
   const you: JumpItem[] = [
     {
       id: "you:account",

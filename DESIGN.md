@@ -20,9 +20,10 @@ The palette comes from the v1.0 product concepts; values and contrast checks liv
 | `sidebar`, `muted`, `secondary`             | Sand          | Sidebar, quiet surfaces                                     |
 | `success`, `warning`, `info`, `destructive` | semantic      | Status only, with `-muted` fills for chips                  |
 
-Hover states are solid tokens, never a see-through fill: `primary-hover` darkens Ember in light
-mode and lifts the orange in dark mode; `ink-hover` moves Ink one step toward the page (lighter
-in light mode, darker in dark mode). A label keeps its contrast while the pointer is on it.
+Hover states are solid tokens, never a see-through fill: `primary-hover` darkens Ember and
+`ink-hover` lifts Ink a step, so a label keeps its contrast while the pointer is on it. Bookly is
+light only (founder, 2026-10-25): the app ignores a dark system setting and offers no theme
+toggle; the `.dark` values left in `globals.css` are for reversed brand uses only.
 
 Bookly Orange never carries small text: white on it is 3.48:1. Status is never brand orange:
 "Due today", "Feedback missing" and overdue counts are `warning` or `destructive`. A workspace's
@@ -57,24 +58,31 @@ add `h-8` (and a `size="sm"` button) only inside tables and chips.
 ## The shell
 
 Every admin page sits in one frame (`app/(admin)/admin/layout.tsx`, parts in
-`components/shell/`):
+`components/shell/`), drawn as `app ui.png` and specified in
+`planning/v2/ux/concept-fidelity.md` §2, which is binding:
 
-- **Sidebar** (Sand, 240 px, `lg` and up): the Bookly lockup, the workspace switcher (a card with
-  the workspace's logo or initial on Ink), then the nav grouped by job: **Work**, **Hiring**
-  (only with the `hiring` flag), **Scheduling**, and **Workspace** pinned to the bottom for
-  owners and admins. Group labels are small and muted; the active item is Peach with Ember text
-  and `aria-current="page"`. The groups live in `shell/nav.ts`, which the breadcrumb and ⌘K read
-  too: add a page there and it is navigable, named and searchable. Collaborators keep their own
-  short list (ADR 0005).
-- **Top bar** (56 px, sticky): breadcrumb (group › page › sub-page; stops before an id), the
-  search-or-jump field (⌘K), the bell, Help, and the account menu (avatar). Personal pages
-  (Account, Notifications, the public booking page) and the theme live in the account menu, not
-  the sidebar.
+- **Sidebar** (Sand, 240 px, `lg` and up): the Bookly lockup; the workspace switcher (a card with
+  the workspace's logo or initial on Ink); the primary items (Home, Bookings, Contacts, Messages,
+  Tasks, Files), a divider, the scheduling items (Booking page, Event types, Availability,
+  Routing); Settings and Team pinned to the bottom for owners and admins; a divider and the
+  account card (picture, name, email). **No group headings**: the dividers are the only
+  grouping. The active item is Peach with Ember text and `aria-current="page"`; Messages carries
+  its unread count. Collaborators keep their own short list (ADR 0005).
+- **Clients | Hiring**: where the `hiring` flag is on, a two-way switch under the workspace
+  swaps in Hiring's own items (`hiring.png`, decision D1). Messages, Files, Settings and Team
+  are shared and keep the side you came from.
+- **Top bar** (56 px, sticky): breadcrumb ("Workspace / Home", "Hiring / Overview"; stops before
+  an id), the search-or-jump field (⌘K) in the middle, then the bell, Help (icon and word) and
+  the avatar. No theme toggle. Personal pages (Account, Notifications, Calendars, Conferencing,
+  the public booking page) live in the account menu; Domains and Billing are reached from ⌘K
+  until Settings is regrouped (§4.11).
 - **Phone and narrow windows**: the sidebar becomes a sheet behind a menu button; the logo mark,
   a search button, the bell, Help and the avatar stay in the bar.
-- **⌘K** (`shell/command-menu.tsx`) is Base UI Autocomplete in a Dialog: pages, settings tabs,
-  your own things, and contacts searched on the server as you type. It never offers a page the
-  nav would not show you.
+- **⌘K** (`shell/command-menu.tsx`) is Base UI Autocomplete in a Dialog: every page the member
+  can open, settings tabs, their own things, and contacts searched on the server as you type.
+
+`shell/nav.ts` holds the sidebar, the breadcrumb and the ⌘K pages: add a page there and it is
+navigable, named and searchable.
 
 ## Page anatomy
 

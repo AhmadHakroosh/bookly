@@ -35,15 +35,34 @@ const flags = async (state: "on" | "off") => {
       .onConflictDoUpdate({ target: schema.featureFlags.key, set: { state } });
 };
 
-test("the sidebar groups pages by job and the breadcrumb follows", async ({ page }) => {
+test("the sidebar is the concept's, and the breadcrumb starts at Workspace", async ({ page }) => {
   await page.goto("/admin");
   const nav = page.getByRole("navigation", { name: "Admin" });
-  for (const group of ["Work", "Scheduling", "Workspace"])
-    await expect(nav.getByText(group, { exact: true })).toBeVisible();
+  // app ui.png: no group headings, Settings and Team pinned to the bottom.
+  for (const heading of ["Work", "Scheduling", "Workspace"])
+    await expect(nav.getByText(heading, { exact: true })).toHaveCount(0);
+  await expect(nav.getByRole("link")).toHaveText([
+    "Home",
+    "Bookings",
+    "Contacts",
+    /Messages/,
+    "Tasks",
+    "Files",
+    "Booking page",
+    "Event types",
+    "Availability",
+    "Routing",
+    "Settings",
+    "Team",
+  ]);
   await expect(nav.getByRole("link", { name: "Home" })).toHaveAttribute("aria-current", "page");
   const crumbs = page.getByRole("navigation", { name: "Breadcrumb" });
-  await expect(crumbs.getByText("Work")).toBeVisible();
+  await expect(crumbs.getByRole("link", { name: "Workspace" })).toBeVisible();
   await expect(crumbs.locator('[aria-current="page"]')).toHaveText("Home");
+  // The account card at the foot of the sidebar opens the same menu as the avatar.
+  await page.getByRole("complementary").getByRole("button", { name: /Demo/ }).click();
+  await expect(page.getByRole("menuitem", { name: "Account" })).toBeVisible();
+  await page.keyboard.press("Escape");
 
   await nav.getByRole("link", { name: "Settings" }).click();
   await page
@@ -90,19 +109,29 @@ test("Help lists the documentation and the keyboard shortcuts", async ({ page })
   await expect(dialog.getByText("Search or jump to a page")).toBeVisible();
 });
 
-test("Hiring shows in the sidebar only where its flag is on", async ({ page }) => {
+test("a workspace in the hiring beta switches between Clients and Hiring", async ({ page }) => {
   await page.goto("/admin");
   const nav = page.getByRole("navigation", { name: "Admin" });
-  await expect(nav.getByText("Hiring", { exact: true })).toHaveCount(0);
+  await expect(nav.getByRole("group", { name: "Solution" })).toHaveCount(0);
   await page.goto("/admin/hiring");
   await expect(page).toHaveURL(/\/admin$/);
 
   await flags("on");
   await page.goto("/admin");
-  await expect(nav.getByText("Hiring", { exact: true })).toBeVisible();
-  await nav.getByRole("link", { name: "Overview" }).click();
+  const solution = nav.getByRole("group", { name: "Solution" });
+  await expect(solution.getByRole("link", { name: "Clients" })).toHaveAttribute(
+    "aria-current",
+    "true",
+  );
+  await solution.getByRole("link", { name: "Hiring" }).click();
   await expect(page.getByRole("heading", { name: "Hiring", level: 1 })).toBeVisible();
   await expect(page.getByText("No opportunities yet")).toBeVisible();
+  // Hiring's own sidebar and breadcrumb (hiring.png).
+  await expect(nav.getByRole("link", { name: "Overview" })).toHaveAttribute("aria-current", "page");
+  await expect(nav.getByRole("link", { name: "Bookings" })).toHaveCount(0);
+  await expect(
+    page.getByRole("navigation", { name: "Breadcrumb" }).getByRole("link", { name: "Hiring" }),
+  ).toBeVisible();
   await flags("off");
 });
 

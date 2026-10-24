@@ -2,9 +2,17 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useState } from "react";
 import { useMessagesUnread } from "@/lib/messages-live";
 import { cn } from "@/lib/utils";
-import { isActive, navGroups, type NavGroup, type NavOptions } from "@/components/shell/nav";
+import {
+  isActive,
+  navSections,
+  solutionOf,
+  type NavItem,
+  type NavOptions,
+  type Solution,
+} from "@/components/shell/nav";
 
 function UnreadBadge({ initial }: { initial: number }) {
   const n = useMessagesUnread(initial);
@@ -17,64 +25,99 @@ function UnreadBadge({ initial }: { initial: number }) {
   );
 }
 
-function Group({ g, pathname, className }: { g: NavGroup; pathname: string; className?: string }) {
+function Items({ items, pathname }: { items: NavItem[]; pathname: string }) {
   return (
-    <div className={className}>
-      <p className="mb-1 px-2.5 text-xs font-medium text-muted-foreground">{g.label}</p>
-      <ul className="space-y-0.5">
-        {g.items.map((it) => {
-          const on = isActive(pathname, it.href);
-          return (
-            <li key={it.href}>
-              <Link
-                href={it.href}
-                aria-current={on ? "page" : undefined}
-                className={cn(
-                  "flex h-9 items-center gap-3 rounded-lg px-2.5 outline-none focus-visible:ring-3 focus-visible:ring-sidebar-ring/50",
-                  on
-                    ? "bg-sidebar-accent font-medium text-sidebar-accent-foreground"
-                    : "text-sidebar-foreground hover:bg-[color-mix(in_oklch,var(--sidebar),var(--foreground)_6%)]",
-                )}
-              >
-                <it.icon
-                  className={cn("size-[18px] shrink-0", !on && "text-muted-foreground")}
-                  aria-hidden
-                />
-                <span className="truncate">{it.label}</span>
-                {it.unread !== undefined && <UnreadBadge initial={it.unread} />}
-              </Link>
-            </li>
-          );
-        })}
-      </ul>
-    </div>
+    <ul className="space-y-0.5">
+      {items.map((it) => {
+        const on = isActive(pathname, it.href);
+        return (
+          <li key={it.href}>
+            <Link
+              href={it.href}
+              aria-current={on ? "page" : undefined}
+              className={cn(
+                "flex h-10 items-center gap-3 rounded-lg px-3 outline-none focus-visible:ring-3 focus-visible:ring-sidebar-ring/50",
+                on
+                  ? "bg-sidebar-accent font-medium text-sidebar-accent-foreground"
+                  : "text-sidebar-foreground hover:bg-[color-mix(in_oklch,var(--sidebar),var(--foreground)_6%)]",
+              )}
+            >
+              <it.icon
+                className={cn("size-5 shrink-0", !on && "text-muted-foreground")}
+                aria-hidden
+              />
+              <span className="truncate">{it.label}</span>
+              {it.unread !== undefined && <UnreadBadge initial={it.unread} />}
+            </Link>
+          </li>
+        );
+      })}
+    </ul>
   );
 }
 
 /**
- * The sidebar's navigation, grouped by the job (`shell/nav.ts`): Work, Hiring (when the
- * workspace runs it), Scheduling, and Workspace for owners and admins, pinned to the bottom.
- * Collaborators (ADR 0005) only get their own profile, schedule and connections.
+ * The sidebar's navigation as `app ui.png` draws it: the primary items, a divider, the
+ * scheduling items, and Settings and Team pinned to the bottom, with no group headings. In the
+ * hiring beta a switch above swaps in Hiring's own items (`hiring.png`); Messages, Files,
+ * Settings and Team keep whichever side you came from. Collaborators (ADR 0005) only get their
+ * own profile, schedule and connections.
  */
 export function AdminNav(props: NavOptions) {
   const pathname = usePathname();
-  const groups = navGroups(props);
-  const pinned = groups.filter((g) => g.id === "workspace");
+  // Hiring pages open the Hiring side, client pages the Clients side; shared pages stay put.
+  const [solution, setSolution] = useState<Solution>(solutionOf(pathname) ?? "clients");
+  const [seen, setSeen] = useState(pathname);
+  if (seen !== pathname) {
+    setSeen(pathname);
+    const next = solutionOf(pathname);
+    if (next && next !== solution) setSolution(next);
+  }
+  const switchable = !!props.hiring && !props.collaborator;
+  const sections = navSections(props, switchable ? solution : "clients");
+  const bottom = sections.find((s) => s.id === "bottom" && s.items.length);
   return (
-    <nav className="flex min-h-full flex-col gap-5 text-sm" aria-label="Admin">
-      {groups
-        .filter((g) => g.id !== "workspace")
-        .map((g) => (
-          <Group key={g.id} g={g} pathname={pathname} />
+    <nav className="flex flex-1 flex-col gap-4 text-sm" aria-label="Admin">
+      {switchable && (
+        <div
+          role="group"
+          aria-label="Solution"
+          className="grid grid-cols-2 gap-1 rounded-lg bg-[color-mix(in_oklch,var(--sidebar),var(--foreground)_6%)] p-1 text-sm font-medium"
+        >
+          {(
+            [
+              ["clients", "Clients", "/admin"],
+              ["hiring", "Hiring", "/admin/hiring"],
+            ] as const
+          ).map(([key, label, href]) => (
+            <Link
+              key={key}
+              href={href}
+              aria-current={solution === key ? "true" : undefined}
+              className={cn(
+                "rounded-md px-2 py-1.5 text-center outline-none focus-visible:ring-3 focus-visible:ring-sidebar-ring/50",
+                solution === key
+                  ? "bg-card text-foreground shadow-xs"
+                  : "text-muted-foreground hover:text-foreground",
+              )}
+            >
+              {label}
+            </Link>
+          ))}
+        </div>
+      )}
+      {sections
+        .filter((s) => s.id !== "bottom" && s.items.length)
+        .map((s, i) => (
+          <div key={s.id} className={cn(i > 0 && "border-t border-sidebar-border pt-4")}>
+            <Items items={s.items} pathname={pathname} />
+          </div>
         ))}
-      {pinned.map((g) => (
-        <Group
-          key={g.id}
-          g={g}
-          pathname={pathname}
-          className="mt-auto border-t border-sidebar-border pt-4"
-        />
-      ))}
+      {bottom && (
+        <div className="mt-auto pt-4">
+          <Items items={bottom.items} pathname={pathname} />
+        </div>
+      )}
     </nav>
   );
 }

@@ -95,9 +95,17 @@ async function AdminShell({ children }: { children: React.ReactNode }) {
     messages,
     hiring,
   };
+  const account = {
+    email: session.user.email,
+    name: session.user.name,
+    image: session.user.image,
+    bookingPageHref,
+    signOut,
+  };
   const sidebar = (
     <AppSidebar
       nav={nav}
+      account={account}
       workspace={{
         current: {
           id: workspace?.id ?? "",
@@ -134,13 +142,7 @@ async function AdminShell({ children }: { children: React.ReactNode }) {
               </Suspense>
             )}
             <HelpMenu supportHref={supportHref} />
-            <AccountMenu
-              email={session.user.email}
-              name={session.user.name}
-              image={session.user.image}
-              bookingPageHref={bookingPageHref}
-              signOut={signOut}
-            />
+            <AccountMenu {...account} />
           </div>
         </header>
         <PaneLinks />

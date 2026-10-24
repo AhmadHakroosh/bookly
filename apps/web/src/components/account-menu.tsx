@@ -2,16 +2,15 @@
 
 import Link from "next/link";
 import { useState, useTransition } from "react";
-import { useTheme } from "next-themes";
 import {
   BellIcon,
+  CalendarDaysIcon,
   ChevronDownIcon,
+  ChevronsUpDownIcon,
   ExternalLinkIcon,
   LogOutIcon,
-  MonitorIcon,
-  MoonIcon,
-  SunIcon,
   UserRoundIcon,
+  VideoIcon,
 } from "lucide-react";
 import { BusyOverlay } from "@/components/busy-overlay";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -23,16 +22,15 @@ import {
   DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
-  DropdownMenuRadioGroup,
-  DropdownMenuRadioItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
 /**
- * The signed-in person's menu at the end of the top bar: their account (sign-in methods,
- * passkeys, password, deletion), their notification settings, their public booking page, the
- * theme, and sign-out. Workspace things stay in the sidebar.
+ * The signed-in person's menu: their account (sign-in methods, passkeys, password, deletion),
+ * their notifications and connections, their public booking page, and sign-out. Opened from the
+ * avatar at the end of the top bar and from the account card at the foot of the sidebar, as
+ * `app ui.png` draws both. Light only: there is no theme choice (concept fidelity).
  */
 export function AccountMenu({
   email,
@@ -40,6 +38,7 @@ export function AccountMenu({
   image,
   bookingPageHref,
   signOut,
+  variant = "avatar",
 }: {
   email: string;
   name: string;
@@ -47,29 +46,55 @@ export function AccountMenu({
   /** The member's public page, when they have one. */
   bookingPageHref?: string | null;
   signOut: () => Promise<void>;
+  /** `avatar` in the top bar, `card` (picture, name and email) at the foot of the sidebar. */
+  variant?: "avatar" | "card";
 }) {
   // Signing out ends with a redirect; the page stays covered until it lands.
   const [leaving, setLeaving] = useState(false);
   const [, start] = useTransition();
-  const { theme, setTheme } = useTheme();
+  const avatar = (size: string) => (
+    <Avatar size="sm" className={size} aria-hidden>
+      {image && <AvatarImage src={image} alt="" />}
+      <AvatarFallback className="bg-accent text-xs font-semibold text-accent-foreground">
+        {initialsOf(name || email)}
+      </AvatarFallback>
+    </Avatar>
+  );
   return (
     <>
       <BusyOverlay show={leaving} label="Signing out…" />
       <DropdownMenu>
-        <DropdownMenuTrigger
-          render={
-            <Button variant="ghost" className="gap-1.5 px-1.5" aria-label={`Account: ${email}`} />
-          }
+        {variant === "card" ? (
+          <DropdownMenuTrigger
+            render={
+              <Button
+                variant="ghost"
+                className="h-auto w-full justify-start gap-3 px-2 py-2 text-left font-normal"
+              />
+            }
+          >
+            {avatar("size-9")}
+            <span className="min-w-0 flex-1">
+              <span className="block truncate text-sm font-medium">{name}</span>
+              <span className="block truncate text-xs text-muted-foreground">{email}</span>
+            </span>
+            <ChevronsUpDownIcon className="size-4 text-muted-foreground" aria-hidden />
+          </DropdownMenuTrigger>
+        ) : (
+          <DropdownMenuTrigger
+            render={
+              <Button variant="ghost" className="gap-1.5 px-1.5" aria-label={`Account: ${email}`} />
+            }
+          >
+            {avatar("size-7")}
+            <ChevronDownIcon className="size-3.5 text-muted-foreground" aria-hidden />
+          </DropdownMenuTrigger>
+        )}
+        <DropdownMenuContent
+          align={variant === "card" ? "start" : "end"}
+          side={variant === "card" ? "top" : "bottom"}
+          className="w-64"
         >
-          <Avatar size="sm" className="size-7" aria-hidden>
-            {image && <AvatarImage src={image} alt="" />}
-            <AvatarFallback className="bg-accent text-xs font-semibold text-accent-foreground">
-              {initialsOf(name || email)}
-            </AvatarFallback>
-          </Avatar>
-          <ChevronDownIcon className="size-3.5 text-muted-foreground" aria-hidden />
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-64">
           <DropdownMenuGroup>
             <DropdownMenuLabel className="font-normal">
               <span className="block truncate text-sm font-medium text-foreground">{name}</span>
@@ -85,6 +110,14 @@ export function AccountMenu({
             <BellIcon className="size-4" aria-hidden />
             Notifications
           </DropdownMenuItem>
+          <DropdownMenuItem render={<Link href="/admin/calendars" />}>
+            <CalendarDaysIcon className="size-4" aria-hidden />
+            Calendars
+          </DropdownMenuItem>
+          <DropdownMenuItem render={<Link href="/admin/conferencing" />}>
+            <VideoIcon className="size-4" aria-hidden />
+            Conferencing
+          </DropdownMenuItem>
           {bookingPageHref && (
             <DropdownMenuItem
               render={<a href={bookingPageHref} target="_blank" rel="noreferrer" />}
@@ -94,24 +127,6 @@ export function AccountMenu({
               <span className="sr-only">(opens in a new tab)</span>
             </DropdownMenuItem>
           )}
-          <DropdownMenuSeparator />
-          <DropdownMenuGroup>
-            <DropdownMenuLabel className="text-xs text-muted-foreground">Theme</DropdownMenuLabel>
-            <DropdownMenuRadioGroup value={theme ?? "system"} onValueChange={(v) => setTheme(v)}>
-              <DropdownMenuRadioItem value="light">
-                <SunIcon className="size-4" aria-hidden />
-                Light
-              </DropdownMenuRadioItem>
-              <DropdownMenuRadioItem value="dark">
-                <MoonIcon className="size-4" aria-hidden />
-                Dark
-              </DropdownMenuRadioItem>
-              <DropdownMenuRadioItem value="system">
-                <MonitorIcon className="size-4" aria-hidden />
-                System
-              </DropdownMenuRadioItem>
-            </DropdownMenuRadioGroup>
-          </DropdownMenuGroup>
           <DropdownMenuSeparator />
           <DropdownMenuItem
             onClick={() => {
