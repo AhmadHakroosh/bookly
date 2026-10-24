@@ -48,6 +48,9 @@ export const envSchema = z.object({
   S3_SECRET_ACCESS_KEY: z.string().optional(),
   /** Path-style addressing (`endpoint/bucket/key`): R2 and MinIO want it; AWS prefers virtual hosts. */
   S3_FORCE_PATH_STYLE: bool,
+  /** ClamAV daemon for scanning public uploads (`docker compose --profile scan`). Unset: files stay unscanned and download-only. */
+  CLAMAV_HOST: z.string().optional(),
+  CLAMAV_PORT: z.coerce.number().int().min(1).max(65535).default(3310),
 
   // ---- Integrations (all optional; a provider is "available" when its keys are set) ----
   GOOGLE_CLIENT_ID: z.string().optional(),

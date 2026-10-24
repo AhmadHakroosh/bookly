@@ -30,3 +30,12 @@ describe("Dockerfile", () => {
     expect(missing).toEqual([]);
   });
 });
+
+describe("Docker build context", () => {
+  it("never makes the build depend on apps/web/tests (left out by .dockerignore)", () => {
+    // `next build` type-checks every file in tsconfig, playwright.config.ts included.
+    const config = readFileSync(path.join(REPO, "apps/web/playwright.config.ts"), "utf8");
+    expect(config).not.toMatch(/from\s+["']\.\/tests\//);
+    expect(readFileSync(path.join(REPO, ".dockerignore"), "utf8")).toContain("apps/web/tests");
+  });
+});

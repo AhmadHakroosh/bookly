@@ -1,7 +1,7 @@
 import "server-only";
 import { and, eq, isNull, schema } from "@bookly/db";
 import type { Workspace } from "@bookly/db/schema";
-import { getStorage } from "@bookly/storage";
+import { getStorage, scanFile, type ScanResult } from "@bookly/storage";
 import { fileAccepted, PUBLIC_FILE_MB, type Field } from "@bookly/forms";
 import { db } from "@/lib/db";
 import { bytesMatchMime, FILE_RULES, MB } from "@/lib/files";
@@ -143,6 +143,7 @@ export async function receiveFormUpload(req: Request, formId: string, fileId: st
 export async function completeFormUpload(req: Request, formId: string, fileId: string) {
   const { ws, draft } = await context(req, formId);
   const file = await ownFile(ws, draft, fileId);
+  let scan: ScanResult | null = null;
   if (file.status !== "ready") {
     const bytes = await getStorage()
       .get(file.key)
@@ -152,8 +153,19 @@ export async function completeFormUpload(req: Request, formId: string, fileId: s
       await removeFile(file, { silent: true });
       throw new FormUploadError("That file is not what its type says. Please choose another.");
     }
+    // The malware scan hook: with no scanner it stays pending (download-only).
+    scan = await scanFile({ bytes, name: file.name, mime: file.mime });
+    if (scan === "infected") {
+      await removeFile(file, { silent: true });
+      throw new FormUploadError("The virus scanner flagged that file. Please choose another.");
+    }
   }
   const ready = await completeUpload(ws, file.id);
+  if (scan)
+    await db()
+      .update(schema.files)
+      .set({ scanStatus: scan, scannedAt: scan === "pending" ? null : new Date() })
+      .where(eq(schema.files.id, file.id));
   await touchDraft(draft!.id);
   return { id: ready.id, name: ready.name, size: ready.size, mime: ready.mime };
 }

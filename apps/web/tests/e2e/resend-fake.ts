@@ -7,6 +7,9 @@ import { createServer, type Server } from "node:http";
  * points RESEND_API_URL at it). Specs run one at a time, so each starts and stops its own.
  */
 
+/** Next to the e2e server's port, as playwright.config.ts computes it: 3999 by default. */
+const RESEND_FAKE_PORT = (Number(process.env.E2E_PORT) || 3010) + 989;
+
 const WEBHOOK_SECRET = Buffer.from("e2e-webhook-secret-0123456789");
 export const DOMAIN = "reply.bookly.test";
 export const PDF = Buffer.from("%PDF-1.4\n1 0 obj<<>>endobj\ntrailer<<>>\n%%EOF\n");
@@ -31,7 +34,7 @@ export function svixHeaders(body: string) {
   };
 }
 
-/** Resend's received-emails API on :3999, answering from `received` (email id → message). */
+/** Resend's received-emails API (on RESEND_FAKE_PORT), answering from `received` (email id → message). */
 export async function startFakeResend(received: Map<string, unknown>): Promise<Server> {
   const server = createServer((req, res) => {
     const parts = (req.url ?? "").split("?")[0]!.split("/").filter(Boolean).map(decodeURIComponent);
@@ -50,7 +53,7 @@ export async function startFakeResend(received: Map<string, unknown>): Promise<S
           has_more: false,
           data: (email?.attachments ?? []).map((a) => ({
             ...a,
-            download_url: `http://localhost:3999/dl/${a.id}`,
+            download_url: `http://localhost:${RESEND_FAKE_PORT}/dl/${a.id}`,
           })),
         }),
       );
@@ -59,6 +62,6 @@ export async function startFakeResend(received: Map<string, unknown>): Promise<S
     res.writeHead(email ? 200 : 404, { "content-type": "application/json" });
     res.end(JSON.stringify(email ?? { error: "not found" }));
   });
-  await new Promise<void>((r) => server.listen(3999, r));
+  await new Promise<void>((r) => server.listen(RESEND_FAKE_PORT, r));
   return server;
 }

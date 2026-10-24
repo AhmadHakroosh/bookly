@@ -23,6 +23,7 @@ Then:
 ```bash
 docker compose --profile app up -d          # app + Postgres
 docker compose --profile app --profile tls up -d   # …plus Caddy with automatic HTTPS
+docker compose --profile app --profile scan up -d  # …plus ClamAV for uploads (see Uploads)
 ```
 
 With the `tls` profile, point your domain's A/AAAA record at the server and set `ACME_EMAIL` in `.env`. Caddy obtains certificates for `APP_URL` and for every custom domain you verify in the admin (on-demand TLS asks the app at `/api/domains/check`).
@@ -89,6 +90,21 @@ logos up to 1024 px, metadata stripped), recorded in the `files` table and serve
   which checks the viewer on every request, so no bucket URL ever reaches a browser.
 
 Self-hosted installs have no storage quota. Every upload and deletion is in the activity log.
+
+### Scanning files people send
+
+Files guests and applicants upload through public forms are scanned for malware when ClamAV is
+running. Start it with the `scan` profile and point the app at it:
+
+```bash
+docker compose --profile app --profile scan up -d
+```
+
+Then set `CLAMAV_HOST=clamav` (and `CLAMAV_PORT` if not 3310) in `.env` and restart the app.
+ClamAV needs about 2 GB of memory and downloads its signatures on first start. A file it
+flags is refused at upload; a clean file can be opened in the browser. Without a scanner (or
+while it is unreachable) files stay unscanned and are only ever downloaded, never opened in
+the browser.
 
 ## Desktop notifications (Web Push)
 

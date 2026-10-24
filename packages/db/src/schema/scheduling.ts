@@ -10,7 +10,9 @@ import {
   text,
   timestamp,
   uniqueIndex,
+  type AnyPgColumn,
 } from "drizzle-orm/pg-core";
+import { applications } from "./hiring";
 import { users } from "./auth";
 import { pipelineStages } from "./pipelines";
 import { workspaces } from "./workspaces";
@@ -326,6 +328,8 @@ export const contactEvents = pgTable(
      * belongs under (always the first email of the thread, so threads stay one level deep).
      */
     parentId: text("parent_id"),
+    /** Hiring events: shown only to people who may see the application (ADR 0005). */
+    applicationId: text("application_id"),
     type: text("type").$type<ContactEventType>().notNull(),
     summary: text("summary").notNull(),
     data: jsonb("data").$type<Record<string, unknown>>().notNull().default({}),
@@ -335,6 +339,7 @@ export const contactEvents = pgTable(
     // Keyset pages of a contact's timeline: (created_at, id) newest first, never offsets.
     index("contact_events_contact_idx").on(t.contactId, t.createdAt, t.id),
     index("contact_events_parent_idx").on(t.parentId),
+    index("contact_events_application_idx").on(t.applicationId, t.createdAt, t.id),
   ],
 );
 
@@ -500,6 +505,13 @@ export const bookings = pgTable(
     seriesCount: integer("series_count"),
     /** The person this booking belongs to (see `contacts`). */
     contactId: text("contact_id"),
+    /** Hiring (ADR 0003): an interview is a booking for an application at a stage. */
+    applicationId: text("application_id").references((): AnyPgColumn => applications.id, {
+      onDelete: "set null",
+    }),
+    stageId: text("stage_id").references((): AnyPgColumn => pipelineStages.id, {
+      onDelete: "set null",
+    }),
     /** Pre-meeting briefing for the host (see server/brief.ts). */
     brief: text("brief"),
     briefAt: timestamp("brief_at", { withTimezone: true }),
@@ -552,6 +564,7 @@ export const bookings = pgTable(
     index("bookings_series_idx").on(t.seriesId),
     index("bookings_event_start_idx").on(t.eventTypeId, t.startAt),
     index("bookings_contact_idx").on(t.contactId),
+    index("bookings_application_idx").on(t.applicationId),
   ],
 );
 

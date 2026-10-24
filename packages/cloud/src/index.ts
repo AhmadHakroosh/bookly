@@ -22,6 +22,8 @@ export type Limits = {
    * Team. Rules on hiring pipelines are free on every plan and never counted.
    */
   stageRules: number | null;
+  /** Opportunities open at once (hiring, ADR 0003): 1 on Free. Drafts and closed ones are free. */
+  opportunities: number | null;
   /** Connected calendar / conferencing accounts per member. */
   integrations: number | null;
   /** Verified custom domains. */
@@ -114,6 +116,7 @@ export const PLANS: Record<PlanId, Plan> = {
       members: 1,
       collaborators: 2,
       stageRules: 3,
+      opportunities: 1,
       integrations: 1,
       domains: 0,
       bookingsPerMonth: 100,
@@ -167,6 +170,7 @@ export const PLANS: Record<PlanId, Plan> = {
       members: 1,
       collaborators: 5,
       stageRules: null,
+      opportunities: null,
       integrations: null,
       domains: 1,
       bookingsPerMonth: null,
@@ -225,6 +229,7 @@ export const PLANS: Record<PlanId, Plan> = {
       members: 25,
       collaborators: 5,
       stageRules: null,
+      opportunities: null,
       integrations: null,
       domains: 3,
       bookingsPerMonth: null,
@@ -279,6 +284,7 @@ export const UNLIMITED: Limits = {
   members: null,
   collaborators: null,
   stageRules: null,
+  opportunities: null,
   integrations: null,
   domains: null,
   bookingsPerMonth: null,
@@ -389,7 +395,13 @@ export function limitsFor(plan: string, status?: string | null): Limits {
 }
 
 export type CountableLimit =
-  "eventTypes" | "members" | "collaborators" | "stageRules" | "integrations" | "domains";
+  | "eventTypes"
+  | "members"
+  | "collaborators"
+  | "stageRules"
+  | "opportunities"
+  | "integrations"
+  | "domains";
 export type RateLimitKey = "bookingsPerMonth" | "apiRequestsPerMinute";
 export type FeatureLimit =
   | "booklyVideo"
@@ -420,6 +432,7 @@ export const LIMIT_LABELS: Record<CountableLimit, string> = {
   members: "members",
   collaborators: "collaborators",
   stageRules: "automations",
+  opportunities: "open opportunities",
   integrations: "connected accounts",
   domains: "custom domains",
 };

@@ -80,6 +80,20 @@ async function count(ws: Workspace, what: CountableLimit, userId?: string): Prom
             )
         )[0]?.n ?? 0
       );
+    case "opportunities":
+      return (
+        (
+          await db()
+            .select({ n })
+            .from(schema.opportunities)
+            .where(
+              and(
+                eq(schema.opportunities.workspaceId, ws.id),
+                eq(schema.opportunities.status, "open"),
+              ),
+            )
+        )[0]?.n ?? 0
+      );
     case "integrations":
       return (
         (
@@ -302,6 +316,7 @@ export async function usageSummary(ws: Workspace): Promise<UsageRow[]> {
     "members",
     "collaborators",
     "stageRules",
+    "opportunities",
     "integrations",
     "domains",
   ];
@@ -315,7 +330,11 @@ export async function usageSummary(ws: Workspace): Promise<UsageRow[]> {
         max: limits[k],
       }))
       // Collaborators come with hiring, automations with the pipeline editor: listed once used.
-      .filter((r) => (r.key !== "collaborators" && r.key !== "stageRules") || r.used > 0),
+      .filter(
+        (r) =>
+          (r.key !== "collaborators" && r.key !== "stageRules" && r.key !== "opportunities") ||
+          r.used > 0,
+      ),
     {
       key: "bookingsPerMonth",
       label: "bookings this month",
