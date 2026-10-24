@@ -1,6 +1,6 @@
 "use client";
 
-import { realtimeTicketAction } from "@/app/(admin)/admin/notifications/feed-actions";
+import type { LiveState } from "@/app/(admin)/admin/notifications/live/route";
 
 /*
  * The tab's one live connection (ADR 0007): a websocket when the install has a socket server,
@@ -10,6 +10,35 @@ import { realtimeTicketAction } from "@/app/(admin)/admin/notifications/feed-act
  */
 
 export type Transport = "connecting" | "socket" | "sse" | "off";
+
+/*
+ * The background calls go to a route handler with fetch, never server actions: a page runs its
+ * server actions one at a time, and these must not hold up what the member is doing.
+ */
+const LIVE = "/admin/notifications/live";
+
+async function getJson<T>(url: string): Promise<T | null> {
+  try {
+    const res = await fetch(url, { cache: "no-store" });
+    return res.ok ? ((await res.json()) as T) : null;
+  } catch {
+    return null;
+  }
+}
+
+/** The member's unread count and Messages numbers, to catch up after (re)connecting. */
+export const liveState = () => getJson<LiveState>(LIVE);
+
+/** Tells the server a tab showed these notifications, which cancels their email and push. */
+export function reportSeen(ids: string[]) {
+  if (!ids.length) return;
+  void fetch(LIVE, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ seen: ids }),
+    keepalive: true,
+  }).catch(() => {});
+}
 type Handler = (data: unknown) => void;
 
 const HEARTBEAT_MS = 25_000;
@@ -86,7 +115,7 @@ function closeStream() {
 async function openSocket() {
   if (socket || !users) return;
   setTransport(stream ? transport : "connecting");
-  const t = await realtimeTicketAction().catch(() => null);
+  const t = await getJson<{ url: string; ticket: string }>(`${LIVE}?ticket`);
   if (!users) return;
   if (!t) {
     // No socket server on this install: Server-Sent Events it is.

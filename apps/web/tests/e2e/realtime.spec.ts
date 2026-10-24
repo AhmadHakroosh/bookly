@@ -135,8 +135,9 @@ test("a connected member gets the reply on the socket and no email; with no tab 
     .toBe(true);
   expect((await notificationBy(first))?.delivery.email).toBeUndefined();
 
-  // Every tab closed: no presence, so the next reply is emailed right away.
-  await page.close();
+  // Every tab closed: no presence, so the next reply is emailed right away. Earlier specs leave
+  // signed-in contexts open in this worker, and each of their tabs counts as Bookly being open.
+  for (const ctx of browser.contexts()) await ctx.close();
   await expect.poll(() => presence(userId), { timeout: 15_000 }).toBe(0);
   const second = await guestReplies(request, guest, 2);
   await expect
