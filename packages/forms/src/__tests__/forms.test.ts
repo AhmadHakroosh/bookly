@@ -1,9 +1,14 @@
 import { describe, expect, it } from "vitest";
 import {
+  answersFromEntries,
+  coerceAnswers,
   conditionHolds,
   evaluate,
+  fileAccepted,
   flattenAnswers,
   fromEventQuestions,
+  newField,
+  opsFor,
   parseFormSchema,
   sameSchema,
   toEventQuestions,
@@ -116,6 +121,108 @@ describe("parseFormSchema", () => {
         '"Orphan" is on no page.',
       ]),
     );
+  });
+});
+
+describe("condition order", () => {
+  const two = (visibleWhen: FormSchema["fields"][number]["visibleWhen"]): FormSchema => ({
+    v: 1,
+    pages: [{ id: "p1", fieldIds: ["a", "b"] }],
+    fields: [
+      { id: "a", type: "yes_no", label: "A", visibleWhen },
+      { id: "b", type: "short_text", label: "B" },
+    ],
+  });
+
+  it("refuses a field that depends on itself or on a later question", () => {
+    for (const fieldId of ["a", "b", "missing"]) {
+      const r = parseFormSchema(two({ match: "all", conditions: [{ fieldId, op: "not_empty" }] }));
+      expect("problems" in r && r.problems).toEqual(['"A" can only depend on questions above it.']);
+    }
+  });
+
+  it("lets a page depend only on earlier pages", () => {
+    const s: FormSchema = {
+      v: 1,
+      pages: [
+        { id: "p1", fieldIds: ["a"] },
+        {
+          id: "p2",
+          title: "More",
+          fieldIds: ["b"],
+          visibleWhen: { match: "all", conditions: [{ fieldId: "a", op: "checked" }] },
+        },
+      ],
+      fields: [
+        { id: "a", type: "yes_no", label: "A" },
+        { id: "b", type: "short_text", label: "B" },
+      ],
+    };
+    expect(parseFormSchema(s)).toEqual({ schema: s });
+    const own = {
+      ...s,
+      pages: [
+        s.pages[0]!,
+        {
+          ...s.pages[1]!,
+          visibleWhen: {
+            match: "all" as const,
+            conditions: [{ fieldId: "b", op: "not_empty" as const }],
+          },
+        },
+      ],
+    };
+    expect("problems" in parseFormSchema(own)).toBe(true);
+  });
+});
+
+describe("building", () => {
+  it("makes fields with new ids and usable defaults", () => {
+    const f = newField("select", ["f_aaaaaa"]);
+    expect(f.id).toMatch(/^f_[a-z0-9]{6}$/);
+    expect(f.options).toHaveLength(1);
+    expect(newField("file").file).toMatchObject({ maxMb: 10, maxFiles: 1 });
+    expect(newField("consent")).toMatchObject({ required: true, consent: { kind: "custom" } });
+  });
+
+  it("offers comparisons that fit the answer", () => {
+    expect(opsFor("yes_no")).toEqual([
+      { op: "checked", label: "is yes" },
+      { op: "equals", label: "is no", value: "false" },
+    ]);
+    expect(opsFor("file").map((o) => o.op)).toEqual(["not_empty", "empty"]);
+    expect(opsFor("heading")).toEqual([]);
+  });
+
+  it("checks a file's type against the field", () => {
+    const f = { file: { accept: ["application/pdf", "image/*"], maxMb: 10, maxFiles: 1 } };
+    expect(fileAccepted(f, "application/pdf")).toBe(true);
+    expect(fileAccepted(f, "IMAGE/PNG")).toBe(true);
+    expect(fileAccepted(f, "text/html")).toBe(false);
+    expect(fileAccepted({}, "text/html")).toBe(true);
+  });
+
+  it("reads posted answers: several checkboxes, file ids, the last value otherwise", () => {
+    const form = new FormData();
+    form.append("q_topics", "Design");
+    form.append("q_topics", "Data");
+    form.append(
+      "q_cv",
+      "11111111-1111-1111-1111-111111111111, 22222222-2222-2222-2222-222222222222",
+    );
+    form.append("q_agree", "");
+    form.append("q_agree", "on");
+    form.append("q_intro", "ignored");
+    const raw = answersFromEntries(application, (n) => form.getAll(n));
+    expect(raw).toMatchObject({
+      topics: ["Design", "Data"],
+      cv: {
+        fileIds: ["11111111-1111-1111-1111-111111111111", "22222222-2222-2222-2222-222222222222"],
+      },
+      agree: "on",
+    });
+    expect(raw).not.toHaveProperty("intro");
+    expect(coerceAnswers(application, raw)).toMatchObject({ agree: true, name: null });
   });
 });
 

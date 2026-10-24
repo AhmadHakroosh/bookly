@@ -11,7 +11,7 @@ import { getEventType, getProfileByUsername } from "@/server/scheduling";
 import { throttlePublicForm } from "@/server/request";
 import { joinWaitlist, type WaitlistTarget } from "@/server/waitlist";
 import { getCurrentWorkspace } from "@/server/workspace";
-import { formQuestions } from "@/server/forms";
+import { formQuestions, publicForm, readPublicAnswers } from "@/server/forms";
 
 const schema = z.object({
   username: z.string().min(1),
@@ -48,9 +48,14 @@ export async function book(_prev: BookState, formData: FormData): Promise<BookSt
   if (!ws || !profile || !et) return { error: "This booking page no longer exists." };
   if (!(await throttlePublicForm(ws.id, "book")))
     return { error: "Too many attempts. Please wait a few minutes and try again." };
-  const answers: Record<string, string> = {};
-  for (const q of await formQuestions(ws, et))
-    answers[q.id] = (raw[`q_${q.id}`] ?? "").slice(0, 2000);
+  // Behind forms_v2: the published form's answers, checked (conditions, types, uploads).
+  const form = await publicForm(ws, et);
+  const read = form ? await readPublicAnswers(ws, form, formData) : null;
+  if (read && "error" in read) return { error: read.error };
+  const answers: Record<string, string> = read?.flat ?? {};
+  if (!read)
+    for (const q of await formQuestions(ws, et))
+      answers[q.id] = (raw[`q_${q.id}`] ?? "").slice(0, 2000);
   let token: string;
   let skipped = 0;
   try {
@@ -62,6 +67,10 @@ export async function book(_prev: BookState, formData: FormData): Promise<BookSt
       phone: d.phone ? (toE164(d.phone, d.phoneCountry) ?? d.phone) : null,
       notes: d.notes,
       answers,
+      form:
+        form && read
+          ? { schema: form.schema, answers: read.answers, token: read.token }
+          : undefined,
       rescheduleToken: d.reschedule || null,
       // "ask": the box on the form. "always": the booking page and the confirmation say so, and
       // booking is the agreement; the timestamp is kept either way.

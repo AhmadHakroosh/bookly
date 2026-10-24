@@ -189,6 +189,30 @@ export const formSchema = z
     for (const f of s.fields)
       if (!placed.has(f.id))
         ctx.addIssue({ code: "custom", message: `"${f.label || f.id}" is on no page.` });
+    // Conditions look back only: a field depends on answers above it, a page on earlier pages,
+    // so showing or hiding something can never loop.
+    const byId = new Map(s.fields.map((f) => [f.id, f]));
+    const before = new Set<string>();
+    for (const p of s.pages) {
+      for (const c of p.visibleWhen?.conditions ?? [])
+        if (!before.has(c.fieldId))
+          ctx.addIssue({
+            code: "custom",
+            message: `Page "${p.title || p.id}" can only depend on questions on earlier pages.`,
+          });
+      const onPage = new Set<string>();
+      for (const fid of p.fieldIds) {
+        const f = byId.get(fid);
+        for (const c of f?.visibleWhen?.conditions ?? [])
+          if (!before.has(c.fieldId) && !onPage.has(c.fieldId))
+            ctx.addIssue({
+              code: "custom",
+              message: `"${f!.label || f!.id}" can only depend on questions above it.`,
+            });
+        if (f && !DISPLAY.has(f.type)) onPage.add(fid);
+      }
+      for (const fid of onPage) before.add(fid);
+    }
   });
 
 /** A stored or submitted schema, checked; the problems in plain words when it is not valid. */
@@ -263,6 +287,166 @@ export function visibleFields(schema: FormSchema, answers: Answers): Field[] {
     .filter((p) => evaluate(p.visibleWhen, answers))
     .flatMap((p) => p.fieldIds.map((fid) => byId.get(fid)!).filter(Boolean))
     .filter((f) => evaluate(f.visibleWhen, answers));
+}
+
+/* ---------------- Building ---------------- */
+
+/** Field types the builder offers, in its menu order, with the words it uses. */
+export const FIELD_LABELS: Record<FieldType, string> = {
+  short_text: "Short answer",
+  long_text: "Paragraph",
+  email: "Email",
+  phone: "Phone",
+  url: "Link",
+  number: "Number",
+  date: "Date",
+  select: "Dropdown",
+  multi_select: "Checkboxes (several)",
+  yes_no: "Yes or no",
+  checkbox: "Checkbox",
+  consent: "Consent",
+  file: "File upload",
+  heading: "Heading",
+  paragraph: "Text block",
+};
+
+export const isDisplayField = (type: FieldType) => DISPLAY.has(type);
+
+/** Accepted file types the builder offers. Entries are MIME types; `image/*` matches any image. */
+export const FILE_ACCEPT = {
+  documents: {
+    label: "Documents (PDF, Word, text)",
+    accept: [
+      "application/pdf",
+      "application/msword",
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "text/plain",
+    ],
+  },
+  images: { label: "Images", accept: ["image/png", "image/jpeg", "image/webp", "image/gif"] },
+  pdf: { label: "PDF only", accept: ["application/pdf"] },
+} as const;
+export type FileAcceptPreset = keyof typeof FILE_ACCEPT;
+
+/** Public forms take files up to this size, whatever a field allows (ADR 0004, question 1). */
+export const PUBLIC_FILE_MB = 10;
+
+/** Whether a field takes a file of this type (`accept` empty: any type the app allows). */
+export function fileAccepted(f: Pick<Field, "file">, mime: string): boolean {
+  const accept = f.file?.accept ?? [];
+  const m = mime.toLowerCase();
+  return (
+    !accept.length ||
+    accept.some((a) => (a.endsWith("/*") ? m.startsWith(a.slice(0, -1)) : a.toLowerCase() === m))
+  );
+}
+
+/** A fresh field of a type with workable defaults; its id is new among `taken`. */
+export function newField(type: FieldType, taken: Iterable<string> = []): Field {
+  const used = new Set(taken);
+  let id = "";
+  do id = `f_${Math.random().toString(36).slice(2, 8)}`;
+  while (used.has(id) || id.length < 8);
+  const base: Field = { id, type, label: "" };
+  switch (type) {
+    case "select":
+    case "multi_select":
+      return { ...base, options: [{ value: "Option 1", label: "Option 1" }] };
+    case "consent":
+      return { ...base, required: true, consent: { kind: "custom", text: "", version: "1" } };
+    case "file":
+      return {
+        ...base,
+        file: { accept: [...FILE_ACCEPT.documents.accept], maxMb: PUBLIC_FILE_MB, maxFiles: 1 },
+      };
+    default:
+      return base;
+  }
+}
+
+/**
+ * The comparisons that make sense for a field's answers, as the builder words them. Yes-or-no
+ * and checkbox answers are booleans: "is yes" is `checked`, "is no" is `equals "false"`.
+ */
+export function opsFor(type: FieldType): { op: ConditionOp; label: string; value?: string }[] {
+  const presence = [
+    { op: "not_empty" as const, label: "is answered" },
+    { op: "empty" as const, label: "is not answered" },
+  ];
+  switch (type) {
+    case "select":
+    case "multi_select":
+      return [
+        { op: "equals", label: type === "select" ? "is" : "includes" },
+        { op: "not_equals", label: type === "select" ? "is not" : "does not include" },
+        ...presence,
+      ];
+    case "yes_no":
+      return [
+        { op: "checked", label: "is yes" },
+        { op: "equals", label: "is no", value: "false" },
+      ];
+    case "checkbox":
+    case "consent":
+      return [
+        { op: "checked", label: "is ticked" },
+        { op: "empty", label: "is not ticked" },
+      ];
+    case "number":
+      return [
+        { op: "equals", label: "equals" },
+        { op: "gt", label: "is more than" },
+        { op: "lt", label: "is less than" },
+        ...presence,
+      ];
+    case "file":
+      return [
+        { op: "not_empty", label: "has a file" },
+        { op: "empty", label: "has no file" },
+      ];
+    case "heading":
+    case "paragraph":
+      return [];
+    default:
+      return [
+        { op: "equals", label: "is" },
+        { op: "not_equals", label: "is not" },
+        { op: "contains", label: "contains" },
+        ...presence,
+      ];
+  }
+}
+
+/** The form-field name an answer is posted under (`q_<id>`, as booking questions always were). */
+export const answerName = (fieldId: string) => `q_${fieldId}`;
+
+/**
+ * A posted form's raw answers for `validateResponse`: several values for checkboxes, comma-
+ * separated file ids for uploads, the last value otherwise (a checkbox may post a hidden
+ * fallback first). `getAll` is `FormData.getAll` or an equivalent.
+ */
+export function answersFromEntries(
+  schema: FormSchema,
+  getAll: (name: string) => unknown[],
+): Record<string, unknown> {
+  const raw: Record<string, unknown> = {};
+  for (const f of schema.fields) {
+    if (DISPLAY.has(f.type)) continue;
+    const values = getAll(answerName(f.id))
+      .filter((v): v is string => typeof v === "string")
+      .map((v) => v.slice(0, LIMITS.answer));
+    if (!values.length) continue;
+    if (f.type === "multi_select") raw[f.id] = values.filter((v) => v.trim());
+    else if (f.type === "file")
+      raw[f.id] = {
+        fileIds: values
+          .flatMap((v) => v.split(","))
+          .map((v) => v.trim())
+          .filter(Boolean),
+      };
+    else raw[f.id] = values.at(-1);
+  }
+  return raw;
 }
 
 /* ---------------- Validation ---------------- */
@@ -353,12 +537,18 @@ function fieldError(f: Field, v: AnswerValue): string | null {
  * required checks apply to visible fields only, and sensitive answers are split out so they
  * never reach a form response.
  */
+/** Raw answers in their typed form, as the server reads them (for live show/hide in the browser). */
+export function coerceAnswers(schema: FormSchema, raw: Record<string, unknown>): Answers {
+  const out: Answers = {};
+  for (const f of schema.fields) if (!DISPLAY.has(f.type)) out[f.id] = coerce(f, raw[f.id]);
+  return out;
+}
+
 export function validateResponse(
   schema: FormSchema,
   raw: Record<string, unknown>,
 ): { answers: Answers; sensitive: Answers; errors: { fieldId: string; message: string }[] } {
-  const coerced: Answers = {};
-  for (const f of schema.fields) if (!DISPLAY.has(f.type)) coerced[f.id] = coerce(f, raw[f.id]);
+  const coerced = coerceAnswers(schema, raw);
   const answers: Answers = {};
   const sensitive: Answers = {};
   const errors: { fieldId: string; message: string }[] = [];
@@ -371,6 +561,15 @@ export function validateResponse(
     (f.sensitivity === "sensitive" ? sensitive : answers)[f.id] = v;
   }
   return { answers, sensitive, errors };
+}
+
+/** Plain-text answers (from `flattenAnswers`) keyed by their question, for timelines. */
+export function labelAnswers(schema: FormSchema, flat: Record<string, string>) {
+  return Object.fromEntries(
+    schema.fields
+      .filter((f) => flat[f.id]?.trim())
+      .map((f) => [f.label || f.id, flat[f.id]!.trim()]),
+  );
 }
 
 /** Answers as plain text by field id, for emails, briefings and `bookings.answers`. */
@@ -445,19 +644,24 @@ export function fromEventQuestions(questions: LegacyQuestion[]): FormSchema {
 
 /**
  * A form as legacy questions, for the pages and readers that still take them. Only the five
- * legacy types convert exactly; anything else reads as a text question (S4 renders forms
- * natively).
+ * legacy types convert exactly; anything else reads as a text question, files are left out
+ * (a legacy page cannot take one), and a question that is only sometimes shown is never
+ * required (a legacy page cannot hide it).
  */
 export function toEventQuestions(schema: FormSchema): LegacyQuestion[] {
+  const conditionalPage = new Set(
+    schema.pages.filter((p) => p.visibleWhen?.conditions.length).flatMap((p) => p.fieldIds),
+  );
   return schema.fields
-    .filter((f) => !DISPLAY.has(f.type) && f.sensitivity !== "sensitive")
+    .filter((f) => !DISPLAY.has(f.type) && f.type !== "file" && f.sensitivity !== "sensitive")
     .map((f) => {
       const type = TO_LEGACY[f.type] ?? "text";
+      const sometimes = !!f.visibleWhen?.conditions.length || conditionalPage.has(f.id);
       return {
         id: f.id,
         label: f.label,
         type,
-        required: !!f.required,
+        required: !!f.required && !sometimes,
         ...(type === "select" ? { options: (f.options ?? []).map((o) => o.label) } : {}),
       };
     });

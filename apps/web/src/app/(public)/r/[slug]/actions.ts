@@ -8,7 +8,8 @@ import { GUEST_ACTOR, audit } from "@/server/audit";
 import { logContactEvent, upsertContact } from "@/server/contacts";
 import { throttlePublicForm } from "@/server/request";
 import { getRoutingForm } from "@/server/routing";
-import { formQuestions, recordResponse } from "@/server/forms";
+import { formQuestions, publicForm, readPublicAnswers, recordResponse } from "@/server/forms";
+import { labelAnswers, type Answers } from "@bookly/forms";
 import { routeAnswers } from "@/server/routing-rules";
 import { getProfileByUser } from "@/server/scheduling";
 import { getCurrentWorkspace } from "@/server/workspace";
@@ -37,19 +38,33 @@ export async function submitRouting(
   if (!ws || !form) return { error: "This form no longer exists." };
   if (!(await throttlePublicForm(ws.id, "routing")))
     return { error: "Too many attempts. Please wait a few minutes and try again." };
-  const answers: Record<string, string> = {};
-  const questions = await formQuestions(ws, form);
-  for (const q of questions) {
-    const v = (raw[`q_${q.id}`] ?? "").slice(0, 2000);
-    if (q.required && !v.trim()) return { error: `Please answer: ${q.label}` };
-    answers[q.id] = v;
+  // Behind forms_v2: the published form's answers, checked (conditions, types, uploads).
+  const published = await publicForm(ws, form);
+  let answers: Answers = {};
+  let labelled: Record<string, string>;
+  let token: string | null = null;
+  if (published) {
+    const read = await readPublicAnswers(ws, published, formData);
+    if ("error" in read) return { error: read.error };
+    ({ answers, token } = read);
+    labelled = labelAnswers(published.schema, read.flat);
+  } else {
+    const questions = await formQuestions(ws, form);
+    const plain: Record<string, string> = {};
+    for (const q of questions) {
+      const v = (raw[`q_${q.id}`] ?? "").slice(0, 2000);
+      if (q.required && !v.trim()) return { error: `Please answer: ${q.label}` };
+      plain[q.id] = v;
+    }
+    answers = plain;
+    labelled = Object.fromEntries(questions.map((q) => [q.label, plain[q.id] ?? ""]));
   }
-  const labelled = Object.fromEntries(questions.map((q) => [q.label, answers[q.id] ?? ""]));
   const contact = await upsertContact(ws.id, { email: d.email, name: d.name });
   await recordResponse({
     ws,
     formId: form.formId,
     answers,
+    token,
     contactId: contact.id,
     routingFormId: form.id,
   });

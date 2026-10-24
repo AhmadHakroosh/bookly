@@ -12,6 +12,7 @@ import { ActionButton } from "@/components/action-button";
 import { Field, FieldDescription, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { FormBuilderLink } from "@/components/forms/builder-link";
 import { QuestionBuilder } from "../../event-types/[id]/question-builder";
 import { deleteRoutingForm, saveRoutingForm, type RoutingSaveState } from "../actions";
 import { Dropdown } from "@/components/dropdown";
@@ -89,9 +90,15 @@ function DestinationPicker({
 export function RoutingFormEditor({
   form,
   eventTypes,
+  formBuilder,
 }: {
   form: RoutingForm;
   eventTypes: EventTypeOption[];
+  /** Behind `forms_v2` the form builder owns the questions: a summary and a link instead. */
+  formBuilder?: {
+    formId: string | null;
+    questions: { label: string; kind: string; conditional: boolean }[];
+  } | null;
 }) {
   const [state, action] = useActionState(saveRoutingForm, {} as RoutingSaveState);
   const [rules, setRules] = useState<RoutingRule[]>(form.rules);
@@ -138,7 +145,15 @@ export function RoutingFormEditor({
         </Field>
         <Field>
           <FieldLabel>Questions</FieldLabel>
-          <QuestionBuilder initial={form.questions} onChange={setQuestionIds} />
+          {formBuilder ? (
+            <FormBuilderLink
+              owner={{ type: "routing_form", id: form.id }}
+              formId={formBuilder.formId}
+              questions={formBuilder.questions}
+            />
+          ) : (
+            <QuestionBuilder initial={form.questions} onChange={setQuestionIds} />
+          )}
         </Field>
         <Field>
           <FieldLabel>Rules</FieldLabel>

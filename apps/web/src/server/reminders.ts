@@ -13,6 +13,7 @@ import { reconcileSeats } from "./billing";
 import { expireManualPlans, setState } from "./ops";
 import { sweepAuditLog } from "./audit";
 import { sweepPendingFiles } from "./files";
+import { sweepFormDrafts } from "./forms";
 import { sendTelemetryPing } from "./telemetry";
 import { ensureDailyWebhook } from "./daily-webhook";
 import { trackBooking } from "./contacts";
@@ -205,6 +206,7 @@ export async function sendDueReminders(
   await expireManualPlans(now).catch((e) => console.error("[ops] plan expiry failed", e));
   await sweepAuditLog(now).catch((e) => console.error("[audit] retention failed", e));
   await sweepPendingFiles(now).catch((e) => console.error("[files] sweep failed", e));
+  await sweepFormDrafts(now).catch((e) => console.error("[forms] draft sweep failed", e));
   await pruneNotifications(now).catch((e) => console.error("[notifications] prune failed", e));
   await purgeTrash(now).catch((e) => console.error("[drive] trash purge failed", e));
   await postDueNotes(now).catch((e) => console.error("[notes] posting failed", e));

@@ -2,7 +2,13 @@ import "server-only";
 import { createHash } from "node:crypto";
 import sharp from "sharp";
 import { and, eq, inArray, lt, schema } from "@bookly/db";
-import type { FileKind, FileVisibility, StoredFile, Workspace } from "@bookly/db/schema";
+import type {
+  FileKind,
+  FileSource,
+  FileVisibility,
+  StoredFile,
+  Workspace,
+} from "@bookly/db/schema";
 import { getStorage } from "@bookly/storage";
 import { db } from "@/lib/db";
 import { audit, type AuditActor } from "./audit";
@@ -166,6 +172,10 @@ export async function createUpload(opts: {
     source: "upload" | "task";
     sourceId: string | null;
   };
+  /** Where it came from outside the drive (a form upload: `form` and the question's id). */
+  origin?: { source: FileSource; sourceId: string };
+  /** The local driver's PUT target and headers, when not `/api/uploads/<id>` (public forms). */
+  local?: { url: (id: string) => string; headers?: Record<string, string> };
 }): Promise<UploadTicket> {
   const check = checkUpload(opts.kind, opts.mime, opts.size, opts.name);
   if (!check.ok) throw new Error(check.error);
@@ -188,6 +198,7 @@ export async function createUpload(opts: {
       ownerType: opts.owner?.type ?? null,
       ownerId: opts.owner?.id ?? null,
       ...(opts.drive ?? {}),
+      ...(opts.origin ?? {}),
     })
     .returning();
   const storage = getStorage();
@@ -207,8 +218,8 @@ export async function createUpload(opts: {
     file: file!,
     upload: {
       method: "PUT",
-      url: `/api/uploads/${id}`,
-      headers: { "content-type": opts.mime },
+      url: opts.local?.url(id) ?? `/api/uploads/${id}`,
+      headers: { "content-type": opts.mime, ...opts.local?.headers },
       expiresAt: new Date(Date.now() + PENDING_UPLOAD_TTL_MS).toISOString(),
     },
   };

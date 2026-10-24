@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { PublicContainer } from "../../container";
 import { getRoutingForm } from "@/server/routing";
-import { formQuestions } from "@/server/forms";
+import { formQuestions, publicForm } from "@/server/forms";
 import { getCurrentWorkspace } from "@/server/workspace";
 import { publicBaseUrl } from "@/server/urls";
 import { RoutingFormView } from "./form";
@@ -33,7 +33,8 @@ async function RoutingPage({ params, searchParams }: PageProps<"/r/[slug]">) {
   const ws = await getCurrentWorkspace();
   const form = ws ? await getRoutingForm(ws.id, slug) : null;
   if (!ws || !form) notFound();
-  const questions = await formQuestions(ws, form);
+  const published = await publicForm(ws, form);
+  const questions = published ? [] : await formQuestions(ws, form);
   const message = typeof sp.message === "string" ? sp.message : null;
   return (
     <PublicContainer className="py-12">
@@ -48,7 +49,7 @@ async function RoutingPage({ params, searchParams }: PageProps<"/r/[slug]">) {
           <p className="mt-6 rounded-xl border p-5 text-sm whitespace-pre-line">{message}</p>
         ) : (
           <div className="mt-6">
-            <RoutingFormView slug={form.slug} questions={questions} />
+            <RoutingFormView slug={form.slug} questions={questions} form={published} />
           </div>
         )}
       </div>
