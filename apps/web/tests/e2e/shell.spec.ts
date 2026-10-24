@@ -22,11 +22,18 @@ test.beforeAll(async () => {
 test.afterAll(async () => {
   const db = testDb();
   await db.delete(schema.contacts).where(eq(schema.contacts.email, CONTACT.email));
-  await db
-    .update(schema.featureFlags)
-    .set({ state: "off" })
-    .where(eq(schema.featureFlags.key, "hiring"));
+  await flags("off");
 });
+
+/** Hiring builds on pipelines (ADR 0003): the flag only counts where pipelines is on too. */
+const flags = async (state: "on" | "off") => {
+  const db = testDb();
+  for (const key of ["pipelines", "hiring"] as const)
+    await db
+      .insert(schema.featureFlags)
+      .values({ key, description: key, state })
+      .onConflictDoUpdate({ target: schema.featureFlags.key, set: { state } });
+};
 
 test("the sidebar groups pages by job and the breadcrumb follows", async ({ page }) => {
   await page.goto("/admin");
@@ -84,27 +91,19 @@ test("Help lists the documentation and the keyboard shortcuts", async ({ page })
 });
 
 test("Hiring shows in the sidebar only where its flag is on", async ({ page }) => {
-  const db = testDb();
   await page.goto("/admin");
   const nav = page.getByRole("navigation", { name: "Admin" });
   await expect(nav.getByText("Hiring", { exact: true })).toHaveCount(0);
   await page.goto("/admin/hiring");
   await expect(page).toHaveURL(/\/admin$/);
 
-  await db
-    .insert(schema.featureFlags)
-    .values({ key: "hiring", description: "Hiring", state: "on" })
-    .onConflictDoUpdate({ target: schema.featureFlags.key, set: { state: "on" } });
+  await flags("on");
   await page.goto("/admin");
   await expect(nav.getByText("Hiring", { exact: true })).toBeVisible();
   await nav.getByRole("link", { name: "Overview" }).click();
   await expect(page.getByRole("heading", { name: "Hiring", level: 1 })).toBeVisible();
   await expect(page.getByText("No opportunities yet")).toBeVisible();
-
-  await db
-    .update(schema.featureFlags)
-    .set({ state: "off" })
-    .where(eq(schema.featureFlags.key, "hiring"));
+  await flags("off");
 });
 
 test("on a phone the sidebar opens from the menu button and closes on a link", async ({ page }) => {
