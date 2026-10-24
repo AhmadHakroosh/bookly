@@ -11,6 +11,7 @@ const TABS = [
   ["/console/health", "Health"],
   ["/console/payments", "Payments"],
   ["/console/installs", "Installs"],
+  ["/console/license", "License"],
 ] as const;
 
 export function ConsoleNav() {

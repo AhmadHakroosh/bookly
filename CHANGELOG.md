@@ -9,6 +9,7 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 - **Contact stages live in a pipeline.** Each workspace gets a "Clients" pipeline with the familiar stages (Lead, Active, Won, Lost), and every contact points at its stage; nothing looks different yet, but this is what lets stages be renamed, reordered and extended, and what hiring pipelines build on. Every stage change is recorded with who made it, for time-in-stage reports later. Migration 0038 creates the tables and fills them for existing contacts; a check on start-up fills anything missed. The old `stage` value is still written and stays in API responses through 1.0.x; it goes in 1.1
 - `contact.stage_changed` webhooks add `from_stage` and `to_stage` (`id`, `key`, `name`, `category`); see [API & webhooks](docs/api.md)
 - The workspace export includes the pipeline, its stages and the stage history
+- The Docker image installs `packages/storage`'s own dependencies again (its manifest was missing from the dependency layer)
 
 - **A new mark.** The logo is now a lowercase b drawn as a speech bubble with a second bubble answering it, in Bookly Orange, with a lowercase "bookly" wordmark. It replaces the buckle mark everywhere: the app and marketing headers, booking and meeting pages (still in the workspace's own colour where it has one), the favicon, touch and notification icons, the email logo and `brand/`. The brand colour (`--brand`) moves to Bookly Orange in light and dark themes
 - `brand/` is generated from vectors: `brand/source/build.py` draws the mark, wordmark and lockups, `brand/source/render.mjs` renders the PNGs, app icons, favicon and press kit
@@ -20,6 +21,8 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 ### Added
 
+- **Open core, ready for Bookly Enterprise.** Commercial modules live in `ee/` under the Elastic License 2.0, readable by anyone; the rest stays AGPL and complete. A license key (`BOOKLY_LICENSE_KEY`, `BOOKLY_LICENSE_FILE`, or pasted under the new **Admin → Settings → License**) is checked offline against Bookly's public key, with a grace period after expiry; without one the install is the Community edition. No commercial feature ships yet. On the hosted service, the console gets a **License** page and per-workspace **Commercial features** grants (migration 0039). See [Bookly Enterprise](docs/enterprise.md)
+- The core is proven to stand alone: a `core-only` CI job deletes `ee/` and builds, typechecks and tests; a guard test keeps core from importing `ee/` and `ee/` from importing the app
 - **Press and brand page** at `/press` on the platform host: logos in SVG and PNG with a one-file press kit, usage rules, colours, type, product design previews, the story of the mark and boilerplate copy; linked from the footer and listed in the sitemap
 
 ## [0.20.1] - 2026-10-17

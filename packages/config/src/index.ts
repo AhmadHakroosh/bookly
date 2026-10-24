@@ -145,6 +145,13 @@ export const envSchema = z.object({
   UPSTASH_REDIS_REST_TOKEN: z.string().optional(),
   TELEMETRY_URL: z.url().default("https://bookly-app.io/api/telemetry"),
   /**
+   * Bookly Enterprise license key (`bookly_lic_1.…`), verified offline (ADR 0006). Without one
+   * the install is Community: every AGPL feature, no commercial modules. BOOKLY_LICENSE_FILE
+   * reads the key from a file instead (Docker secrets); an owner can also paste it in the admin.
+   */
+  BOOKLY_LICENSE_KEY: z.string().optional(),
+  BOOKLY_LICENSE_FILE: z.string().optional(),
+  /**
    * Web Push (desktop and installed-app notifications when Bookly is closed). Generate a pair
    * with `npx web-push generate-vapid-keys`; the subject is a mailto: or https: contact for push
    * services. Unset = notifications still arrive in the open app (bell + browser notification),

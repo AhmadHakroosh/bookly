@@ -2,6 +2,8 @@
  * Cloud (SaaS) plans and limits. Pure data + helpers, shared by the app, billing and the
  * operator console. Prices are configured in Stripe; only price ids come from env.
  */
+import type { EeFeature } from "@bookly/editions";
+
 export type PlanId = "free" | "pro" | "team";
 
 export type Limits = {
@@ -78,6 +80,11 @@ export type Plan = {
   limits: Limits;
   /** Shown on plan cards, strongest first. */
   highlights: string[];
+  /**
+   * Commercial features (ADR 0006) this plan includes on the hosted service. None today:
+   * Enterprise contracts on cloud get them as operator grants (workspace_entitlements).
+   */
+  ee: readonly EeFeature[];
   /** The highlights that set this plan apart; cards render them emphasised. */
   featured: string[];
 };
@@ -123,6 +130,7 @@ export const PLANS: Record<PlanId, Plan> = {
 
       meetingNotes: false,
     },
+    ee: [],
     highlights: [
       "Contacts, briefings and the daily Home page",
       "1 connected account: Google (Calendar + Meet), Microsoft (Outlook + Teams) or Zoom",
@@ -173,6 +181,7 @@ export const PLANS: Record<PlanId, Plan> = {
 
       meetingNotes: true,
     },
+    ee: [],
     highlights: [
       "Auto-capture: transcripts, AI recaps, tasks (5 hours a month, then $3 an hour)",
       "Bookly video, no account needed by anyone",
@@ -230,6 +239,7 @@ export const PLANS: Record<PlanId, Plan> = {
       meetingNotes: true,
       storagePerSeat: true,
     },
+    ee: [],
     highlights: [
       "Everything in Pro",
       "Shared customer memory: every contact, timeline and briefing across the team",

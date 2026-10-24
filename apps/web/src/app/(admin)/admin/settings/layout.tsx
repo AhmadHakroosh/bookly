@@ -29,6 +29,8 @@ async function SettingsShell({ children }: { children: React.ReactNode }) {
       ? [{ href: "/admin/settings/payments", label: "Payments" }]
       : []),
     { href: "/admin/settings/data", label: "Data" },
+    // The install's Enterprise license; on the hosted service the operator holds it.
+    ...(isCloud() ? [] : [{ href: "/admin/settings/license", label: "License" }]),
   ];
   return (
     <div className="space-y-6">

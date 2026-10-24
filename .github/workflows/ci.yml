@@ -42,6 +42,37 @@ jobs:
       - run: pnpm test
       - run: pnpm build
 
+  # The AGPL core builds, tests and runs without the commercial modules in ee/ (ADR 0006).
+  core-only:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: bookly
+          POSTGRES_PASSWORD: bookly
+          POSTGRES_DB: bookly
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U bookly" --health-interval 5s --health-timeout 3s --health-retries 20
+    env:
+      DATABASE_URL: postgres://bookly:bookly@localhost:5432/bookly
+      AUTH_SECRET: ci-only-secret-0123456789abcdef0123
+      APP_URL: http://localhost:3002
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: rm -rf ee
+      - run: pnpm install --no-frozen-lockfile
+      - run: pnpm typecheck
+      - run: pnpm db:migrate
+      - run: pnpm test
+      - run: pnpm build
+
   e2e:
     runs-on: ubuntu-latest
     services:

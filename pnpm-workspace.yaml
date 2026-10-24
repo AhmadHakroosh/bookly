@@ -1,6 +1,8 @@
 packages:
   - apps/*
   - packages/*
+  # Commercial modules (Elastic License 2.0); the core builds and runs with ee/ deleted.
+  - ee/*
 
 allowBuilds:
   sharp: true

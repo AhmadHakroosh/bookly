@@ -150,6 +150,14 @@ One container needs nothing: limits are counted in memory. If you run several re
 a load balancer, set `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN` so booking-form,
 API and sign-in limits are shared; otherwise each replica allows the full quota on its own.
 
+## Bookly Enterprise license (optional)
+
+Without a license the install is the Community edition, with every open-source feature. A Bookly
+Enterprise key unlocks the commercial modules in `ee/`: set `BOOKLY_LICENSE_KEY` (or
+`BOOKLY_LICENSE_FILE` for a secrets file), or paste it under Admin → Settings → License. The key
+is checked offline against Bookly's public key. Expiry, grace and trials:
+[Bookly Enterprise](enterprise.md).
+
 ## Update check and telemetry
 
 Once a day (on the job tick) the install POSTs to `TELEMETRY_URL` and gets back the latest

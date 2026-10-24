@@ -1,2 +1,5 @@
 # Every change to `main` needs a review from a code owner (see the "Protect main" ruleset).
 * @AhmadHakroosh
+# Commercial modules (Elastic License 2.0): core team only.
+/ee/ @AhmadHakroosh
+/packages/cloud/ @AhmadHakroosh
