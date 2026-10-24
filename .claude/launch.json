@@ -14,6 +14,7 @@
         "TENANCY=multi",
         "APP_URL=http://localhost:3002",
         "ROOT_DOMAIN=localhost:3002",
+        "PLATFORM_ADMIN_EMAILS=demo@example.com",
         "pnpm",
         "--filter",
         "@bookly/web",

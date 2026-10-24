@@ -29,6 +29,7 @@ const ORDER = [
   "embeds",
   "domains",
   "api",
+  "enterprise",
   "cloud",
 ];
 

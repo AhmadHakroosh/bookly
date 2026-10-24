@@ -23,6 +23,7 @@ import { Dropdown } from "@/components/dropdown";
 import { DatePicker } from "@/components/date-picker";
 import { NumberField } from "@/components/number-field";
 import { Input } from "@/components/ui/input";
+import { EntitlementsSection } from "./entitlements-section";
 import { FlagsSection } from "./flags-section";
 
 export const metadata = { title: "Workspace", robots: { index: false } };
@@ -254,6 +255,7 @@ async function WorkspacePage({ params }: PageProps<"/platform/console/[id]">) {
       </div>
 
       <FlagsSection ws={ws} />
+      <EntitlementsSection ws={ws} />
 
       <section className="rounded-xl border p-4">
         <h3 className="text-base font-semibold tracking-tight">

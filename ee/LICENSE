@@ -1,0 +1,17 @@
+Bookly Enterprise modules
+Copyright (c) 2026 Ahmad Hakroosh. All rights reserved, except as licensed below.
+
+Everything in this directory (`ee/`) is licensed under the Elastic License 2.0 ("ELv2"):
+https://www.elastic.co/licensing/elastic-license
+
+The rest of this repository is licensed under the GNU AGPL v3 (see /LICENSE), except
+`packages/cloud`, which carries its own license.
+
+In plain words (the license text governs, not this summary): you may read, copy, modify and run
+this code, including in production, provided that you do not offer it to third parties as a hosted
+or managed service, and do not move, change, disable or circumvent the license key functionality
+or remove licensing notices. The commercial features in this directory work only with a valid
+Bookly license key.
+
+Pending: the full license text and the final copyright holder (Cloudeo Solutions, LLC, after the
+IP assignment) are added here in the licensing change, once counsel has confirmed them.

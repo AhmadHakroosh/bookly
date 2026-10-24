@@ -39,7 +39,7 @@ Before pushing: `pnpm format && pnpm lint && pnpm typecheck && pnpm test && pnpm
 3. Fill in the PR template. CI must be green.
 4. A code owner reviews; expect questions rather than silence. `main` only takes pull requests: direct and force pushes are blocked for everyone, including maintainers.
 
-By contributing you agree that your contributions are licensed under the AGPL-3.0, like the rest of the project. Contributions to `packages/cloud` are not accepted from outside the core team.
+By contributing you agree that your contributions are licensed under the AGPL-3.0, like the rest of the project. Contributions to `packages/cloud` and `ee/` (the commercial modules, Elastic License 2.0) are not accepted from outside the core team.
 
 ## Releasing
 
