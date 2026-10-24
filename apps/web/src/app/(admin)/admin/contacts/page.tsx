@@ -1,22 +1,15 @@
 import { ContactsSkeleton } from "@/components/skeletons/pages";
 import Link from "next/link";
 import { Suspense } from "react";
-import { CONTACT_STAGES, type ContactStage } from "@bookly/db/schema";
 import { Badge } from "@/components/ui/badge";
 import { fmtDate } from "@/lib/time";
 import { listContacts } from "@/server/contacts";
+import { stageChoices } from "@/server/pipelines";
 import { getProfileByUser } from "@/server/scheduling";
 import { requireStaff } from "@/server/session";
 import { getCurrentWorkspace } from "@/server/workspace";
 
 export const metadata = { title: "Contacts" };
-
-const STAGE_LABEL: Record<ContactStage, string> = {
-  lead: "Lead",
-  active: "Active",
-  won: "Won",
-  lost: "Lost",
-};
 
 async function ContactsPage({ searchParams }: PageProps<"/admin/contacts">) {
   const [{ session }, ws, sp] = await Promise.all([
@@ -27,10 +20,9 @@ async function ContactsPage({ searchParams }: PageProps<"/admin/contacts">) {
   if (!ws) return null;
   const tz = (await getProfileByUser(ws.id, session.user.id))?.timezone ?? ws.timezone;
   const q = typeof sp.q === "string" ? sp.q : "";
-  const stage =
-    typeof sp.stage === "string" && (CONTACT_STAGES as readonly string[]).includes(sp.stage)
-      ? (sp.stage as ContactStage)
-      : undefined;
+  const { choices, keyOf } = await stageChoices(ws);
+  const choice = (key: string) => choices.find((s) => s.key === key);
+  const stage = typeof sp.stage === "string" && choice(sp.stage) ? sp.stage : undefined;
   const rows = await listContacts(ws.id, { q, stage });
   const href = (over: { q?: string; stage?: string }) => {
     const p = new URLSearchParams();
@@ -65,52 +57,55 @@ async function ContactsPage({ searchParams }: PageProps<"/admin/contacts">) {
           >
             All
           </Link>
-          {CONTACT_STAGES.map((s) => (
+          {choices.map((s) => (
             <Link
-              key={s}
-              href={href({ stage: s })}
-              className={`rounded-md px-2.5 py-1 ${stage === s ? "bg-muted font-medium" : "text-muted-foreground"}`}
+              key={s.key}
+              href={href({ stage: s.key })}
+              className={`rounded-md px-2.5 py-1 ${stage === s.key ? "bg-muted font-medium" : "text-muted-foreground"}`}
             >
-              {STAGE_LABEL[s]}
+              {s.name}
             </Link>
           ))}
         </nav>
       </div>
       <ul className="divide-y rounded-xl border text-sm">
-        {rows.map((c) => (
-          <li key={c.id}>
-            <Link
-              href={`/admin/contacts/${c.id}`}
-              className="flex flex-wrap items-center justify-between gap-3 p-4 hover:bg-muted/40"
-            >
-              <div className="min-w-0">
-                <p className="font-medium">
-                  {c.name || c.email}
-                  {c.company ? <span className="text-muted-foreground"> · {c.company}</span> : null}
-                </p>
-                <p className="truncate text-muted-foreground">
-                  {c.email} · {c.bookingsCount} booking{c.bookingsCount === 1 ? "" : "s"} · last
-                  activity {fmtDate(c.lastActivityAt, tz)}
-                </p>
-              </div>
-              <div className="flex items-center gap-2">
-                {c.nextFollowUpAt && c.nextFollowUpAt <= new Date() && (
-                  <Badge variant="destructive">Follow up due</Badge>
-                )}
-                {c.tags.slice(0, 3).map((t) => (
-                  <Badge key={t} variant="outline">
-                    {t}
+        {rows.map((c) => {
+          const s = choice(keyOf(c));
+          return (
+            <li key={c.id}>
+              <Link
+                href={`/admin/contacts/${c.id}`}
+                className="flex flex-wrap items-center justify-between gap-3 p-4 hover:bg-muted/40"
+              >
+                <div className="min-w-0">
+                  <p className="font-medium">
+                    {c.name || c.email}
+                    {c.company ? (
+                      <span className="text-muted-foreground"> · {c.company}</span>
+                    ) : null}
+                  </p>
+                  <p className="truncate text-muted-foreground">
+                    {c.email} · {c.bookingsCount} booking{c.bookingsCount === 1 ? "" : "s"} · last
+                    activity {fmtDate(c.lastActivityAt, tz)}
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  {c.nextFollowUpAt && c.nextFollowUpAt <= new Date() && (
+                    <Badge variant="destructive">Follow up due</Badge>
+                  )}
+                  {c.tags.slice(0, 3).map((t) => (
+                    <Badge key={t} variant="outline">
+                      {t}
+                    </Badge>
+                  ))}
+                  <Badge variant={s?.emphasis ? "default" : "secondary"}>
+                    {s?.name ?? keyOf(c)}
                   </Badge>
-                ))}
-                <Badge
-                  variant={c.stage === "active" || c.stage === "won" ? "default" : "secondary"}
-                >
-                  {STAGE_LABEL[c.stage]}
-                </Badge>
-              </div>
-            </Link>
-          </li>
-        ))}
+                </div>
+              </Link>
+            </li>
+          );
+        })}
         {rows.length === 0 && (
           <li className="p-10 text-center text-muted-foreground">
             No contacts yet. They appear as soon as someone books.

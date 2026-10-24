@@ -11,7 +11,7 @@ Your calendar is governed by intent, not just busy/free:
 
 - **Focus blocks**: mark a range in `Admin → Availability` as _focus_. It counts as available only for priority contacts; everyone else sees your open hours.
 - **Weekly budget**: a cap on Bookly bookings per week for new people (calendar events only block the times they cover; they are not counted, and neither are they for "max bookings per day"). Once the week is full, only priority contacts can still book.
-- **Priority contacts** are existing relationships: contacts in stage _active_ or _won_, or tagged `vip`. Bookly recognises them by email, at booking time (the form email is checked before the slot is validated) and on the slot list when the visitor is known, for example when they arrive from a routing form or a link with `?email=`; the API accepts `email` on `/availability` for the same purpose.
+- **Priority contacts** are existing relationships: contacts in stage _active_ or _won_ (with the `pipelines` flag, any stage with **Priority scheduling** on, see [Contacts](contacts.md#your-own-stages)), or tagged `vip`. Bookly recognises them by email, at booking time (the form email is checked before the slot is validated) and on the slot list when the visitor is known, for example when they arrive from a routing form or a link with `?email=`; the API accepts `email` on `/availability` for the same purpose.
 
 ## Group sessions (seats)
 

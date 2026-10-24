@@ -2,6 +2,8 @@ import { Suspense } from "react";
 import { paymentsConfigured } from "@/server/payments";
 import { isCloud } from "@/server/platform";
 import { requireManager } from "@/server/session";
+import { hasFlag } from "@/server/flags";
+import { getCurrentWorkspace } from "@/server/workspace";
 import { SettingsNav, type SettingsTab } from "./settings-nav";
 
 export const metadata = { title: "Settings" };
@@ -19,12 +21,14 @@ export default function SettingsLayout({ children }: LayoutProps<"/admin/setting
 }
 
 async function SettingsShell({ children }: { children: React.ReactNode }) {
-  await requireManager();
+  const [, ws] = await Promise.all([requireManager(), getCurrentWorkspace()]);
+  const pipelines = !!ws && (await hasFlag(ws, "pipelines"));
   const tabs: SettingsTab[] = [
     { href: "/admin/settings", label: "General" },
     { href: "/admin/settings/branding", label: "Branding" },
     { href: "/admin/settings/emails", label: "Emails" },
     { href: "/admin/settings/integrations", label: "Integrations" },
+    ...(pipelines ? [{ href: "/admin/settings/pipeline", label: "Pipeline" }] : []),
     ...(isCloud() && paymentsConfigured()
       ? [{ href: "/admin/settings/payments", label: "Payments" }]
       : []),

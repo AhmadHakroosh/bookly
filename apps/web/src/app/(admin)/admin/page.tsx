@@ -10,6 +10,7 @@ import { fmtDate, fmtDateTime, fmtTime, todayIn, utcToZoned } from "@/lib/time";
 import { listOpenTasks } from "@/server/capture";
 import { recapsToReview } from "@/server/recaps";
 import { staleContacts } from "@/server/contacts";
+import { stageChoices } from "@/server/pipelines";
 import {
   getProfileByUser,
   getSchedule,
@@ -59,6 +60,11 @@ async function AdminHome() {
     listWaitlist(workspace.id, mine ? session.user.id : undefined),
     recapsToReview(workspace.id, mine ? session.user.id : undefined),
   ]);
+  const stageNames = await stageChoices(workspace);
+  const stageName = (c: (typeof stale)[number]) => {
+    const key = stageNames.keyOf(c);
+    return stageNames.choices.find((s) => s.key === key)?.name ?? key;
+  };
   const full = await Promise.all(schedules.map((s) => getSchedule(s.id)));
   const hasHours = full.some((s) => (s?.rules.length ?? 0) > 0);
   const active = events.filter((e) => e.active);
@@ -368,9 +374,7 @@ async function AdminHome() {
                             : `Quiet since ${fmtDate(c.lastActivityAt, tz)}`}
                           {" ·"}
                         </span>
-                        <Badge variant="secondary" className="capitalize">
-                          {c.stage}
-                        </Badge>
+                        <Badge variant="secondary">{stageName(c)}</Badge>
                         {c.emailOptOut && <Badge variant="outline">No email</Badge>}
                       </p>
                     </div>

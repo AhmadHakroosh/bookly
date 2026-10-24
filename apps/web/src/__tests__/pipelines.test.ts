@@ -2,11 +2,15 @@ import { readFileSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
 import {
+  archiveProblem,
   CLIENT_PIPELINE,
+  editProblems,
   isStageKey,
   legacyStageFor,
+  stageForKey,
   stageKeyFor,
   stageProblems,
+  swapTarget,
 } from "@/server/pipelines-text";
 
 describe("client pipeline template", () => {
@@ -110,5 +114,79 @@ describe("stageProblems", () => {
 
   it("refuses an empty pipeline", () => {
     expect(stageProblems([])).toEqual(["A pipeline needs at least one stage."]);
+  });
+});
+
+describe("editing the pipeline", () => {
+  const stages = CLIENT_PIPELINE.stages.map((s) => ({ ...s, id: s.key, isEntry: !!s.isEntry }));
+
+  it("keeps exactly one entry stage when another becomes the entry", () => {
+    expect(editProblems(stages, "active", { isEntry: true })).toEqual([]);
+    expect(editProblems(stages, "lead", { isEntry: false })).toContain(
+      "Exactly one stage must be where new people start.",
+    );
+  });
+
+  it("refuses an edit that leaves no open stage", () => {
+    const twoOpen = editProblems(stages, "lead", { category: "won" });
+    expect(twoOpen).toEqual([]);
+    const oneOpen = stages.filter((s) => s.key !== "active");
+    expect(editProblems(oneOpen, "lead", { category: "won" })).toContain(
+      "A pipeline needs at least one open stage.",
+    );
+  });
+
+  it("archives only an empty stage, or one whose people have somewhere to go", () => {
+    expect(archiveProblem(stages, "lost", 0, null)).toBeNull();
+    expect(archiveProblem(stages, "lost", 3, null)).toBe(
+      "Move the 3 people in this stage somewhere first.",
+    );
+    expect(archiveProblem(stages, "lost", 1, "lost")).toBe(
+      "Move the 1 person in this stage somewhere first.",
+    );
+    expect(archiveProblem(stages, "lost", 3, "won")).toBeNull();
+    expect(archiveProblem(stages, "lead", 0, null)).toBe(
+      "Choose another stage where new people start first.",
+    );
+  });
+
+  it("swaps with the neighbour, and stops at the ends", () => {
+    expect(swapTarget(stages, "active", "up")?.id).toBe("lead");
+    expect(swapTarget(stages, "active", "down")?.id).toBe("won");
+    expect(swapTarget(stages, "lead", "up")).toBeNull();
+    expect(swapTarget(stages, "lost", "down")).toBeNull();
+  });
+
+  it("lands classic values on a live stage of the same kind once their own is archived", () => {
+    expect(stageForKey(stages, "won")?.key).toBe("won");
+    const custom = [
+      { key: "new", category: "open" as const, isEntry: true },
+      { key: "proposal-sent", category: "open" as const, isEntry: false },
+      { key: "signed", category: "won" as const, isEntry: false },
+      { key: "gone", category: "lost" as const, isEntry: false },
+    ];
+    expect(stageForKey(custom, "lead")?.key).toBe("new");
+    expect(stageForKey(custom, "active")?.key).toBe("proposal-sent");
+    expect(stageForKey(custom, "won")?.key).toBe("signed");
+    expect(stageForKey(custom, "lost")?.key).toBe("gone");
+    expect(stageForKey(custom.slice(0, 1), "active")?.key).toBe("new");
+    expect(stageForKey(custom.slice(0, 2), "won")).toBeUndefined();
+    expect(stageForKey(custom, "no-such-stage")).toBeUndefined();
+  });
+});
+
+describe("priority scheduling", () => {
+  it("follows the stage's setting, and the legacy value without a stage", async () => {
+    process.env.AUTH_SECRET ??= "test-secret-test-secret-test";
+    process.env.DATABASE_URL ??= "postgres://x:y@localhost:5432/z";
+    process.env.APP_URL ??= "http://localhost:3002";
+    const { isPriorityContact } = await import("@/server/contacts");
+    const lead = { stage: "lead" as const, tags: [] };
+    expect(isPriorityContact(lead, { settings: { priorityScheduling: true } })).toBe(true);
+    expect(isPriorityContact({ ...lead, stage: "won" }, { settings: {} })).toBe(false);
+    expect(isPriorityContact({ ...lead, stage: "active" }, null)).toBe(true);
+    expect(isPriorityContact(lead, null)).toBe(false);
+    expect(isPriorityContact({ ...lead, tags: ["VIP"] }, { settings: {} })).toBe(true);
+    expect(isPriorityContact(null)).toBe(false);
   });
 });

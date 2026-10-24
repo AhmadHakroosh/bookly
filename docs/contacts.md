@@ -4,6 +4,10 @@ Bookly keeps a **contact** for every person who books, joins a waitlist or fills
 
 `Admin → Contacts` lists everyone (search, filter by stage), and each contact page shows the timeline, upcoming meetings and the editable details. Booking rows link to the attendee's contact. A first completed meeting moves a lead to _active_ automatically; the other stages are yours to set.
 
+### Your own stages
+
+Behind the `pipelines` flag, `Admin → Settings → Pipeline` edits the stages contacts move through. Rename them, change their colour, reorder them, add your own (for example _Proposal sent_), choose which stage new contacts start in, and turn on **Priority scheduling** for the stages whose people count as priority contacts (they may book focus blocks and past the weekly budget, see [Scheduling](scheduling.md#priority-aware-availability)). Each stage has a **category**: _open_, _on hold_, _won_ or _lost_. Reports, automations and the classic `stage` value read the category, so renaming or adding stages never breaks them. A stage's key (shown under it, e.g. `proposal-sent`) is fixed when it is created and stays the same across renames; the API and webhooks use it. Archiving a stage that still has people asks where to move them; the entry stage cannot be archived. The contacts list gets a tab per stage, and stage changes on the timeline name the stages (`Stage: Proposal sent → Active`). Without the flag the four classic stages show exactly as before.
+
 ## Home
 
 At the top of Home a row of cards sums up the day, each a link to the page that owns it:

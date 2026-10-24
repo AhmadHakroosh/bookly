@@ -55,6 +55,13 @@ describe("plain brief", () => {
     expect(b).toContain("Recent notes: Sent the proposal");
     expect(b).toContain("Heads-up: 1 no-show before");
   });
+  it("names the contact's stage when it has one", () => {
+    const b = plainBrief(
+      { ...facts, contact: { ...facts.contact, stageName: "Proposal sent" } },
+      now,
+    );
+    expect(b).toContain("Ahmad, Acme · Proposal sent · vip");
+  });
   it("says so when it is a first conversation", () => {
     const b = plainBrief({ ...facts, previousMeetings: [], timeline: [] }, now);
     expect(b).toContain("First meeting.");

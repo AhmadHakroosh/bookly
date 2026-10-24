@@ -141,6 +141,54 @@ const q = (name: string, description: string, required = false, schema: unknown 
   schema,
 });
 const p = (name: string) => ({ name, in: "path", required: true, schema: str });
+const stage = {
+  type: "object",
+  properties: {
+    id: str,
+    key: {
+      type: "string",
+      description: "Stable across renames: lead, active, won, lost or the workspace's own",
+    },
+    name: str,
+    category: { type: "string", enum: ["open", "hold", "won", "lost"] },
+    color: str,
+    isEntry: { type: "boolean", description: "Where new contacts start" },
+    priorityScheduling: { type: "boolean" },
+  },
+};
+const pipeline = {
+  type: "object",
+  properties: {
+    id: str,
+    kind: { type: "string", enum: ["client"] },
+    name: str,
+    stages: { type: "array", items: stage },
+  },
+};
+const contact = {
+  type: "object",
+  properties: {
+    id: str,
+    email: str,
+    name: str,
+    company: nstr,
+    phone: nstr,
+    tags: { type: "array", items: str },
+    stage: {
+      type: "string",
+      enum: ["lead", "active", "won", "lost"],
+      description: "Classic stage value, kept through 1.0.x; prefer stageId",
+    },
+    stageId: nstr,
+    stageKey: nstr,
+    stageName: nstr,
+    notes: nstr,
+    nextFollowUpAt: { type: "string", format: "date-time", nullable: true },
+    lastActivityAt: { type: "string", format: "date-time" },
+    bookingsCount: { type: "integer" },
+    createdAt: { type: "string", format: "date-time" },
+  },
+};
 
 export function GET() {
   const base = loadEnv().APP_URL.replace(/\/$/, "");
@@ -155,7 +203,14 @@ export function GET() {
     servers: [{ url: `${base}/api/v1` }],
     components: {
       securitySchemes: { apiKey: { type: "http", scheme: "bearer" } },
-      schemas: { EventType: eventType, Booking: booking, DaySlots: slot, Error: err },
+      schemas: {
+        EventType: eventType,
+        Booking: booking,
+        DaySlots: slot,
+        Contact: contact,
+        Pipeline: pipeline,
+        Error: err,
+      },
     },
     paths: {
       "/workspace": {
@@ -217,6 +272,70 @@ export function GET() {
             ...ok({ type: "array", items: { $ref: "#/components/schemas/DaySlots" } }),
             400: errors[400],
             404: errors[404],
+          },
+        },
+      },
+      "/pipelines": {
+        get: {
+          summary: "The client pipeline and its stages",
+          security: [{ apiKey: [] }],
+          description: "Scope `bookings:read`.",
+          responses: ok({ type: "array", items: { $ref: "#/components/schemas/Pipeline" } }),
+        },
+      },
+      "/contacts": {
+        get: {
+          summary: "List contacts",
+          security: [{ apiKey: [] }],
+          description: "Scope `bookings:read`.",
+          parameters: [
+            q("q", "Search name, email or company"),
+            q("stage", "A stage key of the client pipeline"),
+            q("stageId", "A stage id of the client pipeline"),
+            q("limit", "1 to 500 (default 100)"),
+          ],
+          responses: {
+            ...ok({ type: "array", items: { $ref: "#/components/schemas/Contact" } }),
+            400: errors[400],
+          },
+        },
+        post: {
+          summary: "Create or update a contact by email",
+          security: [{ apiKey: [] }],
+          description: "Scope `bookings:write`. Set the stage with `stage` (a key) or `stageId`.",
+          requestBody: {
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  required: ["email"],
+                  properties: {
+                    email: str,
+                    name: str,
+                    company: str,
+                    phone: str,
+                    tags: { type: "array", items: str },
+                    stage: str,
+                    stageId: str,
+                    notes: str,
+                  },
+                },
+              },
+            },
+          },
+          responses: {
+            201: {
+              description: "Created or updated",
+              content: {
+                "application/json": {
+                  schema: {
+                    type: "object",
+                    properties: { data: { $ref: "#/components/schemas/Contact" } },
+                  },
+                },
+              },
+            },
+            ...errors,
           },
         },
       },

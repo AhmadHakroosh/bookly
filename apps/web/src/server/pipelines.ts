@@ -1,11 +1,22 @@
 import "server-only";
 import { and, asc, eq, isNull, notExists, schema, sql } from "@bookly/db";
-import type { Contact, Pipeline, PipelineStage } from "@bookly/db/schema";
+import type { Contact, Pipeline, PipelineStage, StageCategory, Workspace } from "@bookly/db/schema";
+import { cacheLife, cacheTag } from "next/cache";
 import { db } from "@/lib/db";
 import { serializeContact } from "./api";
-import { refreshWorkspace } from "./cache";
+import { refreshWorkspace, workspaceTag } from "./cache";
 import { emitEvent } from "./webhooks";
-import { CLIENT_PIPELINE, legacyStageFor } from "./pipelines-text";
+import { hasFlag } from "./flags";
+import {
+  archiveProblem,
+  CLIENT_PIPELINE,
+  editProblems,
+  legacyStageFor,
+  STAGE_COLOR,
+  stageForKey,
+  stageKeyFor,
+  swapTarget,
+} from "./pipelines-text";
 
 /**
  * Pipelines and stages (ADR 0001). Every workspace has one client pipeline, seeded from the
@@ -84,6 +95,50 @@ export async function ensureClientPipeline(workspaceId: string): Promise<ClientP
   return { pipeline, stages };
 }
 
+/**
+ * The client pipeline's live stages in order, for readers (cached per workspace; the pipeline
+ * editor refreshes it). Empty only before the pipeline exists, which the backfill prevents.
+ */
+export async function clientStages(workspaceId: string): Promise<PipelineStage[]> {
+  "use cache";
+  cacheTag(workspaceTag(workspaceId));
+  cacheLife("hours");
+  const pipeline = await defaultClientPipeline(workspaceId);
+  return pipeline ? liveStages(pipeline.id) : [];
+}
+
+/** A stage as the admin shows it: picker option, filter tab, badge. */
+export type StageChoice = { key: string; name: string; color: string; emphasis: boolean };
+
+const CLASSIC: StageChoice[] = CLIENT_PIPELINE.stages.map((s) => ({
+  key: s.key,
+  name: s.name,
+  color: s.color,
+  emphasis: s.key === "active" || s.key === "won",
+}));
+
+/**
+ * The stages the admin offers. Behind `pipelines`: the workspace's own client stages (renamed,
+ * reordered, added). Otherwise the four classic ones, exactly as before pipelines.
+ */
+export async function stageChoices(ws: Pick<Workspace, "id" | "settings">): Promise<{
+  choices: StageChoice[];
+  keyOf: (c: Pick<Contact, "stageId" | "stage">) => string;
+}> {
+  if (!(await hasFlag(ws, "pipelines"))) return { choices: CLASSIC, keyOf: (c) => c.stage };
+  const stages = await clientStages(ws.id);
+  const byId = new Map(stages.map((s) => [s.id, s.key]));
+  return {
+    choices: stages.map((s) => ({
+      key: s.key,
+      name: s.name,
+      color: s.color,
+      emphasis: !!s.settings.priorityScheduling || s.category === "won",
+    })),
+    keyOf: (c) => (c.stageId ? (byId.get(c.stageId) ?? c.stage) : c.stage),
+  };
+}
+
 /** Where new contacts start in the client pipeline. */
 export async function clientEntryStage(workspaceId: string): Promise<PipelineStage | undefined> {
   const { stages } = await ensureClientPipeline(workspaceId);
@@ -103,7 +158,7 @@ export async function clientStageKey(contact: Pick<Contact, "stageId" | "stage">
 /** The live client stage with this key, if the workspace still has one. */
 export async function clientStageByKey(workspaceId: string, key: string) {
   const { stages } = await ensureClientPipeline(workspaceId);
-  return stages.find((s) => s.key === key);
+  return stageForKey(stages, key);
 }
 
 const stageRef = (s: PipelineStage | null | undefined) =>
@@ -186,7 +241,8 @@ export async function moveToStage(input: {
     workspaceId,
     contactId,
     "stage_changed",
-    `Stage: ${before.stage} → ${legacy}`,
+    // Named stages, so moves between custom open stages (both `lead` underneath) still read.
+    `Stage: ${from?.name ?? before.stage} → ${to.name}`,
     { data: { from: before.stage, to: legacy, by, fromStage: from?.key, toStage: to.key } },
   );
   emitEvent(workspaceId, "contact.stage_changed", {
@@ -194,8 +250,8 @@ export async function moveToStage(input: {
     from: before.stage,
     to: legacy,
     by,
-    from_stage: stageRef(from),
-    to_stage: stageRef(to),
+    fromStage: stageRef(from),
+    toStage: stageRef(to),
   });
   void contacts.afterContactChange(workspaceId, updated);
   refreshWorkspace(workspaceId);
@@ -236,4 +292,137 @@ export async function backfillClientPipelines(): Promise<number> {
       and s.key = c.stage and s.archived_at is null
   `);
   return fixed.rowCount ?? 0;
+}
+
+/* ---------------- Editing (Settings → Pipeline, behind `pipelines`) ---------------- */
+
+/** How many contacts sit in each live client stage. */
+export async function stageCounts(workspaceId: string): Promise<Map<string, number>> {
+  const rows = await db()
+    .select({ stageId: schema.contacts.stageId, n: sql<number>`count(*)::int` })
+    .from(schema.contacts)
+    .where(eq(schema.contacts.workspaceId, workspaceId))
+    .groupBy(schema.contacts.stageId);
+  return new Map(rows.filter((r) => r.stageId).map((r) => [r.stageId!, r.n]));
+}
+
+type StagePatch = {
+  name?: string;
+  category?: StageCategory;
+  color?: string;
+  priorityScheduling?: boolean;
+  isEntry?: boolean;
+};
+
+/** Edits one client stage; returns why not, or null. The key never changes. */
+export async function updateStage(
+  workspaceId: string,
+  id: string,
+  patch: StagePatch,
+): Promise<string | null> {
+  const { stages } = await ensureClientPipeline(workspaceId);
+  const stage = stages.find((s) => s.id === id);
+  if (!stage) return "That stage no longer exists.";
+  const problems = editProblems(stages, id, patch);
+  if (problems.length) return problems[0]!;
+  await db().transaction(async (tx) => {
+    // Only one live entry stage (a partial unique index): clear the old one first.
+    if (patch.isEntry && !stage.isEntry)
+      await tx
+        .update(schema.pipelineStages)
+        .set({ isEntry: false })
+        .where(eq(schema.pipelineStages.pipelineId, stage.pipelineId));
+    await tx
+      .update(schema.pipelineStages)
+      .set({
+        ...(patch.name !== undefined ? { name: patch.name } : {}),
+        ...(patch.category ? { category: patch.category } : {}),
+        ...(patch.color ? { color: patch.color } : {}),
+        ...(patch.isEntry !== undefined ? { isEntry: patch.isEntry } : {}),
+        ...(patch.priorityScheduling !== undefined
+          ? { settings: { ...stage.settings, priorityScheduling: patch.priorityScheduling } }
+          : {}),
+      })
+      .where(eq(schema.pipelineStages.id, id));
+  });
+  refreshWorkspace(workspaceId);
+  return null;
+}
+
+/** Adds a stage at the end of the client pipeline; returns why not, or null. */
+export async function addStage(
+  workspaceId: string,
+  input: { name: string; category: StageCategory },
+): Promise<string | null> {
+  const name = input.name.trim().slice(0, 60);
+  if (!name) return "Give the stage a name.";
+  const { pipeline, stages } = await ensureClientPipeline(workspaceId);
+  if (stages.length >= 30) return "A pipeline has at most 30 stages.";
+  await db()
+    .insert(schema.pipelineStages)
+    .values({
+      workspaceId,
+      pipelineId: pipeline.id,
+      key: stageKeyFor(
+        name,
+        stages.map((s) => s.key),
+      ),
+      name,
+      category: input.category,
+      color: STAGE_COLOR[input.category],
+      position: (stages.at(-1)?.position ?? 0) + 1,
+    });
+  refreshWorkspace(workspaceId);
+  return null;
+}
+
+/** Moves a stage one place up or down (swaps positions with its neighbour). */
+export async function moveStage(workspaceId: string, id: string, dir: "up" | "down") {
+  const { stages } = await ensureClientPipeline(workspaceId);
+  const stage = stages.find((s) => s.id === id);
+  const other = swapTarget(stages, id, dir);
+  if (!stage || !other) return;
+  await db().transaction(async (tx) => {
+    await tx
+      .update(schema.pipelineStages)
+      .set({ position: other.position })
+      .where(eq(schema.pipelineStages.id, stage.id));
+    await tx
+      .update(schema.pipelineStages)
+      .set({ position: stage.position })
+      .where(eq(schema.pipelineStages.id, other.id));
+  });
+  refreshWorkspace(workspaceId);
+}
+
+/**
+ * Archives a stage, first moving everyone in it to `moveTo` (each move recorded like any
+ * other). History keeps the archived stage; its key is free again. Returns why not, or null.
+ */
+export async function archiveStage(
+  workspaceId: string,
+  id: string,
+  moveTo: string | null,
+  by: string,
+): Promise<string | null> {
+  const { stages } = await ensureClientPipeline(workspaceId);
+  const inStage = (await stageCounts(workspaceId)).get(id) ?? 0;
+  const problem = archiveProblem(stages, id, inStage, moveTo);
+  if (problem) return problem;
+  if (inStage && moveTo) {
+    const people = await db()
+      .select({ id: schema.contacts.id })
+      .from(schema.contacts)
+      .where(and(eq(schema.contacts.workspaceId, workspaceId), eq(schema.contacts.stageId, id)));
+    for (const p of people)
+      await moveToStage({ workspaceId, contactId: p.id, toStageId: moveTo, by });
+  }
+  await db()
+    .update(schema.pipelineStages)
+    .set({ archivedAt: new Date() })
+    .where(
+      and(eq(schema.pipelineStages.id, id), eq(schema.pipelineStages.workspaceId, workspaceId)),
+    );
+  refreshWorkspace(workspaceId);
+  return null;
 }

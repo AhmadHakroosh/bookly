@@ -38,7 +38,8 @@ Typical assistant flow: `GET /event-types` → `GET /availability` → `POST /bo
 
 ### Contacts and tasks
 
-- `GET /contacts?q=&stage=&limit=` (scope `bookings:read`) and `POST /contacts` (scope `bookings:write`, body `{ email, name?, company?, phone?, tags?, stage?, notes? }`, upsert by email).
+- `GET /contacts?q=&stage=&stageId=&limit=` (scope `bookings:read`) and `POST /contacts` (scope `bookings:write`, body `{ email, name?, company?, phone?, tags?, stage?, stageId?, notes? }`, upsert by email). `stage` is a stage key of the workspace's client pipeline (`lead`, `active`, `won`, `lost` or one the workspace added, such as `proposal-sent`); an unknown key or id is a `400`. Each contact carries `stageId`, `stageKey` and `stageName` next to the classic `stage` (`lead`, `active`, `won` or `lost`, which an added open stage reads as `lead`; it goes in 1.1).
+- `GET /pipelines` (scope `bookings:read`): the client pipeline and its stages in order, each `{ id, key, name, category, color, isEntry, priorityScheduling }`. Keys are stable across renames.
 - `GET /tasks?contactId=&limit=` (scope `bookings:read`): open tasks, soonest due first.
 
 ## Webhooks
@@ -48,10 +49,10 @@ Add an endpoint under **Admin → Settings → Integrations** and choose events:
 (sent together with `booking.created` for the replacement; carries `previousBookingId`). Use
 **Ping** to send a test delivery.
 
-`contact.stage_changed` carries `{ contact, from, to, by, from_stage, to_stage }`. `from` and
-`to` are the four classic values (`lead`, `active`, `won`, `lost`); `from_stage` and `to_stage`
-are the stages of the workspace's client pipeline, `{ id, key, name, category }` (`from_stage`
-is `null` the first time). Prefer the stage objects: from 1.0 a workspace can rename stages and
+`contact.stage_changed` carries `{ contact, from, to, by, fromStage, toStage }`. `from` and `to`
+are the four classic values (`lead`, `active`, `won`, `lost`); `fromStage` and `toStage` are the
+stages of the workspace's client pipeline, `{ id, key, name, category }` (`fromStage` is `null`
+the first time). Prefer the stage objects: from 1.0 a workspace can rename stages and
 add its own, which `from`/`to` only approximate (an open stage reads as `lead`, a won stage as
 `won`), and 1.1 drops them.
 

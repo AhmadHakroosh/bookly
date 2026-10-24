@@ -6,6 +6,7 @@ import type {
   ContactEvent,
   ContactEventType,
   ContactStage,
+  PipelineStage,
   Workspace,
 } from "@bookly/db/schema";
 import { db } from "@/lib/db";
@@ -13,7 +14,13 @@ import { serializeContact } from "./api";
 import { refreshWorkspace } from "./cache";
 import { emitEvent } from "./webhooks";
 import { enqueue } from "./jobs";
-import { clientEntryStage, clientStageByKey, clientStageKey, moveToStage } from "./pipelines";
+import {
+  clientEntryStage,
+  clientStageByKey,
+  clientStageKey,
+  clientStages,
+  moveToStage,
+} from "./pipelines";
 
 /**
  * Contacts are the relationship layer: one row per email per workspace, with a stage and a
@@ -216,7 +223,7 @@ async function recount(contactId: string) {
 export async function setStage(
   workspaceId: string,
   contactId: string,
-  stage: ContactStage,
+  stage: string,
   by: string,
 ): Promise<void> {
   const to = await clientStageByKey(workspaceId, stage);
@@ -244,10 +251,18 @@ export async function getContactByEmail(workspaceId: string, email: string) {
 
 export async function listContacts(
   workspaceId: string,
-  opts: { q?: string; stage?: ContactStage; limit?: number } = {},
+  opts: { q?: string; stage?: string; limit?: number } = {},
 ): Promise<Contact[]> {
   const conds = [eq(schema.contacts.workspaceId, workspaceId)];
-  if (opts.stage) conds.push(eq(schema.contacts.stage, opts.stage));
+  if (opts.stage) {
+    // A stage key of the client pipeline (any of the workspace's own), else a legacy value.
+    const stage = (await clientStages(workspaceId)).find((s) => s.key === opts.stage);
+    conds.push(
+      stage
+        ? eq(schema.contacts.stageId, stage.id)
+        : eq(schema.contacts.stage, opts.stage as ContactStage),
+    );
+  }
   if (opts.q?.trim()) {
     const like = `%${opts.q.trim()}%`;
     conds.push(
@@ -333,14 +348,26 @@ export async function getContactById(id: string): Promise<Contact | null> {
   return (await db().query.contacts.findFirst({ where: eq(schema.contacts.id, id) })) ?? null;
 }
 
-/** Existing customers (active / won) and anyone tagged `vip` get priority scheduling. */
-export const isPriorityContact = (c: Pick<Contact, "stage" | "tags"> | null | undefined) =>
+/**
+ * Priority scheduling: anyone tagged `vip`, and anyone in a client stage with priority
+ * scheduling on (by default Active and Won, the existing customers). Without a stage the legacy
+ * value decides, as before pipelines.
+ */
+export const isPriorityContact = (
+  c: Pick<Contact, "stage" | "tags"> | null | undefined,
+  stage?: Pick<PipelineStage, "settings"> | null,
+) =>
   !!c &&
-  (c.stage === "active" || c.stage === "won" || c.tags.some((t) => t.toLowerCase() === "vip"));
+  (c.tags.some((t) => t.toLowerCase() === "vip") ||
+    (stage ? !!stage.settings.priorityScheduling : c.stage === "active" || c.stage === "won"));
 
 export async function priorityForEmail(workspaceId: string, email: string | null | undefined) {
   if (!email) return false;
-  return isPriorityContact(await getContactByEmail(workspaceId, email));
+  const c = await getContactByEmail(workspaceId, email);
+  const stage = c?.stageId
+    ? (await clientStages(workspaceId)).find((s) => s.id === c.stageId)
+    : null;
+  return isPriorityContact(c, stage);
 }
 
 /** Contacts the host should look at: overdue follow-ups first, then long-quiet leads. */
@@ -354,13 +381,19 @@ export async function staleContacts(workspaceId: string, quietDays = 7, limit = 
         eq(schema.contacts.workspaceId, workspaceId),
         or(
           sql`${schema.contacts.nextFollowUpAt} <= now()`,
-          and(
-            eq(schema.contacts.stage, "lead"),
-            sql`${schema.contacts.lastActivityAt} <= ${cutoff}`,
-          ),
+          and(await inEntryStage(workspaceId), sql`${schema.contacts.lastActivityAt} <= ${cutoff}`),
         )!,
       ),
     )
     .orderBy(asc(schema.contacts.nextFollowUpAt), asc(schema.contacts.lastActivityAt))
     .limit(limit);
+}
+
+/**
+ * "Still a lead": the contact sits in the client pipeline's entry stage (Lead by default), or,
+ * before the pipeline exists, has the legacy value `lead`.
+ */
+export async function inEntryStage(workspaceId: string) {
+  const entry = (await clientStages(workspaceId)).find((s) => s.isEntry);
+  return entry ? eq(schema.contacts.stageId, entry.id) : eq(schema.contacts.stage, "lead");
 }

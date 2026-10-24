@@ -164,7 +164,8 @@ export async function needsAttention({ ws, hostUserId }: HomeScope, now = new Da
           or(
             lte(schema.contacts.nextFollowUpAt, now),
             and(
-              eq(schema.contacts.stage, "lead"),
+              // Lazy: contacts.ts pulls in the app; Home's date helpers stay importable alone.
+              await (await import("./contacts")).inEntryStage(ws.id),
               lte(schema.contacts.lastActivityAt, quietCutoff),
             ),
           ),
