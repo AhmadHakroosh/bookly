@@ -61,6 +61,20 @@ test.describe("marketing site", () => {
   const pages: [string, string][] = [
     ["/", "The meeting is booked"],
     ["/pricing", "Start free"],
+    ["/product", "One client."],
+    ["/solutions", "Built around"],
+    ["/solutions/coaches", "Built around"],
+    ["/solutions/hiring", "Built around"],
+    ["/solutions/programs", "Built around"],
+    ["/trust", "Your relationships."],
+    ["/resources", "Make Bookly"],
+    ["/compare", "Compare Bookly."],
+    ["/compare/calendly", "Bookly vs Calendly"],
+    ["/compare/cal-com", "Bookly vs Cal.com"],
+    ["/compare/savvycal", "Bookly vs SavvyCal"],
+    ["/compare/greenhouse", "Bookly vs Greenhouse"],
+    ["/compare/ashby", "Bookly vs Ashby"],
+    ["/compare/submittable", "Bookly vs Submittable"],
     ["/about", "About Bookly"],
     ["/contact", "Contact"],
     ["/security", "Security"],
@@ -103,7 +117,8 @@ test.describe("marketing site", () => {
     expect(robots.text).toContain("Sitemap:");
     expect(robots.text).toContain("Disallow: /console");
     const sitemap = await api(page, "/sitemap.xml");
-    expect(sitemap.text).toContain("/pricing");
+    for (const p of ["/pricing", "/product", "/solutions/hiring", "/trust", "/compare/ashby"])
+      expect(sitemap.text).toContain(`${platformUrl}${p}<`);
     const og = await api(page, "/og");
     expect(og.status).toBe(200);
     expect(og.type).toContain("image/png");
@@ -163,19 +178,114 @@ test.describe("marketing site", () => {
     expect(res.text).toContain("terms");
   });
 
-  for (const path of ["/", "/pricing", "/signup"])
-    test(`${path} has no serious accessibility violations`, async ({ page }) => {
+  for (const path of [
+    "/",
+    "/pricing",
+    "/signup",
+    "/product",
+    "/solutions",
+    "/solutions/hiring",
+    "/trust",
+    "/resources",
+    "/compare",
+    "/compare/greenhouse",
+  ])
+    test(`${path} has no accessibility violations`, async ({ page }) => {
       // Scroll-reveal keeps off-screen sections at opacity 0, which axe reads as invisible text
       // on white; reduced motion disables the effect (as it does for real users who ask for it).
       await page.emulateMedia({ reducedMotion: "reduce" });
       await page.goto(path);
       await page.waitForLoadState("networkidle");
-      const results = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa"]).analyze();
-      const serious = results.violations.filter(
-        (v) => v.impact === "serious" || v.impact === "critical",
-      );
-      expect(serious, JSON.stringify(serious, null, 2)).toEqual([]);
+      await settled(page);
+      const results = await new AxeBuilder({ page })
+        .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"])
+        .analyze();
+      expect(results.violations, JSON.stringify(results.violations, null, 2)).toEqual([]);
     });
+
+  test("header mega menus open, close and lead to their pages", async ({ page }) => {
+    await page.goto("/");
+    const nav = page.getByRole("navigation", { name: "Primary" });
+    const product = nav.getByRole("button", { name: "Product" });
+    await product.click();
+    await expect(product).toHaveAttribute("aria-expanded", "true");
+    await expect(
+      nav.getByRole("link", { name: /One client\. Every step connected\./ }),
+    ).toBeVisible();
+    await settled(page);
+    const scan = await new AxeBuilder({ page })
+      .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"])
+      .analyze();
+    expect(scan.violations, JSON.stringify(scan.violations, null, 2)).toEqual([]);
+    await page.keyboard.press("Escape");
+    await expect(product).toHaveAttribute("aria-expanded", "false");
+    await expect(product).toBeFocused();
+
+    const solutions = nav.getByRole("button", { name: "Solutions" });
+    await solutions.click();
+    await expect(nav.getByText("Every applicant heard. Every decision clear.")).toBeVisible();
+    await nav.getByRole("link", { name: /Programs & cohorts/ }).click();
+    await expect(page).toHaveURL(/\/solutions\/programs$/);
+    await expect(solutions).toHaveAttribute("aria-expanded", "false");
+    const tabs = page.getByRole("navigation", { name: "Solutions by audience" });
+    await expect(
+      tabs.getByRole("link", { name: "Programs & cohorts", exact: true }),
+    ).toHaveAttribute("aria-current", "page");
+    await nav.getByRole("link", { name: "Pricing" }).click();
+    await expect(page.getByRole("heading", { level: 1 })).toContainText("Grow with your work.");
+  });
+
+  test("the footer has the six columns and the legal links land on their sections", async ({
+    page,
+  }) => {
+    await page.goto("/trust");
+    const footer = page.getByRole("contentinfo");
+    for (const col of ["Product", "Solutions", "Compare", "Company", "Resources", "Legal"])
+      await expect(footer.getByRole("heading", { name: col, exact: true })).toBeVisible();
+    await footer.getByRole("link", { name: "Sub-processors" }).click();
+    await expect(page).toHaveURL(/\/dpa#sub-processors$/);
+    await expect(page.locator("#sub-processors")).toBeVisible();
+  });
+
+  test("at 375 px the menu sheet holds the same menus", async ({ page }) => {
+    await page.setViewportSize({ width: 375, height: 812 });
+    await page.goto("/");
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
+      375,
+    );
+    await page.getByRole("button", { name: "Menu" }).click();
+    const sheet = page.getByRole("navigation", { name: "Mobile" });
+    await sheet.getByText("Solutions", { exact: true }).click();
+    await sheet.getByRole("link", { name: /Hiring/ }).click();
+    await expect(page).toHaveURL(/\/solutions\/hiring$/);
+    await expect(page.getByRole("navigation", { name: "Mobile" })).toHaveCount(0);
+  });
+
+  test("the docs search on Resources finds a section", async ({ page }) => {
+    await page.goto("/resources");
+    const search = page.getByRole("searchbox", { name: "Search documentation" });
+    // The shortcut listener exists once the page has hydrated; press until it answers.
+    await expect(async () => {
+      await page.keyboard.press("ControlOrMeta+k");
+      await expect(search).toBeFocused({ timeout: 500 });
+    }).toPass();
+    await search.fill("webhooks");
+    await page.getByRole("search").getByRole("link").first().click();
+    await expect(page).toHaveURL(/\/docs\/[a-z-]+/);
+  });
+
+  test("comparison pages cite their sources and credit the other side", async ({ page }) => {
+    await page.goto("/compare/cal-com");
+    await expect(page.getByText("Last verified: 2026-10-25")).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: "Where Cal.com is ahead today." }),
+    ).toBeVisible();
+    const sources = page.getByRole("link", { name: /^Source for / });
+    expect(await sources.count()).toBeGreaterThan(5);
+    await expect(sources.first()).toHaveAttribute("href", /^https:\/\/cal\.com\//);
+    const ld = await page.locator('script[type="application/ld+json"]').allTextContents();
+    expect(ld.join("")).toContain('"FAQPage"');
+  });
 });
 
 test.describe("sign-up and tenants", () => {

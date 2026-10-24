@@ -1,16 +1,16 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { CheckIcon, MinusIcon } from "lucide-react";
+import { ArrowRightIcon, Building2Icon, CheckIcon, MinusIcon, ServerIcon } from "lucide-react";
 import { CAPTURE_OVERAGE_PER_HOUR, captureHours, PLANS, type Plan } from "@bookly/cloud";
 import { Button } from "@/components/ui/button";
 import { breadcrumbLd, faqLd, JsonLd } from "../json-ld";
 import { PlanGrid } from "../plan-card";
 import { pageMetadata, SITE } from "../site";
+import { CtaBand, PageHero, Section, StraightAnswers } from "../_site/ui";
 
 export const metadata: Metadata = pageMetadata({
   title: "Pricing",
-  description:
-    "Bookly plans: Free with contacts, briefings, the daily Home page and paid bookings at a 5% fee; Pro at $24/month or $240/year adds Bookly video, auto-capture, paid bookings with no platform fee, a custom domain; Team at $30 a member shares the customer memory, two months free yearly.",
+  description: `Bookly plans: Free with contacts, briefings, the daily Home page and paid bookings at a ${PLANS.free.feePercent}% fee; Pro at $${PLANS.pro.priceMonthly}/month or $${PLANS.pro.priceYearly}/year adds Bookly video, auto-capture, no platform fee and a custom domain; Team at $${PLANS.team.priceMonthly} a member shares the customer memory. Enterprise and self-hosting below.`,
   path: "/pricing",
 });
 
@@ -87,7 +87,7 @@ const FAQ: [string, string][] = [
   ],
   [
     "Can I self-host instead?",
-    "Yes. Bookly is open source under AGPL-3.0. Run it with Docker Compose and every feature is unlocked with no limits. Bring your own keys for email, video, payments and AI.",
+    "Yes. Bookly's core is open source under AGPL-3.0. Run it with Docker Compose and there are no plan limits; bring your own keys for email, video, payments and AI. Enterprise modules such as single sign-on need a license key.",
   ],
   [
     "Can I cancel or change plans?",
@@ -111,31 +111,66 @@ function Cell({ v }: { v: string | boolean }) {
 
 export default function PricingPage() {
   return (
-    <div className="mx-auto max-w-6xl px-4 py-14 md:py-20">
+    <div>
       <JsonLd data={[breadcrumbLd([["Pricing", "/pricing"]]), faqLd(FAQ)]} />
-      <div className="mx-auto max-w-2xl text-center">
-        <h1 className="text-3xl font-semibold tracking-tight md:text-5xl">
-          Start free. Pay when it pays for itself.
-        </h1>
-        <p className="mt-4 text-lg text-muted-foreground">
-          Upgrade from your workspace whenever you hit a limit. Cancel any time from the billing
-          page. Prices in USD.
-        </p>
-      </div>
+      <PageHero
+        first="Start free."
+        second="Grow with your work."
+        lead="Choose the plan that fits your stage. Upgrade any time as your client work grows, and cancel from the billing page. Prices in USD."
+        note="All the essentials to get started."
+      />
 
-      <div className="mt-12">
-        <PlanGrid plans={plans} heading="h2" />
-      </div>
+      <Section className="pt-6 md:pt-8" labelledBy="plans">
+        <h2 id="plans" className="sr-only">
+          Plans
+        </h2>
+        <PlanGrid plans={plans} heading="h3" />
 
-      <div className="mt-20">
-        <h2 className="text-2xl font-semibold tracking-tight">Compare plans</h2>
-        <div className="mt-6 overflow-x-auto rounded-2xl border">
+        <div className="mt-6 grid gap-4 md:grid-cols-[1.6fr_1fr]">
+          <div className="flex flex-col gap-5 rounded-2xl border bg-card p-6 sm:flex-row sm:items-center">
+            <Building2Icon className="size-6 shrink-0 text-(--brand)" aria-hidden />
+            <div className="min-w-0 flex-1">
+              <h3 className="text-xl font-bold tracking-tight">Enterprise</h3>
+              <p className="mt-1 text-sm text-muted-foreground">
+                For organisations: single sign-on and SCIM, custom roles, compliance reports and
+                retention per region, on our cloud or your own servers, with a contract and an
+                invoice. The first modules are in development; trial and development keys are free.
+              </p>
+            </div>
+            <Button variant="outline" nativeButton={false} render={<Link href="/contact" />}>
+              Talk to us
+            </Button>
+          </div>
+          <div className="flex flex-col gap-3 rounded-2xl border bg-card p-6">
+            <div className="flex items-center gap-3">
+              <ServerIcon className="size-5 text-(--brand)" aria-hidden />
+              <h3 className="font-bold tracking-tight">Self-hosted</h3>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              The open-source core on your own server, free, with no plan limits.
+            </p>
+            <Link
+              href="/docs/self-hosting"
+              className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary hover:underline"
+            >
+              Self-hosting guide
+              <ArrowRightIcon className="size-4" aria-hidden />
+            </Link>
+          </div>
+        </div>
+      </Section>
+
+      <Section labelledBy="compare-plans" className="pt-4 md:pt-6">
+        <h2 id="compare-plans" className="text-3xl font-bold tracking-[-0.03em]">
+          Compare plans
+        </h2>
+        <div className="mt-6 overflow-x-auto rounded-2xl border bg-card">
           <table className="w-full min-w-[640px] text-sm">
             <thead>
-              <tr className="border-b bg-muted/50 text-left">
-                <th className="p-4 font-medium">Feature</th>
+              <tr className="border-b bg-sidebar text-left">
+                <th className="p-4 font-semibold">Feature</th>
                 {plans.map((p) => (
-                  <th key={p.id} className="w-32 p-4 text-center font-medium">
+                  <th key={p.id} className="w-32 p-4 text-center font-semibold">
                     {p.name}
                   </th>
                 ))}
@@ -155,52 +190,10 @@ export default function PricingPage() {
             </tbody>
           </table>
         </div>
-      </div>
+      </Section>
 
-      <div className="mt-20 grid gap-10 md:grid-cols-[1fr_2fr]">
-        <div>
-          <h2 className="text-2xl font-semibold tracking-tight">Questions</h2>
-          <p className="mt-2 text-sm text-muted-foreground">
-            Anything else?{" "}
-            <Link href="/contact" className="underline underline-offset-4">
-              Get in touch
-            </Link>
-            .
-          </p>
-        </div>
-        <dl className="divide-y">
-          {FAQ.map(([q, a]) => (
-            <div key={q} className="py-4">
-              <dt className="font-medium">{q}</dt>
-              <dd className="mt-1 text-sm text-muted-foreground">{a}</dd>
-            </div>
-          ))}
-        </dl>
-      </div>
-
-      <div className="mt-20 rounded-2xl border bg-muted/30 p-8 text-center">
-        <h2 className="text-xl font-semibold tracking-tight">Prefer to run it yourself?</h2>
-        <p className="mx-auto mt-2 max-w-xl text-sm text-muted-foreground">
-          Bookly is open source and self-hostable with every feature unlocked and no limits. You
-          bring the server and the API keys; we bring the updates.
-        </p>
-        <div className="mt-5 flex justify-center gap-3">
-          <Button
-            variant="outline"
-            nativeButton={false}
-            render={<Link href="/docs/self-hosting" target="_blank" />}
-          >
-            Self-hosting guide
-          </Button>
-          <Button
-            variant="ghost"
-            nativeButton={false}
-            render={<a href={SITE.github} target="_blank" rel="noreferrer" />}
-          >
-            GitHub
-          </Button>
-        </div>
-      </div>
+      <StraightAnswers items={FAQ} />
+      <CtaBand />
     </div>
   );
 }

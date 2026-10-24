@@ -180,7 +180,7 @@ export default function PrivacyPage() {
         where the host controls them. Bookings and their event details follow the retention periods
         below.
       </p>
-      <h2>How long we keep it</h2>
+      <h2 id="how-long-we-keep-it">How long we keep it</h2>
       <ul>
         <li>
           Account and workspace data: until you delete the workspace, then 30 days in backups.
@@ -229,7 +229,7 @@ export default function PrivacyPage() {
         is nothing to opt out of. Requests go to{" "}
         <a href={`mailto:${SITE.supportEmail}`}>{SITE.supportEmail}</a>; we answer within 45 days.
       </p>
-      <h2>Cookies</h2>
+      <h2 id="cookies">Cookies</h2>
       <p>
         We use a session cookie to keep you signed in and a preference cookie for your theme. No
         advertising or cross-site tracking cookies. Embedded booking widgets set no cookies on the

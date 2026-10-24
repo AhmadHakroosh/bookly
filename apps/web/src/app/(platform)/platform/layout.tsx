@@ -1,13 +1,12 @@
 import type { Metadata } from "next";
+import { Caveat } from "next/font/google";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { headers } from "next/headers";
 import { Suspense } from "react";
-import { ExternalLinkIcon, MenuIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SubmitButton } from "@/components/submit-button";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { GitHubIcon, Logo, LogoMark } from "@/components/brand/logo";
+import { Logo } from "@/components/brand/logo";
 import { auth } from "@/lib/auth";
 import { isPlatformAdmin } from "@/server/platform";
 import { getSession } from "@/server/session";
@@ -15,8 +14,14 @@ import { PLANS } from "@bookly/cloud";
 import { WebMcpTools } from "@/components/webmcp-tools";
 import { ARD_PATH } from "@/lib/ard";
 import { listDocs } from "@/server/docs";
-import { FOOTER, NAV, SITE, siteUrl } from "./site";
+import { MENUS, SITE, siteUrl } from "./site";
 import { Reveal } from "./reveal";
+import { MegaMenuNav } from "./_site/mega-menu";
+import { MobileMenu } from "./_site/mobile-menu";
+import { SiteFooter } from "./_site/footer";
+
+/** Handwriting for the concepts' annotations ("Less admin. More progress."); marketing only. */
+const hand = Caveat({ subsets: ["latin"], variable: "--font-caveat", display: "swap" });
 
 async function signOut() {
   "use server";
@@ -81,24 +86,6 @@ async function AgentTools() {
   );
 }
 
-function NavLinks({ className = "" }: { className?: string }) {
-  return (
-    <>
-      {NAV.map((n) => (
-        <Link
-          key={n.href}
-          href={n.href}
-          target={"external" in n && n.external ? "_blank" : undefined}
-          rel={"external" in n && n.external ? "noreferrer" : undefined}
-          className={`text-muted-foreground transition-colors hover:text-foreground ${className}`}
-        >
-          {n.label}
-        </Link>
-      ))}
-    </>
-  );
-}
-
 async function sessionState() {
   const session = await getSession();
   return { session, admin: !!session && isPlatformAdmin(session.user.email) };
@@ -109,14 +96,12 @@ async function SessionNav() {
   const { session, admin } = await sessionState();
   if (!session)
     return (
-      <Button
-        variant="ghost"
-        nativeButton={false}
-        render={<Link href="/login" />}
-        className="hidden sm:inline-flex"
+      <Link
+        href="/login"
+        className="hidden h-9 items-center rounded-md px-3 text-sm font-medium text-foreground/80 hover:text-foreground sm:inline-flex"
       >
         Sign in
-      </Button>
+      </Link>
     );
   return (
     <>
@@ -156,17 +141,17 @@ async function SessionMenu() {
   const { session, admin } = await sessionState();
   if (!session)
     return (
-      <Link href="/login" className="rounded-md px-2 py-2">
+      <Link href="/login" className="rounded-md py-2 font-medium">
         Sign in
       </Link>
     );
   return (
     <>
-      <Link href="/workspaces" className="rounded-md px-2 py-2">
+      <Link href="/workspaces" className="rounded-md py-2 font-medium">
         Your workspaces
       </Link>
       {admin && (
-        <Link href="/console" className="rounded-md px-2 py-2">
+        <Link href="/console" className="rounded-md py-2 font-medium">
           Console
         </Link>
       )}
@@ -177,7 +162,7 @@ async function SessionMenu() {
       >
         <SubmitButton
           variant="ghost"
-          className="h-auto w-full justify-start rounded-md px-2 py-2 font-normal"
+          className="h-auto w-full justify-start rounded-md px-0 py-2 text-base font-medium"
         >
           Sign out
         </SubmitButton>
@@ -187,122 +172,45 @@ async function SessionMenu() {
 }
 
 function Shell({ children }: { children: React.ReactNode }) {
+  const menus = [MENUS.product, MENUS.solutions, MENUS.resources];
+  const pricing = { href: "/pricing", label: "Pricing" };
   return (
-    <div className="flex min-h-full flex-1 flex-col">
+    <div className={`${hand.variable} flex min-h-full flex-1 flex-col`}>
       <a
         href="#main"
         className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-50 focus:rounded-md focus:bg-background focus:px-3 focus:py-2 focus:text-sm focus:shadow"
       >
         Skip to content
       </a>
-      <header className="sticky top-0 z-40 border-b bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-4 px-4">
+      <header className="sticky top-0 z-40 border-b border-border/70 bg-background/90 backdrop-blur supports-[backdrop-filter]:bg-background/75">
+        <div className="relative mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-4">
           <Link href="/" className="shrink-0" aria-label="Bookly home">
-            <Logo />
+            <Logo size={28} />
           </Link>
-          <nav aria-label="Primary" className="hidden items-center gap-6 text-sm md:flex">
-            <NavLinks />
-          </nav>
+          <MegaMenuNav menus={menus} pricing={pricing} />
           <div className="flex items-center gap-1.5">
-            <a
-              href={SITE.github}
-              target="_blank"
-              rel="noreferrer"
-              aria-label="Bookly on GitHub"
-              className="hidden rounded-md p-2 text-muted-foreground hover:text-foreground sm:inline-flex"
-            >
-              <GitHubIcon className="size-4" />
-            </a>
-            <Suspense fallback={<span className="hidden h-8 w-16 sm:inline-block" aria-hidden />}>
+            <Suspense fallback={<span className="hidden h-9 w-16 sm:inline-block" aria-hidden />}>
               <SessionNav />
             </Suspense>
-            <Button nativeButton={false} render={<Link href="/signup" />}>
-              Get started
+            <Button variant="ink" nativeButton={false} render={<Link href="/signup" />}>
+              Start free
             </Button>
-            <Sheet>
-              <SheetTrigger
-                render={
-                  <Button variant="ghost" size="icon-sm" className="md:hidden" aria-label="Menu" />
-                }
-              >
-                <MenuIcon />
-              </SheetTrigger>
-              <SheetContent side="right" className="w-72">
-                <SheetHeader>
-                  <SheetTitle>
-                    <Logo />
-                  </SheetTitle>
-                </SheetHeader>
-                <nav aria-label="Mobile" className="flex flex-col gap-1 px-4 text-base">
-                  <NavLinks className="rounded-md px-2 py-2" />
-                  <Link
-                    href={SITE.github}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="rounded-md px-2 py-2 text-muted-foreground hover:text-foreground"
-                  >
-                    GitHub
-                  </Link>
-                  <hr className="my-2" />
-                  <Suspense fallback={null}>
-                    <SessionMenu />
-                  </Suspense>
-                </nav>
-              </SheetContent>
-            </Sheet>
+            <MobileMenu
+              menus={menus}
+              pricing={pricing}
+              session={
+                <Suspense fallback={null}>
+                  <SessionMenu />
+                </Suspense>
+              }
+            />
           </div>
         </div>
       </header>
       <main id="main" className="flex-1">
         {children}
       </main>
-      <footer className="border-t bg-muted/30">
-        <div className="mx-auto grid max-w-6xl gap-10 px-4 py-14 md:grid-cols-[1.4fr_repeat(4,1fr)]">
-          <div className="space-y-3">
-            <Logo />
-            <p className="max-w-xs text-sm text-muted-foreground">{SITE.tagline}</p>
-            <p className="text-xs text-muted-foreground">
-              Open source under AGPL-3.0. Self-host it, or let us run it for you.
-            </p>
-          </div>
-          {Object.entries(FOOTER).map(([group, links]) => (
-            <nav key={group} aria-label={group}>
-              <p className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
-                {group}
-              </p>
-              <ul className="mt-3 space-y-2 text-sm">
-                {links.map((l) => (
-                  <li key={l.href}>
-                    <Link
-                      href={l.href}
-                      target={"external" in l && l.external ? "_blank" : undefined}
-                      rel={"external" in l && l.external ? "noreferrer" : undefined}
-                      className="inline-flex items-center gap-1 text-muted-foreground hover:text-foreground"
-                    >
-                      {l.label}
-                      {"external" in l && l.external && (
-                        <ExternalLinkIcon className="size-3 opacity-60" aria-hidden />
-                      )}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </nav>
-          ))}
-        </div>
-        <div className="border-t">
-          <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-2 px-4 py-5 text-xs text-muted-foreground">
-            <span className="inline-flex items-center gap-2">
-              <LogoMark className="size-4" />© {SITE.updated.slice(0, 4)} {SITE.operator}.
-            </span>
-            <span>
-              <a href={`mailto:${SITE.supportEmail}`} className="hover:text-foreground">
-                {SITE.supportEmail}
-              </a>
-            </span>
-          </div>
-        </div>
-      </footer>
+      <SiteFooter />
       {/* Mounted with the streamed shell: its DOM writes must come after hydration of the page. */}
       <Reveal />
     </div>

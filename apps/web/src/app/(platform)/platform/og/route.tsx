@@ -7,11 +7,15 @@ import { MARK, MARK_BOX, WORDMARK, WORDMARK_BOTTOM, WORDMARK_WIDTH } from "@/com
  */
 export const OG_SIZE = { width: 1200, height: 630 };
 
-const STEPS = ["Booked", "Briefed", "Captured", "Recapped", "Followed up"];
+/** The client journey, as the website concepts draw it. */
+const STEPS = ["Booked", "Prepared", "Met", "Followed up", "Paid"];
 
-/** Night, and Bookly Orange lifted for text on it (6.8:1); the mark keeps Bookly Orange. */
-const BG = "#121110";
-const ORANGE = "#F0794A";
+/** Light only: Paper, Ink, Bookly Orange for the mark and large type, muted warm grey. */
+const BG = "#FAF8F4";
+const INK = "#1C1C1C";
+const ORANGE = "#E85D2C";
+const MUTED = "#6B655D";
+const LINE = "#E4DFD7";
 
 /**
  * `?title=` puts a page's own title on the card (pricing, docs, legal pages) instead of the
@@ -31,7 +35,7 @@ export function GET(req: Request) {
         justifyContent: "space-between",
         padding: 72,
         background: BG,
-        color: "#fafafa",
+        color: INK,
         fontFamily: "sans-serif",
       }}
     >
@@ -41,26 +45,26 @@ export function GET(req: Request) {
           <path d={MARK.replyBody} fill="#F5B6A0" />
           <path d={MARK.replyTail} fill="#F5B6A0" />
           <path d={MARK.b} fill={BG} stroke={BG} strokeWidth="5" strokeLinejoin="round" />
-          <path d={MARK.b} fill="#E85D2C" />
+          <path d={MARK.b} fill={ORANGE} />
         </svg>
         <svg
           height="46"
           width={(46 * WORDMARK_WIDTH) / WORDMARK_BOTTOM}
           viewBox={`0 0 ${WORDMARK_WIDTH} ${WORDMARK_BOTTOM}`}
         >
-          <path d={WORDMARK} fill="#fafafa" />
+          <path d={WORDMARK} fill={INK} />
         </svg>
         <div
           style={{
             marginLeft: "auto",
             fontSize: 22,
-            color: "#a3a3a3",
-            border: "2px solid #333",
+            color: MUTED,
+            border: `2px solid ${LINE}`,
             borderRadius: 999,
             padding: "8px 20px",
           }}
         >
-          Open source
+          Open-source core
         </div>
       </div>
       <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
@@ -78,7 +82,7 @@ export function GET(req: Request) {
         >
           {title ? "Bookly" : "Bookly handles the rest."}
         </div>
-        <div style={{ fontSize: 28, color: "#a3a3a3", marginTop: 8 }}>
+        <div style={{ fontSize: 28, color: MUTED, marginTop: 8 }}>
           Briefings before, transcripts during, tasks and follow-ups after.
         </div>
       </div>
@@ -90,16 +94,17 @@ export function GET(req: Request) {
                 display: "flex",
                 alignItems: "center",
                 gap: 10,
-                border: "2px solid #333",
+                border: `2px solid ${LINE}`,
                 borderRadius: 999,
                 padding: "10px 22px",
                 fontSize: 24,
+                background: "#FFFFFF",
               }}
             >
               <div style={{ width: 10, height: 10, borderRadius: 999, background: ORANGE }} />
               {s}
             </div>
-            {i < STEPS.length - 1 && <div style={{ color: "#555", fontSize: 24 }}>→</div>}
+            {i < STEPS.length - 1 && <div style={{ color: MUTED, fontSize: 24 }}>→</div>}
           </div>
         ))}
       </div>
