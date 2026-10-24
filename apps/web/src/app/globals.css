@@ -50,6 +50,7 @@
   --color-info-foreground: var(--info-foreground);
   --color-info-muted: var(--info-muted);
   --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
   --color-popover-foreground: var(--popover-foreground);
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
@@ -79,6 +80,8 @@
   --popover-foreground: oklch(0.226 0 0);
   --primary: oklch(0.535 0.167 37.9);
   --primary-foreground: oklch(1 0 0);
+  /* Hover darkens Ember: a see-through Ember over Paper drops white text under 4.5:1. */
+  --primary-hover: oklch(0.48 0.155 37.9);
   --secondary: oklch(0.955 0.006 84.6);
   --secondary-foreground: oklch(0.226 0 0);
   --muted: oklch(0.955 0.006 84.6);
@@ -132,6 +135,8 @@
   --popover-foreground: oklch(0.97 0.006 84.6);
   --primary: oklch(0.705 0.159 41.4);
   --primary-foreground: oklch(0.178 0.003 67.7);
+  /* Hover lifts the orange, so the dark label keeps (and gains) contrast. */
+  --primary-hover: oklch(0.77 0.14 43);
   --secondary: oklch(0.27 0.006 70);
   --secondary-foreground: oklch(0.97 0.006 84.6);
   --muted: oklch(0.27 0.006 70);

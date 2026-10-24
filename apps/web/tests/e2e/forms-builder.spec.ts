@@ -1,7 +1,7 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
 import { and, eq, schema } from "@bookly/db";
-import { STORAGE, upcomingWeekday } from "./helpers";
+import { settled, STORAGE, upcomingWeekday } from "./helpers";
 import { testDb } from "./db";
 
 /*
@@ -71,6 +71,7 @@ async function addQuestion(page: Page, type: string, label: string) {
 }
 
 async function noAxeViolations(page: Page, what: string) {
+  await settled(page);
   const r = await new AxeBuilder({ page })
     .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"])
     .analyze();

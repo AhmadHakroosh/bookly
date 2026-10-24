@@ -24,6 +24,7 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 - **The v1.0 colours.** Warm Paper pages, white cards, a Sand sidebar and Ink text replace the neutral greys. Primary buttons, links, checkboxes and unread counts turn Ember (a deep orange that keeps white labels readable), the active nav item and selected rows sit on Peach, and focus rings are Bookly Orange; dark mode moves to warm Night and Char with a lighter orange. Bookly's default accent for booking pages, emails and the meeting room is Bookly Orange (`#e85d2c`), and the social card and browser theme colours follow
 - New button variant `ink` (the dark button) and badge variants `success`, `warning`, `info`; status colours that were hard-coded (task board overdue, internal notes, handle availability, console health) use the new semantic tokens
 - The meeting room's Join button uses the primary colour, so its label stays readable on Bookly Orange and on a workspace's own colour
+- Primary buttons and linked badges darken on hover (a new `--primary-hover` token; dark mode lightens instead). They used to turn see-through, which put white labels under the 4.5:1 contrast minimum
 - Task board cards are list items again for screen readers: the draggable button (dnd-kit's `role="button"`) moved inside each `<li>`, which axe flagged as a broken list
 
 ### Added
