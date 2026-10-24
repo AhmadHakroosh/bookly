@@ -150,9 +150,10 @@ Two sources, one identity (decided by the founder, 2026-10-24):
 - **Type**: Geist for UI and marketing (already shipped); display headlines bold with tight
   tracking (≈ -0.03em). The wordmark is artwork, not typed text.
 - **Taglines**: "People. Conversations. Progress." (brand), "A booking starts it. Bookly keeps
-  it moving." (client work), "The call ends. The context stays." (capture). Hiring line: the
-  equivalent one-liner for the Hiring solution pages and ads **(open: `bookly-brand-marketing`
-  proposes, founder picks)**.
+  it moving." (client work), "The call ends. The context stays." (capture), **"Every applicant heard. Every decision clear."** (hiring: solution pages,
+  application pages, ads; chosen by the founder 2026-10-24). It carries the hiring guardrails:
+  candidates get a response and a visible status, and every decision is made and owned by a
+  person. Don't use it next to anything that ranks or auto-rejects people.
 - **Press page**: the platform host serves `/press` with the logo files, colours, type, product
   UI and boilerplate (owned by `bookly-design-system`, copy by `bookly-brand-marketing`).
 

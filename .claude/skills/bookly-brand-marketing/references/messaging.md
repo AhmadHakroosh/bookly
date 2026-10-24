@@ -34,8 +34,11 @@ Roof: **People. Conversations. Progress.**
 - Trust: "Your relationships. Your data. Your choice."
 - Resources: "Make Bookly your own."
 - Closing CTA: "Your next booking could be the start of something."
-- Hiring hero: **open** (canon). Candidates to test: "An application starts it. Bookly keeps it
-  fair." / "Every candidate, every conversation, one place." / "Select people, not paperwork."
+- Hiring hero (decided 2026-10-24): **"Every applicant heard. Every decision clear."** Typeset
+  like the client-work hero: first sentence Ink, second in Bookly Orange. Proof it must stay
+  true to: every application gets a reply and a status page (heard), independent reviews and a
+  named decision-maker with a reason on record (clear). Supporting lines to test under it:
+  "Select people, not paperwork." / "From application to cohort, in one place."
 - The current `SITE.tagline` "The meeting is booked. Bookly handles the rest." retires with v2.
 
 ## Site map v2 (from `marketing ui.png`)
