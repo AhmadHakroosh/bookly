@@ -13,7 +13,7 @@ import {
   listOverrides,
   listSchedules,
 } from "@/server/scheduling";
-import { requireStaff } from "@/server/session";
+import { requireWorkspaceUser } from "@/server/session";
 import { getCurrentWorkspace } from "@/server/workspace";
 import {
   createSchedule,
@@ -28,7 +28,7 @@ export const metadata = { title: "Availability" };
 
 async function AvailabilityPage({ searchParams }: PageProps<"/admin/availability">) {
   const [{ session }, ws, sp] = await Promise.all([
-    requireStaff(),
+    requireWorkspaceUser(),
     getCurrentWorkspace(),
     searchParams,
   ]);

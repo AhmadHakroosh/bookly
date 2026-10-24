@@ -12,6 +12,7 @@ import { authStorage, getLimiter } from "@/server/ratelimit";
 import { CONSENT_COOKIE, consentCookieOptions } from "@/server/consent";
 import { configuredSocialProviders, TRUSTED_SOCIAL_PROVIDERS } from "@/lib/social-providers";
 import { passkeyRpId } from "@/lib/passkey-rp";
+import { ac, orgRoles } from "@/lib/roles";
 
 const env = loadEnv();
 
@@ -241,6 +242,9 @@ export const auth = betterAuth({
     organization({
       allowUserToCreateOrganization: async () => env.TENANCY === "multi",
       creatorRole: "owner",
+      // owner, admin, member and collaborator (outside reviewers, ADR 0005).
+      ac,
+      roles: orgRoles,
       // Team seats follow the member count however the membership changed (an invitation
       // accepted from the browser included); lazy import keeps the auth module light.
       organizationHooks: {

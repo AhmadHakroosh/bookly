@@ -45,12 +45,22 @@ import {
 } from "@/server/limits";
 import { captureSupportsLocation } from "@/server/integrations/notetaker";
 import { paymentsHint, paymentsReady } from "@/server/payments";
-import { isManager, requireStaff } from "@/server/session";
+import { isManager, requireStaff, requireWorkspaceUser } from "@/server/session";
 import { removeWaitlistEntry } from "@/server/waitlist";
 import { getCurrentWorkspace } from "@/server/workspace";
 
 async function ctx() {
   const [{ session, role }, ws] = await Promise.all([requireStaff(), getCurrentWorkspace()]);
+  if (!ws) throw new Error("No workspace");
+  return { session, ws, role };
+}
+
+/** Your own profile and schedules: open to collaborators too, who host interviews (ADR 0005). */
+async function ownCtx() {
+  const [{ session, role }, ws] = await Promise.all([
+    requireWorkspaceUser(),
+    getCurrentWorkspace(),
+  ]);
   if (!ws) throw new Error("No workspace");
   return { session, ws, role };
 }
@@ -87,7 +97,7 @@ const profileSchema = z.object({
 /** A member's username, validated as typed (see lib/handles) and free in this workspace. */
 export async function checkUsername(raw: string): Promise<HandleCheck> {
   // audit: read-only — checks whether a username is free; nothing is written
-  const { session, ws } = await ctx();
+  const { session, ws } = await ownCtx();
   const r = checkHandle(raw, "username");
   if (!r.ok) return r;
   const taken = await db().query.profiles.findFirst({
@@ -100,7 +110,7 @@ export async function checkUsername(raw: string): Promise<HandleCheck> {
 }
 
 export async function saveProfile(_prev: { ok?: boolean; error?: string }, formData: FormData) {
-  const { session, ws } = await ctx();
+  const { session, ws } = await ownCtx();
   const parsed = profileSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success)
     return { error: parsed.error.issues[0]?.message ?? "Please check the form." };
@@ -137,7 +147,7 @@ export async function saveProfile(_prev: { ok?: boolean; error?: string }, formD
 
 /** A schedule the signed-in member owns, or null. */
 async function ownSchedule(id: string) {
-  const { session, ws } = await ctx();
+  const { session, ws } = await ownCtx();
   return db().query.schedules.findFirst({
     where: and(
       eq(schema.schedules.id, id),
@@ -152,7 +162,7 @@ async function ownSchedule(id: string) {
  * offer different hours. Starts as a copy of the default's hours and timezone.
  */
 export async function createSchedule(formData: FormData) {
-  const { session, ws } = await ctx();
+  const { session, ws } = await ownCtx();
   const profile = await getProfileByUser(ws.id, session.user.id);
   const base = await ensureDefaultSchedule(ws.id, session.user.id, profile?.timezone ?? "UTC");
   const name =
@@ -224,7 +234,7 @@ export async function deleteSchedule(id: string) {
 }
 
 export async function saveSchedule(_prev: { ok?: boolean; error?: string }, formData: FormData) {
-  const { session, ws } = await ctx();
+  const { session, ws } = await ownCtx();
   const scheduleId = String(formData.get("scheduleId") ?? "");
   const timezone = String(formData.get("timezone") ?? "UTC");
   if (!isValidTimezone(timezone)) return { error: "Unknown timezone" };
@@ -280,7 +290,7 @@ export async function saveSchedule(_prev: { ok?: boolean; error?: string }, form
 }
 
 export async function addOverride(formData: FormData) {
-  const { session, ws } = await ctx();
+  const { session, ws } = await ownCtx();
   const scheduleId = String(formData.get("scheduleId") ?? "");
   const date = String(formData.get("date") ?? "");
   if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return;
@@ -328,7 +338,7 @@ export async function addOverride(formData: FormData) {
 
 /** Removes one override; with `everywhere`, the same date and hours on all the member's schedules. */
 export async function removeOverride(id: string, everywhere = false) {
-  const { session, ws } = await ctx();
+  const { session, ws } = await ownCtx();
   const row = await db()
     .select({
       id: schema.scheduleOverrides.id,

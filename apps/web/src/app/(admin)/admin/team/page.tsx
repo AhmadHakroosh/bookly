@@ -8,6 +8,7 @@ import { listProfiles } from "@/server/scheduling";
 import { requireStaff } from "@/server/session";
 import { getCurrentWorkspace } from "@/server/workspace";
 import { cancelInvite, removeMember, setRole } from "./actions";
+import { hasFlag } from "@/server/flags";
 import { InviteForm } from "./invite-form";
 
 export const metadata = { title: "Team" };
@@ -54,7 +55,7 @@ async function TeamPage({ searchParams }: PageProps<"/admin/team">) {
       {typeof sp.error === "string" && sp.error && (
         <p className="rounded-xl border border-destructive/40 p-3 text-sm">{sp.error}</p>
       )}
-      {canManage && <InviteForm />}
+      {canManage && <InviteForm collaborators={await hasFlag(ws, "hiring")} />}
       <ul className="divide-y rounded-xl border">
         {members.map((m) => (
           <li key={m.id} className="flex flex-wrap items-center justify-between gap-3 p-4 text-sm">
@@ -74,18 +75,23 @@ async function TeamPage({ searchParams }: PageProps<"/admin/team">) {
             </div>
             <div className="flex items-center gap-2">
               <Badge variant={m.role === "owner" ? "default" : "secondary"}>{m.role}</Badge>
-              {canManage && m.role !== "owner" && m.userId !== session.user.id && (
-                <>
-                  <form action={setRole.bind(null, m.id, m.role === "admin" ? "member" : "admin")}>
-                    <SubmitButton variant="ghost">
-                      {m.role === "admin" ? "Make member" : "Make admin"}
-                    </SubmitButton>
-                  </form>
-                  <form action={removeMember.bind(null, m.id)}>
-                    <SubmitButton variant="ghost">Remove</SubmitButton>
-                  </form>
-                </>
-              )}
+              {canManage &&
+                m.role !== "owner" &&
+                m.role !== "collaborator" &&
+                m.userId !== session.user.id && (
+                  <>
+                    <form
+                      action={setRole.bind(null, m.id, m.role === "admin" ? "member" : "admin")}
+                    >
+                      <SubmitButton variant="ghost">
+                        {m.role === "admin" ? "Make member" : "Make admin"}
+                      </SubmitButton>
+                    </form>
+                    <form action={removeMember.bind(null, m.id)}>
+                      <SubmitButton variant="ghost">Remove</SubmitButton>
+                    </form>
+                  </>
+                )}
             </div>
           </li>
         ))}

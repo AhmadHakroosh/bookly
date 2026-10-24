@@ -5,7 +5,7 @@ import { z } from "zod";
 import type { CalendarFeed } from "@bookly/db/schema";
 import { audit, diff } from "@/server/audit";
 import { addFeed, invalidateBusy, listFeeds, removeFeed, syncFeed } from "@/server/integrations";
-import { requireStaff } from "@/server/session";
+import { requireWorkspaceUser } from "@/server/session";
 import { getCurrentWorkspace } from "@/server/workspace";
 
 export type FeedState = { ok?: boolean; error?: string };
@@ -17,7 +17,7 @@ const addSchema = z.object({
 
 /** Subscribes to a feed: the address is checked, fetched once and stored with its busy blocks. */
 export async function addFeedAction(_prev: FeedState, formData: FormData): Promise<FeedState> {
-  const [{ session }, ws] = await Promise.all([requireStaff(), getCurrentWorkspace()]);
+  const [{ session }, ws] = await Promise.all([requireWorkspaceUser(), getCurrentWorkspace()]);
   if (!ws) return { error: "No workspace" };
   const parsed = addSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) return { error: "Paste the feed address (an https:// or webcal:// link)." };
@@ -38,7 +38,7 @@ export async function addFeedAction(_prev: FeedState, formData: FormData): Promi
 }
 
 export async function refreshFeedAction(id: string): Promise<void> {
-  const { session } = await requireStaff();
+  const { session } = await requireWorkspaceUser();
   const feed = (await listFeeds(session.user.id)).find((f) => f.id === id);
   if (!feed) return;
   const synced = await syncFeed(feed);
@@ -52,7 +52,7 @@ export async function refreshFeedAction(id: string): Promise<void> {
 }
 
 export async function removeFeedAction(id: string): Promise<void> {
-  const { session } = await requireStaff();
+  const { session } = await requireWorkspaceUser();
   const feed = (await listFeeds(session.user.id)).find((f) => f.id === id);
   await removeFeed(session.user.id, id);
   await audit({

@@ -8,14 +8,14 @@ import { fileIdFromUrl, fileUrl, getFile, removeFile, storeImage } from "@/serve
 import { hasFlag } from "@/server/flags";
 import { LimitError } from "@/server/limits";
 import { getProfileByUser } from "@/server/scheduling";
-import { requireStaff } from "@/server/session";
+import { requireWorkspaceUser } from "@/server/session";
 import { getCurrentWorkspace } from "@/server/workspace";
 
 export type ImageUploadState = { ok?: boolean; url?: string; error?: string };
 
 /** Profile photo: the image is resized to 512×512 and the profile points at it at once. */
 export async function uploadAvatarAction(formData: FormData): Promise<ImageUploadState> {
-  const { session } = await requireStaff();
+  const { session } = await requireWorkspaceUser();
   const ws = await getCurrentWorkspace();
   if (!ws) return { error: "No workspace." };
   if (!(await hasFlag(ws, "file_uploads"))) return { error: "Uploads are not enabled yet." };
@@ -58,7 +58,7 @@ export async function uploadAvatarAction(formData: FormData): Promise<ImageUploa
 
 /** Clears the profile photo and deletes the uploaded file when it was one of ours. */
 export async function removeAvatarAction(): Promise<ImageUploadState> {
-  const { session } = await requireStaff();
+  const { session } = await requireWorkspaceUser();
   const ws = await getCurrentWorkspace();
   if (!ws) return { error: "No workspace." };
   const before = await getProfileByUser(ws.id, session.user.id);

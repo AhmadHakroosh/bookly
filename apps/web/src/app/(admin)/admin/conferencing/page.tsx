@@ -4,7 +4,7 @@ import { Suspense } from "react";
 import { Badge } from "@/components/ui/badge";
 import { SubmitButton } from "@/components/submit-button";
 import { conferencingAvailability, listIntegrations } from "@/server/integrations";
-import { requireStaff } from "@/server/session";
+import { requireWorkspaceUser } from "@/server/session";
 import { hasFeature } from "@/server/limits";
 import { getCurrentWorkspace } from "@/server/workspace";
 import { ConnectButton } from "@/components/connect-button";
@@ -15,7 +15,7 @@ export const metadata = { title: "Conferencing" };
 
 async function ConferencingPage({ searchParams }: PageProps<"/admin/conferencing">) {
   const [{ session }, ws, sp] = await Promise.all([
-    requireStaff(),
+    requireWorkspaceUser(),
     getCurrentWorkspace(),
     searchParams,
   ]);

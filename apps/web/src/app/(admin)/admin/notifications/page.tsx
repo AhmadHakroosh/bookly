@@ -2,7 +2,7 @@ import { NotificationsSkeleton } from "@/components/skeletons/pages";
 import { Suspense } from "react";
 import { channelAvailable } from "@/server/notify";
 import { getProfileByUser } from "@/server/scheduling";
-import { requireStaff } from "@/server/session";
+import { requireWorkspaceUser } from "@/server/session";
 import { getCurrentWorkspace } from "@/server/workspace";
 import { isCloud } from "@/server/platform";
 import { and, desc, eq, schema } from "@bookly/db";
@@ -19,7 +19,7 @@ import { VerifyPanel } from "./verify-panel";
 export const metadata = { title: "Notifications" };
 
 async function NotificationsPage() {
-  const [{ session }, ws] = await Promise.all([requireStaff(), getCurrentWorkspace()]);
+  const [{ session }, ws] = await Promise.all([requireWorkspaceUser(), getCurrentWorkspace()]);
   if (!ws) return null;
   const [profile, flagged] = await Promise.all([
     getProfileByUser(ws.id, session.user.id),

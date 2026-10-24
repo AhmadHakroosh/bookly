@@ -19,6 +19,7 @@ import { isCloud, listUserWorkspaces, platformUrl } from "@/server/platform";
 import { vapidPublicKey } from "@/server/push";
 import { getProfileByUser } from "@/server/scheduling";
 import { getSession, getStaffRole, isManager } from "@/server/session";
+import { isCollaborator } from "@/lib/roles";
 import { getCurrentWorkspace } from "@/server/workspace";
 import { MenuIcon } from "lucide-react";
 
@@ -107,6 +108,7 @@ async function AdminShell({ children }: { children: React.ReactNode }) {
                   <AdminNav
                     cloud={isCloud()}
                     manager={isManager(role)}
+                    collaborator={isCollaborator(role)}
                     tasks={tasks}
                     files={files}
                     messages={messages}
@@ -144,6 +146,7 @@ async function AdminShell({ children }: { children: React.ReactNode }) {
           <AdminNav
             cloud={isCloud()}
             manager={isManager(role)}
+            collaborator={isCollaborator(role)}
             tasks={tasks}
             files={files}
             messages={messages}

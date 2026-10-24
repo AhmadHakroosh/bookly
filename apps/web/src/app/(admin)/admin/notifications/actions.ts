@@ -6,7 +6,7 @@ import { and, eq, schema } from "@bookly/db";
 import { db } from "@/lib/db";
 import { audit, diff } from "@/server/audit";
 import { confirmPhoneCode, sendPhoneCode, testSlackWebhook } from "@/server/phone-verification";
-import { requireStaff } from "@/server/session";
+import { requireWorkspaceUser } from "@/server/session";
 import { getCurrentWorkspace } from "@/server/workspace";
 
 const prefsSchema = z.object({
@@ -40,7 +40,7 @@ export async function saveNotificationPrefs(
   _prev: PrefsState,
   formData: FormData,
 ): Promise<PrefsState> {
-  const [{ session }, ws] = await Promise.all([requireStaff(), getCurrentWorkspace()]);
+  const [{ session }, ws] = await Promise.all([requireWorkspaceUser(), getCurrentWorkspace()]);
   if (!ws) return { error: "No workspace" };
   const parsed = prefsSchema.safeParse({
     phone: formData.get("phone") ?? "",
@@ -107,7 +107,7 @@ export async function saveNotificationPrefs(
 
 /** Texts a verification code to the saved phone (Admin → Notifications → Send code). */
 export async function sendPhoneCodeAction(): Promise<PrefsState> {
-  const [{ session }, ws] = await Promise.all([requireStaff(), getCurrentWorkspace()]);
+  const [{ session }, ws] = await Promise.all([requireWorkspaceUser(), getCurrentWorkspace()]);
   if (!ws) return { error: "No workspace" };
   const r = await sendPhoneCode(ws.id, session.user.id);
   if (r.ok) await audit({ action: "notifications.phone_code_sent", target: self(session.user) });
@@ -119,7 +119,7 @@ export async function confirmPhoneCodeAction(
   _prev: PrefsState,
   formData: FormData,
 ): Promise<PrefsState> {
-  const [{ session }, ws] = await Promise.all([requireStaff(), getCurrentWorkspace()]);
+  const [{ session }, ws] = await Promise.all([requireWorkspaceUser(), getCurrentWorkspace()]);
   if (!ws) return { error: "No workspace" };
   const r = await confirmPhoneCode(ws.id, session.user.id, String(formData.get("code") ?? ""));
   if (r.ok) await audit({ action: "notifications.phone_verified", target: self(session.user) });
@@ -129,7 +129,7 @@ export async function confirmPhoneCodeAction(
 
 /** Posts a test message to the saved Slack webhook. */
 export async function testSlackAction(): Promise<PrefsState> {
-  const [{ session }, ws] = await Promise.all([requireStaff(), getCurrentWorkspace()]);
+  const [{ session }, ws] = await Promise.all([requireWorkspaceUser(), getCurrentWorkspace()]);
   if (!ws) return { error: "No workspace" };
   const p = await db().query.profiles.findFirst({
     where: and(eq(schema.profiles.workspaceId, ws.id), eq(schema.profiles.userId, session.user.id)),
