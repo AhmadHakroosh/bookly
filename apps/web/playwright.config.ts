@@ -40,7 +40,8 @@ export default defineConfig({
       EMAIL_PROVIDER: "console",
       JOBS_WORKER: "false",
       // The in-process socket server behind /realtime; e2e:build bakes the same port.
-      REALTIME_PORT: process.env.E2E_REALTIME_PORT ?? "3012",
+      // Next to the server's port (3012 by default), so parallel worktrees each get their own.
+      REALTIME_PORT: process.env.E2E_REALTIME_PORT ?? String(port + 2),
       // Specs call the tick (/api/cron/tick); a test server never pings the real update check.
       TELEMETRY: "off",
       // Guest replies: tests sign webhook calls with this secret and stand in for Resend's API.

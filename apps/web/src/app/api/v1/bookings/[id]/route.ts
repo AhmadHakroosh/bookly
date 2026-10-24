@@ -1,6 +1,7 @@
 import { and, eq, schema } from "@bookly/db";
 import { db } from "@/lib/db";
 import { apiContext, apiError, json, options, serializeBooking } from "@/server/api";
+import { bookingsVisibleTo } from "@/server/access/hiring";
 import { publicBaseUrl } from "@/server/urls";
 
 export const OPTIONS = options;
@@ -10,9 +11,18 @@ export async function GET(req: Request, ctx: RouteContext<"/api/v1/bookings/[id]
   const api = await apiContext(req, "bookings:read");
   if (api instanceof Response) return api;
   const { id } = await ctx.params;
-  const b = await db().query.bookings.findFirst({
-    where: and(eq(schema.bookings.id, id), eq(schema.bookings.workspaceId, api.workspace.id)),
-  });
+  const [b] = await db()
+    .select()
+    .from(schema.bookings)
+    .where(
+      and(
+        eq(schema.bookings.id, id),
+        eq(schema.bookings.workspaceId, api.workspace.id),
+        // Interviews are hiring data: not served before the API's hiring scopes exist (ADR 0005).
+        bookingsVisibleTo(null),
+      ),
+    )
+    .limit(1);
   if (!b) return apiError("Booking not found", 404, "not_found");
   const et = b.eventTypeId
     ? await db().query.eventTypes.findFirst({

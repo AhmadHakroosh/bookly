@@ -28,6 +28,7 @@ import { getRecap, recapOf } from "@/server/recaps";
 import { getTranscript } from "@/server/transcripts";
 import { getProfileByUser, locationLabel } from "@/server/scheduling";
 import { requireStaff } from "@/server/session";
+import { bookingsVisibleTo } from "@/server/access/hiring";
 import { getCurrentWorkspace } from "@/server/workspace";
 import { responseFiles } from "@/server/forms";
 import { fileUrl } from "@/lib/files";
@@ -47,11 +48,22 @@ const STATUS_TONE: Record<string, StatusTone> = {
 };
 
 export async function BookingDetail({ id, inPane = false }: { id: string; inPane?: boolean }) {
-  const [, ws] = await Promise.all([requireStaff(), getCurrentWorkspace()]);
+  const [{ session: signedIn }, ws] = await Promise.all([requireStaff(), getCurrentWorkspace()]);
+  const viewer = signedIn.user.id;
   if (!ws) return null;
-  const b = await db().query.bookings.findFirst({
-    where: and(eq(schema.bookings.id, id), eq(schema.bookings.workspaceId, ws.id)),
-  });
+  // An interview opens only for people who may see its application (ADR 0005).
+  // A plain select: the predicate names the table, which relational queries alias.
+  const [b] = await db()
+    .select()
+    .from(schema.bookings)
+    .where(
+      and(
+        eq(schema.bookings.id, id),
+        eq(schema.bookings.workspaceId, ws.id),
+        bookingsVisibleTo(viewer),
+      ),
+    )
+    .limit(1);
   if (!b) notFound();
   const hostProfile = await getProfileByUser(ws.id, b.hostUserId);
   const tz = hostProfile?.timezone ?? ws.timezone;
@@ -61,7 +73,7 @@ export async function BookingDetail({ id, inPane = false }: { id: string; inPane
   const [brief, tasks, timeline, transcript, recapRow, sentFiles] = await Promise.all([
     briefForBooking(ws, b, et ?? null),
     listOpenTasks(ws.id, { bookingId: b.id }),
-    b.contactId ? contactTimeline(b.contactId, 50) : Promise.resolve([]),
+    b.contactId ? contactTimeline(b.contactId, 50, viewer) : Promise.resolve([]),
     b.transcriptStatus ? getTranscript(b.id) : Promise.resolve(null),
     getRecap(b.id),
     responseFiles(ws.id, b.id),

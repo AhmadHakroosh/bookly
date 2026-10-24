@@ -252,6 +252,6 @@ export async function searchContactsAction(q: string) {
   const v = await viewer();
   if (!v) return [];
   const { listContacts } = await import("@/server/contacts");
-  const list = await listContacts(v.ws.id, { q, limit: 20 });
+  const list = await listContacts(v.ws.id, { q, limit: 20, viewer: v.userId });
   return list.map((c) => ({ id: c.id, name: c.name || c.email, email: c.email }));
 }

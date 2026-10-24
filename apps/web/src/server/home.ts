@@ -2,6 +2,7 @@ import "server-only";
 import { and, asc, count, eq, gte, inArray, isNull, lt, lte, or, schema, sql } from "@bookly/db";
 import type { Workspace } from "@bookly/db/schema";
 import { db } from "@/lib/db";
+import { contactsVisibleTo } from "./access/hiring";
 import { todayIn, zonedToUtc } from "@/lib/time";
 
 /*
@@ -120,11 +121,23 @@ export async function contactsSummary({ ws, tz }: HomeScope, now = new Date()) {
     db()
       .select({ n: count() })
       .from(schema.contacts)
-      .where(and(eq(schema.contacts.workspaceId, ws.id), gte(schema.contacts.createdAt, start))),
+      .where(
+        and(
+          eq(schema.contacts.workspaceId, ws.id),
+          gte(schema.contacts.createdAt, start),
+          contactsVisibleTo(null),
+        ),
+      ),
     db()
       .select({ n: count() })
       .from(schema.contacts)
-      .where(and(eq(schema.contacts.workspaceId, ws.id), lte(schema.contacts.nextFollowUpAt, now))),
+      .where(
+        and(
+          eq(schema.contacts.workspaceId, ws.id),
+          lte(schema.contacts.nextFollowUpAt, now),
+          contactsVisibleTo(null),
+        ),
+      ),
   ]);
   return { addedThisWeek: added[0]?.n ?? 0, followUpsDue: due[0]?.n ?? 0 };
 }

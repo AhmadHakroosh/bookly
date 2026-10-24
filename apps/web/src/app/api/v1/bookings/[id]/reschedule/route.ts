@@ -1,5 +1,6 @@
 import { apiContext, apiError, json, options, readJson, serializeBooking } from "@/server/api";
 import { publicBaseUrl } from "@/server/urls";
+import { apiMayTouchBooking } from "@/server/hiring/files";
 import { isValidTimezone } from "@/lib/time";
 import { API_KEY_ACTOR, SYSTEM_ACTOR, audit } from "@/server/audit";
 import { BookingError, rescheduleBooking } from "@/server/booking-flow";
@@ -11,6 +12,8 @@ export async function POST(req: Request, ctx: RouteContext<"/api/v1/bookings/[id
   const api = await apiContext(req, "bookings:write");
   if (api instanceof Response) return api;
   const { id } = await ctx.params;
+  if (!(await apiMayTouchBooking(api.workspace.id, id)))
+    return apiError("Booking not found", 404, "not_found");
   const body = await readJson(req);
   if (body instanceof Response) return body;
   const start = new Date(String(body.start ?? ""));

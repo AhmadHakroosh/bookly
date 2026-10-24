@@ -19,6 +19,7 @@ import type { FileSource, Folder, StoredFile, Workspace } from "@bookly/db/schem
 import type { EmailAttachment } from "@bookly/email";
 import { getStorage } from "@bookly/storage";
 import { db } from "@/lib/db";
+import { filesVisibleToHiring } from "./access/hiring";
 import { FILE_RULES, extFor, keyFor } from "@/lib/files";
 import { audit, SYSTEM_ACTOR } from "./audit";
 import { logContactEvent } from "./contacts";
@@ -64,6 +65,8 @@ export function visibleFiles(v: Viewer, opts: { trash?: boolean } = {}) {
     eq(f.kind, "attachment"),
     eq(f.status, "ready"),
     opts.trash ? isNotNull(f.deletedAt) : isNull(f.deletedAt),
+    // Candidates' files follow their application's access (ADR 0005).
+    filesVisibleToHiring(v.userId),
     or(
       and(eq(f.space, "personal"), eq(f.uploadedBy, v.userId)),
       inArray(f.space, ["team", "contact"]),

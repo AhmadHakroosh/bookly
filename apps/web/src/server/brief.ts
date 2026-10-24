@@ -5,6 +5,7 @@ import { and, asc, eq, schema } from "@bookly/db";
 import { loadEnv } from "@bookly/config";
 import type { Booking, EventType, Workspace } from "@bookly/db/schema";
 import { db } from "@/lib/db";
+import { bookingsVisibleTo } from "./access/hiring";
 import { BRIEF_SYSTEM, factsForModel, plainBrief, type BriefFacts } from "./brief-text";
 import { listOpenTasks } from "./capture";
 import { contactTimeline, logContactEvent, trackBooking } from "./contacts";
@@ -35,7 +36,12 @@ async function gatherFacts(
       .from(schema.bookings)
       .leftJoin(schema.eventTypes, eq(schema.eventTypes.id, schema.bookings.eventTypeId))
       .where(
-        and(eq(schema.bookings.contactId, c.id), eq(schema.bookings.workspaceId, workspace.id)),
+        and(
+          eq(schema.bookings.contactId, c.id),
+          eq(schema.bookings.workspaceId, workspace.id),
+          // Interviews never reach a client meeting's briefing (or its AI context).
+          bookingsVisibleTo(null),
+        ),
       )
       .orderBy(asc(schema.bookings.startAt)),
     getProfileByUser(workspace.id, booking.hostUserId),

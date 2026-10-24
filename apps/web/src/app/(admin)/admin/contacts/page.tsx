@@ -24,7 +24,7 @@ async function ContactsPage({ searchParams }: PageProps<"/admin/contacts">) {
   const { choices, keyOf } = await stageChoices(ws);
   const choice = (key: string) => choices.find((s) => s.key === key);
   const stage = typeof sp.stage === "string" && choice(sp.stage) ? sp.stage : undefined;
-  const rows = await listContacts(ws.id, { q, stage });
+  const rows = await listContacts(ws.id, { q, stage, viewer: session.user.id });
   const href = (over: { q?: string; stage?: string }) => {
     const p = new URLSearchParams();
     const merged = { q, stage: stage ?? "", ...over };
