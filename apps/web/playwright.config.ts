@@ -1,5 +1,4 @@
 import { defineConfig, devices } from "@playwright/test";
-import { E2E_PORT, RESEND_FAKE_PORT } from "./tests/e2e/ports";
 
 /**
  * End-to-end tests against a production build in single-tenant mode. The server needs a
@@ -8,7 +7,10 @@ import { E2E_PORT, RESEND_FAKE_PORT } from "./tests/e2e/ports";
  * Locally: `pnpm --filter @bookly/web e2e` (builds if needed). CI runs the same. To run beside
  * another worktree's suite, set E2E_PORT and point DATABASE_URL at a database of your own.
  */
-const port = E2E_PORT;
+// tests/ is not in the Docker build context, so the ports are worked out here, not imported.
+const port = Number(process.env.E2E_PORT) || 3010;
+/** The fake Resend API (tests/e2e/resend-fake.ts uses the same formula): 3999 by default. */
+const resendFakePort = port + 989;
 
 export default defineConfig({
   testDir: "./tests/e2e",
@@ -43,7 +45,7 @@ export default defineConfig({
       INBOUND_EMAIL_DOMAIN: "reply.bookly.test",
       RESEND_WEBHOOK_SECRET: `whsec_${Buffer.from("e2e-webhook-secret-0123456789").toString("base64")}`,
       RESEND_API_KEY: "re_e2e",
-      RESEND_API_URL: `http://localhost:${RESEND_FAKE_PORT}`,
+      RESEND_API_URL: `http://localhost:${resendFakePort}`,
     },
   },
 });
