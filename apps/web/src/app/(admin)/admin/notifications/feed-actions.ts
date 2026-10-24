@@ -14,14 +14,12 @@ import {
   decodeCursor,
   listNotifications,
   markRead,
-  markSeen,
   toClient,
   unreadCount,
   type ClientNotification,
 } from "@/server/notifications";
-import { canGuest, canTeam, messagesPulse } from "@/server/messages";
 import { deviceLabel, pushToUser } from "@/server/push";
-import { channels, memberTicket, publish, realtimeUrl } from "@/server/realtime";
+import { channels, publish } from "@/server/realtime";
 import { requireWorkspaceUser } from "@/server/session";
 import { getCurrentWorkspace } from "@/server/workspace";
 
@@ -52,14 +50,6 @@ export async function loadNotificationsAction(cursor?: string | null): Promise<F
   return { items: page.rows.map(toClient), next: page.next, unread };
 }
 
-/** The unread count alone: the bell's fallback when the live stream is unavailable. */
-export async function unreadCountAction(): Promise<number | null> {
-  // audit: read-only — counts the member's own unread notifications
-  const m = await me();
-  if (!m) return null;
-  return unreadCount(m.ws.id, m.user.id);
-}
-
 /** Marks the given notifications (or all of them) read; returns the new unread count. */
 export async function markNotificationsReadAction(ids?: string[]): Promise<number | null> {
   // audit: read-only — the member's own read state of their notifications (UI state, not workspace data)
@@ -71,46 +61,6 @@ export async function markNotificationsReadAction(ids?: string[]): Promise<numbe
   // The member's other tabs and devices update their bell too.
   await publish([channels.member(m.ws.id, m.user.id)], "count", { unread });
   return unread;
-}
-
-/**
- * A tab showed these notifications (visible, or as a desktop notification), so the email, push
- * and texts held back for them are not sent (ADR 0007).
- */
-export async function markNotificationsSeenAction(ids: string[]): Promise<void> {
-  // audit: read-only — the member's own delivery state of their notifications (UI state, not workspace data)
-  const m = await me();
-  if (!m || !Array.isArray(ids)) return;
-  await markSeen(
-    m.ws.id,
-    m.user.id,
-    ids.filter((i) => typeof i === "string"),
-  );
-}
-
-export type RealtimeTicket = { url: string; ticket: string };
-
-/**
- * Where this tab opens its websocket and a one-minute ticket to do so, or null when this
- * install has no socket server (the tab uses the Server-Sent Events stream).
- */
-export async function realtimeTicketAction(): Promise<RealtimeTicket | null> {
-  // audit: read-only — signs a short-lived connection ticket for the member's own feed
-  const m = await me();
-  const url = realtimeUrl();
-  if (!m || !url) return null;
-  return { url, ticket: memberTicket(m.ws.id, m.user.id) };
-}
-
-/** Messages' unread count and newest activity for this member, after a `messages` event. */
-export async function messagesPulseAction(): Promise<{
-  unread: number;
-  latest: string | null;
-} | null> {
-  // audit: read-only — counts the member's own unread threads
-  const m = await me();
-  if (!m || !(await hasFlag(m.ws, "messages")) || !(canGuest(m.ws) || canTeam(m.ws))) return null;
-  return messagesPulse({ userId: m.user.id, ws: m.ws });
 }
 
 const subSchema = z.object({

@@ -74,6 +74,11 @@ test("a client's conversation: booking note, email out, reply in, internal note,
   // live in the pane), so it would never count as unread.
   await page.goto("/admin/messages");
   await expect(row).not.toContainText("(unread)");
+  await expect(page.getByRole("button", { name: /^Notifications/ })).toHaveAttribute(
+    "data-live",
+    "socket",
+    { timeout: 15_000 },
+  );
 
   // The guest answers that email: it comes in through the webhook and makes the thread unread.
   const emailId = `em_msg_${run}`;
@@ -113,6 +118,11 @@ test("a client's conversation: booking note, email out, reply in, internal note,
   await page.waitForLoadState("networkidle");
   await page.goto("/admin/messages");
   await expect(row).not.toContainText("(unread)");
+  await expect(page.getByRole("button", { name: /^Notifications/ })).toHaveAttribute(
+    "data-live",
+    "socket",
+    { timeout: 15_000 },
+  );
 
   // An internal note stays inside: it shows here, marked as a note, and goes to nobody.
   await row.click();

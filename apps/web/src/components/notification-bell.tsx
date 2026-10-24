@@ -31,16 +31,20 @@ import {
 import {
   loadNotificationsAction,
   markNotificationsReadAction,
-  markNotificationsSeenAction,
-  messagesPulseAction,
   savePushSubscriptionAction,
-  unreadCountAction,
 } from "@/app/(admin)/admin/notifications/feed-actions";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { publishMessages } from "@/lib/messages-live";
 import { currentSubscription, pushSupport, showLocal } from "@/lib/push-client";
-import { currentTransport, onConnect, onTransport, subscribe } from "@/lib/realtime-client";
+import {
+  currentTransport,
+  liveState,
+  onConnect,
+  onTransport,
+  reportSeen,
+  subscribe,
+} from "@/lib/realtime-client";
 import { ago } from "@/lib/time";
 import { cn } from "@/lib/utils";
 import type { ClientNotification } from "@/server/notifications";
@@ -108,14 +112,14 @@ export function NotificationBell({
     setItems((prev) => (prev ? [n, ...prev.filter((x) => x.id !== n.id)] : prev));
     if (typeof n.unread === "number") setUnread(n.unread);
     if (document.visibilityState === "visible") {
-      void markNotificationsSeenAction([n.id]);
+      reportSeen([n.id]);
       return;
     }
     const fresh = Date.now() - new Date(n.createdAt).getTime() < 5 * 60_000;
     if (desktop.current.has(n.kind) && fresh && !announced.current.has(n.id)) {
       announced.current.add(n.id);
       void showLocal(n.title, n.body, n.link ?? "/admin", n.id).then((shown) =>
-        shown ? markNotificationsSeenAction([n.id]) : void unseen.current.add(n.id),
+        shown ? reportSeen([n.id]) : void unseen.current.add(n.id),
       );
       return;
     }
@@ -126,10 +130,12 @@ export function NotificationBell({
   // polling the count when no transport gets through.
   const transport = useSyncExternalStore(onTransport, currentTransport, () => "off" as const);
   useEffect(() => {
-    const refresh = () => {
-      void unreadCountAction().then((n) => n !== null && setUnread(n));
-      void messagesPulseAction().then((p) => p && publishMessages(p));
-    };
+    const refresh = () =>
+      void liveState().then((s) => {
+        if (!s) return;
+        setUnread(s.unread);
+        if (s.messages) publishMessages(s.messages);
+      });
     const off = [
       // Too big for one event (the server sends `{ refresh: true }` then): ask for the count.
       subscribe("notification", (d) =>
@@ -140,7 +146,10 @@ export function NotificationBell({
       subscribe("messages", (d) => {
         if (d && typeof d === "object" && "unread" in d)
           publishMessages(d as { unread: number; latest: string | null });
-        else void messagesPulseAction().then((p) => p && publishMessages(p));
+        else
+          void liveState().then((s) => {
+            if (s?.messages) publishMessages(s.messages);
+          });
       }),
       onConnect(refresh),
     ];
@@ -148,7 +157,7 @@ export function NotificationBell({
       if (document.visibilityState !== "visible") return;
       refresh();
       if (unseen.current.size) {
-        void markNotificationsSeenAction([...unseen.current]);
+        reportSeen([...unseen.current]);
         unseen.current.clear();
       }
     };
@@ -161,7 +170,7 @@ export function NotificationBell({
   useEffect(() => {
     if (transport !== "off") return;
     const poll = setInterval(() => {
-      void unreadCountAction().then((n) => n !== null && setUnread(n));
+      void liveState().then((s) => s && setUnread(s.unread));
     }, POLL_MS);
     return () => clearInterval(poll);
   }, [transport]);

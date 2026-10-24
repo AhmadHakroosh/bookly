@@ -66,19 +66,25 @@ const unreadCount = cache(async (ws: Workspace, userId: string): Promise<number>
 
 export const unreadThreads = (v: Viewer) => unreadCount(v.ws, v.userId);
 
-/** For the live stream: the unread count and the newest activity, so tabs refresh when either moves. */
+/** The newest activity in any thread this member sees: tabs refresh when it moves. */
+export async function latestActivity(v: Viewer): Promise<string | null> {
+  const [row] = await db()
+    .select({ at: sql<string | null>`max(${t.lastActivityAt})::text` })
+    .from(t)
+    .where(visibleThreads(v));
+  return row?.at ?? null;
+}
+
+/** For the live connection: the unread count and the newest activity, so tabs refresh when either moves. */
 export async function messagesPulse(v: Viewer): Promise<{ unread: number; latest: string | null }> {
-  const [[counts], [latest]] = await Promise.all([
+  const [[counts], latest] = await Promise.all([
     db()
       .select({ n: sql<number>`count(*)::int` })
       .from(t)
       .where(and(visibleThreads(v), isNull(t.closedAt), unread(v.userId))),
-    db()
-      .select({ at: sql<string | null>`max(${t.lastActivityAt})::text` })
-      .from(t)
-      .where(visibleThreads(v)),
+    latestActivity(v),
   ]);
-  return { unread: counts?.n ?? 0, latest: latest?.at ?? null };
+  return { unread: counts?.n ?? 0, latest };
 }
 
 /**
