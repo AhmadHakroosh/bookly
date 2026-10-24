@@ -117,25 +117,28 @@ function SortableCard({
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: task.id,
   });
+  // The li stays a plain list item (dnd-kit's role="button" on it would break the list for
+  // screen readers); it only moves. The draggable button is the element inside it.
   return (
     <li
       ref={setNodeRef}
       style={{ transform: CSS.Transform.toString(transform), transition }}
-      {...attributes}
-      {...listeners}
-      aria-roledescription="draggable task"
-      aria-label={`${task.title}. Press Enter to open, Space to move.`}
-      onClick={() => router.push(href, { scroll: false })}
-      onKeyDown={(e) => {
-        listeners?.onKeyDown?.(e);
-        if (e.key === "Enter" && !e.defaultPrevented) router.push(href, { scroll: false });
-      }}
-      className={cn(
-        "cursor-grab touch-manipulation rounded-lg focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none active:cursor-grabbing",
-        isDragging && "opacity-40",
-      )}
+      className={cn(isDragging && "opacity-40")}
     >
-      <Card task={task} showAssignee={showAssignee} />
+      <div
+        {...attributes}
+        {...listeners}
+        aria-roledescription="draggable task"
+        aria-label={`${task.title}. Press Enter to open, Space to move.`}
+        onClick={() => router.push(href, { scroll: false })}
+        onKeyDown={(e) => {
+          listeners?.onKeyDown?.(e);
+          if (e.key === "Enter" && !e.defaultPrevented) router.push(href, { scroll: false });
+        }}
+        className="cursor-grab touch-manipulation rounded-lg focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none active:cursor-grabbing"
+      >
+        <Card task={task} showAssignee={showAssignee} />
+      </div>
     </li>
   );
 }
