@@ -98,6 +98,11 @@ export const KINDS: Record<NotificationKind, KindInfo> = {
     hint: "A teammate @-mentioned you in a team thread or an internal note.",
     defaults: { inApp: true, desktop: true, email: true },
   },
+  automation: {
+    label: "Automations",
+    hint: "An automation on a pipeline stage asks the team to look, or failed.",
+    defaults: { inApp: true, desktop: true, email: false },
+  },
   "task.overdue": {
     label: "Task overdue",
     hint: "One of your tasks passed its due date.",

@@ -26,7 +26,8 @@ export type NotificationKind =
   | "task.mentioned"
   | "task.overdue"
   | "message.posted"
-  | "message.mentioned";
+  | "message.mentioned"
+  | "automation";
 
 /**
  * One notification for one member of one workspace: the bell, the panel and the Home card read

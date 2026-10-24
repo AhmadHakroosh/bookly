@@ -6,6 +6,8 @@ import { STAGE_CATEGORIES } from "@bookly/db/schema";
 import { audit } from "@/server/audit";
 import { hasFlag } from "@/server/flags";
 import { addStage, archiveStage, moveStage, updateStage } from "@/server/pipelines";
+import { refreshWorkspace } from "@/server/cache";
+import { deleteRule, saveRule, setRuleActive } from "@/server/pipelines/rules";
 import { assertManager } from "@/server/session";
 import { getCurrentWorkspace } from "@/server/workspace";
 
@@ -92,4 +94,110 @@ export async function archiveStageAction(id: string, formData: FormData) {
     changes: moveTo ? { movedTo: { to: moveTo } } : {},
   });
   back();
+}
+
+/* ---------------- Automations (stage rules, ADR 0002) ---------------- */
+
+const editorAction = z.discriminatedUnion("kind", [
+  z.object({
+    kind: z.literal("email"),
+    templateId: z.string().max(40).optional(),
+    subject: z.string().max(200),
+    body: z.string().max(8000),
+    transactional: z.boolean(),
+  }),
+  z.object({
+    kind: z.literal("tasks"),
+    items: z
+      .array(
+        z.object({
+          title: z.string().max(200),
+          dueDays: z.number().int().min(0).max(365).nullable(),
+        }),
+      )
+      .max(30),
+  }),
+  z.object({ kind: z.literal("booking_link"), eventTypeId: z.string().max(80) }),
+  z.object({ kind: z.literal("form"), formId: z.string().max(80) }),
+  z.object({
+    kind: z.literal("payment"),
+    amount: z.number().min(0).max(100_000),
+    currency: z.string().length(3),
+    description: z.string().max(200),
+  }),
+  z.object({ kind: z.literal("move"), stageKey: z.string().max(40) }),
+  z.object({ kind: z.literal("tag"), tag: z.string().max(40) }),
+  z.object({ kind: z.literal("notify"), text: z.string().max(500) }),
+]);
+
+const editorRule = z.object({
+  name: z.string().max(120),
+  on: z.enum(["enter", "leave"]),
+  delayHours: z.number().min(0).max(168),
+  tag: z.string().max(40),
+  actions: z.array(editorAction).max(20),
+});
+
+export type RuleSaveState = { problems?: string[]; savedAt?: number };
+
+/** Adds or edits an automation on a stage (with the emails, checklist… it uses). */
+export async function saveRuleAction(
+  stageId: string,
+  ruleId: string | null,
+  _prev: RuleSaveState,
+  formData: FormData,
+): Promise<RuleSaveState> {
+  const { ws, userId } = await ruleCtx();
+  let raw: unknown;
+  try {
+    raw = JSON.parse(String(formData.get("rule") ?? ""));
+  } catch {
+    return { problems: ["The automation could not be read. Reload and try again."] };
+  }
+  const parsed = editorRule.safeParse(raw);
+  if (!parsed.success)
+    return { problems: [parsed.error.issues[0]?.message ?? "Invalid automation."] };
+  const r = await saveRule(ws, { stageId, ruleId, draft: parsed.data, userId });
+  if ("problems" in r) return { problems: r.problems };
+  await audit({
+    action: ruleId ? "stage_rule.updated" : "stage_rule.created",
+    target: { type: "stage_rule", id: r.id, label: parsed.data.name },
+    changes: {
+      trigger: { to: parsed.data.on },
+      actions: { to: parsed.data.actions.map((a) => a.kind).join(", ") },
+    },
+  });
+  refreshWorkspace(ws.id);
+  return { savedAt: Date.now() };
+}
+
+export async function toggleRuleAction(ruleId: string, active: boolean) {
+  const { ws } = await ruleCtx();
+  const error = await setRuleActive(ws, ruleId, active);
+  if (error) back(error);
+  await audit({
+    action: active ? "stage_rule.enabled" : "stage_rule.disabled",
+    target: { type: "stage_rule", id: ruleId },
+  });
+  refreshWorkspace(ws.id);
+  back();
+}
+
+export async function deleteRuleAction(ruleId: string) {
+  const { ws } = await ruleCtx();
+  const gone = await deleteRule(ws, ruleId);
+  if (gone)
+    await audit({
+      action: "stage_rule.deleted",
+      target: { type: "stage_rule", id: ruleId, label: gone.name },
+    });
+  refreshWorkspace(ws.id);
+  back();
+}
+
+/** Owners and admins, where both the pipeline editor and automations are on. */
+async function ruleCtx() {
+  const c = await ctx();
+  if (!(await hasFlag(c.ws, "stage_rules"))) back("Automations aren't on for this workspace.");
+  return c;
 }

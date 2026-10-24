@@ -29,6 +29,10 @@ export type Jobs = {
   "crm.note": { workspaceId: string; contactId: string; text: string };
   /** Until 1.1: client pipeline for every workspace, a stage for every contact (ADR 0001). */
   "pipelines.backfill": Record<string, never>;
+  /** One stage-rule run, at its time (ADR 0002). */
+  "pipeline.rule": { runId: string };
+  /** Scheduled: stage-rule runs that are due and whose job never arrived. */
+  "pipeline.rules": Record<string, never>;
 };
 
 export const JOB_NAMES = [
@@ -42,6 +46,8 @@ export const JOB_NAMES = [
   "crm.sync",
   "crm.note",
   "pipelines.backfill",
+  "pipeline.rule",
+  "pipeline.rules",
 ] as const satisfies readonly (keyof Jobs)[];
 
 export type JobName = keyof Jobs;

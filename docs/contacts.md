@@ -8,6 +8,19 @@ Bookly keeps a **contact** for every person who books, joins a waitlist or fills
 
 Behind the `pipelines` flag, `Admin → Settings → Pipeline` edits the stages contacts move through. Rename them, change their colour, reorder them, add your own (for example _Proposal sent_), choose which stage new contacts start in, and turn on **Priority scheduling** for the stages whose people count as priority contacts (they may book focus blocks and past the weekly budget, see [Scheduling](scheduling.md#priority-aware-availability)). Each stage has a **category**: _open_, _on hold_, _won_ or _lost_. Reports, automations and the classic `stage` value read the category, so renaming or adding stages never breaks them. A stage's key (shown under it, e.g. `proposal-sent`) is fixed when it is created and stays the same across renames; the API and webhooks use it. Archiving a stage that still has people asks where to move them; the entry stage cannot be archived. The contacts list gets a tab per stage, and stage changes on the timeline name the stages (`Stage: Proposal sent → Active`). Without the flag the four classic stages show exactly as before.
 
+### Automations
+
+Behind the `stage_rules` flag, every stage on `Admin → Settings → Pipeline` has **Automations**: _when someone enters (or leaves) this stage_, optionally after a wait of up to 7 days and only for contacts with a given tag, do these things in order:
+
+- **Send an email**, from the automation's author in the contact's conversation, so replies land in Messages. Placeholders: `{name}`, `{company}`, `{stage}`, `{host}`. People who unsubscribed are skipped, unless you mark the email as status, scheduling or payment news.
+- **Create tasks** from the stage's checklist (one task per line, with an optional due date), on the contact and assigned to the automation's author.
+- **Send a booking link** for one of your event types, with their name and email filled in.
+- **Ask to fill in a form** (one of your routing forms).
+- **Request a payment** with a Stripe Checkout link (needs payments set up).
+- **Move to another stage**, **add a tag**, or **tell owners and admins** in the app.
+
+Automations run in the background right after the move (through the job queue, with a sweep every 5 minutes as the safety net), once per move: moving someone out and back in runs them again, running the sweep twice does not. A delayed automation does nothing if the person has left the stage by then. Each run shows on the contact's timeline ("Automation _Onboard new clients_ ran") and in the activity log as the automation. A failed action is retried after 1, 5, 30, 120 and 720 minutes, then owners and admins are notified; the list on each stage shows how often an automation ran and how many runs failed. An automation that moves people can't move them into its own stage, and a chain of automations moving someone back and forth is stopped after five moves. Free includes 3 active automations on the client pipeline; Pro and Team are unlimited.
+
 ## Home
 
 At the top of Home a row of cards sums up the day, each a link to the page that owns it:
