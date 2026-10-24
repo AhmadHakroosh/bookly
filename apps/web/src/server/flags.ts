@@ -92,6 +92,8 @@ export async function hasFlag(
   key: FlagKey,
 ): Promise<boolean> {
   if (!isFlagKey(key)) return false;
+  // Hiring builds on the pipeline editor (ADR 0003): it is never on where pipelines are off.
+  if (key === "hiring" && !(await hasFlag(ws, "pipelines"))) return false;
   const r = await resolve(ws.id);
   if (r.grants.get(key) === "deny") return false;
   const state = r.states.get(key) ?? "off";

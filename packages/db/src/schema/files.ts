@@ -83,6 +83,12 @@ export const files = pgTable(
     sourceId: text("source_id"),
     updatedAt: timestamp("updated_at", { withTimezone: true }),
     deletedAt: timestamp("deleted_at", { withTimezone: true }),
+    /**
+     * Public uploads only (ADR 0004): pending until a scanner says clean or infected (with no
+     * scanner configured, pending for good). Only clean files open in the browser.
+     */
+    scanStatus: text("scan_status").$type<"pending" | "clean" | "infected">(),
+    scannedAt: timestamp("scanned_at", { withTimezone: true }),
   },
   (t) => [
     uniqueIndex("files_key_idx").on(t.key),
@@ -99,7 +105,8 @@ export const files = pgTable(
 export type StoredFile = typeof files.$inferSelect;
 
 /** What a file is linked to besides its folder: a task, a timeline entry, a booking. */
-export type FileLinkTarget = "task" | "contact_event" | "booking" | "thread_message";
+export type FileLinkTarget =
+  "task" | "contact_event" | "booking" | "thread_message" | "application";
 
 export const fileLinks = pgTable(
   "file_links",

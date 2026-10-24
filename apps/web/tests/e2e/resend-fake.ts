@@ -1,5 +1,6 @@
 import { createHmac } from "node:crypto";
 import { createServer, type Server } from "node:http";
+import { RESEND_FAKE_PORT } from "./ports";
 
 /*
  * Stand-ins for Resend in e2e: the signed reply address Bookly puts on an email, Svix headers
@@ -31,7 +32,7 @@ export function svixHeaders(body: string) {
   };
 }
 
-/** Resend's received-emails API on :3999, answering from `received` (email id → message). */
+/** Resend's received-emails API (on RESEND_FAKE_PORT), answering from `received` (email id → message). */
 export async function startFakeResend(received: Map<string, unknown>): Promise<Server> {
   const server = createServer((req, res) => {
     const parts = (req.url ?? "").split("?")[0]!.split("/").filter(Boolean).map(decodeURIComponent);
@@ -50,7 +51,7 @@ export async function startFakeResend(received: Map<string, unknown>): Promise<S
           has_more: false,
           data: (email?.attachments ?? []).map((a) => ({
             ...a,
-            download_url: `http://localhost:3999/dl/${a.id}`,
+            download_url: `http://localhost:${RESEND_FAKE_PORT}/dl/${a.id}`,
           })),
         }),
       );
@@ -59,6 +60,6 @@ export async function startFakeResend(received: Map<string, unknown>): Promise<S
     res.writeHead(email ? 200 : 404, { "content-type": "application/json" });
     res.end(JSON.stringify(email ?? { error: "not found" }));
   });
-  await new Promise<void>((r) => server.listen(3999, r));
+  await new Promise<void>((r) => server.listen(RESEND_FAKE_PORT, r));
   return server;
 }

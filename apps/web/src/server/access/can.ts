@@ -15,6 +15,11 @@ export const ACTIONS = [
   "own_schedule.manage",
   /** Start an opportunity (hiring.creators: members by default; managers always). */
   "opportunity.create",
+  /**
+   * Read an applicant's accommodation request. Owners and admins here; an opportunity's
+   * coordinators through their team role (server/hiring/sensitive.ts).
+   */
+  "accommodations.read",
 ] as const;
 export type Action = (typeof ACTIONS)[number];
 
