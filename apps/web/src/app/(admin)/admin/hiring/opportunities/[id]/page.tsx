@@ -171,7 +171,13 @@ function Pipeline({ setup, totals }: { setup: Setup; totals: Map<string, number>
           }
         />
       )}
-      <KanbanBoard>
+      {/* The board scrolls sideways: reachable and named for keyboard and screen readers. */}
+      <KanbanBoard
+        tabIndex={0}
+        role="region"
+        aria-label="Pipeline by stage"
+        className="rounded-xl outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+      >
         {open.map((s) => (
           <KanbanColumn key={s.id} title={s.name} count={totals.get(s.id) ?? 0}>
             <KanbanList>
