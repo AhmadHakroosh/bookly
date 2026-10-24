@@ -183,6 +183,8 @@ export async function syncInlineForm(input: {
 export type FormOwner =
   | { type: "event_type"; id: string; label: string; userId: string }
   | { type: "routing_form"; id: string; label: string }
+  /** Hiring: the application form, or a stage's follow-up or reference form. */
+  | { type: "opportunity"; id: string; label: string }
   | { type: "none" };
 
 /** What a form belongs to: the event type or routing form it asks the questions of. */
@@ -205,6 +207,43 @@ export async function formOwner(workspaceId: string, formId: string): Promise<Fo
   ]);
   if (et) return { type: "event_type", id: et.id, label: et.title, userId: et.userId };
   if (rf) return { type: "routing_form", id: rf.id, label: rf.name };
+  // Hiring: the opportunity whose application form it is, else the one whose live stage uses
+  // it, for forms made for one opportunity only (shared forms stay with managers).
+  const opp =
+    (
+      await db()
+        .select({ id: schema.opportunities.id, title: schema.opportunities.title })
+        .from(schema.opportunities)
+        .where(
+          and(
+            eq(schema.opportunities.workspaceId, workspaceId),
+            eq(schema.opportunities.formId, formId),
+          ),
+        )
+        .limit(1)
+    )[0] ??
+    (
+      await db()
+        .select({ id: schema.opportunities.id, title: schema.opportunities.title })
+        .from(schema.opportunities)
+        .innerJoin(
+          schema.pipelineStages,
+          eq(schema.pipelineStages.pipelineId, schema.opportunities.pipelineId),
+        )
+        .innerJoin(schema.forms, eq(schema.forms.id, formId))
+        .where(
+          and(
+            eq(schema.opportunities.workspaceId, workspaceId),
+            eq(schema.forms.workspaceId, workspaceId),
+            eq(schema.forms.shared, false),
+            isNull(schema.pipelineStages.archivedAt),
+            sql`${schema.pipelineStages.modules} -> 'forms' -> 'forms' @> ${JSON.stringify([{ formId }])}::jsonb`,
+          ),
+        )
+        .orderBy(schema.opportunities.createdAt)
+        .limit(1)
+    )[0];
+  if (opp) return { type: "opportunity", id: opp.id, label: opp.title };
   return { type: "none" };
 }
 
@@ -212,10 +251,15 @@ export async function formOwner(workspaceId: string, formId: string): Promise<Fo
  * Who may change a form: an event type's questions, its host or an owner or admin (as the event
  * type editor); a routing form's, anyone on the team (as the routing editor); others, managers.
  */
-export const mayEditForm = (owner: FormOwner, user: { id: string; manager: boolean }) =>
+export const mayEditForm = (
+  owner: FormOwner,
+  user: { id: string; manager: boolean; coordinates?: (opportunityId: string) => boolean },
+) =>
   owner.type === "event_type"
     ? user.manager || owner.userId === user.id
-    : owner.type === "routing_form" || user.manager;
+    : owner.type === "opportunity"
+      ? user.manager || !!user.coordinates?.(owner.id)
+      : owner.type === "routing_form" || user.manager;
 
 /**
  * A form as the builder opens it: the working copy (unpublished changes, else what is live),

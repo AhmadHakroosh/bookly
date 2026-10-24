@@ -50,6 +50,9 @@ Add an endpoint under **Admin → Settings → Integrations** and choose events:
 (sent together with `booking.created` for the replacement; carries `previousBookingId`). Use
 **Ping** to send a test delivery.
 
+`opportunity.published` (hiring beta) carries `{ id, title, type, slug, opensAt, closesAt,
+decidesBy }` when an opportunity is published; it never carries applicant data.
+
 `contact.stage_changed` carries `{ contact, from, to, by, fromStage, toStage }`. `from` and `to`
 are the four classic values (`lead`, `active`, `won`, `lost`); `fromStage` and `toStage` are the
 stages of the workspace's client pipeline, `{ id, key, name, category }` (`fromStage` is `null`

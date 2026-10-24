@@ -136,10 +136,10 @@ test("a workspace in the hiring beta switches between Clients and Hiring", async
     "true",
   );
   await solution.getByRole("link", { name: "Hiring" }).click();
-  await expect(page.getByRole("heading", { name: "Hiring", level: 1 })).toBeVisible();
-  await expect(page.getByText("No opportunities yet")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Overview", level: 1 })).toBeVisible();
   // Hiring's own sidebar and breadcrumb (hiring.png).
   await expect(nav.getByRole("link", { name: "Overview" })).toHaveAttribute("aria-current", "page");
+  await expect(nav.getByRole("link", { name: "Opportunities" })).toBeVisible();
   await expect(nav.getByRole("link", { name: "Bookings" })).toHaveCount(0);
   await expect(
     page.getByRole("navigation", { name: "Breadcrumb" }).getByRole("link", { name: "Hiring" }),

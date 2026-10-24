@@ -16,8 +16,8 @@ workspace and shows its name and logo. Below it:
 - At the very bottom, you: your picture, name and email, which open your menu.
 
 Workspaces in the hiring beta (the `hiring` flag) get a **Clients | Hiring** switch under the
-workspace. Hiring has its own items: an overview for now, with opportunities, candidates,
-interviews and reviews arriving as they ship. Messages, Files, Settings and Team are the same on
+workspace. Hiring has its own items: **Overview** and **Opportunities** (see [Hiring](hiring.md)),
+with candidates, interviews and reviews arriving as they ship. Messages, Files, Settings and Team are the same on
 both sides.
 
 Collaborators (outside reviewers and interviewers, see [Teams](teams.md)) see only their own

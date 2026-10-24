@@ -1,5 +1,5 @@
 import "server-only";
-import { and, asc, desc, eq, schema, sql } from "@bookly/db";
+import { and, asc, desc, eq, inArray, ne, schema, sql } from "@bookly/db";
 import type { Opportunity, OpportunityRole } from "@bookly/db/schema";
 import { db } from "@/lib/db";
 import { applicationsVisibleTo, reviewsVisibleTo, roleOn, type Actor } from "../access";
@@ -118,4 +118,109 @@ export async function listTeam(actor: Actor, opportunityId: string) {
       ),
     )
     .orderBy(sql`case ${schema.opportunityMembers.role} when 'coordinator' then 0 else 1 end`);
+}
+
+export type OpportunitySummary = OpportunityListing & {
+  cohort: string | null;
+  opensAt: Date | null;
+  closesAt: Date | null;
+  decidesBy: Date | null;
+  /** Applications the actor may see that were sent (drafts are not counted). */
+  applications: number;
+};
+
+/**
+ * Opportunities with their round's dates and how many applications the actor may see, for the
+ * Opportunities list and the Hiring overview. Archived ones are left out unless asked for.
+ */
+export async function listOpportunitySummaries(
+  actor: Actor,
+  opts: { archived?: boolean } = {},
+): Promise<OpportunitySummary[]> {
+  const list = (await listOpportunities(actor)).filter(
+    (x) => opts.archived || x.status !== "archived",
+  );
+  if (!list.length) return [];
+  const ids = list.map((x) => x.id);
+  const c = schema.opportunityCohorts;
+  const a = schema.applications;
+  const [cohorts, counts] = await Promise.all([
+    db()
+      .select({
+        opportunityId: c.opportunityId,
+        name: c.name,
+        opensAt: c.opensAt,
+        closesAt: c.closesAt,
+        decidesBy: c.decidesBy,
+      })
+      .from(c)
+      .where(and(inArray(c.opportunityId, ids), eq(c.isDefault, true))),
+    db()
+      .select({ opportunityId: a.opportunityId, n: sql<number>`count(*)::int` })
+      .from(a)
+      .where(and(applicationsVisibleTo(actor), inArray(a.opportunityId, ids), ne(a.state, "draft")))
+      .groupBy(a.opportunityId),
+  ]);
+  return list.map((x) => {
+    const k = cohorts.find((r) => r.opportunityId === x.id);
+    return {
+      ...x,
+      cohort: k?.name || null,
+      opensAt: k?.opensAt ?? null,
+      closesAt: k?.closesAt ?? null,
+      decidesBy: k?.decidesBy ?? null,
+      applications: x.role ? (counts.find((r) => r.opportunityId === x.id)?.n ?? 0) : 0,
+    };
+  });
+}
+
+/**
+ * The counts beside an opportunity's tabs ("24 applications · 6 interviews this week · 8 reviews
+ * pending"), each over what the actor may see.
+ */
+export async function opportunityCounts(actor: Actor, opportunityId: string, now = new Date()) {
+  if (!roleOn(actor, opportunityId)) return { applications: 0, interviews: 0, reviews: 0 };
+  const a = schema.applications;
+  const visible = and(applicationsVisibleTo(actor), eq(a.opportunityId, opportunityId));
+  const weekEnd = new Date(now.getTime() + 7 * 86_400_000);
+  const [apps, interviews, reviews] = await Promise.all([
+    db()
+      .select({ n: sql<number>`count(*)::int` })
+      .from(a)
+      .where(and(visible, ne(a.state, "draft"))),
+    db()
+      .select({ n: sql<number>`count(*)::int` })
+      .from(schema.bookings)
+      .innerJoin(a, eq(a.id, schema.bookings.applicationId))
+      .where(
+        and(
+          visible,
+          eq(schema.bookings.status, "confirmed"),
+          sql`${schema.bookings.startAt} >= ${now} and ${schema.bookings.startAt} < ${weekEnd}`,
+        ),
+      ),
+    db()
+      .select({ n: sql<number>`count(*)::int` })
+      .from(schema.reviewAssignments)
+      .innerJoin(a, eq(a.id, schema.reviewAssignments.applicationId))
+      .where(and(visible, eq(schema.reviewAssignments.status, "pending"))),
+  ]);
+  return {
+    applications: apps[0]?.n ?? 0,
+    interviews: interviews[0]?.n ?? 0,
+    reviews: reviews[0]?.n ?? 0,
+  };
+}
+
+/** Applications per stage the actor may see, for the board's column counts. */
+export async function stageTotals(actor: Actor, opportunityId: string) {
+  const a = schema.applications;
+  const rows = await db()
+    .select({ stageId: a.stageId, n: sql<number>`count(*)::int` })
+    .from(a)
+    .where(
+      and(applicationsVisibleTo(actor), eq(a.opportunityId, opportunityId), ne(a.state, "draft")),
+    )
+    .groupBy(a.stageId);
+  return new Map(rows.filter((r) => r.stageId).map((r) => [r.stageId!, r.n]));
 }

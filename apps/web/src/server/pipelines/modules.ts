@@ -66,6 +66,14 @@ const configs = {
       )
       .max(10)
       .default([]),
+    /** What a template asks for until an event type is chosen ("45-minute panel interview"). */
+    suggested: z
+      .object({
+        title: z.string().trim().min(1).max(120),
+        minutes: z.number().int().min(5).max(480),
+        format: z.enum(["one_on_one", "panel", "group"]),
+      })
+      .optional(),
   }),
   video: z.object({
     v: z.literal(1),

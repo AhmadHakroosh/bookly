@@ -111,10 +111,16 @@ export function navSections(o: NavOptions, solution: Solution = "clients"): NavS
           {
             href: "/admin/hiring",
             label: "Overview",
-            icon: BriefcaseIcon,
-            keywords: "hiring opportunities candidates cohorts applications",
+            icon: HomeIcon,
+            keywords: "hiring candidates cohorts applications",
           },
-          // Opportunities, Candidates, Interviews and Reviews join as their pages ship.
+          {
+            href: "/admin/hiring/opportunities",
+            label: "Opportunities",
+            icon: BriefcaseIcon,
+            keywords: "fellowship internship program admissions jobs selection round",
+          },
+          // Candidates, Interviews and Reviews join as their pages ship.
           ...shared(o).filter((i) => i.href !== "/admin/tasks"),
         ],
       },

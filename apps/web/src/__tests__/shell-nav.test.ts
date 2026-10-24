@@ -25,7 +25,7 @@ describe("admin sidebar (concept fidelity §2)", () => {
 
   it("swaps in Hiring's own items only where the flag is on", () => {
     expect(sidebar({ hiring: true, manager: true, files: true }, "hiring")).toEqual([
-      ["primary", ["Overview", "Files"]],
+      ["primary", ["Overview", "Opportunities", "Files"]],
       ["bottom", ["Settings", "Team"]],
     ]);
     expect(sidebar({ manager: true }, "hiring")[0]![1]).toContain("Home");
