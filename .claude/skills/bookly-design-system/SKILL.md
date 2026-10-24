@@ -56,11 +56,14 @@ Bookly.
    Black button → the ink variant. Peach active nav → `--accent`. "Due today", "Feedback
    missing" and count badges → semantic warning/destructive. Timeline dots and progress →
    `--brand`. Cream page → `--background` (Paper). Sidebar → `--sidebar` (Sand).
-5. **Check contrast every time** (method in `references/tokens.md`), in both themes. Record new
-   pairs there.
-6. **Dark mode is part of the change.** Every token you add gets a `.dark` value.
+5. **Check contrast every time** (method in `references/tokens.md`), hovers and disabled states
+   included. Record new pairs there.
+6. **Light only.** The dark theme is retired (founder, 2026-10-25): add no `.dark` values, no
+   theme toggle. Match the concept panel first: `planning/v2/ux/concept-fidelity.md` is binding
+   for navigation, screens and how parts connect; `https://hiresam.local` is the second
+   reference for patterns the concepts do not show.
 7. **Verify in the browser.** preview_start on port 3002, demo workspace via `pnpm demo`.
-   Screenshot changed screens in light and dark, at desktop and 375 px. For marketing pages
+   Screenshot changed screens beside the concept panel, at desktop and 375 px. For marketing pages
    (`/press`, `/`), run with `TENANCY=multi` on the platform host (see `docs/cloud.md`).
    Before/after shots go in the PR.
 
