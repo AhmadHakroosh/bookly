@@ -180,7 +180,9 @@ async function StatusPage({ params, searchParams }: PageProps<"/applications/[to
             )}
           </div>
           {!v.editable && app.state === "active" && (
-            <p className="text-sm text-muted-foreground">{COPY.editLocked}</p>
+            <p className="text-sm text-muted-foreground">
+              {v.closedForEdits ? COPY.editClosed : COPY.editLocked}
+            </p>
           )}
           <dl className="space-y-3 rounded-xl border bg-card p-4 text-sm">
             {(v.form?.fields ?? [])

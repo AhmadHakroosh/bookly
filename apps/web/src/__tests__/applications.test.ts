@@ -54,6 +54,7 @@ vi.mock("@/server/ratelimit", async (orig) => ({
   rateLimit: async () => ({ ok: true }),
 }));
 vi.mock("@/server/urls", () => ({ publicBaseUrl: async () => "https://horizon.test" }));
+vi.mock("@/server/request", () => ({ clientIp: async () => "203.0.113.7" }));
 // Cached reads ("use cache") run as plain functions here.
 vi.mock("next/cache", () => ({
   cacheTag: () => {},
@@ -172,6 +173,7 @@ describe("helpers", () => {
     expect(mayEdit({ ...base, submittedReviews: 1 })).toBe(false);
     expect(mayEdit({ ...base, isEntry: false })).toBe(false);
     expect(mayEdit({ ...base, state: "withdrawn" })).toBe(false);
+    expect(mayEdit({ ...base, window: "closed" })).toBe(false);
   });
 });
 
@@ -498,5 +500,87 @@ describe.skipIf(!realDb)("applying (seeded database)", () => {
         futureContact: false,
       }),
     ).toMatchObject({ ok: true });
+  });
+
+  const reopen = () =>
+    db
+      .update(schema.opportunityCohorts)
+      .set({ closesAt: new Date(Date.now() + 10 * 86_400_000) })
+      .where(eq(schema.opportunityCohorts.opportunityId, oppId));
+
+  it("keeps outcomes out of the download until released, and links out of greetings", async () => {
+    await reopen();
+    expect(apply.plainName("Maya Chen")).toBe("Maya Chen");
+    for (const n of [
+      "win at https://x.io",
+      "www.prize.example",
+      "a@b.co",
+      "<b>hi</b>",
+      "visit bit.ly",
+    ])
+      expect(apply.plainName(n)).toBe("there");
+    const email = `outcome-${run}@example.test`;
+    const r = (await apply.submitApplication(workspace, slug, {
+      token: null,
+      answers: answers(email),
+      accommodations: "",
+      consent: true,
+      futureContact: false,
+    })) as { statusToken: string };
+    const status = await apply.statusByToken(workspace, r.statusToken);
+    if (status.kind !== "ok") throw new Error("expected the application");
+    const [opp] = await db
+      .select()
+      .from(schema.opportunities)
+      .where(eq(schema.opportunities.id, oppId));
+    const lost = await db.query.pipelineStages.findFirst({
+      where: (t, { and: a, eq: e }) => a(e(t.pipelineId, opp!.pipelineId), e(t.category, "lost")),
+    });
+    await db
+      .update(schema.applications)
+      .set({ stageId: lost!.id })
+      .where(eq(schema.applications.id, status.view.application.id));
+    expect((await apply.exportOwnData(workspace, r.statusToken)).status).toBe("Under review");
+  });
+
+  it("keeps a person who is more than this application when it is deleted", async () => {
+    await reopen();
+    const email = `client-${run}@example.test`;
+    const r = (await apply.submitApplication(workspace, slug, {
+      token: null,
+      answers: answers(email),
+      accommodations: "",
+      consent: true,
+      futureContact: false,
+    })) as { statusToken: string };
+    const [contact] = await contactsNamed(email);
+    // The team already writes to this person in Messages.
+    await db
+      .insert(schema.threads)
+      .values({ workspaceId: ws, contactId: contact!.id, kind: "guest" });
+    const req = await apply.requestDeletion(workspace, r.statusToken);
+    await apply.deleteNow(me, workspace, req.id);
+    expect(await contactsNamed(email)).toHaveLength(1);
+    expect((await apply.statusByToken(workspace, r.statusToken)).kind).toBe("deleted");
+  });
+
+  it("says the answers stand once the deadline passed, rather than 'being reviewed'", async () => {
+    await reopen();
+    const email = `late-edit-${run}@example.test`;
+    const r = (await apply.submitApplication(workspace, slug, {
+      token: null,
+      answers: answers(email),
+      accommodations: "",
+      consent: true,
+      futureContact: false,
+    })) as { statusToken: string };
+    await db
+      .update(schema.opportunityCohorts)
+      .set({ closesAt: new Date(Date.now() - 3 * 3600_000) })
+      .where(eq(schema.opportunityCohorts.opportunityId, oppId));
+    const status = await apply.statusByToken(workspace, r.statusToken);
+    if (status.kind !== "ok") throw new Error("expected the application");
+    expect(status.view).toMatchObject({ editable: false, closedForEdits: true });
+    await reopen();
   });
 });

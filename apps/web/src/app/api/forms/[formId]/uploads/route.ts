@@ -6,6 +6,8 @@ const body = z.object({
   name: z.string().trim().min(1).max(200),
   mime: z.string().trim().min(3).max(100),
   size: z.number().int().positive(),
+  /** Editing a submitted application: its status token, so the upload's draft belongs to it. */
+  statusToken: z.string().min(1).max(100).optional(),
 });
 
 /**

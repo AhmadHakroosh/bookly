@@ -11,6 +11,7 @@ import {
 } from "@bookly/forms";
 import { loadEnv } from "@bookly/config";
 import { sendEmail } from "@bookly/email";
+import { after } from "next/server";
 import { db } from "@/lib/db";
 import { assertOnOpportunity, type Actor } from "../access";
 import { audit, type AuditActor } from "../audit";
@@ -20,6 +21,7 @@ import { checkFileAnswers, draftResponse, publishedSchema } from "../forms";
 import { notify } from "../notifications";
 import { readModules } from "../pipelines/modules";
 import { rateLimit } from "../ratelimit";
+import { clientIp } from "../request";
 import { publicBaseUrl } from "../urls";
 import { emitEvent } from "../webhooks";
 import {
@@ -212,9 +214,9 @@ export async function saveDraft(
       .where(eq(schema.formResponses.id, draft.id));
     return { token: input.token!, savedAt: now };
   }
-  const limit = await rateLimit(`apply-draft:${p.opportunity.id}`, 600, 3600_000);
-  if (!limit.ok)
-    throw new ApplyError("Too many people are applying right now. Try again shortly.", 429);
+  // Per visitor, so one client can't use up a round's drafts near its deadline.
+  const limit = await rateLimit(`apply-draft:${await clientIp()}`, 30, 3600_000);
+  if (!limit.ok) throw new ApplyError(COPY.recoverLimited, 429);
   const token = newToken();
   await db()
     .insert(schema.formResponses)
@@ -247,8 +249,11 @@ export async function sendResumeLink(
     : "";
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
     throw new ApplyError("Enter your email first, so we can send you the link.");
-  const limit = await rateLimit(`apply-resume:${email}`, 5, 3600_000);
-  if (!limit.ok) throw new ApplyError(COPY.recoverLimited, 429);
+  const [byEmail, byIp] = await Promise.all([
+    rateLimit(`apply-resume:${email}`, 3, 3600_000),
+    rateLimit(`apply-resume-ip:${await clientIp()}`, 10, 3600_000),
+  ]);
+  if (!byEmail.ok || !byIp.ok) throw new ApplyError(COPY.recoverLimited, 429);
   const base = await publicBaseUrl(ws);
   await candidateEmail(ws, p.opportunity, {
     to: email,
@@ -324,8 +329,12 @@ export async function submitApplication(
         .slice(0, 200)
     : "";
 
-  const limit = await rateLimit(`apply-submit:${email}`, 10, 3600_000);
-  if (!limit.ok) throw new ApplyError(COPY.recoverLimited, 429);
+  const [byEmail, byIp, byRound] = await Promise.all([
+    rateLimit(`apply-submit:${email}`, 3, 3600_000),
+    rateLimit(`apply-submit-ip:${await clientIp()}`, 10, 3600_000),
+    rateLimit(`apply-submit-opp:${opp.id}`, 2000, 3600_000),
+  ]);
+  if (!byEmail.ok || !byIp.ok || !byRound.ok) throw new ApplyError(COPY.recoverLimited, 429);
 
   // Already applied to this round: the email is the proof, so the link goes there, not here.
   const existing = await applicationOf(ws.id, cohort.id, email);
@@ -514,10 +523,11 @@ async function confirmationEmail(
     templateId && templateId.type === "send_message"
       ? entry.modules.messages?.templates.find((x) => x.id === templateId.templateId)
       : null;
+  const greet = plainName(name);
   const fill = (s: string) =>
     s.replace(/\{(\w+)\}/g, (m, k: string) =>
       k === "name"
-        ? name || "there"
+        ? greet
         : k === "opportunity"
           ? p.opportunity.title
           : k === "decides_by"
@@ -531,13 +541,22 @@ async function confirmationEmail(
     subject: t ? fill(t.subject) : EMAIL.received(p.opportunity.title),
     body: t
       ? fill(t.body)
-      : `Hi ${name || "there"},\n\nThank you for applying to ${p.opportunity.title}. We'll email you at each step.`,
+      : `Hi ${greet},\n\nThank you for applying to ${p.opportunity.title}. We'll email you at each step.`,
     cta: { href: statusUrl, label: COPY.statusButton },
     applicationId: app.id,
   });
 }
 
 /* ---------------- Emails ---------------- */
+
+/**
+ * The applicant's name as an email greets them, or "there": anyone can type anything into a
+ * name field, so nothing that reads like a link or an address goes into an email we send.
+ */
+export function plainName(name: string): string {
+  const n = name.trim().slice(0, 60);
+  return !n || /[@<>]|:\/\/|www\.|\.[a-z]{2,}\b/i.test(n) ? "there" : n;
+}
 
 /**
  * An email to a candidate: from the opportunity's sender name, replies to its reply-to, with the
@@ -739,6 +758,14 @@ async function statusView(ws: Workspace, app: Application) {
       window,
     }),
     window,
+    // New and unreviewed, but the deadline passed: the answers stand as they were sent.
+    closedForEdits:
+      mayEdit({
+        state: app.state,
+        isEntry: s.isEntry,
+        submittedReviews: reviews[0]?.n ?? 0,
+        window: "open",
+      }) && window === "closed",
     accommodations: await readOwnAccommodations(app),
     email: maskEmail((await emailOf(app)) ?? ""),
     request: request ?? null,
@@ -754,11 +781,20 @@ async function byToken(ws: Workspace, token: string) {
 
 /* ---------------- Withdraw and delete ---------------- */
 
+/** The reasons the withdraw dialog offers; anything else is the candidate's own words. */
+export const WITHDRAW_REASONS = [
+  "I accepted another offer",
+  "My plans changed",
+  "The timing doesn't work",
+  "Asked for their application to be deleted.",
+];
+
 /**
  * Withdraws an application: its interviews still to come are cancelled (the hosts are told),
  * the coordinators hear about it and the candidate gets a confirmation. Can't be undone by the
  * candidate. Returns quietly when it is already withdrawn.
  */
+
 export async function withdraw(
   ws: Workspace,
   token: string,
@@ -795,7 +831,10 @@ export async function withdraw(
     action: "application.withdrawn",
     target: { type: "application", id: app.id, label: v.opportunity.title },
     actor: CANDIDATE,
-    changes: { reason: { to: reason?.slice(0, 500) ?? null } },
+    // The free-text reason goes to the coordinators, not into the permanent log.
+    changes: {
+      reason: { to: reason ? (WITHDRAW_REASONS.includes(reason) ? reason : "Other") : null },
+    },
   });
   emitEvent(ws.id, "application.withdrawn", {
     id: app.id,
@@ -887,7 +926,9 @@ export async function exportOwnData(ws: Workspace, token: string) {
   return {
     opportunity: v.opportunity.title,
     submittedAt: v.application.submittedAt?.toISOString() ?? null,
-    status: v.application.state === "withdrawn" ? "Withdrawn" : v.label,
+    // The same words as the status page: an outcome shows only once it is released.
+    status:
+      v.application.state === "withdrawn" ? "Withdrawn" : v.released ? v.label : "Under review",
     answers: Object.fromEntries(
       Object.entries(v.answers)
         .filter(([, a]) => a !== null && a !== "")
@@ -933,6 +974,8 @@ export async function saveEdit(
   const v = await byToken(ws, token);
   if (!v.editable || !v.form || !v.application.formResponseId)
     throw new ApplyError(COPY.editLocked, 409);
+  const limit = await rateLimit(`apply-edit:${v.application.id}`, 20, 3600_000);
+  if (!limit.ok) throw new ApplyError(COPY.recoverLimited, 429);
   const current = await db().query.formResponses.findFirst({
     where: eq(schema.formResponses.id, v.application.formResponseId),
   });
@@ -948,9 +991,11 @@ export async function saveEdit(
   const ids = identityFields(published.schema);
   if (ids.email)
     answers[ids.email.id] = (v.answers[ids.email.id] ?? answers[ids.email.id]) as never;
-  const draft = input.draftToken
+  const found = input.draftToken
     ? await draftResponse(ws.id, current!.formId, input.draftToken)
     : null;
+  // Only a draft this application's edit started (its uploads).
+  const draft = found && found.applicationId === v.application.id ? found : null;
   // Files: this revision's own uploads, or ones the current revision already has.
   const kept = new Set(v.files.map((f) => f.id));
   const fresh: Answers = { ...answers };
@@ -1005,6 +1050,25 @@ export async function saveEdit(
       .where(eq(schema.applications.id, v.application.id));
     return id;
   });
+  // Drafts other edits started and never saved go now, with their uploads.
+  const leftovers = await db()
+    .select({ id: schema.formResponses.id })
+    .from(schema.formResponses)
+    .where(
+      and(
+        eq(schema.formResponses.applicationId, v.application.id),
+        eq(schema.formResponses.status, "draft"),
+      ),
+    );
+  if (leftovers.length) {
+    const ids = leftovers.map((x) => x.id);
+    const files = await db()
+      .select()
+      .from(schema.files)
+      .where(and(eq(schema.files.ownerType, "form_response"), inArray(schema.files.ownerId, ids)));
+    for (const f of files) await removeFile(f, { silent: true });
+    await db().delete(schema.formResponses).where(inArray(schema.formResponses.id, ids));
+  }
   await audit({
     workspace: ws.id,
     action: "application.edited",
@@ -1025,6 +1089,13 @@ export async function saveEdit(
     });
   refreshWorkspace(ws.id);
   return { ok: true };
+}
+
+/** For uploads during an edit: the application the status token opens, if it may change. */
+export async function editLink(ws: Workspace, formId: string, token: string) {
+  const r = await statusByToken(ws, token);
+  if (r.kind !== "ok" || !r.view.editable || r.view.opportunity.formId !== formId) return null;
+  return { applicationId: r.view.application.id, contactId: r.view.application.contactId };
 }
 
 /* ---------------- Link recovery ---------------- */
@@ -1059,7 +1130,15 @@ export async function recoverLinks(
     )
     .orderBy(desc(schema.applications.submittedAt))
     .limit(10);
-  for (const r of rows) await resendStatusLink(ws, r.opportunity, r.application, email);
+  // Sent after the response, so how long the answer takes says nothing either.
+  const send = async () => {
+    for (const r of rows) await resendStatusLink(ws, r.opportunity, r.application, email);
+  };
+  try {
+    after(send);
+  } catch {
+    await send();
+  }
   return "sent";
 }
 
@@ -1206,13 +1285,23 @@ async function completeDeletion(
           ),
         );
       await tx.delete(schema.applications).where(eq(schema.applications.id, app.id));
-      // The person goes too when this was all they were: no client stage, nothing else here.
+      // The person goes too, but only when this application was everything the workspace had
+      // of them: no client stage, no other application, booking, conversation, task, form
+      // answer or timeline entry. Anyone else stays, with their own history.
       await tx.execute(sql`
         delete from ${schema.contacts} c
         where c.id = ${app.contactId} and c.stage_id is null
           and not exists (select 1 from ${schema.applications} a where a.contact_id = c.id)
           and not exists (select 1 from ${schema.bookings} b where b.contact_id = c.id)
+          and not exists (select 1 from ${schema.threads} t where t.contact_id = c.id)
+          and not exists (select 1 from ${schema.tasks} k where k.contact_id = c.id)
+          and not exists (select 1 from ${schema.formResponses} r where r.contact_id = c.id)
+          and not exists (select 1 from ${schema.contactEvents} e where e.contact_id = c.id)
       `);
+      // Coordinators' notifications named the applicant.
+      await tx
+        .delete(schema.notifications)
+        .where(sql`${schema.notifications.dedupeKey} like ${`application.%:${app.id}:%`}`);
     });
   }
   const now = new Date();

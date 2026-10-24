@@ -278,7 +278,8 @@ export function ApplyForm({
         schema={schema}
         pages={current.kind === "section" ? current.pageIds : []}
         initial={initial?.raw}
-        initialToken={mode === "apply" ? (initial?.token ?? null) : null}
+        initialToken={initial?.token ?? null}
+        uploadContext={mode === "edit" && statusToken ? { statusToken } : undefined}
         draftToken={token}
         onChange={setRaw}
         onToken={setToken}

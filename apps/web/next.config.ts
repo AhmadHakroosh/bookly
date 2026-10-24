@@ -150,6 +150,15 @@ const nextConfig: NextConfig = {
               ]),
         ],
       },
+      // A candidate's status and resume links carry their token in the path: never sent on as
+      // a referrer, never indexed.
+      ...["/applications/:path*", "/apply/:slug/resume/:path*"].map((source) => ({
+        source,
+        headers: [
+          { key: "Referrer-Policy", value: "no-referrer" },
+          { key: "X-Robots-Tag", value: "noindex, nofollow" },
+        ],
+      })),
       // The admin and platform pages are never meant to be framed.
       { source: "/admin/:path*", headers: [{ key: "X-Frame-Options", value: "DENY" }] },
       { source: "/console/:path*", headers: [{ key: "X-Frame-Options", value: "DENY" }] },

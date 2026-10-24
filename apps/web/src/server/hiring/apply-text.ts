@@ -42,6 +42,7 @@ export const COPY = {
   previewBanner: "Preview — not live. Nothing you submit here is kept.",
   nothingToDo: "Nothing to do right now.",
   editButton: "Edit my application",
+  editClosed: "Applications have closed, so your answers stand as you sent them.",
   editLocked:
     "Your application is being reviewed, so it can't be changed. If something important is wrong, write to the team.",
   withdrawTitle: "Withdraw your application?",
@@ -263,7 +264,8 @@ export const mayEdit = (input: {
   input.state === "active" &&
   input.isEntry &&
   input.submittedReviews === 0 &&
-  input.window !== "scheduled";
+  // After the deadline everyone's answers stand as they were sent.
+  (input.window === "open" || input.window === "grace");
 
 /** Days a deletion request may stay open before Bookly deletes the application itself. */
 export const DELETION_DAYS = 30;

@@ -34,44 +34,61 @@ async function run<T>(fn: () => Promise<T>): Promise<T | { error: string }> {
   }
 }
 
-export async function withdrawAction(token: string, reason: string) {
+const token = z.string().min(1).max(100);
+const text = (max: number) => z.string().max(max);
+
+export async function withdrawAction(raw: string, rawReason: string) {
   // audit: by server/hiring/apply.ts
+  const parsed = z.tuple([token, text(1000)]).safeParse([raw, rawReason]);
+  if (!parsed.success) return { error: "Reload the page and try again." };
+  const [t, reason] = parsed.data;
   return run(async () => {
-    await withdraw(await workspace(), token, reason.trim().slice(0, 500) || null);
+    await withdraw(await workspace(), t, reason.trim().slice(0, 500) || null);
     return { ok: true as const };
   });
 }
 
-export async function deleteRequestAction(token: string) {
+export async function deleteRequestAction(raw: string) {
   // audit: by server/hiring/apply.ts
+  const parsed = token.safeParse(raw);
+  if (!parsed.success) return { error: "Reload the page and try again." };
   return run(async () => {
-    await requestDeletion(await workspace(), token);
+    await requestDeletion(await workspace(), parsed.data);
     return { ok: true as const };
   });
 }
 
-export async function accommodationsAction(token: string, text: string) {
+export async function accommodationsAction(raw: string, rawText: string) {
   // audit: by server/hiring/apply.ts
+  const parsed = z.tuple([token, text(4000)]).safeParse([raw, rawText]);
+  if (!parsed.success) return { error: "Keep it under 4,000 characters." };
   return run(async () => {
-    await updateAccommodations(await workspace(), token, text);
+    await updateAccommodations(await workspace(), parsed.data[0], parsed.data[1]);
     return { ok: true as const };
   });
 }
 
 export async function saveEditAction(
-  token: string,
+  raw: string,
   draftToken: string | null,
   answers: Record<string, unknown>,
 ) {
   // audit: by server/hiring/apply.ts
-  const parsed = z.record(z.string().max(64), z.unknown()).safeParse(answers);
+  const parsed = z
+    .tuple([token, token.nullable(), z.record(z.string().max(64), z.unknown())])
+    .safeParse([raw, draftToken, answers]);
   if (!parsed.success) return { error: "Reload the page and try again." };
-  return run(async () => saveEdit(await workspace(), token, { draftToken, answers: parsed.data }));
+  const [t, d, a] = parsed.data;
+  return run(async () => saveEdit(await workspace(), t, { draftToken: d, answers: a }));
 }
 
 export async function recoverAction(email: string): Promise<{ sent: boolean; limited?: boolean }> {
   // audit: read-only — emails fresh status links; the old ones stop working, nothing else changes
   const ws = await workspace();
-  const r = await recoverLinks(ws, String(email).slice(0, 320), await clientIp());
+  const r = await recoverLinks(
+    ws,
+    typeof email === "string" ? email.slice(0, 320) : "",
+    await clientIp(),
+  );
   return r === "limited" ? { sent: false, limited: true } : { sent: true };
 }

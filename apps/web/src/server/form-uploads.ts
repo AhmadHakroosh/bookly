@@ -110,7 +110,7 @@ export function uploadProblem(
 export async function startFormUpload(
   req: Request,
   formId: string,
-  body: { fieldId: string; name: string; mime: string; size: number },
+  body: { fieldId: string; name: string; mime: string; size: number; statusToken?: string },
 ) {
   const { ws, published, draft: existing } = await context(req, formId);
   const ip = await clientIp();
@@ -135,7 +135,14 @@ export async function startFormUpload(
   // Refused files never start a draft.
   const problem = uploadProblem(field, body, already);
   if (problem) throw new FormUploadError(problem);
-  const draft = existing ?? (await startDraftResponse(ws.id, formId));
+  // An edit's uploads join a draft that belongs to the application, so deleting the
+  // application deletes them too.
+  const link = body.statusToken
+    ? await import("./hiring/apply").then((m) => m.editLink(ws, formId, body.statusToken!))
+    : null;
+  if (body.statusToken && !link)
+    throw new FormUploadError("This application can't be changed.", 409);
+  const draft = existing ?? (await startDraftResponse(ws.id, formId, link));
   if (!draft) throw new FormUploadError("Not found.", 404);
   const token = "token" in draft ? draft.token : req.headers.get(TOKEN)!;
   const ticket = await createUpload({

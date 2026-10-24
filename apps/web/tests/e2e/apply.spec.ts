@@ -122,9 +122,9 @@ test("a candidate applies from a phone", async ({ browser }) => {
   const page = await candidate(browser);
   await page.goto(`/apply/${slug}`);
   await expect(page.getByRole("heading", { level: 1, name: TITLE })).toBeVisible();
-  await expect(
-    page.getByRole("region", { name: "Who sees your application" }),
-  ).toContainText("You must be 16 or older to apply.");
+  await expect(page.getByRole("region", { name: "Who sees your application" })).toContainText(
+    "You must be 16 or older to apply.",
+  );
   await expect(page.getByRole("heading", { name: "What happens next" })).toBeVisible();
   await expect(page.getByText(/your time/)).toBeVisible();
   await fits(page);
@@ -172,6 +172,10 @@ test("a candidate applies from a phone", async ({ browser }) => {
   await fits(page);
   await axe(page, "P5 and P6, the status page");
   statusUrl = new URL(page.url()).pathname;
+  // The token is in the path: it never travels on as a referrer.
+  const res = await page.request.get(statusUrl);
+  expect(res.headers()["referrer-policy"]).toBe("no-referrer");
+  expect(res.headers()["x-robots-tag"]).toBe("noindex, nofollow");
 
   const db = testDb();
   const contact = await db.query.contacts.findFirst({ where: eq(schema.contacts.email, EMAIL) });

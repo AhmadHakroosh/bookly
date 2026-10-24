@@ -401,6 +401,8 @@ const UUID = /^[0-9a-f-]{36}$/i;
 export async function startDraftResponse(
   workspaceId: string,
   formId: string,
+  /** An edit of a submitted application: the draft belongs to it (and goes with it). */
+  link: { applicationId: string; contactId: string } | null = null,
 ): Promise<{ id: string; token: string } | null> {
   const form = await db().query.forms.findFirst({
     where: and(eq(schema.forms.id, formId), eq(schema.forms.workspaceId, workspaceId)),
@@ -416,6 +418,7 @@ export async function startDraftResponse(
       formVersionId: form.publishedVersionId,
       status: "draft",
       resumeTokenHash: tokenHash(token),
+      ...(link ?? {}),
     })
     .returning({ id: schema.formResponses.id });
   return { id: row!.id, token };

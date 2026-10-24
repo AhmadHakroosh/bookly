@@ -41,6 +41,7 @@ export function FormFields({
   pages,
   draftToken,
   errors,
+  uploadContext,
 }: {
   formId: string;
   schema: FormSchema;
@@ -61,6 +62,8 @@ export function FormFields({
   draftToken?: string | null;
   /** Messages under questions, by field id, from the caller's check. */
   errors?: Record<string, string>;
+  /** Sent with each upload's start (an application edit sends its status token). */
+  uploadContext?: Record<string, string>;
 }) {
   const [raw, setRaw] = useState<Raw>(initial ?? {});
   const [token, setToken] = useState<string | null>(initialToken);
@@ -94,6 +97,7 @@ export function FormFields({
           name: file.name,
           mime: file.type || "application/octet-stream",
           size: file.size,
+          ...uploadContext,
         }),
       });
       const ticket = await start.json().catch(() => ({}));
