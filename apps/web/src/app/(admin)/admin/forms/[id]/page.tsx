@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { BetaBadge } from "@/components/beta-badge";
 import { BackLink } from "@/components/links";
+import { canOnOpportunity, getActor } from "@/server/access";
 import { hasFlag, inBeta } from "@/server/flags";
 import { formForBuilder, mayEditForm } from "@/server/forms";
 import { isManager, requireStaff } from "@/server/session";
@@ -12,37 +13,54 @@ import { FormBuilder } from "./builder";
 export const metadata = { title: "Questions" };
 
 async function FormBuilderPage({ params }: PageProps<"/admin/forms/[id]">) {
-  const [{ id }, { session, role }, ws] = await Promise.all([
+  const [{ id }, { session, role }, ws, actor] = await Promise.all([
     params,
     requireStaff(),
     getCurrentWorkspace(),
+    getActor(),
   ]);
-  if (!ws || !(await hasFlag(ws, "forms_v2"))) notFound();
+  if (!ws) notFound();
   const data = await formForBuilder(ws.id, id);
-  if (!data || !mayEditForm(data.owner, { id: session.user.id, manager: isManager(role) }))
+  // Hiring's forms open with the `hiring` flag; the others with `forms_v2`.
+  const flag = data?.owner.type === "opportunity" ? "hiring" : "forms_v2";
+  if (!(await hasFlag(ws, flag))) notFound();
+  const coordinates = (oid: string) =>
+    !!actor && canOnOpportunity(actor, oid, "opportunity.configure");
+  if (
+    !data ||
+    !mayEditForm(data.owner, { id: session.user.id, manager: isManager(role), coordinates })
+  )
     notFound();
-  const beta = await inBeta(ws, "forms_v2");
+  const beta = await inBeta(ws, flag);
   const { owner } = data;
   const back =
     owner.type === "event_type"
       ? { href: `/admin/event-types/${owner.id}`, label: owner.label }
       : owner.type === "routing_form"
         ? { href: `/admin/routing/${owner.id}`, label: owner.label }
-        : { href: "/admin", label: "Home" };
+        : owner.type === "opportunity"
+          ? { href: `/admin/hiring/opportunities/${owner.id}/setup/stages`, label: owner.label }
+          : { href: "/admin", label: "Home" };
   return (
     <div className="space-y-6">
       <div>
         <BackLink href={back.href}>{back.label}</BackLink>
         <div className="mt-3 flex items-center gap-3">
           <h1 className="text-2xl font-semibold tracking-tight">
-            {owner.type === "routing_form" ? "Routing questions" : "Booking questions"}
+            {owner.type === "routing_form"
+              ? "Routing questions"
+              : owner.type === "opportunity"
+                ? data.form.name
+                : "Booking questions"}
           </h1>
           {beta && <BetaBadge />}
         </div>
         <p className="mt-1 text-sm text-muted-foreground">
           {owner.type === "routing_form"
             ? "What people answer before they are sent on. Routing rules can use every question."
-            : "What people answer when they book, after their name and email."}{" "}
+            : owner.type === "opportunity"
+              ? "What applicants answer. Forms have no calculated or quiz-style scoring: people review every application."
+              : "What people answer when they book, after their name and email."}{" "}
           Show a question only when an earlier answer calls for it, ask for files or consent, and
           split long forms into pages. Answers keep the version of the form they were given to.
         </p>

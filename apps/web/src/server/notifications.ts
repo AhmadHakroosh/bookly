@@ -128,6 +128,11 @@ export const KINDS: Record<NotificationKind, KindInfo> = {
     hint: "An automation on a pipeline stage asks the team to look, or failed.",
     defaults: { inApp: true, desktop: true, email: false },
   },
+  "hiring.team": {
+    label: "Hiring team",
+    hint: "You were added to the team of an open opportunity.",
+    defaults: { inApp: true, desktop: true, email: true },
+  },
   "task.overdue": {
     label: "Task overdue",
     hint: "One of your tasks passed its due date.",

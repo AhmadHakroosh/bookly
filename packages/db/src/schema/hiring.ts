@@ -71,6 +71,13 @@ export type OpportunitySettings = {
   statusLabels?: Record<string, string>;
   /** "Access limited to assigned reviewers" (ADR 0005). Default true. */
   assignedReviewersOnly?: boolean;
+  /** IANA zone the dates are shown in; the workspace's when unset. */
+  timezone?: string;
+  /** Candidate emails: the "from" name and where replies go. */
+  senderName?: string;
+  replyTo?: string;
+  /** The setup template it started from ("cohort", "internship"…, "blank" or "clone"). */
+  template?: string;
 };
 
 export const opportunities = pgTable(
@@ -99,6 +106,8 @@ export const opportunities = pgTable(
     clonedFromId: text("cloned_from_id").references((): AnyPgColumn => opportunities.id, {
       onDelete: "set null",
     }),
+    /** First published; a draft has none. */
+    publishedAt: timestamp("published_at", { withTimezone: true }),
     createdBy: text("created_by").references(() => users.id, { onDelete: "set null" }),
     ...timestamps,
   },
@@ -129,6 +138,8 @@ export const opportunityCohorts = pgTable(
     /** Program dates. */
     startsAt: timestamp("starts_at", { withTimezone: true }),
     endsAt: timestamp("ends_at", { withTimezone: true }),
+    /** "Decisions by": the date applicants are promised an answer. Required to publish. */
+    decidesBy: timestamp("decides_by", { withTimezone: true }),
     /** Seats; null = no cap. Advisory: offering past it asks for confirmation. */
     capacity: integer("capacity"),
     /** "Close cycle": every applicant has a released final outcome; starts the retention clock. */
@@ -517,6 +528,37 @@ export const applicationAccess = pgTable(
   ],
 );
 
+/**
+ * Someone invited by email to an opportunity's team before they have an account in the
+ * workspace. The workspace invitation (as a collaborator) goes out when the opportunity is
+ * published, or at once on a live one; accepting it turns this row into a team role.
+ */
+export const opportunityInvites = pgTable(
+  "opportunity_invites",
+  {
+    id: id(),
+    workspaceId: text("workspace_id")
+      .notNull()
+      .references(() => workspaces.id, { onDelete: "cascade" }),
+    opportunityId: text("opportunity_id")
+      .notNull()
+      .references(() => opportunities.id, { onDelete: "cascade" }),
+    /** Lower-cased. */
+    email: text("email").notNull(),
+    /** Never coordinator: people from outside join as collaborators (ADR 0005). */
+    role: text("role").$type<Exclude<OpportunityRole, "coordinator">>().notNull(),
+    invitedBy: text("invited_by").references(() => users.id, { onDelete: "set null" }),
+    /** The workspace invitation, once sent. */
+    invitationId: text("invitation_id"),
+    sentAt: timestamp("sent_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("opportunity_invites_opp_email_idx").on(t.opportunityId, t.email),
+    index("opportunity_invites_ws_email_idx").on(t.workspaceId, t.email),
+  ],
+);
+
 export type Opportunity = typeof opportunities.$inferSelect;
 export type Cohort = typeof opportunityCohorts.$inferSelect;
 export type Application = typeof applications.$inferSelect;
@@ -528,3 +570,4 @@ export type DecisionBatch = typeof decisionBatches.$inferSelect;
 export type DataRequest = typeof dataRequests.$inferSelect;
 export type OpportunityMember = typeof opportunityMembers.$inferSelect;
 export type ApplicationAccess = typeof applicationAccess.$inferSelect;
+export type OpportunityInvite = typeof opportunityInvites.$inferSelect;

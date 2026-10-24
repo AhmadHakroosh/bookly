@@ -13,6 +13,7 @@ import {
 import {
   AlarmClockIcon,
   AtSignIcon,
+  BriefcaseIcon,
   MessagesSquareIcon,
   BanknoteIcon,
   BellIcon,
@@ -61,6 +62,7 @@ const ICONS: Record<string, LucideIcon> = {
   "task.assigned": UserCheckIcon,
   "task.mentioned": AtSignIcon,
   "task.overdue": ClockAlertIcon,
+  "hiring.team": BriefcaseIcon,
   "message.posted": MessagesSquareIcon,
   "message.mentioned": AtSignIcon,
 };

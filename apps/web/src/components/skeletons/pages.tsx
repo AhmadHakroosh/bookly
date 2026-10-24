@@ -160,6 +160,47 @@ export function HiringSkeleton() {
   );
 }
 
+export function OpportunitiesSkeleton() {
+  return (
+    <Shell className="space-y-6">
+      <HeadingWithAction width="w-44" />
+      <Table rows={4} cols={5} />
+    </Shell>
+  );
+}
+
+/** An opportunity: title with its actions, the tabs, then the board's columns. */
+export function OpportunitySkeleton() {
+  return (
+    <Shell className="space-y-6">
+      <HeadingWithAction width="w-72" />
+      <Skeleton className="h-8 w-96 max-w-full" />
+      <div className="flex gap-3 overflow-hidden">
+        {Array.from({ length: 4 }, (_, i) => (
+          <Skeleton key={i} className="h-72 w-72 shrink-0 rounded-xl" />
+        ))}
+      </div>
+    </Shell>
+  );
+}
+
+/** The setup wizard: the step rail beside the step's content. */
+export function OpportunitySetupSkeleton() {
+  return (
+    <Shell className="space-y-6">
+      <Heading width="w-56" />
+      <div className="grid gap-6 lg:grid-cols-[12rem_1fr]">
+        <div className="hidden space-y-3 lg:block">
+          {Array.from({ length: 6 }, (_, i) => (
+            <Skeleton key={i} className="h-5 w-32" />
+          ))}
+        </div>
+        <FormCard fields={5} />
+      </div>
+    </Shell>
+  );
+}
+
 export function ContactsSkeleton() {
   return (
     <Shell className="space-y-6">

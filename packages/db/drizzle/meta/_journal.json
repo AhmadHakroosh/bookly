@@ -309,6 +309,13 @@
       "when": 1792876052291,
       "tag": "0043_realtime",
       "breakpoints": true
+    },
+    {
+      "idx": 44,
+      "version": "7",
+      "when": 1792879602826,
+      "tag": "0044_opportunity_setup",
+      "breakpoints": true
     }
   ]
 }

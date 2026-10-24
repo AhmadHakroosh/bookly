@@ -24,7 +24,7 @@ export function retentionDays(type: OpportunityType, settings: OpportunitySettin
 /** The editor's warning for a retention shorter than employment law usually asks, or null. */
 export function retentionWarning(type: OpportunityType, days: number): string | null {
   return EMPLOYMENT.has(type) && days < 365
-    ? "Employers in the US usually have to keep hiring records for a year. Check before going shorter."
+    ? "US employers must keep applications for at least a year. Check your local rules before choosing a shorter period."
     : null;
 }
 

@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 import { and, eq, schema } from "@bookly/db";
 import { db } from "@/lib/db";
+import { canOnOpportunity, getActor } from "@/server/access";
 import { audit } from "@/server/audit";
 import { refreshWorkspace } from "@/server/cache";
 import { hasFlag } from "@/server/flags";
@@ -19,10 +20,22 @@ import { isManager, requireStaff } from "@/server/session";
 import { getCurrentWorkspace } from "@/server/workspace";
 
 async function ctx(formId: string) {
-  const [{ session, role }, ws] = await Promise.all([requireStaff(), getCurrentWorkspace()]);
-  if (!ws || !(await hasFlag(ws, "forms_v2"))) throw new Error("Forms are not enabled here.");
+  const [{ session, role }, ws, actor] = await Promise.all([
+    requireStaff(),
+    getCurrentWorkspace(),
+    getActor(),
+  ]);
+  if (!ws) throw new Error("Forms are not enabled here.");
   const data = await formForBuilder(ws.id, formId);
-  if (!data || !mayEditForm(data.owner, { id: session.user.id, manager: isManager(role) }))
+  // Hiring's forms open with the `hiring` flag; the others with `forms_v2`.
+  const flag = data?.owner.type === "opportunity" ? "hiring" : "forms_v2";
+  if (!(await hasFlag(ws, flag))) throw new Error("Forms are not enabled here.");
+  const coordinates = (id: string) =>
+    !!actor && canOnOpportunity(actor, id, "opportunity.configure");
+  if (
+    !data ||
+    !mayEditForm(data.owner, { id: session.user.id, manager: isManager(role), coordinates })
+  )
     throw new Error("Form not found.");
   return { ws, session, data };
 }
