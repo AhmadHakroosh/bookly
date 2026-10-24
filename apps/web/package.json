@@ -50,7 +50,6 @@
     "lucide-react": "^1.49.0",
     "marked": "^18.0.14",
     "next": "catalog:",
-    "next-themes": "^0.4.6",
     "react": "catalog:",
     "react-day-picker": "^10.0.2",
     "react-dom": "catalog:",

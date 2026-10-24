@@ -136,3 +136,33 @@ export async function renderDoc(slug: string): Promise<{
     next: i >= 0 && i < pages.length - 1 ? pages[i + 1]! : null,
   };
 }
+
+/** One searchable place in the docs: a page, or a section of it. */
+export type DocsSearchEntry = { title: string; page: string; href: string };
+
+/** Every doc page and its h2/h3 sections, for the docs search on the Resources page. */
+export async function docsSearchIndex(): Promise<DocsSearchEntry[]> {
+  const dir = await docsDir();
+  if (!dir) return [];
+  const entries: DocsSearchEntry[] = [];
+  for (const d of await listDocs()) {
+    entries.push({ title: d.title, page: d.description, href: `/docs/${d.slug}` });
+    const md = await readFile(
+      /*turbopackIgnore: true*/ path.join(/*turbopackIgnore: true*/ dir, `${d.slug}.md`),
+      "utf8",
+    );
+    // Same ids as decorateHeadings gives the rendered page (first occurrence of each).
+    const seen = new Set<string>();
+    for (const m of md.replace(/^```[\s\S]*?^```/gm, "").matchAll(/^#{2,3}\s+(.+)$/gm)) {
+      const text = m[1]!
+        .replace(/\[([^\]]+)\]\([^)]*\)/g, "$1")
+        .replace(/[`*_]/g, "")
+        .trim();
+      const id = slugify(text);
+      if (!id || seen.has(id)) continue;
+      seen.add(id);
+      entries.push({ title: text, page: d.title, href: `/docs/${d.slug}#${id}` });
+    }
+  }
+  return entries;
+}

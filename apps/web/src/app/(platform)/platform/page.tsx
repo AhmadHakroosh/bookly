@@ -39,7 +39,9 @@ import {
 } from "./mocks";
 import { EmailMock, FollowUpMock, LiveTranscriptMock, RoutingMock, SeatsMock } from "./mocks-more";
 import { PlanGrid } from "./plan-card";
-import { JsonLd, organizationLd, softwareLd, websiteLd } from "./json-ld";
+import { faqLd, JsonLd, organizationLd, softwareLd, websiteLd } from "./json-ld";
+import { CtaBand, StraightAnswers } from "./_site/ui";
+import { HOME_FAQ } from "./_site/faq";
 import { pageMetadata, SITE } from "./site";
 import { Suspense } from "react";
 import { flagOnForEveryone } from "@/server/flags";
@@ -140,7 +142,7 @@ const COMPARE: [string, Cmp, Cmp][] = [
   ["Contact timeline built in, synced to HubSpot or Pipedrive", false, true],
   ["Branded emails in your name, with wording you control", "some", true],
   ["Export or delete everything yourself, no ticket needed", "some", true],
-  ["Self-host with every feature, AGPL-licensed", false, true],
+  ["Self-host the open-source core (AGPL-3.0), no plan limits", false, true],
 ];
 
 function Section({
@@ -247,6 +249,7 @@ export default function LandingPage() {
               priceYearly: p.priceYearly,
             })),
           ),
+          faqLd(HOME_FAQ),
         ]}
       />
       {/* Hero */}
@@ -586,11 +589,11 @@ open http://localhost:3002`}
             </pre>
           }
         >
-          Bookly is AGPL-licensed. Run it on your own server with Docker and keep every transcript
-          and contact in your own database, or let us host it and get the same features with
-          backups, updates and support. Self-hosted installs get a notice when a new release is out
-          and never share usage data unless you opt in. Transcripts expire on the schedule you set,
-          attendees can delete theirs, and the AI parts are optional.
+          Bookly&apos;s core is AGPL-licensed. Run it on your own server with Docker and keep every
+          transcript and contact in your own database, or let us host it with backups, updates and
+          support. Self-hosted installs get a notice when a new release is out and never share usage
+          data unless you opt in. Transcripts expire on the schedule you set, attendees can delete
+          theirs, and the AI parts are optional.
         </Feature>
         <div className="mt-8 flex flex-wrap gap-3">
           <Button
@@ -629,37 +632,8 @@ open http://localhost:3002`}
         </p>
       </Section>
 
-      {/* Final CTA */}
-      <section className="relative overflow-hidden border-t">
-        <div
-          className="marketing-glow absolute inset-x-0 bottom-0 -z-10 h-full rotate-180"
-          aria-hidden
-        />
-        <div className="mx-auto max-w-6xl px-4 py-20 text-center md:py-28" data-reveal>
-          <h2 className="text-3xl font-semibold tracking-tight text-balance md:text-4xl">
-            Your next meeting could arrive with a briefing.
-          </h2>
-          <p className="mx-auto mt-4 max-w-xl text-muted-foreground">
-            Set up your booking page in two minutes. Connect your calendar. The rest starts working
-            on the first call.
-          </p>
-          <div className="mt-8 flex justify-center gap-3">
-            <Button size="lg" nativeButton={false} render={<Link href="/signup" />}>
-              Get started free
-              <ArrowRightIcon data-icon="inline-end" />
-            </Button>
-            <Button
-              size="lg"
-              variant="outline"
-              nativeButton={false}
-              className="bg-background"
-              render={<Link href="/contact" />}
-            >
-              Talk to us
-            </Button>
-          </div>
-        </div>
-      </section>
+      <StraightAnswers items={HOME_FAQ} />
+      <CtaBand />
     </div>
   );
 }

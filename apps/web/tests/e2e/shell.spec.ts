@@ -97,6 +97,18 @@ test("⌘K jumps to a page and finds a contact", async ({ page }) => {
   await expect(page.getByRole("heading", { name: CONTACT.name })).toBeVisible();
 });
 
+test("Create on Home opens the new task form", async ({ page }) => {
+  await page.goto("/admin");
+  await page.getByRole("button", { name: "Create" }).click();
+  await page.getByRole("menuitem", { name: "Task" }).click();
+  await expect(page).toHaveURL(/\/admin\/tasks\?new=1/);
+  const form = page.getByRole("dialog");
+  await expect(form.getByRole("heading", { name: /task/i })).toBeVisible();
+  // Closing forgets ?new=1, so a reload does not open the form again.
+  await page.keyboard.press("Escape");
+  await expect(page).toHaveURL(/\/admin\/tasks$/);
+});
+
 test("Help lists the documentation and the keyboard shortcuts", async ({ page }) => {
   await page.goto("/admin");
   await page.getByRole("button", { name: "Help" }).click();

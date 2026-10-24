@@ -137,6 +137,7 @@ async function TasksPage({ searchParams }: PageProps<"/admin/tasks">) {
               people={people.map((p) => ({ id: p.userId, name: p.displayName }))}
               canBoard={canBoard}
               canAssign={canAssign}
+              defaultOpen={one(sp.new) === "1"}
             />
           </>
         }

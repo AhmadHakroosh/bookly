@@ -20,8 +20,9 @@ sRGB → OKLab transform. Contrast is WCAG 2.x relative luminance.
 The marketing concepts render the orange slightly hotter (`#FC5014` on "Review & send"); treat
 that as rendering noise and use Bookly Orange everywhere.
 
-Dark mode was **retired** on 2026-10-25 (light only, as the concepts). These values are kept for
-reversed brand uses only (logo on dark, CTA bands), never as an app theme:
+Dark mode was **retired** on 2026-10-25 (light only, as the concepts) and its tokens were removed
+from `globals.css` (Phase 2.5). These values are a record only; a dark brand surface (logo on
+dark, CTA bands) uses `--ink`:
 
 | Name          | Hex       | OKLCH                     | Use                                    |
 | ------------- | --------- | ------------------------- | -------------------------------------- |

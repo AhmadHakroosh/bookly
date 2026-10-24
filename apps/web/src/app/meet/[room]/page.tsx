@@ -19,8 +19,8 @@ export const metadata: Metadata = { title: "Meeting", robots: { index: false, fo
 
 /**
  * Bookly video: Bookly's own call UI (see call.tsx) on the Daily room created for a booking.
- * Lives outside the public shell (no workspace header or footer), fills the viewport and is
- * always dark, like most call surfaces, using Bookly's dark theme tokens.
+ * Lives outside the public shell (no workspace header or footer) and fills the viewport. Light,
+ * like the rest of Bookly (mocks.png 04); the video tiles are dark because video is.
  */
 async function MeetPage({ params, searchParams }: PageProps<"/meet/[room]">) {
   const { room } = await params;
@@ -113,7 +113,7 @@ async function MeetPage({ params, searchParams }: PageProps<"/meet/[room]">) {
     console.error("[meet] token", e);
   }
   return (
-    <div className="dark flex h-dvh flex-col bg-background text-foreground" style={style}>
+    <div className="flex h-dvh flex-col bg-background text-foreground" style={style}>
       <header className="flex items-center justify-between gap-3 border-b px-4 py-2.5 text-sm">
         <span className="flex min-w-0 items-center gap-2.5">
           {brand.own ? (
@@ -167,9 +167,7 @@ async function MeetPage({ params, searchParams }: PageProps<"/meet/[room]">) {
 
 export default function MeetPageBoundary(props: PageProps<"/meet/[room]">) {
   return (
-    <Suspense
-      fallback={<div className="dark h-dvh bg-background" aria-busy aria-label="Loading" />}
-    >
+    <Suspense fallback={<div className="h-dvh bg-background" aria-busy aria-label="Loading" />}>
       <MeetPage {...props} />
     </Suspense>
   );

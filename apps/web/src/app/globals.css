@@ -3,6 +3,10 @@
 @import "shadcn/tailwind.css";
 @plugin "@tailwindcss/typography";
 
+/*
+ * Light only (founder, 2026-10-25). Nothing sets `.dark`, so a `dark:` utility never applies;
+ * the variant stays defined so one copied in from shadcn cannot follow the system setting.
+ */
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
@@ -105,9 +109,10 @@
   --success: oklch(0.5 0.12 150);
   --success-foreground: oklch(1 0 0);
   --success-muted: oklch(0.955 0.03 150);
-  --warning: oklch(0.52 0.11 75);
+  /* Warnings are Ember, as the concepts draw "Due today" and "Feedback missing" (4.92 on the tint). */
+  --warning: oklch(0.535 0.167 37.9);
   --warning-foreground: oklch(1 0 0);
-  --warning-muted: oklch(0.96 0.045 88);
+  --warning-muted: oklch(0.96 0.025 45);
   --info: oklch(0.5 0.13 250);
   --info-foreground: oklch(1 0 0);
   --info-muted: oklch(0.96 0.02 250);
@@ -127,57 +132,6 @@
   --sidebar-ring: oklch(0.651 0.183 38.6);
 }
 
-.dark {
-  /* Night page, Char cards, Bookly Orange lifted for text and fills (6.8:1 on Night). */
-  --brand: oklch(0.705 0.159 41.4);
-  --background: oklch(0.178 0.003 67.7);
-  --foreground: oklch(0.97 0.006 84.6);
-  --card: oklch(0.224 0.005 67.6);
-  --card-foreground: oklch(0.97 0.006 84.6);
-  --popover: oklch(0.224 0.005 67.6);
-  --popover-foreground: oklch(0.97 0.006 84.6);
-  --primary: oklch(0.705 0.159 41.4);
-  --primary-foreground: oklch(0.178 0.003 67.7);
-  /* Hover lifts the orange, so the dark label keeps (and gains) contrast. */
-  --primary-hover: oklch(0.77 0.14 43);
-  --secondary: oklch(0.27 0.006 70);
-  --secondary-foreground: oklch(0.97 0.006 84.6);
-  --muted: oklch(0.27 0.006 70);
-  --muted-foreground: oklch(0.72 0.008 80);
-  --accent: oklch(0.28 0.04 40);
-  --accent-foreground: oklch(0.705 0.159 41.4);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.705 0.159 41.4);
-  --ink: oklch(0.97 0.006 84.6);
-  --ink-foreground: oklch(0.178 0.003 67.7);
-  --apricot: oklch(0.34 0.06 55);
-  --reply: oklch(0.829 0.08 40.1);
-  --success: oklch(0.75 0.14 150);
-  --success-foreground: oklch(0.178 0.003 67.7);
-  --success-muted: oklch(0.27 0.04 150);
-  --warning: oklch(0.8 0.13 80);
-  --warning-foreground: oklch(0.178 0.003 67.7);
-  --warning-muted: oklch(0.28 0.045 80);
-  --info: oklch(0.72 0.11 250);
-  --info-foreground: oklch(0.178 0.003 67.7);
-  --info-muted: oklch(0.27 0.04 250);
-  --chart-1: oklch(0.705 0.159 41.4);
-  --chart-2: oklch(0.829 0.08 40.1);
-  --chart-3: oklch(0.97 0.006 84.6);
-  --chart-4: oklch(0.72 0.008 80);
-  --chart-5: oklch(0.34 0.06 55);
-  --sidebar: oklch(0.224 0.005 67.6);
-  --sidebar-foreground: oklch(0.97 0.006 84.6);
-  --sidebar-primary: oklch(0.705 0.159 41.4);
-  --sidebar-primary-foreground: oklch(0.178 0.003 67.7);
-  --sidebar-accent: oklch(0.28 0.04 40);
-  --sidebar-accent-foreground: oklch(0.705 0.159 41.4);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.705 0.159 41.4);
-}
-
 @layer base {
   * {
     @apply border-border outline-ring/50;
@@ -187,6 +141,7 @@
   }
   html {
     @apply font-sans;
+    color-scheme: light;
   }
   /*
    * Native selects: replace the platform arrow with one chevron that sits inside the padding
@@ -224,13 +179,6 @@
     background-size: 0.75rem;
     background-position: center;
     background-repeat: no-repeat;
-  }
-  .dark input[type="checkbox"] {
-    background-color: color-mix(in oklab, var(--input) 30%, transparent);
-  }
-  .dark input[type="checkbox"]:checked {
-    background-color: var(--primary);
-    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23171717' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'><path d='M20 6 9 17l-5-5'/></svg>");
   }
   input[type="checkbox"]:focus-visible {
     outline: none;
@@ -332,9 +280,6 @@
   --border: oklch(0.922 0 0);
   --input: oklch(0.922 0 0);
   --ring: oklch(0.708 0 0);
-}
-.force-light .dark\:prose-invert {
-  color: inherit;
 }
 
 /* Marketing site (platform host) */
