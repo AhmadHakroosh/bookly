@@ -34,7 +34,10 @@ function ChecklistRow({
 }) {
   const id = useId();
   return (
-    <div data-slot="checklist-row" className={cn("flex min-w-0 items-start gap-3 py-2.5", className)}>
+    <div
+      data-slot="checklist-row"
+      className={cn("flex min-w-0 items-start gap-3 py-2.5", className)}
+    >
       <Checkbox
         aria-labelledby={id}
         checked={checked}
