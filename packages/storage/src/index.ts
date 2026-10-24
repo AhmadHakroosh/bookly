@@ -228,3 +228,12 @@ export function getStorage(): StorageDriver {
 export function resetStorage() {
   driver = undefined;
 }
+
+export {
+  clamavScanner,
+  parseClamReply,
+  scanFile,
+  setScanner,
+  type ScanResult,
+  type Scanner,
+} from "./scan";

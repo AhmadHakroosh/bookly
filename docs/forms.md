@@ -23,7 +23,7 @@ A file question uploads straight from the browser while the person fills in the 
 
 - Public uploads are capped at **10 MB** per file, take only the types the question allows (and only types Bookly accepts at all), and are limited per visitor (20 per ten minutes) and per form (300 per hour). They count toward the workspace's storage.
 - Bookly checks the file's first bytes against its type; a file that is not what it says (an HTML page named `cv.pdf`) is deleted and refused.
-- Files are private and never appear in the drive. The host sees them on the booking page under "Their answers"; they open only for members of the workspace, and **always download** rather than open in the browser, since Bookly does not scan them for malware yet.
+- Files are private and never appear in the drive. The host sees them on the booking page under "Their answers"; they open only for members of the workspace. With a malware scanner configured (ClamAV on self-hosted installs, see [Self-hosting](self-hosting.md#scanning-files-people-send)), a file it flags is refused at upload and a clean file can be opened in the browser; unscanned files only ever download.
 - Files of a form that was never sent are deleted after 7 days, and the unsent draft after 30.
 
 The endpoints are `POST /api/forms/<formId>/uploads` (announce a file: question id, name, type, size; returns where to send it and the draft token), `PUT /api/forms/<formId>/uploads/<fileId>` (local driver only), `POST …/<fileId>/complete` and `DELETE …/<fileId>`, each with the token in `x-form-token`.

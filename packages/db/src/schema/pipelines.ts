@@ -1,6 +1,7 @@
 import { sql } from "drizzle-orm";
 import {
   boolean,
+  check,
   doublePrecision,
   index,
   integer,
@@ -94,6 +95,8 @@ export const pipelineStages = pgTable(
     color: text("color").notNull().default("#71717a"),
     /** Where new items land. Exactly one live entry stage per pipeline. */
     isEntry: boolean("is_entry").notNull().default(false),
+    /** This hold stage is the pipeline's Waitlist (hiring). At most one live per pipeline. */
+    isWaitlist: boolean("is_waitlist").notNull().default(false),
     settings: jsonb("settings").$type<StageSettings>().notNull().default({}),
     modules: jsonb("modules").$type<StageModules>().notNull().default({}),
     /** Archived stages keep their history; items are moved out first. */
@@ -109,6 +112,10 @@ export const pipelineStages = pgTable(
     uniqueIndex("pipeline_stages_entry_idx")
       .on(t.pipelineId)
       .where(sql`${t.isEntry} and ${t.archivedAt} is null`),
+    uniqueIndex("pipeline_stages_waitlist_idx")
+      .on(t.pipelineId)
+      .where(sql`${t.isWaitlist} and ${t.archivedAt} is null`),
+    check("pipeline_stages_waitlist_hold", sql`not ${t.isWaitlist} or ${t.category} = 'hold'`),
   ],
 );
 
