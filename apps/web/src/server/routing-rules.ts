@@ -4,13 +4,13 @@
  * evaluated by the forms engine (ADR 0004), the one evaluator shared with forms and stage rules.
  */
 import type { RoutingCondition, RoutingDestination, RoutingRule } from "@bookly/db/schema";
-import { conditionHolds as formConditionHolds } from "@bookly/forms";
+import { conditionHolds as formConditionHolds, type Answers } from "@bookly/forms";
 
-export function conditionHolds(c: RoutingCondition, answers: Record<string, string>): boolean {
+export function conditionHolds(c: RoutingCondition, answers: Answers): boolean {
   return formConditionHolds({ fieldId: c.questionId, op: c.op, value: c.value }, answers);
 }
 
-export function ruleMatches(rule: RoutingRule, answers: Record<string, string>): boolean {
+export function ruleMatches(rule: RoutingRule, answers: Answers): boolean {
   if (!rule.conditions.length) return true;
   return rule.match === "any"
     ? rule.conditions.some((c) => conditionHolds(c, answers))
@@ -19,7 +19,7 @@ export function ruleMatches(rule: RoutingRule, answers: Record<string, string>):
 
 export function routeAnswers(
   form: { rules: RoutingRule[]; fallback: RoutingDestination | null },
-  answers: Record<string, string>,
+  answers: Answers,
 ): RoutingDestination | null {
   for (const r of form.rules) if (ruleMatches(r, answers)) return r.destination;
   return form.fallback ?? null;

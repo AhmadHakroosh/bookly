@@ -27,6 +27,8 @@ import { getTranscript } from "@/server/transcripts";
 import { getProfileByUser, locationLabel } from "@/server/scheduling";
 import { requireStaff } from "@/server/session";
 import { getCurrentWorkspace } from "@/server/workspace";
+import { responseFiles } from "@/server/forms";
+import { fileUrl } from "@/lib/files";
 import { regenerateBrief } from "../scheduling-actions";
 import { sessionSummary } from "@/server/sessions";
 import { CheckIcon, ClockIcon, UsersIcon } from "lucide-react";
@@ -43,12 +45,13 @@ export async function BookingDetail({ id, inPane = false }: { id: string; inPane
   const et = b.eventTypeId
     ? await db().query.eventTypes.findFirst({ where: eq(schema.eventTypes.id, b.eventTypeId) })
     : null;
-  const [brief, tasks, timeline, transcript, recapRow] = await Promise.all([
+  const [brief, tasks, timeline, transcript, recapRow, sentFiles] = await Promise.all([
     briefForBooking(ws, b, et ?? null),
     listOpenTasks(ws.id, { bookingId: b.id }),
     b.contactId ? contactTimeline(b.contactId, 50) : Promise.resolve([]),
     b.transcriptStatus ? getTranscript(b.id) : Promise.resolve(null),
     getRecap(b.id),
+    responseFiles(ws.id, b.id),
   ]);
   const lastCapture = timeline.find((e) => e.type === "capture" && e.bookingId === b.id);
   const recapDraft = recapOf(recapRow)?.followUp ?? null;
@@ -239,7 +242,7 @@ export async function BookingDetail({ id, inPane = false }: { id: string; inPane
           }
         />
       )}
-      {Object.keys(b.answers).length > 0 && (
+      {(Object.keys(b.answers).length > 0 || sentFiles.length > 0) && (
         <section className="rounded-xl border p-5 text-sm">
           <h2 className="text-base font-semibold tracking-tight">Their answers</h2>
           <dl className="mt-2 space-y-1">
@@ -252,6 +255,20 @@ export async function BookingDetail({ id, inPane = false }: { id: string; inPane
               ) : null,
             )}
           </dl>
+          {sentFiles.length > 0 && (
+            <ul className="mt-2 space-y-1" aria-label="Files they sent">
+              {sentFiles.map((f) => (
+                <li key={f.id}>
+                  <a href={fileUrl(f.id)} className="underline underline-offset-2">
+                    {f.name}
+                  </a>{" "}
+                  <span className="text-muted-foreground">
+                    ({Math.max(1, Math.round(f.size / 1024))} KB)
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
           {b.notes && <p className="mt-2 text-muted-foreground">Note: {b.notes}</p>}
         </section>
       )}

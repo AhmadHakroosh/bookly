@@ -513,6 +513,8 @@ export async function saveEventType(_prev: EventTypeSaveState, formData: FormDat
     recurEnabled: formData.get("recurEnabled") ? "on" : "off",
   });
   const hostUserIds = formData.getAll("hostUserIds").map(String).slice(0, 20);
+  // Behind forms_v2 the form builder owns the questions and the editor posts none: keep them.
+  const builderOwnsQuestions = !formData.has("questionsJson") && !formData.has("questions");
   if (!parsed.success)
     return { error: parsed.error.issues[0]?.message ?? "Please check the form." };
   const d = parsed.data;
@@ -574,7 +576,11 @@ export async function saveEventType(_prev: EventTypeSaveState, formData: FormDat
     locations,
     color: d.color,
     scheduleId: d.scheduleId || existing.scheduleId,
-    questions: d.questionsJson ? parseQuestionsJson(d.questionsJson) : parseQuestions(d.questions),
+    questions: builderOwnsQuestions
+      ? existing.questions
+      : d.questionsJson
+        ? parseQuestionsJson(d.questionsJson)
+        : parseQuestions(d.questions),
     reminders: parseReminders(d.reminders),
     followUp: {
       enabled: d.followUpEnabled === "on",
@@ -599,14 +605,15 @@ export async function saveEventType(_prev: EventTypeSaveState, formData: FormDat
   };
   await db().update(schema.eventTypes).set(patch).where(eq(schema.eventTypes.id, d.id));
   // The same questions as a versioned form (ADR 0004); a new version only when they changed.
-  await syncInlineForm({
-    workspaceId: ws.id,
-    purpose: "booking",
-    name: d.title,
-    owner: { table: "event_types", id: d.id, formId: existing.formId },
-    questions: patch.questions,
-    userId: c.session.user.id,
-  });
+  if (!builderOwnsQuestions)
+    await syncInlineForm({
+      workspaceId: ws.id,
+      purpose: "booking",
+      name: d.title,
+      owner: { table: "event_types", id: d.id, formId: existing.formId },
+      questions: patch.questions,
+      userId: c.session.user.id,
+    });
   await audit({
     action: "event_type.updated",
     target: { type: "event_type", id: d.id, label: d.title },

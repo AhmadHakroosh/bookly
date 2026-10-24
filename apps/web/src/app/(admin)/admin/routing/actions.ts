@@ -61,6 +61,7 @@ export async function saveRoutingForm(
     ...Object.fromEntries(formData),
     active: formData.get("active") ? "on" : "off",
   });
+  const builderOwnsQuestions = !formData.has("questionsJson");
   if (!parsed.success)
     return { error: parsed.error.issues[0]?.message ?? "Please check the form." };
   const d = parsed.data;
@@ -87,21 +88,23 @@ export async function saveRoutingForm(
     name: d.name,
     slug,
     description: d.description || null,
-    questions: parseQuestionsJson(d.questionsJson),
+    // Behind forms_v2 the form builder owns the questions and the editor posts none: keep them.
+    questions: builderOwnsQuestions ? existing.questions : parseQuestionsJson(d.questionsJson),
     rules: parseRulesJson(d.rulesJson, known),
     fallback,
     active: d.active === "on",
   };
   await db().update(schema.routingForms).set(patch).where(eq(schema.routingForms.id, d.id));
   // The same questions as a versioned form (ADR 0004); a new version only when they changed.
-  await syncInlineForm({
-    workspaceId: ws.id,
-    purpose: "routing",
-    name: d.name,
-    owner: { table: "routing_forms", id: d.id, formId: existing.formId },
-    questions: patch.questions,
-    userId: session.user.id,
-  });
+  if (!builderOwnsQuestions)
+    await syncInlineForm({
+      workspaceId: ws.id,
+      purpose: "routing",
+      name: d.name,
+      owner: { table: "routing_forms", id: d.id, formId: existing.formId },
+      questions: patch.questions,
+      userId: session.user.id,
+    });
   await audit({
     action: "routing_form.updated",
     target: { type: "routing_form", id: d.id, label: d.name },

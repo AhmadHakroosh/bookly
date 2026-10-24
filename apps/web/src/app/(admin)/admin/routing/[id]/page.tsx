@@ -1,6 +1,7 @@
 import { RoutingEditorSkeleton } from "@/components/skeletons/pages";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
+import { builderSummary } from "@/server/forms";
 import { getRoutingFormById } from "@/server/routing";
 import { listAllEventTypes, listProfiles } from "@/server/scheduling";
 import { requireStaff } from "@/server/session";
@@ -14,11 +15,16 @@ async function EditRoutingPage({ params }: PageProps<"/admin/routing/[id]">) {
   if (!ws) return null;
   const form = await getRoutingFormById(ws.id, id);
   if (!form) notFound();
-  const [eventTypes, profiles] = await Promise.all([listAllEventTypes(ws.id), listProfiles(ws.id)]);
+  const [eventTypes, profiles, formBuilder] = await Promise.all([
+    listAllEventTypes(ws.id),
+    listProfiles(ws.id),
+    builderSummary(ws, form.formId),
+  ]);
   const names = new Map(profiles.map((p) => [p.userId, p.displayName]));
   return (
     <RoutingFormEditor
       form={form}
+      formBuilder={formBuilder}
       eventTypes={eventTypes
         .filter((e) => e.active)
         .map((e) => ({ id: e.id, label: `${e.title} · ${names.get(e.userId) ?? ""}` }))}

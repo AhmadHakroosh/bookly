@@ -14,6 +14,7 @@ import {
 } from "@/server/scheduling";
 import { isManager, requireStaff } from "@/server/session";
 import { getCurrentWorkspace } from "@/server/workspace";
+import { builderSummary } from "@/server/forms";
 import { EventTypeForm } from "./event-type-form";
 
 export const metadata = { title: "Edit event type" };
@@ -27,17 +28,19 @@ async function EditEventTypePage({ params }: PageProps<"/admin/event-types/[id]"
   if (!ws) return null;
   const et = await getEventTypeById(ws.id, id);
   if (!et || (!isManager(role) && et.userId !== session.user.id)) notFound();
-  const [schedules, profile, avail, profiles] = await Promise.all([
+  const [schedules, profile, avail, profiles, formBuilder] = await Promise.all([
     listSchedules(ws.id, et.userId),
     getProfileByUser(ws.id, session.user.id),
     conferencingAvailability(et.userId),
     listProfiles(ws.id),
+    builderSummary(ws, et.formId),
   ]);
   const teammates = profiles
     .filter((p) => p.userId !== et.userId)
     .map((p) => ({ userId: p.userId, name: p.displayName }));
   return (
     <EventTypeForm
+      formBuilder={formBuilder}
       paymentsReady={paymentsReady(ws)}
       paymentsHint={paymentsHint(ws)}
       notetaker={notetakerConfigured()}

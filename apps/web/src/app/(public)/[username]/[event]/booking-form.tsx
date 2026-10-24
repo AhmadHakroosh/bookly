@@ -2,6 +2,8 @@
 
 import { useActionState, useState } from "react";
 import type { EventQuestion } from "@bookly/db/schema";
+import type { FormSchema } from "@bookly/forms";
+import { FormFields } from "@/components/forms/form-fields";
 import { countryOptions } from "@/lib/phone";
 import { book, type BookState } from "./actions";
 import { Dropdown } from "@/components/dropdown";
@@ -13,6 +15,8 @@ type Props = {
   slot: string;
   tz: string;
   questions: EventQuestion[];
+  /** The published form, rendered natively behind `forms_v2` (then `questions` is empty). */
+  form?: { formId: string; schema: FormSchema } | null;
   reschedule?: string;
   defaults?: { name?: string; email?: string };
   paid?: boolean;
@@ -46,6 +50,7 @@ export function BookingForm({
   slot,
   tz,
   questions,
+  form,
   reschedule,
   defaults,
   paid = false,
@@ -196,6 +201,9 @@ export function BookingForm({
           className={field}
         />
       </label>
+      {form && (
+        <FormFields formId={form.formId} schema={form.schema} toolPrefix="The host's question" />
+      )}
       {questions.map((q) => (
         <label key={q.id} className="block text-sm">
           <span className="mb-1 block font-medium">

@@ -15,6 +15,7 @@ import { deleteEventType, saveEventType, type EventTypeSaveState } from "../../s
 import { QuestionBuilder } from "./question-builder";
 import { LocationsEditor, type ConferencingReady } from "./locations-editor";
 import { Dropdown } from "@/components/dropdown";
+import { FormBuilderLink } from "@/components/forms/builder-link";
 import { ColorPicker } from "@/components/color-picker";
 import { NumberField } from "@/components/number-field";
 
@@ -121,6 +122,7 @@ export function EventTypeForm({
   paymentsHint = "",
   notetaker = false,
   teammates,
+  formBuilder,
 }: {
   initial: Values;
   schedules: { id: string; name: string; isDefault?: boolean }[];
@@ -132,6 +134,11 @@ export function EventTypeForm({
   /** A notetaker is configured, so Meet, Teams and Zoom calls can be transcribed too. */
   notetaker?: boolean;
   teammates: { userId: string; name: string }[];
+  /** Behind `forms_v2` the form builder owns the questions: a summary and a link instead. */
+  formBuilder?: {
+    formId: string | null;
+    questions: { label: string; kind: string; conditional: boolean }[];
+  } | null;
 }) {
   const [state, action] = useActionState(saveEventType, {} as EventTypeSaveState);
   const [locs, setLocs] = useState<EventLocation[]>(initial.locations);
@@ -427,7 +434,15 @@ export function EventTypeForm({
           </fieldset>
           <Field>
             <FieldLabel>Booking questions</FieldLabel>
-            <QuestionBuilder initial={initial.questionsList} />
+            {formBuilder ? (
+              <FormBuilderLink
+                owner={{ type: "event_type", id: initial.id }}
+                formId={formBuilder.formId}
+                questions={formBuilder.questions}
+              />
+            ) : (
+              <QuestionBuilder initial={initial.questionsList} />
+            )}
           </Field>
         </Section>
 

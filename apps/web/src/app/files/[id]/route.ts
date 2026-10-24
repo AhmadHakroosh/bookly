@@ -18,7 +18,9 @@ export async function GET(req: Request, ctx: RouteContext<"/files/[id]">) {
   if (!file || file.status !== "ready" || file.deletedAt)
     return new Response("Not found", { status: 404 });
   // Only images and PDFs open in the browser (unless `?download=1`); anything else downloads.
-  const forceDownload = new URL(req.url).searchParams.get("download") === "1";
+  // Files people sent through a public form always download: nothing has scanned them.
+  const forceDownload =
+    new URL(req.url).searchParams.get("download") === "1" || file.ownerType === "form_response";
   const inline = !forceDownload && (file.visibility === "public" || PREVIEWABLE.has(file.mime));
   const disposition = `${inline ? "inline" : "attachment"}; filename="${file.name.replace(/["\r\n]/g, "")}"`;
 

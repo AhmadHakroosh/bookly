@@ -23,7 +23,7 @@ export type FileStatus = "pending" | "ready";
  */
 export type FileSpace = "personal" | "team" | "contact";
 /** How a drive file arrived: uploaded by a member, or received from a contact. */
-export type FileSource = "upload" | "email" | "message" | "booking" | "task";
+export type FileSource = "upload" | "email" | "message" | "booking" | "task" | "form";
 
 /** A folder in My files (personal) or the team space; folders nest through `parentId`. */
 export const folders = pgTable(

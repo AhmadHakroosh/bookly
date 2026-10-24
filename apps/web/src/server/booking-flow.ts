@@ -6,6 +6,7 @@ import { and, asc, eq, gt, inArray, ne, schema } from "@bookly/db";
 import type { Booking, EventType, Workspace } from "@bookly/db/schema";
 import { sendEmail } from "@bookly/email";
 import { db } from "@/lib/db";
+import { labelAnswers, type Answers, type FormSchema } from "@bookly/forms";
 import { formQuestions, recordResponse } from "./forms";
 import {
   attendeeConfirmation,
@@ -50,6 +51,12 @@ export type BookingInput = {
   phone?: string | null;
   notes?: string | null;
   answers: Record<string, string>;
+  /**
+   * Behind `forms_v2`: the published form the answers were checked against (`answers` is then
+   * its plain-text projection), the typed answers for the form response, and the draft token
+   * its uploads went into.
+   */
+  form?: { schema: FormSchema; answers: Answers; token: string | null };
   rescheduleToken?: string | null;
   /** Existing customers may use focus blocks and exceed the weekly budget. */
   priority?: boolean;
@@ -83,6 +90,12 @@ export const attendeeParty = (b: Pick<Booking, "attendeeName" | "attendeeEmail" 
   { name: b.attendeeName, email: b.attendeeEmail },
   ...b.guests.map((email) => ({ name: email, email })),
 ];
+
+/** The answers by question, from the form when the booking used one. */
+const labelled = (eventType: EventType, input: BookingInput) =>
+  input.form
+    ? labelAnswers(input.form.schema, input.answers)
+    : labelledAnswers(eventType, input.answers);
 
 /** Booking answers keyed by the question's label, for timelines and briefs. */
 function labelledAnswers(eventType: EventType, answers: Record<string, string>) {
@@ -295,10 +308,12 @@ export async function createBooking(
   eventType: EventType,
   input: BookingInput,
 ): Promise<BookingResult> {
-  for (const q of await formQuestions(workspace, eventType)) {
-    if (q.required && !input.answers[q.id]?.trim())
-      throw new BookingError(`Please answer: ${q.label}`);
-  }
+  // A form's answers were validated against it already (hidden questions are not required).
+  if (!input.form)
+    for (const q of await formQuestions(workspace, eventType)) {
+      if (q.required && !input.answers[q.id]?.trim())
+        throw new BookingError(`Please answer: ${q.label}`);
+    }
   if (isBlocked(input.email, workspace.settings.blockedEmails as string[] | undefined))
     throw new BookingError("Bookings from this email address are not accepted.");
   const guests = guestList(input.guests, eventType, input.email);
@@ -415,7 +430,8 @@ export async function createBooking(
     await recordResponse({
       ws: workspace,
       formId: eventType.formId,
-      answers: input.answers,
+      answers: input.form?.answers ?? input.answers,
+      token: input.form?.token,
       bookingId: first.id,
     });
 
@@ -426,7 +442,7 @@ export async function createBooking(
       first,
       "booked",
       `Started paid booking of ${eventType.title} for ${fmtDateTime(first.startAt, first.timezone)}`,
-      { answers: labelledAnswers(eventType, input.answers), awaitingPayment: true },
+      { answers: labelled(eventType, input), awaitingPayment: true },
     );
     return { ...first, skipped };
   }
@@ -436,7 +452,7 @@ export async function createBooking(
     rescheduledFromId ? "rescheduled" : "booked",
     `${rescheduledFromId ? "Rescheduled" : "Booked"} ${eventType.title}${rows.length > 1 ? ` (${rows.length} sessions)` : ""} for ${fmtDateTime(first.startAt, first.timezone)}`,
     {
-      answers: labelledAnswers(eventType, input.answers),
+      answers: labelled(eventType, input),
       notes: input.notes?.trim() || null,
       sessions: rows.length,
     },
