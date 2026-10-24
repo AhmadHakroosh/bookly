@@ -236,6 +236,17 @@ everywhere, resolved in `src/proxy.ts`; `XPage` + `XPageBoundary`; `"use cache"`
 `refreshWorkspace` in actions; `audit()` after every write; vendors behind interfaces; flags via
 `hasFlag`; every user-visible change updates `docs/` and `CHANGELOG.md`.
 
+### Delivery: realtime first (decided 2026-10-24)
+
+Notifications, messages and emails reach people over a **websocket first**. Email, desktop push,
+SMS/WhatsApp and other channels are the **fallback**, used only when the recipient is not
+connected. Every delivery goes through one presence-aware layer (`notify()` and the message and
+thread services); features never email a member or a guest directly when a live channel could
+carry it. Self-host keeps working with `docker compose up` and no third-party accounts (a
+self-hosted websocket server and presence by default; cloud may use a provider behind an
+interface). Design: ADR 0007 (to write); until it lands, the bell and Messages run on the
+Server-Sent Events stream.
+
 ### Versioning
 
 - **v2 ships as Bookly 1.0.0** (decided 2026-10-24). "v2" is the project and branch name; the

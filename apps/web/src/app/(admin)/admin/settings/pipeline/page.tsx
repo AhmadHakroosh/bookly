@@ -10,6 +10,12 @@ import { SubmitButton } from "@/components/submit-button";
 import { Input } from "@/components/ui/input";
 import { hasFlag, inBeta } from "@/server/flags";
 import { clientStages, stageCounts } from "@/server/pipelines";
+import { describeAction, toEditor } from "@/server/pipelines/editor-text";
+import { readModules } from "@/server/pipelines/modules";
+import { stageRulesOf } from "@/server/pipelines/rules";
+import { listRoutingForms } from "@/server/routing";
+import { listAllEventTypes } from "@/server/scheduling";
+import { StageAutomations, type AutomationRow } from "./automations";
 import { requireManager } from "@/server/session";
 import { getCurrentWorkspace } from "@/server/workspace";
 import { addStageAction, archiveStageAction, moveStageAction, saveStageAction } from "./actions";
@@ -22,11 +28,13 @@ const categories = STAGE_CATEGORIES.map((c) => ({ value: c, label: CATEGORY_LABE
 async function PipelinePage({ searchParams }: PageProps<"/admin/settings/pipeline">) {
   const [, ws, sp] = await Promise.all([requireManager(), getCurrentWorkspace(), searchParams]);
   if (!ws || !(await hasFlag(ws, "pipelines"))) notFound();
-  const [stages, counts, beta] = await Promise.all([
+  const [stages, counts, beta, automationsOn] = await Promise.all([
     clientStages(ws.id),
     stageCounts(ws.id),
     inBeta(ws, "pipelines"),
+    hasFlag(ws, "stage_rules"),
   ]);
+  const automations = automationsOn ? await automationsFor(ws.id, stages) : null;
   const error = typeof sp.error === "string" ? sp.error : null;
   return (
     <div className="max-w-3xl space-y-6">
@@ -141,6 +149,15 @@ async function PipelinePage({ searchParams }: PageProps<"/admin/settings/pipelin
                   </form>
                 )}
               </div>
+              {automations && (
+                <StageAutomations
+                  stageId={s.id}
+                  stageName={s.name}
+                  stageKey={s.key}
+                  rules={automations.rows.get(s.id) ?? []}
+                  options={automations.options}
+                />
+              )}
             </li>
           );
         })}
@@ -168,6 +185,46 @@ async function PipelinePage({ searchParams }: PageProps<"/admin/settings/pipelin
       </form>
     </div>
   );
+}
+
+/** Every stage's automations as the editor shows them, and what they can point at. */
+async function automationsFor(
+  workspaceId: string,
+  stages: Awaited<ReturnType<typeof clientStages>>,
+) {
+  const [perStage, eventTypes, routingForms] = await Promise.all([
+    Promise.all(stages.map((s) => stageRulesOf(workspaceId, s.id))),
+    listAllEventTypes(workspaceId),
+    listRoutingForms(workspaceId),
+  ]);
+  const options = {
+    stages: stages.map((s) => ({ value: s.key, label: s.name })),
+    eventTypes: eventTypes.filter((e) => e.active).map((e) => ({ value: e.id, label: e.title })),
+    forms: routingForms.filter((f) => f.formId).map((f) => ({ value: f.formId!, label: f.name })),
+  };
+  const names = {
+    stages: new Map(options.stages.map((o) => [o.value, o.label])),
+    eventTypes: new Map(options.eventTypes.map((o) => [o.value, o.label])),
+    forms: new Map(options.forms.map((o) => [o.value, o.label])),
+  };
+  const rows = new Map<string, AutomationRow[]>();
+  stages.forEach((stage, i) => {
+    const { modules } = readModules(stage.modules);
+    rows.set(
+      stage.id,
+      perStage[i]!.map((r) => {
+        const editor = toEditor(r, modules);
+        return {
+          id: r.id,
+          active: r.active,
+          editor,
+          summary: editor.actions.map((a) => describeAction(a, names)),
+          runs: r.runs,
+        };
+      }),
+    );
+  });
+  return { rows, options };
 }
 
 export default function PipelinePageBoundary(props: PageProps<"/admin/settings/pipeline">) {

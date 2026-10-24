@@ -211,6 +211,11 @@ export async function sendDueReminders(
   await sweepAuditLog(now).catch((e) => console.error("[audit] retention failed", e));
   await sweepPendingFiles(now).catch((e) => console.error("[files] sweep failed", e));
   await sweepFormDrafts(now).catch((e) => console.error("[forms] draft sweep failed", e));
+  await (
+    await import("./pipelines/rules")
+  )
+    .runDueRules(now)
+    .catch((e) => console.error("[rules] sweep failed", e));
   await pruneNotifications(now).catch((e) => console.error("[notifications] prune failed", e));
   // Realtime first (ADR 0007): held-back channels whose job was lost or never scheduled (inline).
   await sendDueFallbacks(now).catch((e) => console.error("[notifications] fallbacks failed", e));

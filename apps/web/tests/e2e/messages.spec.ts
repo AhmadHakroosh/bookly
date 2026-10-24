@@ -1,7 +1,7 @@
 import type { Server } from "node:http";
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
-import { bookFirstSlot, STORAGE } from "./helpers";
+import { bookFirstSlot, settled, STORAGE } from "./helpers";
 import { replyAddress, startFakeResend, svixHeaders } from "./resend-fake";
 
 /*
@@ -162,7 +162,8 @@ test("team threads: start one, post, close and reopen", async ({ page }) => {
   await posted;
   await expect(pane(page).getByText("Second thought: ship Monday.")).toBeVisible();
 
-  // The conversation pane has no accessibility violations.
+  // The conversation pane has no accessibility violations (once the "posted" toast is in).
+  await settled(page);
   const axe = await new AxeBuilder({ page })
     .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"])
     .analyze();

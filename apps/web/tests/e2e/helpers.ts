@@ -52,3 +52,18 @@ export async function bookFirstSlot(
   await expect(page.getByRole("heading", { name: "You're booked" })).toBeVisible();
   return page.url();
 }
+
+/**
+ * Waits for running CSS animations and transitions to end (endless ones, like spinners, are
+ * ignored), so an axe scan measures final colours: a toast sliding in or a button fading back
+ * from disabled reads as low contrast half-way.
+ */
+export async function settled(page: Page) {
+  await page.waitForFunction(() =>
+    document
+      .getAnimations()
+      .every(
+        (a) => a.playState !== "running" || a.effect?.getComputedTiming().iterations === Infinity,
+      ),
+  );
+}

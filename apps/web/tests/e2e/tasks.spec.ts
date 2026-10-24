@@ -13,6 +13,8 @@ const card = (where: Locator, title: string) =>
 async function drag(page: Page, from: Locator, to: Locator) {
   // The board re-renders when fresh data arrives; measure once it has settled.
   await page.waitForLoadState("networkidle");
+  // A long column puts the card below the fold: the pointer can only reach what is on screen.
+  await from.scrollIntoViewIfNeeded();
   await expect(from).toBeVisible();
   const a = (await from.boundingBox())!;
   const b = (await to.boundingBox())!;

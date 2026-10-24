@@ -51,21 +51,22 @@ is large text (≥ 24 px regular or ≥ 18.66 px bold needs 3:1).
 
 ## Mapping onto today's variables (`apps/web/src/app/globals.css`)
 
-| Variable                                    | Today (light)         | v2 light                                        | v2 dark                  |
-| ------------------------------------------- | --------------------- | ----------------------------------------------- | ------------------------ |
-| `--brand`                                   | `oklch(0.72 0.14 55)` | Bookly Orange                                   | Orange lifted            |
-| `--background`                              | white                 | Paper                                           | Night                    |
-| `--foreground`                              | `oklch(0.145 0 0)`    | Ink                                             | `oklch(0.97 0.006 84.6)` |
-| `--card`, `--popover`                       | white                 | white                                           | Char                     |
-| `--primary`                                 | near-black            | Ember                                           | Orange lifted            |
-| `--primary-foreground`                      | near-white            | white                                           | Night                    |
-| `--accent`                                  | `oklch(0.97 0 0)`     | Peach                                           | `oklch(0.28 0.04 40)`    |
-| `--accent-foreground`                       | near-black            | Ember                                           | Orange lifted            |
-| `--ring`                                    | grey                  | Bookly Orange                                   | Orange lifted            |
-| `--sidebar`                                 | `oklch(0.985 0 0)`    | Sand                                            | Char                     |
-| `--sidebar-primary`                         | near-black            | Ember                                           | Orange lifted            |
-| `--sidebar-accent`                          | grey                  | Peach                                           | as `--accent`            |
-| neutrals (`--muted`, `--border`, `--input`) | pure grey (chroma 0)  | same lightness, hue ≈ 85, chroma ≤ 0.008 (warm) | same                     |
+| Variable                                    | Today (light)         | v2 light                                        | v2 dark                                      |
+| ------------------------------------------- | --------------------- | ----------------------------------------------- | -------------------------------------------- |
+| `--brand`                                   | `oklch(0.72 0.14 55)` | Bookly Orange                                   | Orange lifted                                |
+| `--background`                              | white                 | Paper                                           | Night                                        |
+| `--foreground`                              | `oklch(0.145 0 0)`    | Ink                                             | `oklch(0.97 0.006 84.6)`                     |
+| `--card`, `--popover`                       | white                 | white                                           | Char                                         |
+| `--primary`                                 | near-black            | Ember                                           | Orange lifted                                |
+| `--primary-foreground`                      | near-white            | white                                           | Night                                        |
+| `--primary-hover`                           | (none)                | Ember darkened, `oklch(0.48 0.155 37.9)`        | Orange lifted further, `oklch(0.77 0.14 43)` |
+| `--accent`                                  | `oklch(0.97 0 0)`     | Peach                                           | `oklch(0.28 0.04 40)`                        |
+| `--accent-foreground`                       | near-black            | Ember                                           | Orange lifted                                |
+| `--ring`                                    | grey                  | Bookly Orange                                   | Orange lifted                                |
+| `--sidebar`                                 | `oklch(0.985 0 0)`    | Sand                                            | Char                                         |
+| `--sidebar-primary`                         | near-black            | Ember                                           | Orange lifted                                |
+| `--sidebar-accent`                          | grey                  | Peach                                           | as `--accent`                                |
+| neutrals (`--muted`, `--border`, `--input`) | pure grey (chroma 0)  | same lightness, hue ≈ 85, chroma ≤ 0.008 (warm) | same                                         |
 
 Add tokens that do not exist yet: `--ink` (+ ink Button variant: Ink background, white text;
 inverts in dark mode), `--apricot`, `--reply`, and semantic `--success`, `--warning`, `--info`

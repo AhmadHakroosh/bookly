@@ -96,8 +96,8 @@ as its queue and scheduler. Set `QSTASH_TOKEN`, `QSTASH_CURRENT_SIGNING_KEY` and
   messages and the old ones find nothing due.
 - Webhook deliveries, transcript download + recap (`capture.process`) and CRM sync/notes run
   as jobs with retries; failures beyond the retries land in QStash's dead-letter queue.
-- Three schedules are registered on boot with fixed ids (`bookly-booking-reminders` every
-  5 min, `bookly-webhooks-retry` every 5 min, `bookly-calendar-sync` every 6 h, `bookly-feeds-sync` every 15 min). They are
+- Five schedules are registered on boot with fixed ids (`bookly-booking-reminders` every
+  5 min, `bookly-webhooks-retry` every 5 min, `bookly-calendar-sync` every 6 h, `bookly-feeds-sync` every 15 min, `bookly-pipeline-rules` every 5 min). They are
   idempotent; Console → Health lists them and the dead-letter count.
 
 `/api/cron/tick` with `CRON_SECRET` still works as a manual fallback. Self-hosted installs

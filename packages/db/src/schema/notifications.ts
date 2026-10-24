@@ -26,7 +26,8 @@ export type NotificationKind =
   | "task.mentioned"
   | "task.overdue"
   | "message.posted"
-  | "message.mentioned";
+  | "message.mentioned"
+  | "automation";
 
 /** A channel `notify()` used for a notification, besides the bell (ADR 0007). */
 export type DeliveryChannel = "socket" | "push" | "email" | "text";

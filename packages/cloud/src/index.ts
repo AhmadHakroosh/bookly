@@ -17,6 +17,11 @@ export type Limits = {
    * hiring ships; until then the included number is the limit).
    */
   collaborators: number | null;
+  /**
+   * Automations on the client pipeline (stage rules, ADR 0002): 3 on Free, unlimited on Pro and
+   * Team. Rules on hiring pipelines are free on every plan and never counted.
+   */
+  stageRules: number | null;
   /** Connected calendar / conferencing accounts per member. */
   integrations: number | null;
   /** Verified custom domains. */
@@ -108,6 +113,7 @@ export const PLANS: Record<PlanId, Plan> = {
       eventTypes: 2,
       members: 1,
       collaborators: 2,
+      stageRules: 3,
       integrations: 1,
       domains: 0,
       bookingsPerMonth: 100,
@@ -160,6 +166,7 @@ export const PLANS: Record<PlanId, Plan> = {
       eventTypes: null,
       members: 1,
       collaborators: 5,
+      stageRules: null,
       integrations: null,
       domains: 1,
       bookingsPerMonth: null,
@@ -217,6 +224,7 @@ export const PLANS: Record<PlanId, Plan> = {
       eventTypes: null,
       members: 25,
       collaborators: 5,
+      stageRules: null,
       integrations: null,
       domains: 3,
       bookingsPerMonth: null,
@@ -270,6 +278,7 @@ export const UNLIMITED: Limits = {
   eventTypes: null,
   members: null,
   collaborators: null,
+  stageRules: null,
   integrations: null,
   domains: null,
   bookingsPerMonth: null,
@@ -380,7 +389,7 @@ export function limitsFor(plan: string, status?: string | null): Limits {
 }
 
 export type CountableLimit =
-  "eventTypes" | "members" | "collaborators" | "integrations" | "domains";
+  "eventTypes" | "members" | "collaborators" | "stageRules" | "integrations" | "domains";
 export type RateLimitKey = "bookingsPerMonth" | "apiRequestsPerMinute";
 export type FeatureLimit =
   | "booklyVideo"
@@ -410,6 +419,7 @@ export const LIMIT_LABELS: Record<CountableLimit, string> = {
   eventTypes: "event types",
   members: "members",
   collaborators: "collaborators",
+  stageRules: "automations",
   integrations: "connected accounts",
   domains: "custom domains",
 };
