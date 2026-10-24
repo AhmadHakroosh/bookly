@@ -73,15 +73,15 @@ export function HandleField({
   return (
     <div
       className={cn(
-        "flex h-10 items-center rounded-lg border border-input bg-transparent transition-colors focus-within:border-ring focus-within:ring-3 focus-within:ring-ring/50 dark:bg-input/30",
-        invalid && "border-destructive ring-3 ring-destructive/20 dark:border-destructive/50",
+        "flex h-10 items-center rounded-lg border border-input bg-transparent transition-colors focus-within:border-ring focus-within:ring-3 focus-within:ring-ring/50",
+        invalid && "border-destructive ring-3 ring-destructive/20",
         className,
       )}
     >
       <Input
         {...input}
         aria-invalid={invalid || undefined}
-        className="h-full flex-1 rounded-none border-0 bg-transparent shadow-none focus-visible:ring-0 dark:bg-transparent"
+        className="h-full flex-1 rounded-none border-0 bg-transparent shadow-none focus-visible:ring-0"
       />
       {suffix && (
         <span className="shrink-0 pr-2.5 text-sm whitespace-nowrap text-muted-foreground">

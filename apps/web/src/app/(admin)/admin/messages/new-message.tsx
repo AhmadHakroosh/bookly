@@ -43,16 +43,28 @@ export function NewMessageButton({
   canTeam,
   teamPlan,
   people,
+  defaultOpen = false,
 }: {
   canGuest: boolean;
   canTeam: boolean;
   teamPlan: string;
   people: MentionPerson[];
+  /** Opened by `?new=1` (Create on Home). */
+  defaultOpen?: boolean;
 }) {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(defaultOpen);
+  const onOpenChange = (o: boolean) => {
+    setOpen(o);
+    // Closing forgets ?new=1, so a reload does not open the form again.
+    if (!o && new URL(location.href).searchParams.has("new")) {
+      const u = new URL(location.href);
+      u.searchParams.delete("new");
+      history.replaceState(null, "", u.pathname + u.search);
+    }
+  };
   const [tab, setTab] = useState<"guest" | "team">(canGuest ? "guest" : "team");
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogTrigger render={<Button />}>
         <PenSquareIcon data-icon="inline-start" />
         New message

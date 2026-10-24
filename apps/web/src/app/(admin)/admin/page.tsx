@@ -33,6 +33,7 @@ import { BetaBadge } from "@/components/beta-badge";
 import { hasFlag, inBeta } from "@/server/flags";
 import { lastHomeVisit } from "@/server/home";
 import { canGuest, canTeam } from "@/server/messages";
+import { CreateMenu } from "./create-menu";
 import { HomeCards } from "./home-cards";
 import { HomeVisit } from "./home-visit";
 import { hostConfirm, replyInstead, snoozeContact } from "./scheduling-actions";
@@ -133,17 +134,20 @@ async function AdminHome() {
           </>
         }
         actions={
-          profile && (
-            <Button
-              variant="outline"
-              nativeButton={false}
-              render={<a href={`/${profile.username}`} target="_blank" rel="noreferrer" />}
-            >
-              View booking page
-              <ExternalLinkIcon data-icon="inline-end" />
-              <span className="sr-only">(opens in a new tab)</span>
-            </Button>
-          )
+          <>
+            {profile && (
+              <Button
+                variant="outline"
+                nativeButton={false}
+                render={<a href={`/${profile.username}`} target="_blank" rel="noreferrer" />}
+              >
+                View booking page
+                <ExternalLinkIcon data-icon="inline-end" />
+                <span className="sr-only">(opens in a new tab)</span>
+              </Button>
+            )}
+            <CreateMenu tasks={taskBoard} messages={messages} />
+          </>
         }
       />
 

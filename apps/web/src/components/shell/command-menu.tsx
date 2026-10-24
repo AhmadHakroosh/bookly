@@ -208,7 +208,7 @@ export function CommandMenu({
         <SearchIcon className="size-[18px]" />
       </Button>
       <Dialog.Portal>
-        <Dialog.Backdrop className="fixed inset-0 z-50 bg-black/25 transition-opacity duration-150 data-ending-style:opacity-0 data-starting-style:opacity-0 motion-reduce:transition-none dark:bg-black/50" />
+        <Dialog.Backdrop className="fixed inset-0 z-50 bg-black/25 transition-opacity duration-150 data-ending-style:opacity-0 data-starting-style:opacity-0 motion-reduce:transition-none" />
         <Dialog.Viewport className="fixed inset-0 z-50 flex items-start justify-center px-3 pt-[12vh] pb-3">
           <Dialog.Popup
             aria-label="Search or jump"
