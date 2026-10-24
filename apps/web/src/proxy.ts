@@ -63,6 +63,11 @@ const MARKETING_PATHS = new Set([
   "changelog",
   "press",
   "og",
+  "product",
+  "solutions",
+  "trust",
+  "resources",
+  "compare",
 ]);
 /** Files served as-is from public/ and the app's icon and manifest routes. */
 const STATIC_FILES = new Set([

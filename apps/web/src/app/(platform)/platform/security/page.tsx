@@ -82,7 +82,7 @@ export default function SecurityPage() {
           Daily; nothing is sent when it is off or on an end-to-end encrypted call.
         </li>
       </ul>
-      <h2>Transcripts and consent</h2>
+      <h2 id="transcripts-and-consent">Transcripts and consent</h2>
       <ul>
         <li>
           Auto-capture is off by default. Hosts turn it on per event type as “ask” (guest chooses at
@@ -118,7 +118,7 @@ export default function SecurityPage() {
         time. See the <Link href="/privacy">privacy policy</Link> for details on what is stored and
         for how long.
       </p>
-      <h2>Reporting a vulnerability</h2>
+      <h2 id="reporting-a-vulnerability">Reporting a vulnerability</h2>
       <p>
         Email{" "}
         <a href={`mailto:${SITE.supportEmail}?subject=Security%20disclosure`}>
