@@ -1,7 +1,7 @@
 import "server-only";
 import { createHash, randomBytes } from "node:crypto";
 import { cacheLife, cacheTag } from "next/cache";
-import { and, desc, eq, exists, inArray, isNull, lt, notExists, or, schema, sql } from "@bookly/db";
+import { and, desc, eq, inArray, isNull, lt, notExists, schema, sql } from "@bookly/db";
 import type { EventQuestion, FormPurpose, Workspace } from "@bookly/db/schema";
 import {
   answersFromEntries,
@@ -207,29 +207,42 @@ export async function formOwner(workspaceId: string, formId: string): Promise<Fo
   ]);
   if (et) return { type: "event_type", id: et.id, label: et.title, userId: et.userId };
   if (rf) return { type: "routing_form", id: rf.id, label: rf.name };
-  const [opp] = await db()
-    .select({ id: schema.opportunities.id, title: schema.opportunities.title })
-    .from(schema.opportunities)
-    .where(
-      and(
-        eq(schema.opportunities.workspaceId, workspaceId),
-        or(
-          eq(schema.opportunities.formId, formId),
-          exists(
-            db()
-              .select({ id: schema.pipelineStages.id })
-              .from(schema.pipelineStages)
-              .where(
-                and(
-                  eq(schema.pipelineStages.pipelineId, schema.opportunities.pipelineId),
-                  sql`${schema.pipelineStages.modules} -> 'forms' -> 'forms' @> ${JSON.stringify([{ formId }])}::jsonb`,
-                ),
-              ),
+  // Hiring: the opportunity whose application form it is, else the one whose live stage uses
+  // it, for forms made for one opportunity only (shared forms stay with managers).
+  const opp =
+    (
+      await db()
+        .select({ id: schema.opportunities.id, title: schema.opportunities.title })
+        .from(schema.opportunities)
+        .where(
+          and(
+            eq(schema.opportunities.workspaceId, workspaceId),
+            eq(schema.opportunities.formId, formId),
           ),
-        ),
-      ),
-    )
-    .limit(1);
+        )
+        .limit(1)
+    )[0] ??
+    (
+      await db()
+        .select({ id: schema.opportunities.id, title: schema.opportunities.title })
+        .from(schema.opportunities)
+        .innerJoin(
+          schema.pipelineStages,
+          eq(schema.pipelineStages.pipelineId, schema.opportunities.pipelineId),
+        )
+        .innerJoin(schema.forms, eq(schema.forms.id, formId))
+        .where(
+          and(
+            eq(schema.opportunities.workspaceId, workspaceId),
+            eq(schema.forms.workspaceId, workspaceId),
+            eq(schema.forms.shared, false),
+            isNull(schema.pipelineStages.archivedAt),
+            sql`${schema.pipelineStages.modules} -> 'forms' -> 'forms' @> ${JSON.stringify([{ formId }])}::jsonb`,
+          ),
+        )
+        .orderBy(schema.opportunities.createdAt)
+        .limit(1)
+    )[0];
   if (opp) return { type: "opportunity", id: opp.id, label: opp.title };
   return { type: "none" };
 }

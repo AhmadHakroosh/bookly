@@ -49,7 +49,7 @@ async function HiringPage() {
           action={create}
         />
       ) : (
-        <ul className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        <ul className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
           {list.map((o) => {
             const s = opportunityStatus(o.status, o.opensAt);
             return (

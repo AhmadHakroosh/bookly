@@ -34,6 +34,9 @@ export type WorkspacePerson = {
 };
 export type PendingInvite = { id: string; email: string; role: OpportunityRole; sent: boolean };
 
+const ROW =
+  "grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-2 px-4 py-3 sm:grid-cols-[minmax(0,1fr)_10rem_8rem_2.5rem] sm:py-2";
+
 const ROLE_OPTIONS = (Object.keys(ROLE_LABELS) as OpportunityRole[]).map((r) => ({
   value: r,
   label: ROLE_LABELS[r],
@@ -67,10 +70,7 @@ export function TeamStep({
   const [pending, start] = useTransition();
   const [addUser, setAddUser] = useState("");
   const [addRole, setAddRole] = useState<OpportunityRole>("reviewer");
-  const [state, invite] = useActionState<InviteState, FormData>(
-    inviteAction.bind(null, oppId, status, title),
-    {},
-  );
+  const [state, invite] = useActionState<InviteState, FormData>(inviteAction.bind(null, oppId), {});
   const run = (fn: () => Promise<{ error?: string }>) =>
     start(async () => {
       const r = await fn();
@@ -82,87 +82,91 @@ export function TeamStep({
   return (
     <div className="space-y-6" aria-busy={pending}>
       <div className="rounded-xl border bg-card">
-        <table className="w-full text-sm">
-          <caption className="sr-only">Team of {title}</caption>
-          <thead className="border-b text-left text-xs text-muted-foreground">
-            <tr>
-              <th className="px-4 py-2 font-medium">Person</th>
-              <th className="px-4 py-2 font-medium">Role</th>
-              <th className="hidden px-4 py-2 font-medium sm:table-cell">Seat</th>
-              <th className="px-4 py-2">
-                <span className="sr-only">Remove</span>
-              </th>
-            </tr>
-          </thead>
-          <tbody className="divide-y">
-            {team.map((p) => (
-              <tr key={p.userId}>
-                <td className="px-4 py-2">
-                  <div className="font-medium">{p.name}</div>
-                  <div className="text-xs text-muted-foreground">{p.email}</div>
-                </td>
-                <td className="px-4 py-2">
-                  <Dropdown
-                    ariaLabel={`Role of ${p.name}`}
-                    size="sm"
-                    value={p.role}
-                    disabled={readOnly}
-                    options={ROLE_OPTIONS.map((o) => ({
-                      ...o,
-                      disabled: o.value === "coordinator" && p.seat === "collaborator",
-                    }))}
-                    onValueChange={(v) =>
-                      run(() => setTeamRoleAction(oppId, p.userId, v as OpportunityRole))
-                    }
-                  />
-                </td>
-                <td className="hidden px-4 py-2 sm:table-cell">
-                  <StatusChip tone="neutral">
-                    {p.seat === "member" ? "Member" : "Collaborator"}
-                  </StatusChip>
-                </td>
-                <td className="px-4 py-2 text-right">
-                  {!readOnly && (
-                    <Button
-                      size="icon-sm"
-                      variant="ghost"
-                      aria-label={`Remove ${p.name} from the team`}
-                      onClick={() => run(() => removeTeamMemberAction(oppId, p.userId))}
-                    >
-                      <Trash2Icon />
-                    </Button>
-                  )}
-                </td>
-              </tr>
-            ))}
-            {invites.map((i) => (
-              <tr key={i.id}>
-                <td className="px-4 py-2">
-                  <div className="font-medium">{i.email}</div>
-                  <div className="text-xs text-muted-foreground">
-                    {i.sent ? "Invitation sent" : "Invitation goes out when you publish"}
-                  </div>
-                </td>
-                <td className="px-4 py-2">{ROLE_LABELS[i.role]}</td>
-                <td className="hidden px-4 py-2 sm:table-cell">
-                  <StatusChip tone="info">Invited</StatusChip>
-                </td>
-                <td className="px-4 py-2 text-right">
-                  {!readOnly && (
-                    <Button
-                      size="icon-sm"
-                      variant="ghost"
-                      aria-label={`Withdraw the invitation to ${i.email}`}
-                      onClick={() => run(() => removeInviteAction(oppId, i.id))}
-                    >
-                      <Trash2Icon />
-                    </Button>
-                  )}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        {/* One row per person: a table's columns from `sm`, a card per person on a phone. */}
+        <div
+          aria-hidden
+          className="hidden grid-cols-[minmax(0,1fr)_10rem_8rem_2.5rem] gap-3 border-b px-4 py-2 text-xs font-medium text-muted-foreground sm:grid"
+        >
+          <span>Person</span>
+          <span>Role</span>
+          <span>Seat</span>
+        </div>
+        <ul aria-label={`Team of ${title}`} className="divide-y text-sm">
+          {team.map((p) => (
+            <li key={p.userId} className={ROW}>
+              <div className="min-w-0">
+                <div className="truncate font-medium">{p.name}</div>
+                <div className="truncate text-xs text-muted-foreground">
+                  {p.email}
+                  <span className="sm:hidden">
+                    {" "}
+                    · {p.seat === "member" ? "Member" : "Collaborator"}
+                  </span>
+                </div>
+              </div>
+              <div className="order-3 col-span-2 sm:order-none sm:col-span-1">
+                <Dropdown
+                  ariaLabel={`Role of ${p.name}`}
+                  size="sm"
+                  value={p.role}
+                  disabled={readOnly}
+                  options={ROLE_OPTIONS.map((o) => ({
+                    ...o,
+                    disabled: o.value === "coordinator" && p.seat === "collaborator",
+                  }))}
+                  onValueChange={(v) =>
+                    run(() => setTeamRoleAction(oppId, p.userId, v as OpportunityRole))
+                  }
+                />
+              </div>
+              <div className="hidden sm:block">
+                <StatusChip tone="neutral">
+                  {p.seat === "member" ? "Member" : "Collaborator"}
+                </StatusChip>
+              </div>
+              <div className="text-right">
+                {!readOnly && (
+                  <Button
+                    size="icon-sm"
+                    variant="ghost"
+                    aria-label={`Remove ${p.name} from the team`}
+                    onClick={() => run(() => removeTeamMemberAction(oppId, p.userId))}
+                  >
+                    <Trash2Icon />
+                  </Button>
+                )}
+              </div>
+            </li>
+          ))}
+          {invites.map((i) => (
+            <li key={i.id} className={ROW}>
+              <div className="min-w-0">
+                <div className="truncate font-medium">{i.email}</div>
+                <div className="text-xs text-muted-foreground">
+                  {i.sent ? "Invitation sent" : "Invitation goes out when you publish"}
+                </div>
+              </div>
+              <div className="order-3 col-span-2 sm:order-none sm:col-span-1">
+                {ROLE_LABELS[i.role]}
+              </div>
+              <div className="hidden sm:block">
+                <StatusChip tone="info">Invited</StatusChip>
+              </div>
+              <div className="text-right">
+                {!readOnly && (
+                  <Button
+                    size="icon-sm"
+                    variant="ghost"
+                    aria-label={`Withdraw the invitation to ${i.email}`}
+                    onClick={() => run(() => removeInviteAction(oppId, i.id))}
+                  >
+                    <Trash2Icon />
+                  </Button>
+                )}
+              </div>
+            </li>
+          ))}
+        </ul>
         {team.length + invites.length === 1 && (
           <p className="border-t px-4 py-3 text-sm text-muted-foreground">
             Add the people who will review and interview.
@@ -172,7 +176,7 @@ export function TeamStep({
       </div>
 
       {!readOnly && (
-        <div className="grid gap-4 lg:grid-cols-2">
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
           <section aria-labelledby="add-member" className="space-y-3 rounded-xl border bg-card p-4">
             <h3 id="add-member" className="text-sm font-semibold">
               Add someone from the workspace

@@ -448,6 +448,40 @@ const formIdsOf = (s: { modules: StageModuleConfigs; rules: { actions: RuleActio
   ),
 ];
 
+const scorecardIdsOf = (stages: { modules: StageModuleConfigs }[]) =>
+  stages.flatMap((s) => (s.modules.reviews?.scorecardId ? [s.modules.reviews.scorecardId] : []));
+
+/**
+ * Forms and scorecards other opportunities of the workspace point at: never deleted with this
+ * one, never borrowed by it (a coordinator sees only their own opportunity's ids).
+ */
+async function usedElsewhere(opp: Opportunity) {
+  const [others, stages] = await Promise.all([
+    db()
+      .select({ formId: o.formId })
+      .from(o)
+      .where(and(eq(o.workspaceId, opp.workspaceId), ne(o.id, opp.id))),
+    db()
+      .select({ modules: st.modules })
+      .from(st)
+      .where(
+        and(
+          eq(st.workspaceId, opp.workspaceId),
+          ne(st.pipelineId, opp.pipelineId),
+          isNull(st.archivedAt),
+        ),
+      ),
+  ]);
+  const read = stages.map((x) => ({ modules: readModules(x.modules).modules, rules: [] }));
+  return {
+    forms: new Set([
+      ...others.flatMap((x) => (x.formId ? [x.formId] : [])),
+      ...read.flatMap(formIdsOf),
+    ]),
+    scorecards: new Set(scorecardIdsOf(read)),
+  };
+}
+
 /**
  * "Copy a previous opportunity" / "Copy for a new cycle": a new draft with the source's setup,
  * stages, modules, rules, forms, scorecards and messages (and its team only when asked). Never
@@ -702,7 +736,11 @@ export async function saveBasics(
       problems.slug = `That link is in use. Try ${nextSlug(input.slug, taken)}.`;
   }
   if (Object.keys(problems).length) return { problems };
-  const cohort = await defaultCohort(opp.id);
+  const [cohort, stages] = await Promise.all([defaultCohort(opp.id), setupStages(opp)]);
+  // The opportunity's own forms carry its title ("Application: 2027 Fellowship").
+  const formIds = [
+    ...new Set([opp.formId, ...stages.flatMap(formIdsOf)].filter(Boolean)),
+  ] as string[];
   const title = input.title.trim();
   await db().transaction(async (tx) => {
     await tx
@@ -729,11 +767,17 @@ export async function saveBasics(
           capacity: input.capacity,
         })
         .where(eq(schema.opportunityCohorts.id, cohort.id));
-    if (opp.formId)
+    if (formIds.length)
       await tx
         .update(schema.forms)
         .set({ name: sql`replace(${schema.forms.name}, ${opp.title}, ${title})` })
-        .where(eq(schema.forms.id, opp.formId));
+        .where(
+          and(
+            eq(schema.forms.workspaceId, opp.workspaceId),
+            inArray(schema.forms.id, formIds),
+            eq(schema.forms.shared, false),
+          ),
+        );
   });
   const diff = [
     title !== opp.title && `title "${title}"`,
@@ -762,6 +806,32 @@ function nameProblem(stages: SetupStage[], name: string, exceptKey?: string) {
   return null;
 }
 
+/**
+ * Rules and routing on the other stages that send applications to `key`. A stage they point at
+ * can't become an outcome or go away: rules never decide (ADR 0002), whatever edits come later.
+ */
+function pointersTo(stages: SetupStage[], key: string) {
+  const out: string[] = [];
+  for (const s of stages) {
+    if (s.key === key) continue;
+    for (const r of s.rules)
+      if (r.actions.some((a) => a.type === "move_to_stage" && a.stageKey === key))
+        out.push(`the rule "${r.name}" on ${s.name}`);
+    if (s.modules.routing?.rules.some((r) => "stage" in r.to && r.to.stage === key))
+      out.push(`routing on ${s.name}`);
+  }
+  return out;
+}
+
+/** Every stage key rules or routing name, so a new stage never inherits a removed one's key. */
+const namedKeys = (stages: SetupStage[]) =>
+  stages.flatMap((s) => [
+    ...s.rules.flatMap((r) =>
+      r.actions.flatMap((a) => (a.type === "move_to_stage" ? [a.stageKey] : [])),
+    ),
+    ...(s.modules.routing?.rules.flatMap((r) => ("stage" in r.to ? [r.to.stage] : [])) ?? []),
+  ]);
+
 /** Writes positions 1..n in the given order. */
 async function writeOrder(tx: Tx, ids: string[]) {
   for (const [i, sid] of ids.entries())
@@ -782,10 +852,7 @@ export async function addStage(
   const problem = nameProblem(stages, input.name);
   if (problem) return problem;
   const name = input.name.trim();
-  const key = stageKeyFor(
-    name,
-    stages.map((s) => s.key),
-  );
+  const key = stageKeyFor(name, [...stages.map((s) => s.key), ...namedKeys(stages)]);
   const firstFinal = stages.findIndex((s) => isFinal(s.category));
   const at = input.category === "open" && firstFinal >= 0 ? firstFinal : stages.length;
   const modules: StageModuleConfigs = isFinal(input.category)
@@ -838,6 +905,11 @@ export async function updateStage(
   const category = patch.category ?? stage.category;
   const catProblem = categoryChangeProblem(stage, category);
   if (catProblem) return catProblem;
+  if (isFinal(category) && category !== stage.category) {
+    const by = pointersTo(stages, stage.key);
+    if (by.length)
+      return `${by[0]![0]!.toUpperCase()}${by[0]!.slice(1)} moves applications to ${stage.name}, and only people decide outcomes. Change it first.`;
+  }
   const waitlist = category === "hold" ? (patch.isWaitlist ?? stage.isWaitlist) : false;
   if (patch.label !== undefined && patch.label.length > 80)
     return "Keep the label under 80 characters.";
@@ -927,10 +999,7 @@ export async function duplicateStage(
   let name = `${s.name} copy`.slice(0, STAGE_LIMITS.nameMax);
   for (let i = 2; nameProblem(stages, name); i++)
     name = `${s.name} copy ${i}`.slice(0, STAGE_LIMITS.nameMax);
-  const key = stageKeyFor(
-    name,
-    stages.map((x) => x.key),
-  );
+  const key = stageKeyFor(name, [...stages.map((x) => x.key), ...namedKeys(stages)]);
   await db().transaction(async (tx) => {
     const [row] = await tx
       .insert(st)
@@ -982,6 +1051,9 @@ export async function removeStage(
   if (!s) return "That stage is gone.";
   const problem = removeProblem(stages, s.key, moveTo);
   if (problem) return problem;
+  const by = pointersTo(stages, s.key);
+  if (by.length)
+    return `${by[0]![0]!.toUpperCase()}${by[0]!.slice(1)} moves applications to ${s.name}. Change it first.`;
   const rest = stages.filter((x) => x.id !== s.id);
   const after = pipelineProblems(rest).find((p) => p.code === "no_won" || p.code === "no_lost");
   if (after) return `${s.name} is the only ${s.category} stage. ${after.message}`;
@@ -1069,6 +1141,33 @@ export async function saveModule(
         if (!to || isFinal(to.category))
           return "Routing can flag an application for a person, never move it to an outcome.";
       }
+  if (kind === "forms") {
+    const ids = [
+      ...new Set((config as NonNullable<StageModuleConfigs["forms"]>).forms.map((f) => f.formId)),
+    ];
+    if (ids.length) {
+      const mine = new Set([opp.formId, ...stages.flatMap(formIdsOf)].filter(Boolean));
+      const rows = await db()
+        .select({ id: schema.forms.id, purpose: schema.forms.purpose, shared: schema.forms.shared })
+        .from(schema.forms)
+        .where(
+          and(
+            eq(schema.forms.workspaceId, opp.workspaceId),
+            inArray(schema.forms.id, ids),
+            isNull(schema.forms.archivedAt),
+          ),
+        );
+      // This opportunity's own forms, or the workspace's shared follow-up and reference forms.
+      const ok = (f: (typeof rows)[number]) =>
+        f.purpose === "application"
+          ? f.id === opp.formId
+          : f.shared
+            ? f.purpose === "stage" || f.purpose === "reference"
+            : mine.has(f.id);
+      if (rows.length !== ids.length || !rows.every(ok))
+        return "Choose one of this opportunity's forms.";
+    }
+  }
   if (kind === "reviews") {
     const sc = (config as NonNullable<StageModuleConfigs["reviews"]>).scorecardId;
     if (sc) {
@@ -1080,6 +1179,8 @@ export async function saveModule(
         columns: { id: true },
       });
       if (!own) return "Choose one of your scorecards.";
+      if (!scorecardIdsOf(stages).includes(sc) && (await usedElsewhere(opp)).scorecards.has(sc))
+        return "That scorecard belongs to another opportunity.";
     }
   }
   if (kind === "scheduling") {
@@ -1541,12 +1642,13 @@ export async function discardDraft(actor: Actor, id: string): Promise<string | n
   const opp = await configurable(actor, id);
   if (opp.status !== "draft" || opp.publishedAt) return "Only drafts can be discarded.";
   const stages = await setupStages(opp);
-  const formIds = [
+  const ownForms = [
     ...new Set([opp.formId, ...stages.flatMap(formIdsOf)].filter(Boolean)),
   ] as string[];
-  const scorecardIds = stages.flatMap((s) =>
-    s.modules.reviews?.scorecardId ? [s.modules.reviews.scorecardId] : [],
-  );
+  // Only what this draft made for itself: never a shared form, nor one another opportunity uses.
+  const elsewhere = await usedElsewhere(opp);
+  const formIds = ownForms.filter((f) => !elsewhere.forms.has(f));
+  const scorecardIds = scorecardIdsOf(stages).filter((c) => !elsewhere.scorecards.has(c));
   await db().transaction(async (tx) => {
     await tx.delete(o).where(eq(o.id, opp.id));
     await tx.delete(schema.pipelines).where(eq(schema.pipelines.id, opp.pipelineId));
@@ -1558,6 +1660,7 @@ export async function discardDraft(actor: Actor, id: string): Promise<string | n
             eq(schema.forms.workspaceId, opp.workspaceId),
             inArray(schema.forms.id, formIds),
             isNull(schema.forms.publishedVersionId),
+            eq(schema.forms.shared, false),
           ),
         );
     if (scorecardIds.length)

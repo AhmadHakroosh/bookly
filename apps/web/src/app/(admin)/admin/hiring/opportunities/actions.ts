@@ -270,8 +270,6 @@ export type InviteState = { error?: string; done?: "member" | "invited"; at?: nu
 
 export async function inviteAction(
   id: string,
-  status: "draft" | "open" | "closed" | "archived",
-  title: string,
   _prev: InviteState,
   formData: FormData,
 ): Promise<InviteState> {
@@ -280,13 +278,7 @@ export async function inviteAction(
   const role = String(formData.get("role") ?? "reviewer") as OpportunityRole;
   if (!(ROLES as readonly string[]).includes(role)) return { error: "Choose a role." };
   try {
-    const r = await inviteToTeam(
-      actor,
-      ws,
-      { id, status, title },
-      String(formData.get("email") ?? ""),
-      role,
-    );
+    const r = await inviteToTeam(actor, ws, id, String(formData.get("email") ?? ""), role);
     refreshWorkspace(ws.id);
     return "error" in r ? { error: r.error } : { done: r.added, at: Date.now() };
   } catch (e) {

@@ -98,8 +98,7 @@ const DELEGATED = /audit:\s*by\s+(server\/[\w/.-]+\.ts)/g;
 const delegated = (body: string) => {
   const mods = [...body.matchAll(DELEGATED)].map((m) => m[1]!);
   return (
-    mods.length > 0 &&
-    mods.every((m) => /\baudit\(/.test(readFileSync(path.join(ROOT, m), "utf8")))
+    mods.length > 0 && mods.every((m) => /\baudit\(/.test(readFileSync(path.join(ROOT, m), "utf8")))
   );
 };
 const audits = (body: string) =>

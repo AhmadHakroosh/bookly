@@ -73,7 +73,7 @@ async function OpportunitiesPage() {
       ) : (
         <>
           {/* Phones: one card per opportunity, Create stays the primary action. */}
-          <ul className="grid gap-3 md:hidden">
+          <ul className="grid grid-cols-1 gap-3 md:hidden">
             {list.map((o) => {
               const s = opportunityStatus(o.status, o.opensAt);
               return (

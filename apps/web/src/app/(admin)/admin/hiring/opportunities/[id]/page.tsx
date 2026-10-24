@@ -226,7 +226,7 @@ async function Interviews({ setup }: { setup: Setup }) {
       />
     );
   return (
-    <ul className="grid gap-3 md:grid-cols-2">
+    <ul className="grid grid-cols-1 gap-3 md:grid-cols-2">
       {stages.map((s) => {
         const sc = s.modules.scheduling!;
         return (
@@ -258,7 +258,7 @@ function ReviewPlan({ setup }: { setup: Setup }) {
       />
     );
   return (
-    <ul className="grid gap-3 md:grid-cols-2">
+    <ul className="grid grid-cols-1 gap-3 md:grid-cols-2">
       {stages.map((s) => {
         const r = s.modules.reviews!;
         const card = setup.scorecards.find((x) => x.id === r.scorecardId);

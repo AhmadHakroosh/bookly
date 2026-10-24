@@ -218,7 +218,7 @@ export function StageEditor({ data }: { data: EditorData }) {
       )}
       <div
         className={cn(
-          "grid items-start gap-6",
+          "grid grid-cols-1 items-start gap-6",
           xwide
             ? "grid-cols-[280px_minmax(0,1fr)_380px]"
             : wide && "grid-cols-[260px_minmax(0,1fr)]",
@@ -723,7 +723,7 @@ function StageConfig({
   const eventTypes = new Map(data.eventTypes.map((e) => [e.value, e.label]));
   return (
     <div className="@container space-y-6" aria-busy={pending}>
-      <div className="grid gap-4 @lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 @lg:grid-cols-2">
         <div className="@lg:col-span-2">
           <label htmlFor="stage-name" className="mb-1 block text-xs font-medium">
             Stage name

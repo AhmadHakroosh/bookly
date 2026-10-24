@@ -35,11 +35,27 @@ export type InviteResult = { added: "member" | "invited" } | { error: string };
 export async function inviteToTeam(
   actor: Actor,
   ws: Workspace,
-  opp: Pick<Opportunity, "id" | "title" | "status">,
+  opportunityId: string,
   rawEmail: string,
   role: OpportunityRole,
 ): Promise<InviteResult> {
-  assertOnOpportunity(actor, opp.id, "opportunity.manage_team");
+  assertOnOpportunity(actor, opportunityId, "opportunity.manage_team");
+  // Owners and admins coordinate any id they pass: the opportunity must be this workspace's.
+  const [opp] = await db()
+    .select({
+      id: schema.opportunities.id,
+      title: schema.opportunities.title,
+      status: schema.opportunities.status,
+    })
+    .from(schema.opportunities)
+    .where(
+      and(
+        eq(schema.opportunities.id, opportunityId),
+        eq(schema.opportunities.workspaceId, ws.id),
+        eq(schema.opportunities.workspaceId, actor.workspaceId),
+      ),
+    );
+  if (!opp) return { error: "That opportunity is gone." };
   const email = rawEmail.trim().toLowerCase();
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return { error: "Enter a valid email." };
   const [member] = await db()
@@ -125,6 +141,7 @@ export async function sendPendingInvites(
     .where(
       and(
         eq(schema.opportunityInvites.opportunityId, opp.id),
+        eq(schema.opportunityInvites.workspaceId, ws.id),
         isNull(schema.opportunityInvites.sentAt),
       ),
     );

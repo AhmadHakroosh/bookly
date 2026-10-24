@@ -28,7 +28,7 @@ export function StepRail({
     <nav aria-label="Setup steps" className="min-w-0">
       <ol
         className={cn(
-          "flex gap-1 overflow-x-auto pb-1",
+          "relative flex gap-1 overflow-x-auto pb-1",
           !row && "lg:flex-col lg:overflow-visible lg:pb-0",
         )}
       >

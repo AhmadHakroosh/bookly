@@ -264,7 +264,7 @@ function ReviewsPanel({ data }: { data: PanelData }) {
   const [v, setV] = useState(r);
   return (
     <div className="space-y-4">
-      <div className="grid gap-3 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <div>
           <span className={label}>Scorecard</span>
           <Dropdown
@@ -463,7 +463,9 @@ function MessagesPanel({ data }: { data: PanelData }) {
     )?.trigger.on === "leave"
       ? "leave"
       : "enter";
-  const [editing, setEditing] = useState<string | "new" | null>(templates.length ? null : "new");
+  const [editing, setEditing] = useState<string | "new" | null>(null);
+  // A stage without a message opens straight on a new one (also after deleting the last).
+  const adding = editing === "new" || !templates.length;
   return (
     <div className="space-y-4">
       {final && (
@@ -509,7 +511,7 @@ function MessagesPanel({ data }: { data: PanelData }) {
           ),
         )}
       </ul>
-      {editing === "new" && !data.readOnly ? (
+      {adding && !data.readOnly ? (
         <MessageEditor
           data={data}
           initial={{ templateId: null, subject: "", body: "", when: "enter" }}
@@ -824,7 +826,7 @@ function PaymentsPanel({ data }: { data: PanelData }) {
   const [v, setV] = useState({ ...p, amount: p.amountCents / 100 });
   return (
     <div className="space-y-3">
-      <div className="grid gap-3 sm:grid-cols-3">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
         <div>
           <span className={label}>Kind</span>
           <Dropdown

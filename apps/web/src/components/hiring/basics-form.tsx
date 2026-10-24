@@ -104,7 +104,7 @@ export function BasicsForm({
           </ul>
         </div>
       )}
-      <div className="grid gap-5 md:grid-cols-2">
+      <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
         <Field id="title" label="Title" error={err("title")} className="md:col-span-2">
           <Input
             id="basics-title"
@@ -219,7 +219,9 @@ export function BasicsForm({
         </Field>
         <Field id="slug" label="Application link" error={err("slug")} className="md:col-span-2">
           <div className="flex items-center rounded-lg border bg-background focus-within:ring-2 focus-within:ring-ring/50">
-            <span className="truncate pl-3 text-sm text-muted-foreground">{linkBase}</span>
+            <span className="min-w-0 shrink truncate pl-3 text-sm text-muted-foreground">
+              {linkBase}
+            </span>
             <input
               id="basics-slug"
               name="slug"

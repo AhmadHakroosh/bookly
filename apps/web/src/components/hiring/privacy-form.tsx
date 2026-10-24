@@ -86,7 +86,7 @@ export function PrivacyForm({
           </p>
         </section>
 
-        <section className="grid gap-5 rounded-xl border bg-card p-5 md:grid-cols-2">
+        <section className="grid grid-cols-1 gap-5 rounded-xl border bg-card p-5 md:grid-cols-2">
           <div className="md:col-span-2">
             <span className="mb-1 block text-sm font-medium" id="retention-label">
               Delete applications of people not admitted

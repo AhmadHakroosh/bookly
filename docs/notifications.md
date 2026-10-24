@@ -27,6 +27,7 @@ What creates one, and the defaults:
 | Task overdue          | on        | off     | off                           |
 | Team message          | on        | on      | off                           |
 | Mentioned in Messages | on        | on      | on                            |
+| Hiring team           | on        | on      | on                            |
 
 Each member changes these under **Notifications → What you hear about** (your menu at the top right);
 the email column also governs the host copies Bookly always sent (booking, cancellation,

@@ -36,7 +36,7 @@ async function NewOpportunityPage() {
         badge={beta && <BetaBadge />}
         description="Start from a template and change anything. Templates set up stages, questions, reviews and messages."
       />
-      <div className="grid gap-6 lg:grid-cols-[12rem_1fr]">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[12rem_1fr]">
         <StepRail current="start" />
         <section aria-labelledby="start-title" className="min-w-0 space-y-4">
           <h2 id="start-title" className="text-lg font-semibold">

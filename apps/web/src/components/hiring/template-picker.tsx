@@ -98,7 +98,7 @@ export function TemplatePicker({
           </div>
         </section>
       )}
-      <ul className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+      <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
         {templates.map((t) => (
           <li key={t.id} className="flex flex-col rounded-xl border bg-card p-5">
             <h2 className="font-semibold">{t.name}</h2>

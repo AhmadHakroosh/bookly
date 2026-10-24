@@ -128,7 +128,9 @@ async function SetupPage({
       {header}
       <div
         className={
-          step === "stages" ? "space-y-6" : "grid gap-6 lg:grid-cols-[12rem_minmax(0,1fr)]"
+          step === "stages"
+            ? "space-y-6"
+            : "grid grid-cols-1 gap-6 lg:grid-cols-[12rem_minmax(0,1fr)]"
         }
       >
         <StepRail
@@ -302,7 +304,8 @@ async function StagesStep({
         The steps an application moves through, in order. Choose what each step does.
         {setup.stages.length <= 3 && " Add the stages your process uses, in order."}
       </p>
-      <StageEditor data={data} />
+      {/* A link to a stage or module (the checklist's) opens it, whatever was open before. */}
+      <StageEditor key={`${stage ?? ""}:${module ?? ""}`} data={data} />
     </>
   );
 }
@@ -374,7 +377,7 @@ function PublishStep({ setup }: { setup: Setup }) {
   const preview = previewOf(setup);
   const draft = setup.opportunity.status === "draft";
   return (
-    <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_400px]">
+    <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_400px]">
       <div className="space-y-4">
         <ul className="divide-y rounded-xl border bg-card">
           {setup.checklist.map((i) => (

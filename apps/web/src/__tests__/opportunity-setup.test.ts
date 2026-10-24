@@ -40,10 +40,13 @@ const sent = vi.hoisted(() => ({
   limits: { opportunities: null as number | null, collaborators: null as number | null },
 }));
 vi.mock("@/server/audit", () => ({
-  audit: async (a: { action: string; changes?: Record<string, unknown> }) => void sent.audit.push(a),
+  audit: async (a: { action: string; changes?: Record<string, unknown> }) =>
+    void sent.audit.push(a),
 }));
 vi.mock("@/server/cache", () => ({ refreshWorkspace: () => {}, workspaceTag: (id: string) => id }));
-vi.mock("@/server/webhooks", () => ({ emitEvent: (_ws: string, e: string) => void sent.events.push(e) }));
+vi.mock("@/server/webhooks", () => ({
+  emitEvent: (_ws: string, e: string) => void sent.events.push(e),
+}));
 vi.mock("@/server/notifications", () => ({
   notify: async (_ws: unknown, userId: string) => void sent.notify.push(userId),
 }));
@@ -110,7 +113,10 @@ describe("templates", () => {
   it("give cohort templates a Waitlist stage, and only one", () => {
     for (const id of ["cohort", "internship", "program", "admissions"] as const) {
       const w = TEMPLATES[id].stages.filter((s) => s.isWaitlist);
-      expect(w.map((s) => s.category), id).toEqual(["hold"]);
+      expect(
+        w.map((s) => s.category),
+        id,
+      ).toEqual(["hold"]);
     }
   });
 
@@ -180,7 +186,8 @@ describe("pipeline validity", () => {
     s[1]!.name = "x".repeat(41);
     expect(pipelineProblems(s)[0]!.code).toBe("stage_name");
     const many = cohort();
-    for (let i = 0; i < 10; i++) many.splice(1, 0, { ...many[1]!, key: `k${i}`, name: `Stage ${i}` });
+    for (let i = 0; i < 10; i++)
+      many.splice(1, 0, { ...many[1]!, key: `k${i}`, name: `Stage ${i}` });
     expect(pipelineProblems(many).map((p) => p.code)).toContain("stage_count");
   });
 
@@ -191,7 +198,9 @@ describe("pipeline validity", () => {
     expect(hiringRuleProblem({ type: "move_to_stage", stageKey: "admitted" }, review, s)).toMatch(
       /People decide outcomes/,
     );
-    expect(hiringRuleProblem({ type: "move_to_stage", stageKey: "interview" }, review, s)).toBeNull();
+    expect(
+      hiringRuleProblem({ type: "move_to_stage", stageKey: "interview" }, review, s),
+    ).toBeNull();
     expect(hiringRuleProblem({ type: "send_message", templateId: "t" }, won, s)).toMatch(
       /release decisions/,
     );
@@ -266,15 +275,25 @@ describe("the Journey", () => {
     const applied = j.stages[0]!;
     expect(applied.label).toBe("Submitted");
     expect(applied.touchpoints).toEqual([
-      expect.objectContaining({ kind: "email", subject: "We received your application", when: "enter" }),
+      expect.objectContaining({
+        kind: "email",
+        subject: "We received your application",
+        when: "enter",
+      }),
     ]);
     const admitted = j.stages.find((s) => s.key === "admitted")!;
     expect(admitted.touchpoints[0]).toMatchObject({ kind: "email", when: "release" });
-    expect(admitted.touchpoints).toContainEqual({ kind: "action", text: "Upload: Signed agreement" });
+    expect(admitted.touchpoints).toContainEqual({
+      kind: "action",
+      text: "Upload: Signed agreement",
+    });
   });
 
   it("warns about quiet stages and due dates past the promised decision date", () => {
-    const j = journey(stagesOf("cohort"), { ...basics, decidesBy: new Date("2026-11-20T00:00:00Z") });
+    const j = journey(stagesOf("cohort"), {
+      ...basics,
+      decidesBy: new Date("2026-11-20T00:00:00Z"),
+    });
     expect(j.warnings).toEqual([
       {
         tone: "advice",
@@ -384,7 +403,9 @@ describe.skipIf(!realDb)("opportunity setup (seeded database)", () => {
         updatedAt: now,
       })),
     );
-    await db.insert(schema.organizations).values({ id: id("org"), name: "H1", slug: id("org"), createdAt: now });
+    await db
+      .insert(schema.organizations)
+      .values({ id: id("org"), name: "H1", slug: id("org"), createdAt: now });
     await db.insert(schema.members).values(
       [owner, member, collab].map((u) => ({
         id: id(`m_${u}`),
@@ -394,10 +415,12 @@ describe.skipIf(!realDb)("opportunity setup (seeded database)", () => {
         createdAt: now,
       })),
     );
-    [workspace] = await db
-      .insert(schema.workspaces)
-      .values({ id: ws, organizationId: id("org"), slug: id("ws"), name: "Horizon" })
-      .returning();
+    workspace = (
+      await db
+        .insert(schema.workspaces)
+        .values({ id: ws, organizationId: id("org"), slug: id("ws"), name: "Horizon" })
+        .returning()
+    )[0]!;
   });
 
   afterAll(async () => {
@@ -407,7 +430,10 @@ describe.skipIf(!realDb)("opportunity setup (seeded database)", () => {
   });
 
   const stagesIn = async (oppId: string) => {
-    const [o] = await db.select().from(schema.opportunities).where(eq(schema.opportunities.id, oppId));
+    const [o] = await db
+      .select()
+      .from(schema.opportunities)
+      .where(eq(schema.opportunities.id, oppId));
     return db
       .select()
       .from(schema.pipelineStages)
@@ -428,7 +454,10 @@ describe.skipIf(!realDb)("opportunity setup (seeded database)", () => {
       "not_selected",
     ]);
     expect(stages.filter((s) => s.isEntry).map((s) => s.key)).toEqual(["applied"]);
-    const [opp] = await db.select().from(schema.opportunities).where(eq(schema.opportunities.id, oppId));
+    const [opp] = await db
+      .select()
+      .from(schema.opportunities)
+      .where(eq(schema.opportunities.id, oppId));
     expect(opp).toMatchObject({ status: "draft", type: "fellowship" });
     const form = await db.query.forms.findFirst({ where: eq(schema.forms.id, opp!.formId!) });
     expect(form).toMatchObject({ purpose: "application", shared: false });
@@ -439,8 +468,14 @@ describe.skipIf(!realDb)("opportunity setup (seeded database)", () => {
       where: eq(schema.scorecards.id, review.reviews.scorecardId),
     });
     expect(card?.criteria).toHaveLength(4);
-    const rules = await db.select().from(schema.stageRules).where(eq(schema.stageRules.pipelineId, opp!.pipelineId));
-    expect(rules.map((r) => r.name).sort()).toEqual(["Assign reviewers", "Confirm the application"]);
+    const rules = await db
+      .select()
+      .from(schema.stageRules)
+      .where(eq(schema.stageRules.pipelineId, opp!.pipelineId));
+    expect(rules.map((r) => r.name).sort()).toEqual([
+      "Assign reviewers",
+      "Confirm the application",
+    ]);
     const team = await db
       .select()
       .from(schema.opportunityMembers)
@@ -480,7 +515,7 @@ describe.skipIf(!realDb)("opportunity setup (seeded database)", () => {
         slug: slug("blank"),
       }),
     ).toEqual({ problems: {} });
-    const res = await invites.inviteToTeam(me, workspace, { id: oppId, status: "draft", title: "Blank round" }, "Reviewer@Uni.test", "reviewer");
+    const res = await invites.inviteToTeam(me, workspace, oppId, "Reviewer@Uni.test", "reviewer");
     expect(res).toEqual({ added: "invited" });
     expect(sent.email).toEqual([]);
     sent.limits.opportunities = 0;
@@ -491,12 +526,20 @@ describe.skipIf(!realDb)("opportunity setup (seeded database)", () => {
     expect(r).toMatchObject({ ok: true, scheduled: null });
     expect(sent.events).toContain("opportunity.published");
     expect(sent.email.map((m) => [m.to, m.subject])).toEqual([
-      ["reviewer@uni.test", "h1_" + run + "_owner invited you to review applications for Blank round"],
+      [
+        "reviewer@uni.test",
+        "h1_" + run + "_owner invited you to review applications for Blank round",
+      ],
     ]);
     const [inv] = await db
       .select()
       .from(schema.invitations)
-      .where(and(eq(schema.invitations.organizationId, id("org")), eq(schema.invitations.email, "reviewer@uni.test")));
+      .where(
+        and(
+          eq(schema.invitations.organizationId, id("org")),
+          eq(schema.invitations.email, "reviewer@uni.test"),
+        ),
+      );
     expect(inv).toMatchObject({ role: "collaborator", status: "pending" });
     // Accepting the workspace invitation puts them on the team.
     await db.insert(schema.users).values({
@@ -507,14 +550,19 @@ describe.skipIf(!realDb)("opportunity setup (seeded database)", () => {
       createdAt: new Date(),
       updatedAt: new Date(),
     });
-    expect(await invites.applyOpportunityInvites(id("org"), id("rev"), "reviewer@uni.test")).toBe(1);
+    expect(await invites.applyOpportunityInvites(id("org"), id("rev"), "reviewer@uni.test")).toBe(
+      1,
+    );
     const team = await db
       .select({ userId: schema.opportunityMembers.userId, role: schema.opportunityMembers.role })
       .from(schema.opportunityMembers)
       .where(eq(schema.opportunityMembers.opportunityId, oppId));
     expect(team).toContainEqual({ userId: id("rev"), role: "reviewer" });
     await db.delete(schema.users).where(eq(schema.users.id, id("rev")));
-    const [o] = await db.select().from(schema.opportunities).where(eq(schema.opportunities.id, oppId));
+    const [o] = await db
+      .select()
+      .from(schema.opportunities)
+      .where(eq(schema.opportunities.id, oppId));
     expect(o).toMatchObject({ status: "open" });
     expect(o!.publishedAt).toBeInstanceOf(Date);
   });
@@ -541,15 +589,27 @@ describe.skipIf(!realDb)("opportunity setup (seeded database)", () => {
     });
     const plain = await setup.cloneOpportunity(me, workspace, src, { team: false });
     const withTeam = await setup.cloneOpportunity(me, workspace, src, { team: true });
-    const [copy] = await db.select().from(schema.opportunities).where(eq(schema.opportunities.id, plain));
-    expect(copy).toMatchObject({ title: "Summer internship (copy)", status: "draft", clonedFromId: src });
+    const [copy] = await db
+      .select()
+      .from(schema.opportunities)
+      .where(eq(schema.opportunities.id, plain));
+    expect(copy).toMatchObject({
+      title: "Summer internship (copy)",
+      status: "draft",
+      clonedFromId: src,
+    });
     expect(copy!.slug).not.toBe(slug("summer"));
     const cohort = await db.query.opportunityCohorts.findFirst({
       where: eq(schema.opportunityCohorts.opportunityId, plain),
     });
     expect(cohort).toMatchObject({ name: "2026", capacity: 10, closesAt: null, decidesBy: null });
-    expect((await stagesIn(plain)).map((s) => s.key)).toEqual((await stagesIn(src)).map((s) => s.key));
-    const [source] = await db.select().from(schema.opportunities).where(eq(schema.opportunities.id, src));
+    expect((await stagesIn(plain)).map((s) => s.key)).toEqual(
+      (await stagesIn(src)).map((s) => s.key),
+    );
+    const [source] = await db
+      .select()
+      .from(schema.opportunities)
+      .where(eq(schema.opportunities.id, src));
     expect(copy!.formId).not.toBe(source!.formId);
     const team = async (o: string) =>
       (
@@ -557,7 +617,9 @@ describe.skipIf(!realDb)("opportunity setup (seeded database)", () => {
           .select({ userId: schema.opportunityMembers.userId })
           .from(schema.opportunityMembers)
           .where(eq(schema.opportunityMembers.opportunityId, o))
-      ).map((m) => m.userId).sort();
+      )
+        .map((m) => m.userId)
+        .sort();
     expect(await team(plain)).toEqual([owner]);
     expect(await team(withTeam)).toEqual([member, owner].sort());
     expect(sent.audit.find((a) => a.action === "opportunity.cloned")).toBeTruthy();
@@ -568,9 +630,9 @@ describe.skipIf(!realDb)("opportunity setup (seeded database)", () => {
     const oppId = await setup.createFromTemplate(me, workspace, "cohort");
     const stages = await stagesIn(oppId);
     const byKey = (k: string) => stages.find((s) => s.key === k)!;
-    expect(await setup.saveModule(me, oppId, byKey("applied").id, "forms", { enabled: false })).toMatch(
-      /Forms stays on/,
-    );
+    expect(
+      await setup.saveModule(me, oppId, byKey("applied").id, "forms", { enabled: false }),
+    ).toMatch(/Forms stays on/);
     expect(
       await setup.saveHiringRule(me, oppId, byKey("in_review").id, null, {
         name: "Reject",
@@ -596,7 +658,9 @@ describe.skipIf(!realDb)("opportunity setup (seeded database)", () => {
       .select()
       .from(schema.opportunityCohorts)
       .where(eq(schema.opportunityCohorts.opportunityId, oppId));
-    await db.insert(schema.contacts).values({ id: id("c1"), workspaceId: ws, email: `${id("c1")}@example.test`, name: "A" });
+    await db
+      .insert(schema.contacts)
+      .values({ id: id("c1"), workspaceId: ws, email: `${id("c1")}@example.test`, name: "A" });
     await db.insert(schema.applications).values({
       id: id("app1"),
       workspaceId: ws,
@@ -609,11 +673,87 @@ describe.skipIf(!realDb)("opportunity setup (seeded database)", () => {
     expect(await setup.updateStage(me, oppId, byKey("in_review").id, { category: "lost" })).toMatch(
       /before making it an outcome/,
     );
-    expect(await setup.removeStage(me, oppId, byKey("in_review").id, null)).toMatch(/Move 1 application/);
+    expect(await setup.removeStage(me, oppId, byKey("in_review").id, null)).toMatch(
+      /Move 1 application/,
+    );
     expect(await setup.removeStage(me, oppId, byKey("in_review").id, "interview")).toBeNull();
-    const [app] = await db.select().from(schema.applications).where(eq(schema.applications.id, id("app1")));
+    const [app] = await db
+      .select()
+      .from(schema.applications)
+      .where(eq(schema.applications.id, id("app1")));
     expect(app!.stageId).toBe(byKey("interview").id);
     // Archiving waits until every applicant has heard their decision.
     expect(await setup.archiveOpportunity(me, oppId)).toEqual({ unheard: 1 });
+  });
+
+  it("refuses another workspace's opportunity, other opportunities' forms and scorecards", async () => {
+    const me = actor(owner);
+    const mine = await setup.createFromTemplate(me, workspace, "cohort");
+    const theirs = await setup.createFromTemplate(me, workspace, "cohort");
+    // An id from elsewhere: owners coordinate any id, so the server must check the workspace.
+    expect(
+      await invites.inviteToTeam(me, { ...workspace, id: "another" }, mine, "x@uni.test", "viewer"),
+    ).toEqual({ error: "That opportunity is gone." });
+    const stagesOf2 = await stagesIn(theirs);
+    const theirReview = (
+      stagesOf2.find((s) => s.key === "in_review")!.modules as {
+        reviews: { scorecardId: string };
+      }
+    ).reviews;
+    const theirAcceptance = (
+      stagesOf2.find((s) => s.key === "admitted")!.modules as {
+        forms: { forms: { formId: string }[] };
+      }
+    ).forms.forms[0]!.formId;
+    const myStages = await stagesIn(mine);
+    const review = myStages.find((s) => s.key === "in_review")!;
+    expect(
+      await setup.saveModule(me, mine, review.id, "reviews", {
+        config: {
+          ...(review.modules as { reviews: object }).reviews,
+          scorecardId: theirReview.scorecardId,
+        },
+      }),
+    ).toBe("That scorecard belongs to another opportunity.");
+    const admitted = myStages.find((s) => s.key === "admitted")!;
+    expect(
+      await setup.saveModule(me, mine, admitted.id, "forms", {
+        config: { v: 1, enabled: true, forms: [{ formId: theirAcceptance, audience: "subject" }] },
+      }),
+    ).toBe("Choose one of this opportunity's forms.");
+    // Discarding a draft keeps what another opportunity uses.
+    await setup.discardDraft(me, mine);
+    expect(
+      await db.query.scorecards.findFirst({
+        where: eq(schema.scorecards.id, theirReview.scorecardId),
+      }),
+    ).toBeTruthy();
+    expect(
+      await db.query.forms.findFirst({ where: eq(schema.forms.id, theirAcceptance) }),
+    ).toBeTruthy();
+  });
+
+  it("keeps a stage a rule moves people to from becoming an outcome or going away", async () => {
+    const me = actor(owner);
+    const oppId = await setup.createFromTemplate(me, workspace, "cohort");
+    const stages = await stagesIn(oppId);
+    const byKey = (k: string) => stages.find((s) => s.key === k)!;
+    expect(
+      await setup.saveHiringRule(me, oppId, byKey("in_review").id, null, {
+        name: "On to interview",
+        on: "enter",
+        tag: "",
+        actions: [{ type: "move_to_stage", stageKey: "interview" }],
+      }),
+    ).toEqual([]);
+    expect(await setup.updateStage(me, oppId, byKey("interview").id, { category: "won" })).toMatch(
+      /only people decide outcomes/,
+    );
+    expect(await setup.updateStage(me, oppId, byKey("interview").id, { category: "hold" })).toMatch(
+      /only people decide outcomes/,
+    );
+    expect(await setup.removeStage(me, oppId, byKey("interview").id, null)).toMatch(
+      /The rule "On to interview" on In review moves applications to Interview/,
+    );
   });
 });

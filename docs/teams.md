@@ -14,6 +14,10 @@ and notifications (and, with hiring, the opportunities they are added to); never
 workspace's clients, bookings, messages, files, tasks or settings. Collaborators are not billed
 as seats: Free includes 2, Pro and Team include 5.
 
+An opportunity's coordinators can also invite people from outside on its **Team** step (owners
+and admins send the invitation): they join the workspace as collaborators when they accept, and
+the opportunity's team at the same time. See [Hiring](hiring.md#team-and-access).
+
 ## The activity log
 
 Every change in a workspace is recorded: who did it (a member, a guest through a booking link,
