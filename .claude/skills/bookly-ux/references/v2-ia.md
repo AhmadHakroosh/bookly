@@ -1,8 +1,11 @@
 # v2 information architecture
 
-Derived from the concepts in `planning/v2/concepts/`. Today's nav (`admin-nav.tsx`) groups
-pages as Scheduling / your connections / Workspace. v2 groups them by the job, and a workspace
-shows the groups for the solutions it runs.
+Derived from the concepts in `planning/v2/concepts/`. **The binding, screen-by-screen version is
+`planning/v2/ux/concept-fidelity.md`** (founder, 2026-10-25); where this summary and that file
+differ, that file wins. In short: the client-work sidebar is exactly `app ui.png` (primary items,
+a divider, the scheduling items, Settings and Team at the bottom, no group headings); hiring has
+its own sidebar as `hiring.png`; a workspace running both switches between them (Clients |
+Hiring). The group names in the table below are for this document only and are never shown.
 
 ## Global frame
 
