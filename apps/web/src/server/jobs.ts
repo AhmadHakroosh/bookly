@@ -43,16 +43,27 @@ type Handler<N extends JobName> = (data: Jobs[N]) => Promise<void>;
 async function handlers(): Promise<{ [N in JobName]: Handler<N> }> {
   // Lazy so this module can be imported from the proxy-free edge of the app without pulling
   // every server module in.
-  const [reminders, webhooks, integrations, transcripts, crm, contacts, pipelines] =
-    await Promise.all([
-      import("./reminders"),
-      import("./webhooks"),
-      import("./integrations"),
-      import("./transcripts"),
-      import("./crm"),
-      import("./contacts"),
-      import("./pipelines"),
-    ]);
+  const [
+    reminders,
+    webhooks,
+    integrations,
+    transcripts,
+    crm,
+    contacts,
+    pipelines,
+    rules,
+    notifications,
+  ] = await Promise.all([
+    import("./reminders"),
+    import("./webhooks"),
+    import("./integrations"),
+    import("./transcripts"),
+    import("./crm"),
+    import("./contacts"),
+    import("./pipelines"),
+    import("./pipelines/rules"),
+    import("./notifications"),
+  ]);
   return {
     "booking.reminders": async () => {
       await reminders.sendDueReminders();
@@ -88,6 +99,15 @@ async function handlers(): Promise<{ [N in JobName]: Handler<N> }> {
     "pipelines.backfill": async () => {
       const n = await pipelines.backfillClientPipelines();
       if (n) console.log(`[pipelines] gave ${n} contacts their client stage`);
+    },
+    "pipeline.rule": async ({ runId }) => {
+      await rules.runRule(runId);
+    },
+    "pipeline.rules": async () => {
+      await rules.runDueRules();
+    },
+    "notifications.fallback": async ({ id }) => {
+      await notifications.sendFallback(id);
     },
   };
 }
@@ -140,6 +160,7 @@ export const SCHEDULES: { name: JobName; cron: string }[] = [
   { name: "webhooks.retry", cron: "*/5 * * * *" },
   { name: "calendar.sync", cron: "17 */6 * * *" },
   { name: "feeds.sync", cron: "*/15 * * * *" },
+  { name: "pipeline.rules", cron: "*/5 * * * *" },
 ];
 
 const scheduleId = (name: JobName) => `bookly-${name.replace(".", "-")}`;

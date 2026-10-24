@@ -7,9 +7,11 @@ import {
   text,
   timestamp,
   uniqueIndex,
+  type AnyPgColumn,
 } from "drizzle-orm/pg-core";
 import type { AnswerValue, FormSchema } from "@bookly/forms";
 import { users } from "./auth";
+import { applications } from "./hiring";
 import { bookings, contacts, routingForms } from "./scheduling";
 import { workspaces } from "./workspaces";
 
@@ -86,8 +88,16 @@ export const formResponses = pgTable(
       .references(() => formVersions.id, { onDelete: "restrict" }),
     contactId: text("contact_id").references(() => contacts.id, { onDelete: "cascade" }),
     bookingId: text("booking_id").references(() => bookings.id, { onDelete: "cascade" }),
-    /** Hiring (ADR 0003); the foreign key arrives with the applications table. */
-    applicationId: text("application_id"),
+    /** Hiring (ADR 0003): the application this response belongs to. */
+    applicationId: text("application_id").references((): AnyPgColumn => applications.id, {
+      onDelete: "cascade",
+    }),
+    /** 1 for the first submission; each candidate edit inserts a new row with revision + 1. */
+    revision: integer("revision").notNull().default(1),
+    /** The revision this one replaced; earlier ones stay readable to coordinators until retention. */
+    supersedesId: text("supersedes_id").references((): AnyPgColumn => formResponses.id, {
+      onDelete: "set null",
+    }),
     routingFormId: text("routing_form_id").references(() => routingForms.id, {
       onDelete: "set null",
     }),
@@ -105,6 +115,7 @@ export const formResponses = pgTable(
     index("form_responses_booking_idx").on(t.bookingId),
     index("form_responses_application_idx").on(t.applicationId),
     uniqueIndex("form_responses_resume_idx").on(t.resumeTokenHash),
+    index("form_responses_supersedes_idx").on(t.supersedesId),
   ],
 );
 

@@ -30,19 +30,41 @@ What creates one, and the defaults:
 
 Each member changes these under **Notifications → What you hear about** (your menu at the top right);
 the email column also governs the host copies Bookly always sent (booking, cancellation,
-reminder, recap). Texts and Slack keep following the switches below it.
+reminder, recap). Texts and Slack keep following the switches below it. Desktop, email, texts
+and Slack are used only when you are not in Bookly (below).
 
-**Live updates.** An open admin tab holds a Server-Sent Events stream
-(`/admin/notifications/stream`) that sends new rows and the unread count; the notifications
-table is the fan-out, so no Redis or worker is involved and it behaves the same on serverless
-and in a container. A stream lives under a minute and the browser reconnects with
-`Last-Event-ID`, so nothing is missed; if streaming is blocked, the bell polls the count every
-minute.
+**Realtime first.** While you have Bookly open (any tab, any device, even in the background),
+notifications reach you there and nothing else is sent: no email, no desktop push, no text or
+Slack ping. The other channels you chose are the fallback:
+
+- **No Bookly tab open anywhere:** they go out right away, as before.
+- **A tab is open:** they wait a short grace period (1 minute for _Guest joined the call_ and
+  _Starting soon_, 2 for _Booking request_, 5 for the rest) and go out only if no tab showed
+  the notification by then. "Showed" means it arrived while a Bookly tab was on screen, the tab
+  came back on screen while it waited, or a background tab raised it as a desktop notification
+  (with permission). Reading it or **Mark all read** also cancels them. A tab left open on an
+  unattended computer therefore delays the email by the grace period, never longer.
+- **Records still go by email:** the host copy of a booking, request or cancellation carries
+  the calendar invite or cancellation (`.ics`) for your calendar, so it is sent whenever its
+  email switch is on. The same goes for sign-in links, invitations and receipts, and for the
+  day-ahead reminder with its briefing (only the hour-before one has a bell notification).
+
+Each notification records which channels it actually used (socket, push, email, text), and
+held-back channels survive restarts: a job sends them at the end of the grace period, and the
+five-minute housekeeping tick catches any it missed.
+
+**Live updates.** Each admin tab keeps one live connection: a websocket at `/realtime` on the
+same address as the admin (Bookly's own socket server, `docs/self-hosting.md`), or, where there
+is none or it cannot connect three times in a row, the Server-Sent Events stream
+`/admin/notifications/stream`, retrying the socket every five minutes. Both count you as
+present, and both carry new notifications, the unread count (marking read in one tab updates
+the others) and Messages' counts. A tab catches up from the server whenever it reconnects; if
+neither transport gets through, the bell polls the count every minute.
 
 **Desktop notifications.** **Turn on for this browser** asks for permission and, when the install
 has Web Push keys, subscribes the browser so notifications arrive with every Bookly tab closed
-(the service worker is `/sw.js`, scoped to `/admin`; it caches nothing). Without keys, an open
-but hidden tab shows them itself. Each browser is listed with a **Remove** button. The admin is
+(the service worker is `/sw.js`, scoped to `/admin`; it caches nothing). While a tab is open,
+even hidden, that tab shows them itself and no push is sent. Each browser is listed with a **Remove** button. The admin is
 installable as an app (`/admin.webmanifest`, start URL `/admin`); on iPhone and iPad, Web Push
 needs Bookly added to the Home Screen first. Notifications carry Bookly's logo as their picture (and a white
 silhouette in Android's status bar); the larger "app" icon is chosen by the operating system:
@@ -59,7 +81,9 @@ Activity log entries: `notifications.kinds_updated`, `notifications.device_added
 ## Host pings
 
 Events: someone books, an attendee cancels, an attendee joins the Bookly video room, a call
-starts in one hour. Channels: email (always available), WhatsApp or SMS via Meta, Sent.dm or Twilio, and a Slack
+starts in one hour. With the `notifications` flag on, texts and Slack pings follow the same
+realtime-first rule as email: only when you have no Bookly tab open, or after the grace period
+if no tab showed it. Channels: email (always available), WhatsApp or SMS via Meta, Sent.dm or Twilio, and a Slack
 incoming webhook. Each host sets their own phone, channel and toggles.
 
 Texts go only to a verified number: after saving a phone and a channel, the host presses

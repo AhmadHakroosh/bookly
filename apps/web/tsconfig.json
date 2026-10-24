@@ -5,6 +5,8 @@
     "lib": ["dom", "dom.iterable", "esnext"],
     "allowJs": true,
     "noEmit": true,
+    // @bookly/realtime imports with .ts extensions so Node runs its standalone server as is.
+    "allowImportingTsExtensions": true,
     "module": "esnext",
     "jsx": "react-jsx",
     "incremental": true,

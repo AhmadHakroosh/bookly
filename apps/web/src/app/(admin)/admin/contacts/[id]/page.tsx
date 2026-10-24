@@ -2,11 +2,13 @@ import { ContactSkeleton } from "@/components/skeletons/pages";
 import Link from "next/link";
 import {
   ArrowRightIcon,
+  BanknoteIcon,
   CalendarPlusIcon,
   CheckCircle2Icon,
   CheckIcon,
   CircleIcon,
   ClipboardCheckIcon,
+  FileIcon,
   FileTextIcon,
   HourglassIcon,
   MailIcon,
@@ -16,9 +18,8 @@ import {
   SquareCheckIcon,
   UserXIcon,
   XCircleIcon,
+  ZapIcon,
   type LucideIcon,
-  BanknoteIcon,
-  FileIcon,
 } from "lucide-react";
 import { BackLink } from "@/components/links";
 import { notFound } from "next/navigation";
@@ -74,6 +75,7 @@ const ICON: Record<string, LucideIcon> = {
   email_sent: MailIcon,
   note: PencilLineIcon,
   stage_changed: ArrowRightIcon,
+  automation: ZapIcon,
   waitlist_joined: HourglassIcon,
   form_submitted: ClipboardCheckIcon,
   brief: FileTextIcon,

@@ -168,7 +168,8 @@ const stageRef = (s: PipelineStage | null | undefined) =>
  * Moves a contact to a stage of the workspace's client pipeline: the one writer of
  * `contacts.stage_id`. In one transaction it updates the contact (and the legacy column) and
  * records the transition; then it logs the timeline entry, sends `contact.stage_changed` and
- * refreshes the workspace. `by` is a user id or "system", "api", "capture", "recap". Returns
+ * refreshes the workspace; the stages' automations are scheduled in the same transaction and
+ * started after it. `by` is a user id, "system", "api", "capture", "recap" or `rule:<id>`. Returns
  * false when nothing moved (unknown contact or stage, or already there).
  */
 export async function moveToStage(input: {
@@ -180,8 +181,9 @@ export async function moveToStage(input: {
   depth?: number;
 }): Promise<boolean> {
   const { workspaceId, contactId, toStageId, by } = input;
-  const actorType = SYSTEM_ACTORS.has(by) ? by : "user";
-  const actorId = actorType === "user" ? by : null;
+  // Automations move people as `rule:<id>` (ADR 0002).
+  const actorType = by.startsWith("rule:") ? "rule" : SYSTEM_ACTORS.has(by) ? by : "user";
+  const actorId = actorType === "user" ? by : actorType === "rule" ? by.slice(5) : null;
 
   const result = await db().transaction(async (tx) => {
     const [contact] = await tx
@@ -219,22 +221,37 @@ export async function moveToStage(input: {
     // A contact created before it had a stage, put where its legacy column already said:
     // attach it quietly instead of reporting a move that did not happen.
     if (!contact.stageId && contact.stage === legacy) return null;
-    await tx.insert(schema.stageTransitions).values({
+    const [transition] = await tx
+      .insert(schema.stageTransitions)
+      .values({
+        workspaceId,
+        pipelineId: to.stage.pipelineId,
+        subjectType: "contact",
+        subjectId: contactId,
+        fromStageId: contact.stageId,
+        toStageId: to.stage.id,
+        actorType,
+        actorId,
+        depth: input.depth ?? 0,
+      })
+      .returning({ id: schema.stageTransitions.id });
+    // The stages' automations, scheduled with the move so none is lost or doubled.
+    const { scheduleTransitionRules } = await import("./pipelines/rules");
+    const runs = await scheduleTransitionRules(tx, {
       workspaceId,
-      pipelineId: to.stage.pipelineId,
       subjectType: "contact",
       subjectId: contactId,
       fromStageId: contact.stageId,
       toStageId: to.stage.id,
-      actorType,
-      actorId,
+      transitionId: transition!.id,
       depth: input.depth ?? 0,
     });
-    return { before: contact, updated: updated!, from, to: to.stage, legacy };
+    return { before: contact, updated: updated!, from, to: to.stage, legacy, runs };
   });
   if (!result) return false;
 
-  const { before, updated, from, to, legacy } = result;
+  const { before, updated, from, to, legacy, runs } = result;
+  if (runs.length) await (await import("./pipelines/rules")).startRuns(runs);
   // Lazy: contacts.ts calls into this module for every stage change.
   const contacts = await import("./contacts");
   await contacts.logContactEvent(

@@ -36,6 +36,8 @@ const RESERVED_ADDRESSES = new Set([
   "help",
   "docs",
   "status",
+  // the cloud's standalone socket server (ADR 0007)
+  "realtime",
   "staging",
   "stage",
   "dev",
@@ -174,6 +176,7 @@ const RESERVED_ADDRESSES = new Set([
 const RESERVED_USERNAMES = new Set([
   "admin",
   "api",
+  "realtime",
   "booking",
   "book",
   "docs",

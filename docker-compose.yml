@@ -2,6 +2,7 @@
 #   pnpm docker:db        -> just Postgres for `pnpm dev`
 #   docker compose --profile app up -d   -> full stack incl. the app image
 #   docker compose --profile app --profile tls up -d   -> + Caddy with automatic HTTPS
+#   docker compose --profile app --profile scan up -d  -> + ClamAV for uploads (CLAMAV_HOST=clamav)
 services:
   postgres:
     image: postgres:17-alpine
@@ -36,6 +37,14 @@ services:
     volumes: [uploads-data:/app/data/uploads]
     ports: ["3002:3000"]
 
+  # Malware scanning for files people upload through public forms (ADR 0004). Run with
+  # `--profile scan` and set CLAMAV_HOST=clamav in .env; without it uploads stay download-only.
+  clamav:
+    profiles: [scan]
+    image: clamav/clamav:1.4.3
+    restart: unless-stopped
+    volumes: [clamav-data:/var/lib/clamav]
+
   caddy:
     profiles: [tls]
     image: caddy:2-alpine
@@ -54,3 +63,4 @@ volumes:
   uploads-data:
   caddy-data:
   caddy-config:
+  clamav-data:

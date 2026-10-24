@@ -15,12 +15,15 @@ import { getCurrentWorkspace } from "@/server/workspace";
 export async function GET(req: Request, ctx: RouteContext<"/files/[id]">) {
   const { id } = await ctx.params;
   const file = await getFileAnywhere(id);
-  if (!file || file.status !== "ready" || file.deletedAt)
+  // An infected file is never served (the scan hook removes it at upload; this is the backstop).
+  if (!file || file.status !== "ready" || file.deletedAt || file.scanStatus === "infected")
     return new Response("Not found", { status: 404 });
   // Only images and PDFs open in the browser (unless `?download=1`); anything else downloads.
-  // Files people sent through a public form always download: nothing has scanned them.
+  // Files people sent through a public form open in the browser only once scanned clean.
   const forceDownload =
-    new URL(req.url).searchParams.get("download") === "1" || file.ownerType === "form_response";
+    new URL(req.url).searchParams.get("download") === "1" ||
+    (file.scanStatus !== null && file.scanStatus !== "clean") ||
+    (file.ownerType === "form_response" && file.scanStatus !== "clean");
   const inline = !forceDownload && (file.visibility === "public" || PREVIEWABLE.has(file.mime));
   const disposition = `${inline ? "inline" : "attachment"}; filename="${file.name.replace(/["\r\n]/g, "")}"`;
 

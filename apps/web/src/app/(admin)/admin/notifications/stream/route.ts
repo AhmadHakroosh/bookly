@@ -8,21 +8,27 @@ import {
   toClient,
   unreadCount,
 } from "@/server/notifications";
+import { ssePresence } from "@/server/realtime";
 import { getSession, getStaffRole } from "@/server/session";
 import { getCurrentWorkspace } from "@/server/workspace";
 
 /*
- * The bell's live feed (Server-Sent Events). The table is the fan-out: each open admin tab holds
- * one stream that checks the member's rows every few seconds and sends what is new plus the
- * unread count when it changes (and, with Messages, their unread count and newest activity).
- * A stream lives under a minute (serverless limits); EventSource reconnects by itself with
- * Last-Event-ID, so nothing is missed between two streams.
+ * The bell's live feed over Server-Sent Events: the fallback transport since realtime delivery
+ * (ADR 0007), for installs without a socket server (Vercel until it has one) and browsers whose
+ * socket cannot connect. The table is the fan-out: each tab's stream checks the member's rows
+ * every few seconds and sends what is new plus the unread count when it changes (and, with
+ * Messages, their unread count and newest activity). With `?tab=<id>` the stream also keeps the
+ * tab's presence row, so `notify()` holds the email back while the member is here. A stream
+ * lives under a minute (serverless limits); EventSource reconnects by itself with Last-Event-ID,
+ * so nothing is missed between two streams.
  */
 
 export const maxDuration = 60;
 
 const WINDOW_MS = 50_000;
 const POLL_MS = 4_000;
+/** Presence is refreshed about every 20 s (the socket server's rhythm). */
+const PRESENCE_EVERY = 5;
 
 const wait = (ms: number, signal: AbortSignal) =>
   new Promise<void>((resolve) => {
@@ -43,6 +49,8 @@ export async function GET(req: Request) {
   const messagesOn =
     (await hasFlag(ws, "messages")) && (canGuest(ws) || canTeam(ws)) ? { userId, ws } : null;
   let cursor = decodeCursor(req.headers.get("last-event-id")) ?? (await streamStart(ws.id, userId));
+  const tab = new URL(req.url).searchParams.get("tab");
+  await ssePresence(ws.id, userId, tab);
   const enc = new TextEncoder();
   const stream = new ReadableStream<Uint8Array>({
     async start(controller) {
@@ -53,8 +61,10 @@ export async function GET(req: Request) {
       let lastCount = -1;
       let lastPulse = "";
       const started = Date.now();
+      let polls = 0;
       try {
         while (!req.signal.aborted && Date.now() - started < WINDOW_MS) {
+          if (++polls % PRESENCE_EVERY === 0) await ssePresence(ws.id, userId, tab);
           const rows = await notificationsAfter(ws.id, userId, cursor);
           for (const r of rows) {
             cursor = { createdAt: r.createdAt.toISOString(), id: r.id };

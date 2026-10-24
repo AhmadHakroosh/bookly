@@ -20,9 +20,10 @@ import { trackBooking } from "./contacts";
 import { purgeTrash } from "./drive";
 import { postDueNotes } from "./meeting-notes";
 import { replyToFor } from "./inbound";
-import { notify, pruneNotifications, wantsEmail } from "./notifications";
+import { notify, pruneNotifications, sendDueFallbacks, wantsEmail } from "./notifications";
 import { textAttendee } from "./notify";
 import { expireUnpaidBookings } from "./payments";
+import { prunePresence } from "./realtime";
 import { getProfileByUser } from "./scheduling";
 import { fmtDateTime } from "@/lib/time";
 
@@ -95,7 +96,9 @@ export async function sendDueReminders(
         replyTo: guestReplyTo,
         fromName: host.displayName,
       }),
-      hostUser?.email && (await wantsEmail(ws.id, b.hostUserId, "booking.reminder"))
+      // Further ahead there is no bell notification to stand in for it: the host's email (with
+      // the briefing) goes as before. Within the hour it rides on `notify()` below, realtime first.
+      m > 60 && hostUser?.email && (await wantsEmail(ws.id, b.hostUserId, "booking.reminder"))
         ? sendEmail({ to: hostUser.email, subject: h.subject, text: h.text, html: h.html })
         : Promise.resolve(),
       et?.remindByText && b.attendeePhone
@@ -117,6 +120,7 @@ export async function sendDueReminders(
             dedupeKey: `booking:${b.id}:remind:${b.startAt.getTime()}`,
             bookingId: b.id,
             text: `${b.attendeeName} · ${et?.title ?? "Meeting"} in ${hours === 1 ? "1 hour" : `${hours} hours`}. ${b.meetingUrl ?? ""}`.trim(),
+            email: { subject: h.subject, text: h.text, html: h.html },
           })
         : Promise.resolve(),
     ]).catch((e) => console.error("[reminders]", e));
@@ -207,7 +211,15 @@ export async function sendDueReminders(
   await sweepAuditLog(now).catch((e) => console.error("[audit] retention failed", e));
   await sweepPendingFiles(now).catch((e) => console.error("[files] sweep failed", e));
   await sweepFormDrafts(now).catch((e) => console.error("[forms] draft sweep failed", e));
+  await (
+    await import("./pipelines/rules")
+  )
+    .runDueRules(now)
+    .catch((e) => console.error("[rules] sweep failed", e));
   await pruneNotifications(now).catch((e) => console.error("[notifications] prune failed", e));
+  // Realtime first (ADR 0007): held-back channels whose job was lost or never scheduled (inline).
+  await sendDueFallbacks(now).catch((e) => console.error("[notifications] fallbacks failed", e));
+  await prunePresence(now).catch((e) => console.error("[realtime] presence prune failed", e));
   await purgeTrash(now).catch((e) => console.error("[drive] trash purge failed", e));
   await postDueNotes(now).catch((e) => console.error("[notes] posting failed", e));
   await reconcileSeats(now).catch((e) => console.error("[billing] seat reconcile failed", e));

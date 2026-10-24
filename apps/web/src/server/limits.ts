@@ -63,6 +63,37 @@ async function count(ws: Workspace, what: CountableLimit, userId?: string): Prom
             )
         )[0]?.n ?? 0
       );
+    case "stageRules":
+      // Client-pipeline automations only; hiring pipelines' rules are free (ADR 0002).
+      return (
+        (
+          await db()
+            .select({ n })
+            .from(schema.stageRules)
+            .innerJoin(schema.pipelines, eq(schema.pipelines.id, schema.stageRules.pipelineId))
+            .where(
+              and(
+                eq(schema.stageRules.workspaceId, ws.id),
+                eq(schema.stageRules.active, true),
+                eq(schema.pipelines.kind, "client"),
+              ),
+            )
+        )[0]?.n ?? 0
+      );
+    case "opportunities":
+      return (
+        (
+          await db()
+            .select({ n })
+            .from(schema.opportunities)
+            .where(
+              and(
+                eq(schema.opportunities.workspaceId, ws.id),
+                eq(schema.opportunities.status, "open"),
+              ),
+            )
+        )[0]?.n ?? 0
+      );
     case "integrations":
       return (
         (
@@ -284,6 +315,8 @@ export async function usageSummary(ws: Workspace): Promise<UsageRow[]> {
     "eventTypes",
     "members",
     "collaborators",
+    "stageRules",
+    "opportunities",
     "integrations",
     "domains",
   ];
@@ -296,8 +329,12 @@ export async function usageSummary(ws: Workspace): Promise<UsageRow[]> {
         used: counts[i]!,
         max: limits[k],
       }))
-      // Collaborators come with hiring: listed once a workspace has any.
-      .filter((r) => r.key !== "collaborators" || r.used > 0),
+      // Collaborators come with hiring, automations with the pipeline editor: listed once used.
+      .filter(
+        (r) =>
+          (r.key !== "collaborators" && r.key !== "stageRules" && r.key !== "opportunities") ||
+          r.used > 0,
+      ),
     {
       key: "bookingsPerMonth",
       label: "bookings this month",
@@ -323,3 +360,6 @@ export async function usageSummary(ws: Workspace): Promise<UsageRow[]> {
     },
   ];
 }
+
+/** How many of a countable thing the workspace has (for checks made outside this module). */
+export const countUsage = (ws: Workspace, what: CountableLimit) => count(ws, what);
