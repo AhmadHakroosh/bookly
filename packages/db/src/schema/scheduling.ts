@@ -213,7 +213,10 @@ export const eventTypes = pgTable(
     location: jsonb("location").$type<EventLocation>().notNull().default({ type: "daily" }),
     /** Every way to meet the attendee may pick from; empty means just `location`. */
     locations: jsonb("locations").$type<EventLocation[]>().notNull().default([]),
+    /** Legacy booking questions, kept in step with `form_id` through 1.0.x; dropped in 1.1. */
     questions: jsonb("questions").$type<EventQuestion[]>().notNull().default([]),
+    /** The booking form (ADR 0004); its published version mirrors `questions` until 1.1. */
+    formId: text("form_id"),
     requiresConfirmation: boolean("requires_confirmation").notNull().default(false),
     color: text("color").notNull().default("#2563eb"),
     hidden: boolean("hidden").notNull().default(false),
@@ -581,6 +584,8 @@ export const routingForms = pgTable(
     name: text("name").notNull(),
     description: text("description"),
     questions: jsonb("questions").$type<EventQuestion[]>().notNull().default([]),
+    /** The routing questionnaire as a form (ADR 0004); mirrors `questions` until 1.1. */
+    formId: text("form_id"),
     rules: jsonb("rules").$type<RoutingRule[]>().notNull().default([]),
     fallback: jsonb("fallback").$type<RoutingDestination | null>(),
     active: boolean("active").notNull().default(true),

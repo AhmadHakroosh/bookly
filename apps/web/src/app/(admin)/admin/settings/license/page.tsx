@@ -1,5 +1,6 @@
 import { SettingsSkeleton } from "@/components/skeletons/pages";
 import { notFound } from "next/navigation";
+import { connection } from "next/server";
 import { Suspense } from "react";
 import type { LicenseStatus } from "@bookly/editions";
 import { Badge } from "@/components/ui/badge";
@@ -43,6 +44,8 @@ function Row({ k, v }: { k: string; v: React.ReactNode }) {
 }
 
 async function LicensePage() {
+  // Request-time: license state depends on the clock (expiry, grace), never prerendered.
+  await connection();
   // The license belongs to the install; on the hosted service the operator holds it.
   if (isCloud()) notFound();
   const [{ role }, { status, source }] = await Promise.all([requireStaff(), licenseStatus()]);

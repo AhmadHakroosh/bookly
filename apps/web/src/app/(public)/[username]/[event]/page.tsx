@@ -34,6 +34,7 @@ import { detectCountry } from "@/server/geo";
 import { captureSupportsLocation } from "@/server/integrations/notetaker";
 import { formatPrice, paymentsReady } from "@/server/payments";
 import { getCurrentWorkspace } from "@/server/workspace";
+import { formQuestions } from "@/server/forms";
 import { publicBaseUrl } from "@/server/urls";
 import { JsonLd } from "@/components/json-ld";
 import { hasFeature } from "@/server/limits";
@@ -70,6 +71,7 @@ async function EventPage({ params, searchParams }: PageProps<"/[username]/[event
   const profile = ws ? await getProfileByUsername(ws.id, username) : null;
   const et = ws && profile ? await getEventType(ws.id, profile.userId, event) : null;
   if (!ws || !profile || !et) notFound();
+  const questions = await formQuestions(ws, et);
 
   const paid = paymentsReady(ws);
   const video = { video: hasFeature(ws, "booklyVideo") };
@@ -225,7 +227,7 @@ async function EventPage({ params, searchParams }: PageProps<"/[username]/[event
                 event={et.slug}
                 slot={slot.toISOString()}
                 tz={tz}
-                questions={et.questions}
+                questions={questions}
                 maxGuests={et.maxGuests}
                 reschedule={reschedule}
                 paid={!!et.priceCents && paid}

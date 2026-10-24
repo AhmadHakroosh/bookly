@@ -11,6 +11,7 @@ import { getEventType, getProfileByUsername } from "@/server/scheduling";
 import { throttlePublicForm } from "@/server/request";
 import { joinWaitlist, type WaitlistTarget } from "@/server/waitlist";
 import { getCurrentWorkspace } from "@/server/workspace";
+import { formQuestions } from "@/server/forms";
 
 const schema = z.object({
   username: z.string().min(1),
@@ -48,7 +49,8 @@ export async function book(_prev: BookState, formData: FormData): Promise<BookSt
   if (!(await throttlePublicForm(ws.id, "book")))
     return { error: "Too many attempts. Please wait a few minutes and try again." };
   const answers: Record<string, string> = {};
-  for (const q of et.questions) answers[q.id] = (raw[`q_${q.id}`] ?? "").slice(0, 2000);
+  for (const q of await formQuestions(ws, et))
+    answers[q.id] = (raw[`q_${q.id}`] ?? "").slice(0, 2000);
   let token: string;
   let skipped = 0;
   try {
