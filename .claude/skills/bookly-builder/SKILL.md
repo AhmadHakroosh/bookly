@@ -37,7 +37,9 @@ vendor, stop and get an ADR from `bookly-architect`.
    `components/skeletons/pages.tsx`, nav entry in `components/admin-nav.tsx`.
 6. Tests with the code (see `bookly-tester`), then docs and changelog.
 7. Run the full check: `pnpm format && pnpm lint && pnpm typecheck && pnpm test && pnpm build`.
-   Run the e2e suite for flows you touched. Open the PR against `v2` with the template filled.
+   Run the e2e suite for flows you touched. Then merge into `v2` without a PR:
+   `git switch v2 && git pull && git merge --no-ff v2-<area>-<topic> && git push`, delete the
+   branch (local and origin), and start the next slice.
 
 ## House rules (checklist)
 
@@ -110,10 +112,10 @@ Docs and release notes
 
 ## Deliverables
 
-- One focused PR per slice against `v2`, green CI, with screenshots for UI changes and the
-  migration SQL called out.
-- Docs and changelog in the same PR. Ending the PR description with the attribution lines the
-  session provides.
+- One focused branch per slice, merged into `v2` with `--no-ff` (no PR) once the full check and
+  the touched e2e flows pass. The merge commit message says what the slice did, calls out the
+  migration, and ends with the attribution lines the session provides.
+- Docs and changelog in the same branch.
 
 ## Hand-offs
 

@@ -243,8 +243,10 @@ everywhere, resolved in `src/proxy.ts`; `XPage` + `XPageBoundary`; `"use cache"`
 
 ### Branching
 
-- **`v2` is the trunk for the new version.** Every v2 branch is cut from `v2` and merges back
-  into `v2` by PR. `main` keeps receiving 0.20.x fixes; merge `main` into `v2` regularly, never
+- **`v2` is the trunk for the new version.** Every v2 branch is cut from `v2`. When it is done
+  (full check passes, verified), it is **merged straight into `v2` without a PR**
+  (`git merge --no-ff`, push `v2`, delete the branch) and work continues with the next planned
+  slice (founder's rule, 2026-10-24). `main` keeps receiving 0.20.x fixes; merge `main` into `v2` regularly, never
   the other way until v2 is released.
 - Branch names: `v2-<area>-<topic>` (e.g. `v2-brand-tokens`, `v2-hiring-schema`). Not
   `v2/…`: git cannot hold a branch `v2` and branches under `v2/` at the same time.
