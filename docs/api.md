@@ -48,6 +48,13 @@ Add an endpoint under **Admin → Settings → Integrations** and choose events:
 (sent together with `booking.created` for the replacement; carries `previousBookingId`). Use
 **Ping** to send a test delivery.
 
+`contact.stage_changed` carries `{ contact, from, to, by, from_stage, to_stage }`. `from` and
+`to` are the four classic values (`lead`, `active`, `won`, `lost`); `from_stage` and `to_stage`
+are the stages of the workspace's client pipeline, `{ id, key, name, category }` (`from_stage`
+is `null` the first time). Prefer the stage objects: from 1.0 a workspace can rename stages and
+add its own, which `from`/`to` only approximate (an open stage reads as `lead`, a won stage as
+`won`), and 1.1 drops them.
+
 Each delivery is a `POST` with JSON `{ id, event, createdAt, data: { booking, … } }` and headers
 `X-Bookly-Event`, `X-Bookly-Delivery`, and `X-Bookly-Signature: t=<unix>,v1=<hex>` where
 `v1 = HMAC-SHA256(secret, "<t>.<raw body>")`. Reject deliveries whose `t` is older than 5

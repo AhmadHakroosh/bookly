@@ -27,6 +27,8 @@ export type Jobs = {
   "crm.sync": { workspaceId: string; contactId: string };
   /** Attach a note to a contact in the CRM. */
   "crm.note": { workspaceId: string; contactId: string; text: string };
+  /** Until 1.1: client pipeline for every workspace, a stage for every contact (ADR 0001). */
+  "pipelines.backfill": Record<string, never>;
 };
 
 export const JOB_NAMES = [
@@ -39,6 +41,7 @@ export const JOB_NAMES = [
   "capture.process",
   "crm.sync",
   "crm.note",
+  "pipelines.backfill",
 ] as const satisfies readonly (keyof Jobs)[];
 
 export type JobName = keyof Jobs;

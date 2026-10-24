@@ -13,6 +13,7 @@ import { serializeContact } from "./api";
 import { refreshWorkspace } from "./cache";
 import { emitEvent } from "./webhooks";
 import { enqueue } from "./jobs";
+import { clientEntryStage, clientStageByKey, clientStageKey, moveToStage } from "./pipelines";
 
 /**
  * Contacts are the relationship layer: one row per email per workspace, with a stage and a
@@ -39,10 +40,13 @@ export async function upsertContact(
       .returning();
     return c ?? existing;
   }
+  const entry = await clientEntryStage(workspaceId);
   const [c] = await db()
     .insert(schema.contacts)
     .values({
       workspaceId,
+      stageId: entry?.id ?? null,
+      stageEnteredAt: entry ? new Date() : null,
       email,
       name: input.name?.trim().slice(0, 120) ?? "",
       phone: input.phone?.trim().slice(0, 40) || null,
@@ -63,7 +67,7 @@ export async function upsertContact(
 }
 
 /** Mirrors the contact to the CRM (when one is configured) through the job queue, with retries. */
-async function afterContactChange(workspaceId: string, c: Contact) {
+export async function afterContactChange(workspaceId: string, c: Contact) {
   try {
     const ws = await workspaceOf(workspaceId);
     if (ws?.settings.crm?.apiKey)
@@ -168,8 +172,9 @@ export async function trackBooking(
     id: opts.id,
   });
   if (type === "booked" || type === "completed") await recount(contact.id);
-  // A completed meeting turns a lead into an active relationship.
-  if (type === "completed" && contact.stage === "lead")
+  // A completed meeting turns a lead into an active relationship. Built-in automation of the
+  // default client pipeline, by stage key; editable rules arrive in 1.1 (ADR 0001).
+  if (type === "completed" && (await clientStageKey(contact)) === "lead")
     await setStage(workspace.id, contact.id, "active", "system");
   return contact;
 }
@@ -186,7 +191,7 @@ export async function retractBookingEvents(bookingId: string, type: ContactEvent
  * held goes back to "lead" unless another meeting with them actually took place.
  */
 export async function reconsiderStageAfterNoShow(workspace: Workspace, contact: Contact) {
-  if (contact.stage !== "active") return;
+  if ((await clientStageKey(contact)) !== "active") return;
   const held = await db().query.bookings.findFirst({
     where: and(eq(schema.bookings.contactId, contact.id), eq(schema.bookings.status, "completed")),
     columns: { id: true },
@@ -203,32 +208,19 @@ async function recount(contactId: string) {
     .where(eq(schema.contacts.id, contactId));
 }
 
+/**
+ * Moves a contact to the client stage with this key ("lead", "active", "won", "lost" or a
+ * workspace's own). A key the workspace has archived is a no-op. `by` is a user id or
+ * "system", "api", "capture", "recap".
+ */
 export async function setStage(
   workspaceId: string,
   contactId: string,
   stage: ContactStage,
   by: string,
 ): Promise<void> {
-  const c = await db().query.contacts.findFirst({ where: eq(schema.contacts.id, contactId) });
-  if (!c || c.workspaceId !== workspaceId || c.stage === stage) return;
-  const [updated] = await db()
-    .update(schema.contacts)
-    .set({ stage })
-    .where(eq(schema.contacts.id, contactId))
-    .returning();
-  await logContactEvent(workspaceId, contactId, "stage_changed", `Stage: ${c.stage} → ${stage}`, {
-    data: { from: c.stage, to: stage, by },
-  });
-  if (updated) {
-    emitEvent(workspaceId, "contact.stage_changed", {
-      contact: serializeContact(updated),
-      from: c.stage,
-      to: stage,
-      by,
-    });
-    void afterContactChange(workspaceId, updated);
-  }
-  refreshWorkspace(workspaceId);
+  const to = await clientStageByKey(workspaceId, stage);
+  if (to) await moveToStage({ workspaceId, contactId, toStageId: to.id, by });
 }
 
 export async function getContact(workspaceId: string, id: string): Promise<Contact | null> {

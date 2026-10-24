@@ -6,6 +6,10 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 ### Changed
 
+- **Contact stages live in a pipeline.** Each workspace gets a "Clients" pipeline with the familiar stages (Lead, Active, Won, Lost), and every contact points at its stage; nothing looks different yet, but this is what lets stages be renamed, reordered and extended, and what hiring pipelines build on. Every stage change is recorded with who made it, for time-in-stage reports later. Migration 0038 creates the tables and fills them for existing contacts; a check on start-up fills anything missed. The old `stage` value is still written and stays in API responses through 1.0.x; it goes in 1.1
+- `contact.stage_changed` webhooks add `from_stage` and `to_stage` (`id`, `key`, `name`, `category`); see [API & webhooks](docs/api.md)
+- The workspace export includes the pipeline, its stages and the stage history
+
 - **A new mark.** The logo is now a lowercase b drawn as a speech bubble with a second bubble answering it, in Bookly Orange, with a lowercase "bookly" wordmark. It replaces the buckle mark everywhere: the app and marketing headers, booking and meeting pages (still in the workspace's own colour where it has one), the favicon, touch and notification icons, the email logo and `brand/`. The brand colour (`--brand`) moves to Bookly Orange in light and dark themes
 - `brand/` is generated from vectors: `brand/source/build.py` draws the mark, wordmark and lockups, `brand/source/render.mjs` renders the PNGs, app icons, favicon and press kit
 
