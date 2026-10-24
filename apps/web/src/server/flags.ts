@@ -29,6 +29,8 @@ export const FLAGS = {
   forms_v2: "Booking and routing questions served from versioned forms (1.0, ADR 0004)",
   hiring: "Hiring: opportunities, applications, reviews and collaborators (1.0, ADR 0003)",
   pipelines: "Contact stages from the client pipeline, and the pipeline editor (1.0, ADR 0001)",
+  stage_rules:
+    "Automations on pipeline stages: run actions when someone enters or leaves (1.0, ADR 0002)",
 } as const;
 
 export type FlagKey = keyof typeof FLAGS;

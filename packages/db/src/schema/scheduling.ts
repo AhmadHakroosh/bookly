@@ -306,7 +306,8 @@ export type ContactEventType =
   | "task"
   | "payment"
   | "email_received"
-  | "file";
+  | "file"
+  | "automation";
 
 /** The contact's timeline: everything that happened between them and the workspace. */
 export const contactEvents = pgTable(

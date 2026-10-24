@@ -10,6 +10,7 @@ import {
   timestamp,
   uniqueIndex,
 } from "drizzle-orm/pg-core";
+import type { ConditionGroup } from "@bookly/forms";
 import { users } from "./auth";
 import { workspaces } from "./workspaces";
 
@@ -145,6 +146,104 @@ export const stageTransitions = pgTable(
     index("stage_transitions_ws_to_idx").on(t.workspaceId, t.toStageId, t.createdAt),
   ],
 );
+
+/* ---------------- Stage rules (ADR 0002) ---------------- */
+
+/** When a rule runs. `idle` is reserved for 1.1 and refused at save until then. */
+export type RuleTrigger =
+  | { on: "enter" }
+  | { on: "leave" }
+  | { on: "event"; event: string }
+  | { on: "idle"; afterMinutes: number };
+
+/** What a rule does, in order. Config the actions use (templates, checklist…) lives on the stage. */
+export type RuleAction =
+  | { type: "send_message"; templateId: string }
+  | { type: "send_booking_link"; sessionIndex: number }
+  | { type: "request_form"; formId: string }
+  | { type: "create_tasks" }
+  | { type: "assign_reviewers" }
+  | { type: "request_payment" }
+  | { type: "create_folder" }
+  | { type: "route" }
+  | { type: "move_to_stage"; stageKey: string }
+  | { type: "add_tag"; tag: string }
+  | {
+      type: "notify_team";
+      who: "coordinators" | "assigned_reviewers" | "stage_owner";
+      text: string;
+    };
+
+export type RuleActionType = RuleAction["type"];
+
+/** A rule on a stage: trigger → conditions → actions. Rows, so runs and audit have a stable id. */
+export const stageRules = pgTable(
+  "stage_rules",
+  {
+    id: id(),
+    workspaceId: text("workspace_id")
+      .notNull()
+      .references(() => workspaces.id, { onDelete: "cascade" }),
+    pipelineId: text("pipeline_id")
+      .notNull()
+      .references(() => pipelines.id, { onDelete: "cascade" }),
+    stageId: text("stage_id")
+      .notNull()
+      .references(() => pipelineStages.id, { onDelete: "cascade" }),
+    name: text("name").notNull(),
+    trigger: jsonb("trigger").$type<RuleTrigger>().notNull(),
+    /** The form-logic grammar over the subject's facts (tags, stage, answers). Null = always. */
+    conditions: jsonb("conditions").$type<ConditionGroup | null>(),
+    actions: jsonb("actions").$type<RuleAction[]>().notNull().default([]),
+    /** Wait before running; a delayed enter rule re-checks the subject is still in the stage. */
+    delayMinutes: integer("delay_minutes").notNull().default(0),
+    position: integer("position").notNull().default(0),
+    active: boolean("active").notNull().default(true),
+    createdBy: text("created_by").references(() => users.id, { onDelete: "set null" }),
+    ...timestamps,
+  },
+  (t) => [
+    index("stage_rules_stage_idx").on(t.stageId, t.position),
+    index("stage_rules_ws_idx").on(t.workspaceId),
+  ],
+);
+
+export type RuleRunStatus = "pending" | "running" | "done" | "skipped" | "failed";
+
+/** One execution of one rule for one subject: the idempotency record. */
+export const stageRuleRuns = pgTable(
+  "stage_rule_runs",
+  {
+    id: id(),
+    workspaceId: text("workspace_id")
+      .notNull()
+      .references(() => workspaces.id, { onDelete: "cascade" }),
+    ruleId: text("rule_id")
+      .notNull()
+      .references(() => stageRules.id, { onDelete: "cascade" }),
+    subjectType: text("subject_type").$type<"contact" | "application">().notNull(),
+    subjectId: text("subject_id").notNull(),
+    /** The transition or module event that caused it; one run per (rule, cause). */
+    causeId: text("cause_id").notNull(),
+    /** How many rule-driven moves led here, carried into moves this run makes. */
+    depth: integer("depth").notNull().default(0),
+    status: text("status").$type<RuleRunStatus>().notNull().default("pending"),
+    runAt: timestamp("run_at", { withTimezone: true }).notNull(),
+    attempts: integer("attempts").notNull().default(0),
+    /** Per action: `done`, `skipped:<reason>` or `failed:<error>`; a retry resumes after done. */
+    results: jsonb("results").$type<string[]>().notNull().default([]),
+    finishedAt: timestamp("finished_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("stage_rule_runs_cause_idx").on(t.ruleId, t.causeId),
+    index("stage_rule_runs_due_idx").on(t.status, t.runAt),
+    index("stage_rule_runs_subject_idx").on(t.subjectType, t.subjectId),
+  ],
+);
+
+export type StageRule = typeof stageRules.$inferSelect;
+export type StageRuleRun = typeof stageRuleRuns.$inferSelect;
 
 export type Pipeline = typeof pipelines.$inferSelect;
 export type PipelineStage = typeof pipelineStages.$inferSelect;

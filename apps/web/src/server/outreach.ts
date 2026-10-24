@@ -290,9 +290,16 @@ export async function sendGuestEmail(
   ws: Workspace,
   c: Contact,
   hostUserId: string,
-  input: { subject: string; text: string; fileIds?: string[] },
+  input: {
+    subject: string;
+    text: string;
+    fileIds?: string[];
+    /** Status, scheduling or payment news: sent even to people who opted out of marketing. */
+    transactional?: boolean;
+  },
 ): Promise<{ ok: true; id: string } | { error: string }> {
-  if (c.emailOptOut) return { error: "This contact has unsubscribed from your emails." };
+  if (c.emailOptOut && !input.transactional)
+    return { error: "This contact has unsubscribed from your emails." };
   const body = input.text.trim().slice(0, 8000);
   if (!body) return { error: "Write your message first." };
   const subject = input.subject.trim().slice(0, 200) || `A message from ${ws.name}`;
