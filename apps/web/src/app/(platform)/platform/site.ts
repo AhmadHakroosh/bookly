@@ -52,6 +52,7 @@ export const FOOTER = {
   Company: [
     { href: "/about", label: "About" },
     { href: "/contact", label: "Contact" },
+    { href: "/press", label: "Press and brand" },
     { href: "/security", label: "Security" },
   ],
   Legal: [

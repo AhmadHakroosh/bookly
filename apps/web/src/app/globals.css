@@ -51,7 +51,8 @@
 }
 
 :root {
-  --brand: oklch(0.72 0.14 55);
+  /* Bookly Orange: the mark, brand fills and large type (see bookly-design-system tokens). */
+  --brand: oklch(0.651 0.183 38.6);
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
   --card: oklch(1 0 0);
@@ -87,6 +88,7 @@
 }
 
 .dark {
+  --brand: oklch(0.705 0.159 41.4);
   --background: oklch(0.145 0 0);
   --foreground: oklch(0.985 0 0);
   --card: oklch(0.205 0 0);

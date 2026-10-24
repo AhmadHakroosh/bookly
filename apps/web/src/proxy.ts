@@ -61,6 +61,7 @@ const MARKETING_PATHS = new Set([
   "terms",
   "dpa",
   "changelog",
+  "press",
   "og",
 ]);
 /** Files served as-is from public/ and the app's icon and manifest routes. */
@@ -210,5 +211,5 @@ export async function proxy(request: NextRequest) {
 export const config = {
   // Every path, including ones with a file extension, so unknown "files" get a real 404.
   // Static folders under public/ that serve files by extension bypass the proxy entirely.
-  matcher: ["/((?!_next/|uploads/|backgrounds/).*)"],
+  matcher: ["/((?!_next/|uploads/|backgrounds/|press/).*)"],
 };
