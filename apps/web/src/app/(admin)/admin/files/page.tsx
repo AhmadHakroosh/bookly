@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { PaneHeader } from "@/components/ui/pane-header";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import { PaneHost } from "@/components/pane";
@@ -46,6 +47,7 @@ import { getCurrentWorkspace } from "@/server/workspace";
 import { FileActions } from "./file-actions";
 import { FileSheet, UnlinkTaskButton } from "./file-sheet";
 import { FolderMenu, NewFolderButton, RestoreFolderButton } from "./folder-actions";
+import { PageHeader } from "@/components/ui/page-header";
 
 export const metadata = { title: "Files" };
 
@@ -120,29 +122,37 @@ async function FilesPage({ searchParams }: PageProps<"/admin/files">) {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <h1 className="flex items-center gap-2 text-2xl font-semibold tracking-tight">
-            Files {beta && <BetaBadge />}
-          </h1>
-          <p className="text-sm text-muted-foreground">
+      <PageHeader
+        title="Files"
+        badge={beta && <BetaBadge />}
+        description={
+          <>
             {formatBytes(used)} used{budget !== null ? ` of ${formatBytes(budget)}` : ""}
-          </p>
-        </div>
-        <form method="get" action="/admin/files" className="relative w-full sm:w-72" role="search">
-          <SearchIcon
-            className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground"
-            aria-hidden
-          />
-          <Input
-            name="q"
-            defaultValue={q}
-            placeholder="Search files"
-            aria-label="Search files"
-            className="pl-9"
-          />
-        </form>
-      </div>
+          </>
+        }
+        actions={
+          <>
+            <form
+              method="get"
+              action="/admin/files"
+              className="relative w-full sm:w-72"
+              role="search"
+            >
+              <SearchIcon
+                className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground"
+                aria-hidden
+              />
+              <Input
+                name="q"
+                defaultValue={q}
+                placeholder="Search files"
+                aria-label="Search files"
+                className="pl-9"
+              />
+            </form>
+          </>
+        }
+      />
       <div className="grid gap-6 md:grid-cols-[180px_1fr]">
         <nav aria-label="Drive" className="flex gap-1 overflow-x-auto md:flex-col">
           {VIEWS.filter(([k]) => k !== "team" || canTeam).map(([k, label, Icon]) => (
@@ -596,15 +606,17 @@ async function FilePane({
   return (
     <FileSheet title={file.name} closeHref={closeHref}>
       <div className="space-y-5">
-        {/* Room on the right for the sheet's own close button. */}
-        <div className="flex items-start justify-between gap-3 pr-8">
-          <h1 className="min-w-0 text-lg font-semibold tracking-tight break-words">{file.name}</h1>
-          <FileActions
-            file={{ id: file.id, name: file.name, mime: file.mime, contactId: file.contactId }}
-            canWrite={file.space !== "personal" || file.uploadedBy === v.userId}
-            canTeam={canTeam}
-          />
-        </div>
+        <PaneHeader
+          as="h1"
+          title={file.name}
+          actions={
+            <FileActions
+              file={{ id: file.id, name: file.name, mime: file.mime, contactId: file.contactId }}
+              canWrite={file.space !== "personal" || file.uploadedBy === v.userId}
+              canTeam={canTeam}
+            />
+          }
+        />
         {file.mime.startsWith("image/") && PREVIEWABLE.has(file.mime) ? (
           // eslint-disable-next-line @next/next/no-img-element -- a private file behind /files, not a static asset
           <img

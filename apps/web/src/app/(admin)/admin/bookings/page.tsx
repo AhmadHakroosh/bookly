@@ -39,6 +39,7 @@ import { requireStaff } from "@/server/session";
 import { listWaitlist } from "@/server/waitlist";
 import { getCurrentWorkspace } from "@/server/workspace";
 import { hostCancel, hostConfirm, hostMark, hostRemoveWaitlist } from "../scheduling-actions";
+import { PageHeader } from "@/components/ui/page-header";
 
 export const metadata = { title: "Bookings" };
 
@@ -425,13 +426,17 @@ async function LegacyBookings({ past }: { past: boolean }) {
   const tz = profile?.timezone ?? ws.timezone;
   return (
     <div className="space-y-6">
-      <div className="flex items-end justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Bookings</h1>
-          <p className="text-sm text-muted-foreground">Times shown in {tz}.</p>
-        </div>
-        <TimeTabs past={past} upcomingHref="/admin/bookings" pastHref="/admin/bookings?view=past" />
-      </div>
+      <PageHeader
+        title="Bookings"
+        description={<>Times shown in {tz}.</>}
+        actions={
+          <TimeTabs
+            past={past}
+            upcomingHref="/admin/bookings"
+            pastHref="/admin/bookings?view=past"
+          />
+        }
+      />
       <BookingList rows={rows} waitlist={waitlist} tz={tz} past={past} />
     </div>
   );
@@ -548,35 +553,33 @@ async function BookingsWorkspace({
 
   return (
     <div className="space-y-5">
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <h1 className="flex items-center gap-2 text-2xl font-semibold tracking-tight">
-            Bookings
-            {(await inBeta(ws, "bookings_calendar")) && <BetaBadge />}
-          </h1>
-          <p className="text-sm text-muted-foreground">Times shown in {tz}.</p>
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
-          {mode === "list" && (
-            <TimeTabs
-              past={past}
-              upcomingHref={hrefFor({ view: null, after: null, booking: null })}
-              pastHref={hrefFor({ view: "past", after: null, booking: null })}
+      <PageHeader
+        title="Bookings"
+        badge={(await inBeta(ws, "bookings_calendar")) && <BetaBadge />}
+        description={<>Times shown in {tz}.</>}
+        actions={
+          <>
+            {mode === "list" && (
+              <TimeTabs
+                past={past}
+                upcomingHref={hrefFor({ view: null, after: null, booking: null })}
+                pastHref={hrefFor({ view: "past", after: null, booking: null })}
+              />
+            )}
+            <ViewToggle
+              mode={mode}
+              listHref={hrefFor({ mode: "list", cal: null, date: null, booking: null })}
+              calendarHref={hrefFor({
+                mode: "calendar",
+                view: null,
+                after: null,
+                booking: null,
+                cal: cal,
+              })}
             />
-          )}
-          <ViewToggle
-            mode={mode}
-            listHref={hrefFor({ mode: "list", cal: null, date: null, booking: null })}
-            calendarHref={hrefFor({
-              mode: "calendar",
-              view: null,
-              after: null,
-              booking: null,
-              cal: cal,
-            })}
-          />
-        </div>
-      </div>
+          </>
+        }
+      />
 
       {(manager && profiles.length > 1) || legend.length > 0 ? (
         <div className="flex flex-wrap items-center gap-x-4 gap-y-2">

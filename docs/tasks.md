@@ -41,7 +41,7 @@ remembers your last view and layout.
 
 On Team, a task can be given to any member (from the pane or **New task**); they are notified
 ("Task assigned to you"). In comments, type **@** to mention a teammate; they are notified
-("Mentioned in a task"). Notification channels per kind are on Admin → Notifications.
+("Mentioned in a task"). Notification channels per kind are under your menu → Notifications.
 
 ## Plans
 

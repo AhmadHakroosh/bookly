@@ -38,6 +38,7 @@
   --color-brand: var(--brand);
   --color-ink: var(--ink);
   --color-ink-foreground: var(--ink-foreground);
+  --color-ink-hover: var(--ink-hover);
   --color-apricot: var(--apricot);
   --color-reply: var(--reply);
   --color-success: var(--success);
@@ -96,6 +97,8 @@
   /* Ink: the dark button and reversed surfaces. Apricot: time chips. Reply: the mark's bubble. */
   --ink: oklch(0.226 0 0);
   --ink-foreground: oklch(1 0 0);
+  /* Hover lifts Ink a step, solid like --primary-hover: the label never sits on a see-through fill. */
+  --ink-hover: oklch(0.33 0.004 70);
   --apricot: oklch(0.914 0.05 61.2);
   --reply: oklch(0.829 0.08 40.1);
   /* Status is semantic, never brand: text colour on Paper/white, and a soft fill. */
@@ -149,6 +152,7 @@
   --ring: oklch(0.705 0.159 41.4);
   --ink: oklch(0.97 0.006 84.6);
   --ink-foreground: oklch(0.178 0.003 67.7);
+  --ink-hover: oklch(0.88 0.008 84.6);
   --apricot: oklch(0.34 0.06 55);
   --reply: oklch(0.829 0.08 40.1);
   --success: oklch(0.75 0.14 150);

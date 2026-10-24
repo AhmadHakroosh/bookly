@@ -8,6 +8,7 @@ import { requireManager } from "@/server/session";
 import { getCurrentWorkspace } from "@/server/workspace";
 import { checkDomain, makePrimary, removeDomain } from "./actions";
 import { AddDomainForm } from "./add-domain-form";
+import { PageHeader } from "@/components/ui/page-header";
 
 export const metadata = { title: "Domains" };
 
@@ -22,27 +23,29 @@ async function DomainsPage() {
 
   return (
     <div className="max-w-3xl space-y-8">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Domains</h1>
-        <p className="text-sm text-muted-foreground">
-          {single ? (
-            <>
-              This installation serves <code>{new URL(env.APP_URL).host}</code> (from{" "}
-              <code>APP_URL</code>). Add the hostnames you point at it so links and feeds use the
-              right one.
-            </>
-          ) : (
-            <>
-              Your workspace is available at{" "}
-              <code>
-                {workspace.slug}.{env.ROOT_DOMAIN}
-              </code>
-              . Add a custom domain and point it at <code>{target}</code>. The primary domain is the
-              address in links and emails; guest pages on other hosts redirect to it.
-            </>
-          )}
-        </p>
-      </div>
+      <PageHeader
+        title="Domains"
+        description={
+          <>
+            {single ? (
+              <>
+                This installation serves <code>{new URL(env.APP_URL).host}</code> (from{" "}
+                <code>APP_URL</code>). Add the hostnames you point at it so links and feeds use the
+                right one.
+              </>
+            ) : (
+              <>
+                Your workspace is available at{" "}
+                <code>
+                  {workspace.slug}.{env.ROOT_DOMAIN}
+                </code>
+                . Add a custom domain and point it at <code>{target}</code>. The primary domain is
+                the address in links and emails; guest pages on other hosts redirect to it.
+              </>
+            )}
+          </>
+        }
+      />
 
       <AddDomainForm />
 

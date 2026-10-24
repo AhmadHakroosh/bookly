@@ -17,6 +17,8 @@ const badgeVariants = cva(
         success: "bg-success-muted text-success",
         warning: "bg-warning-muted text-warning",
         info: "bg-info-muted text-info",
+        // Peach with Ember text: emphasis that is not a status ("In 15 min", the current step).
+        accent: "bg-accent text-accent-foreground",
         ghost: "hover:bg-muted hover:text-muted-foreground dark:hover:bg-muted/50",
         link: "text-primary underline-offset-4 hover:underline",
       },

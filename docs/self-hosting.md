@@ -118,7 +118,7 @@ Admin → Settings → Data lets the workspace owner download everything as one 
 forms, transcripts, recaps; tokens and keys excluded) and delete the workspace permanently.
 Deletion removes the owning organization, which cascades through every table; on a
 single-tenant install the app returns to the setup wizard. Users delete their own account from
-Admin → Account (the menu under their email) once they own no workspace. Neither action touches your backups, so keep
+Account (in their menu at the top right) once they own no workspace. Neither action touches your backups, so keep
 their retention in mind when someone asks for erasure.
 
 ## Accounts and passwords

@@ -12,6 +12,7 @@ const TABS = [
   ["/console/payments", "Payments"],
   ["/console/installs", "Installs"],
   ["/console/license", "License"],
+  ["/console/design", "Design"],
 ] as const;
 
 export function ConsoleNav() {

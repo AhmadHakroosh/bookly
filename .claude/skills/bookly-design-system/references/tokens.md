@@ -91,6 +91,20 @@ OKLCH values:
 
 Neutrals use hue ≈ 70–85 with chroma ≤ 0.008. Charts: Bookly Orange, Reply, Ink, muted, Apricot.
 
+## Shipped (2026-10-24, `v2-design-components-shell`)
+
+`--ink-hover` joins `--primary-hover`: hovers are solid, never a see-through fill. Pairs the
+components pass added:
+
+| Pair                                                                | Ratio        | Verdict                   |
+| ------------------------------------------------------------------- | ------------ | ------------------------- |
+| white on `ink-hover` `oklch(0.33 0.004 70)`                         | 12.22        | AAA (ink button, hovered) |
+| Night on dark `ink-hover` `oklch(0.88 0.008 84.6)`                  | 13.15        | AAA                       |
+| `muted-foreground` / Ink on the active agenda card (Peach 55%)      | 5.51 / 15.65 | AA text                   |
+| dark `muted-foreground` on the active agenda card                   | 6.35         | AA text                   |
+| Ember on Peach (⌘K highlighted row, `accent` chip, avatar initials) | 4.74         | AA text                   |
+| white on Ember (unread count in the sidebar)                        | 5.58         | AA text                   |
+
 ## How to check a new pair
 
 Relative luminance with sRGB linearisation, ratio (L1 + 0.05) / (L2 + 0.05). Record the pair

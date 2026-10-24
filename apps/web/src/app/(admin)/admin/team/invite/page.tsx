@@ -8,6 +8,7 @@ import { formatPrice } from "@/server/payments";
 import { requireStaff } from "@/server/session";
 import { getCurrentWorkspace } from "@/server/workspace";
 import { confirmInvite } from "../actions";
+import { PageHeader } from "@/components/ui/page-header";
 
 export const metadata = { title: "Confirm invitation" };
 
@@ -31,12 +32,10 @@ async function InvitePage({ searchParams }: PageProps<"/admin/team/invite">) {
   const per = preview.interval === "year" ? "year" : "month";
   return (
     <div className="max-w-xl space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Invite {email}</h1>
-        <p className="text-sm text-muted-foreground">
-          This adds a seat to your Team plan. Nothing is charged until they accept.
-        </p>
-      </div>
+      <PageHeader
+        title={<>Invite {email}</>}
+        description={<>This adds a seat to your Team plan. Nothing is charged until they accept.</>}
+      />
       <dl className="space-y-3 rounded-xl border p-5 text-sm">
         <div className="flex gap-4">
           <dt className="w-32 shrink-0 text-muted-foreground">When they join</dt>

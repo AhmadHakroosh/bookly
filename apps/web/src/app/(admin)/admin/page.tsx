@@ -1,7 +1,13 @@
 import { HomeSkeleton } from "@/components/skeletons/pages";
 import Link from "next/link";
-import { ExternalLink } from "@/components/links";
-import { CheckIcon, SparklesIcon } from "lucide-react";
+import {
+  CalendarIcon,
+  CheckIcon,
+  ExternalLinkIcon,
+  FileTextIcon,
+  SparklesIcon,
+  VideoIcon,
+} from "lucide-react";
 import { Suspense } from "react";
 import { Badge } from "@/components/ui/badge";
 import { SubmitButton } from "@/components/submit-button";
@@ -30,6 +36,11 @@ import { canGuest, canTeam } from "@/server/messages";
 import { HomeCards } from "./home-cards";
 import { HomeVisit } from "./home-visit";
 import { hostConfirm, replyInstead, snoozeContact } from "./scheduling-actions";
+import { Agenda, AgendaItem } from "@/components/ui/agenda";
+import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/empty-state";
+import { PageHeader } from "@/components/ui/page-header";
+import { StatusChip } from "@/components/ui/status-chip";
 
 /** Home: what needs the host's attention today, with one-click actions. */
 async function AdminHome() {
@@ -75,6 +86,8 @@ async function AdminHome() {
   const confirmed = upcoming.filter((b) => b.status === "confirmed");
   const todays = confirmed.filter((b) => utcToZoned(b.startAt, tz).date === today);
   const later = confirmed.filter((b) => !todays.includes(b)).slice(0, 8);
+  // The meeting on now, else the next one today: the agenda opens on it.
+  const nextToday = todays.find((b) => b.endAt > now);
   const overdue = tasks.filter((t) => t.dueAt && t.dueAt < now);
 
   const steps: { title: string; detail: string; href: string; done: boolean }[] = [
@@ -107,21 +120,31 @@ async function AdminHome() {
 
   return (
     <div className="space-y-8">
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <h1 className="flex items-center gap-2 text-2xl font-semibold tracking-tight">
-            Home
-            {dashboard && beta && <BetaBadge />}
-          </h1>
-          <p className="text-sm text-muted-foreground">
+      <PageHeader
+        title="Home"
+        badge={dashboard && beta && <BetaBadge />}
+        description={
+          <>
             {fmtDate(now, tz)} · {todays.length} meeting{todays.length === 1 ? "" : "s"} today ·{" "}
             {pending.length} request{pending.length === 1 ? "" : "s"} · {overdue.length} overdue
             task
             {overdue.length === 1 ? "" : "s"} · {stale.length} to follow up
-          </p>
-        </div>
-        {profile && <ExternalLink href={`/${profile.username}`}>Your booking page</ExternalLink>}
-      </div>
+          </>
+        }
+        actions={
+          profile && (
+            <Button
+              variant="outline"
+              nativeButton={false}
+              render={<a href={`/${profile.username}`} target="_blank" rel="noreferrer" />}
+            >
+              View booking page
+              <ExternalLinkIcon data-icon="inline-end" />
+              <span className="sr-only">(opens in a new tab)</span>
+            </Button>
+          )
+        }
+      />
 
       {dashboard && ready && (
         <>
@@ -256,16 +279,24 @@ async function AdminHome() {
       <section className="space-y-3">
         <h2 className="text-lg font-semibold tracking-tight">Today</h2>
         {todays.length === 0 ? (
-          <p className="rounded-xl border border-dashed p-6 text-sm text-muted-foreground">
-            No meetings today.
-          </p>
+          <EmptyState
+            size="sm"
+            icon={CalendarIcon}
+            title="No meetings today."
+            description="New bookings show up here on the day."
+          />
         ) : (
-          <ul className="divide-y rounded-xl border text-sm">
+          <Agenda>
             {todays.map((b) => (
-              <li key={b.id} className="flex flex-wrap items-center justify-between gap-3 p-4">
-                <div>
-                  <p className="font-medium">
-                    {fmtTime(b.startAt, tz)} · {b.eventTitle ?? "Meeting"} with{" "}
+              <AgendaItem
+                key={b.id}
+                time={fmtTime(b.startAt, tz)}
+                end={fmtTime(b.endAt, tz)}
+                dateTime={b.startAt.toISOString()}
+                active={b.id === nextToday?.id}
+                title={
+                  <>
+                    {b.eventTitle ?? "Meeting"} with{" "}
                     {b.contactId ? (
                       <Link href={`/admin/contacts/${b.contactId}`} className="hover:underline">
                         {b.attendeeName}
@@ -273,8 +304,19 @@ async function AdminHome() {
                     ) : (
                       b.attendeeName
                     )}
-                  </p>
-                  <p className="text-muted-foreground">
+                  </>
+                }
+                badge={
+                  b.id === nextToday?.id && b.startAt > now ? (
+                    <StatusChip tone="accent">Next</StatusChip>
+                  ) : b.startAt <= now && b.endAt > now ? (
+                    <StatusChip tone="accent" dot>
+                      Now
+                    </StatusChip>
+                  ) : undefined
+                }
+                subtitle={
+                  <>
                     {b.meetingUrl ?? locationLabel(b.location)}
                     {b.paymentStatus && b.amountCents != null && (
                       <>
@@ -298,29 +340,46 @@ async function AdminHome() {
                         )}
                       </>
                     )}
+                  </>
+                }
+                actions={
+                  <>
+                    {b.meetingUrl && b.endAt > now && (
+                      <Button
+                        variant="ink"
+                        size="sm"
+                        nativeButton={false}
+                        render={<a href={b.meetingUrl} target="_blank" rel="noreferrer" />}
+                      >
+                        <VideoIcon data-icon="inline-start" />
+                        Join
+                        <span className="sr-only">(opens in a new tab)</span>
+                      </Button>
+                    )}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      nativeButton={false}
+                      render={<Link href={`/admin/bookings/${b.id}`} />}
+                    >
+                      <FileTextIcon data-icon="inline-start" />
+                      {b.endAt < now ? "Notes" : "Brief"}
+                    </Button>
+                  </>
+                }
+              >
+                {b.brief && (
+                  <p className="line-clamp-2 text-xs text-muted-foreground">
+                    <span className="mr-1 inline-flex items-center gap-0.5 rounded border px-1 align-middle text-[10px] leading-4">
+                      <SparklesIcon className="size-2.5" aria-hidden />
+                      AI
+                    </span>
+                    {b.brief}
                   </p>
-                  {b.brief && (
-                    <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">
-                      <span className="mr-1 inline-flex items-center gap-0.5 rounded border px-1 align-middle text-[10px] leading-4">
-                        <SparklesIcon className="size-2.5" aria-hidden />
-                        AI
-                      </span>
-                      {b.brief}
-                    </p>
-                  )}
-                </div>
-                <div className="flex items-center gap-2">
-                  {b.meetingUrl && <ExternalLink href={b.meetingUrl}>Join</ExternalLink>}
-                  <Link
-                    href={`/admin/bookings/${b.id}`}
-                    className="text-sm underline underline-offset-4"
-                  >
-                    {b.endAt < now ? "Notes" : "Brief"}
-                  </Link>
-                </div>
-              </li>
+                )}
+              </AgendaItem>
             ))}
-          </ul>
+          </Agenda>
         )}
         {later.length > 0 && (
           <details>

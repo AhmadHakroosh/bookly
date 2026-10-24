@@ -10,6 +10,7 @@ import { getCurrentWorkspace } from "@/server/workspace";
 import { ConnectButton } from "@/components/connect-button";
 import { disconnect } from "../integrations-actions";
 import { IntegrationError } from "../integration-errors";
+import { PageHeader } from "@/components/ui/page-header";
 
 export const metadata = { title: "Conferencing" };
 
@@ -109,14 +110,16 @@ async function ConferencingPage({ searchParams }: PageProps<"/admin/conferencing
   ];
   return (
     <div className="max-w-2xl space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Conferencing</h1>
-        <p className="text-sm text-muted-foreground">
-          Each event type picks a location. Anything marked ready gets a real meeting link on every
-          confirmed booking. If a provider fails, Bookly falls back to Bookly video where the plan
-          includes it, then to a plain note in the email.
-        </p>
-      </div>
+      <PageHeader
+        title="Conferencing"
+        description={
+          <>
+            Each event type picks a location. Anything marked ready gets a real meeting link on
+            every confirmed booking. If a provider fails, Bookly falls back to Bookly video where
+            the plan includes it, then to a plain note in the email.
+          </>
+        }
+      />
       <IntegrationError code={typeof sp.error === "string" ? sp.error : undefined} />
       <ul className="divide-y rounded-xl border">
         {rows.map((r) => (

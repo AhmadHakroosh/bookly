@@ -56,8 +56,8 @@ export function DatePicker({
               id={id}
               type="button"
               variant="outline"
-              aria-label={ariaLabel}
-              aria-required={required || undefined}
+              // A button cannot carry aria-required (axe: aria-allowed-attr); say it in words.
+              aria-label={ariaLabel && required ? `${ariaLabel} (required)` : ariaLabel}
               className={cn(
                 "h-10 w-full justify-start gap-2 bg-background px-3 font-normal",
                 !date && "text-muted-foreground",
@@ -68,6 +68,7 @@ export function DatePicker({
         >
           <CalendarIcon className="text-muted-foreground" />
           {date ? format(date, "PP") : placeholder}
+          {required && !ariaLabel && <span className="sr-only"> (required)</span>}
         </PopoverTrigger>
         <PopoverContent className="w-auto p-0" align="start">
           <Calendar
