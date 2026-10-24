@@ -16,13 +16,13 @@ candidates, interviews and reviews arriving in the next beta releases.
 
 ### Start: a template or a copy
 
-| Template                  | Stages                                                                                         |
-| ------------------------- | ---------------------------------------------------------------------------------------------- |
-| **Cohort or fellowship**  | Applied → In review → Interview → Decision → Admitted · Waitlist · Not selected                |
-| **Internship**            | Applied → Screen → Interview → Decision → Accepted · Waitlist · Not selected                   |
-| **Program**               | Applied → Review → Interview → Decision → Onboarded · Waitlist · Not selected                  |
-| **Admissions**            | Applied → Review → Interview → Decision → Enrolled · Waitlist · Not selected                    |
-| **Start blank**           | Applied → Accepted · Not selected                                                              |
+| Template                 | Stages                                                                          |
+| ------------------------ | ------------------------------------------------------------------------------- |
+| **Cohort or fellowship** | Applied → In review → Interview → Decision → Admitted · Waitlist · Not selected |
+| **Internship**           | Applied → Screen → Interview → Decision → Accepted · Waitlist · Not selected    |
+| **Program**              | Applied → Review → Interview → Decision → Onboarded · Waitlist · Not selected   |
+| **Admissions**           | Applied → Review → Interview → Decision → Enrolled · Waitlist · Not selected    |
+| **Start blank**          | Applied → Accepted · Not selected                                               |
 
 Templates fill in the application form, scorecards, reviews, rules and every message; change
 anything afterwards. The internship and admissions forms ask applicants to confirm they are 16 or
