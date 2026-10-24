@@ -2,7 +2,14 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useRef, useState, useTransition } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  useSyncExternalStore,
+  useTransition,
+} from "react";
 import {
   AlarmClockIcon,
   AtSignIcon,
@@ -24,6 +31,8 @@ import {
 import {
   loadNotificationsAction,
   markNotificationsReadAction,
+  markNotificationsSeenAction,
+  messagesPulseAction,
   savePushSubscriptionAction,
   unreadCountAction,
 } from "@/app/(admin)/admin/notifications/feed-actions";
@@ -31,6 +40,7 @@ import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { publishMessages } from "@/lib/messages-live";
 import { currentSubscription, pushSupport, showLocal } from "@/lib/push-client";
+import { currentTransport, onConnect, onTransport, subscribe } from "@/lib/realtime-client";
 import { ago } from "@/lib/time";
 import { cn } from "@/lib/utils";
 import type { ClientNotification } from "@/server/notifications";
@@ -55,10 +65,11 @@ const POLL_MS = 60_000;
 
 /**
  * The header bell: unread count, a panel with the latest notifications (mark read, mark all
- * read, show earlier) and the live feed. Notifications arrive over Server-Sent Events while
- * the tab is open; when this browser also has Web Push, the hidden tab lets push do the work.
- * Without push, a hidden tab shows a browser notification itself for the kinds the member
- * wants on the desktop.
+ * read, show earlier) and the live feed. Notifications arrive over the tab's live connection
+ * (a websocket, or Server-Sent Events as the fallback), realtime first (ADR 0007): while any tab
+ * is open the server sends no push or email, so a hidden tab shows a browser notification
+ * itself for the kinds the member wants on the desktop. Whatever a tab shows (visible, or as a
+ * desktop notification) is reported as seen, which cancels the email held back for it.
  */
 export function NotificationBell({
   initialUnread,
@@ -75,7 +86,6 @@ export function NotificationBell({
   const [items, setItems] = useState<ClientNotification[] | null>(null);
   const [next, setNext] = useState<string | null>(null);
   const [loading, startLoading] = useTransition();
-  const pushActive = useRef(false);
   const desktop = useRef(new Set(desktopKinds));
   useEffect(() => {
     desktop.current = new Set(desktopKinds);
@@ -85,77 +95,76 @@ export function NotificationBell({
   useEffect(() => {
     if (!pushKey || pushSupport() !== "granted") return;
     void currentSubscription().then((sub) => {
-      if (!sub) return;
-      pushActive.current = true;
-      void savePushSubscriptionAction(sub.toJSON());
+      if (sub) void savePushSubscriptionAction(sub.toJSON());
     });
   }, [pushKey]);
 
   // Ids already announced on this page: a notification is shown on the desktop at most once,
-  // and never when it is already read or more than a few minutes old.
+  // and never when it is more than a few minutes old. `unseen` arrived while the tab was hidden
+  // and could not be shown; they count as seen once the member looks at the tab.
   const announced = useRef(new Set<string>());
-  const onNotification = useCallback((n: ClientNotification) => {
+  const unseen = useRef(new Set<string>());
+  const onNotification = useCallback((n: ClientNotification & { unread?: number }) => {
     setItems((prev) => (prev ? [n, ...prev.filter((x) => x.id !== n.id)] : prev));
-    const fresh = Date.now() - new Date(n.createdAt).getTime() < 5 * 60_000;
-    if (
-      !pushActive.current &&
-      document.visibilityState === "hidden" &&
-      desktop.current.has(n.kind) &&
-      !n.read &&
-      fresh &&
-      !announced.current.has(n.id)
-    ) {
-      announced.current.add(n.id);
-      void showLocal(n.title, n.body, n.link ?? "/admin", n.id);
+    if (typeof n.unread === "number") setUnread(n.unread);
+    if (document.visibilityState === "visible") {
+      void markNotificationsSeenAction([n.id]);
+      return;
     }
+    const fresh = Date.now() - new Date(n.createdAt).getTime() < 5 * 60_000;
+    if (desktop.current.has(n.kind) && fresh && !announced.current.has(n.id)) {
+      announced.current.add(n.id);
+      void showLocal(n.title, n.body, n.link ?? "/admin", n.id).then((shown) =>
+        shown ? markNotificationsSeenAction([n.id]) : void unseen.current.add(n.id),
+      );
+      return;
+    }
+    unseen.current.add(n.id);
   }, []);
 
-  // The live feed: one EventSource while the tab is visible (or hidden without push), polling
-  // the count when the stream is unavailable.
+  // The live feed, while the tab is open (hidden too: being here is what holds email back),
+  // polling the count when no transport gets through.
+  const transport = useSyncExternalStore(onTransport, currentTransport, () => "off" as const);
   useEffect(() => {
-    let es: EventSource | null = null;
-    let poll: ReturnType<typeof setInterval> | null = null;
-    const startPolling = () => {
-      if (poll) return;
-      poll = setInterval(() => {
-        void unreadCountAction().then((n) => n !== null && setUnread(n));
-      }, POLL_MS);
+    const refresh = () => {
+      void unreadCountAction().then((n) => n !== null && setUnread(n));
+      void messagesPulseAction().then((p) => p && publishMessages(p));
     };
-    const connect = () => {
-      if (es) return;
-      es = new EventSource("/admin/notifications/stream");
-      es.addEventListener("count", (e) => setUnread(JSON.parse((e as MessageEvent).data).unread));
-      es.addEventListener("notification", (e) =>
-        onNotification(JSON.parse((e as MessageEvent).data)),
-      );
-      // Messages ride the same stream: the nav badge and the Messages page listen.
-      es.addEventListener("messages", (e) => publishMessages(JSON.parse((e as MessageEvent).data)));
-      es.onerror = () => {
-        // CONNECTING = the stream ended normally and the browser reconnects; CLOSED = refused.
-        if (es?.readyState === EventSource.CLOSED) {
-          es = null;
-          startPolling();
-        }
-      };
-    };
-    const disconnect = () => {
-      es?.close();
-      es = null;
-    };
+    const off = [
+      // Too big for one event (the server sends `{ refresh: true }` then): ask for the count.
+      subscribe("notification", (d) =>
+        (d as { refresh?: boolean }).refresh ? refresh() : onNotification(d as ClientNotification),
+      ),
+      subscribe("count", (d) => setUnread((d as { unread: number }).unread)),
+      // The stream sends Messages' numbers; the socket says a thread moved and the tab asks.
+      subscribe("messages", (d) => {
+        if (d && typeof d === "object" && "unread" in d)
+          publishMessages(d as { unread: number; latest: string | null });
+        else void messagesPulseAction().then((p) => p && publishMessages(p));
+      }),
+      onConnect(refresh),
+    ];
     const onVisibility = () => {
-      if (document.visibilityState === "visible") {
-        connect();
-        void unreadCountAction().then((n) => n !== null && setUnread(n));
-      } else if (pushActive.current) disconnect();
+      if (document.visibilityState !== "visible") return;
+      refresh();
+      if (unseen.current.size) {
+        void markNotificationsSeenAction([...unseen.current]);
+        unseen.current.clear();
+      }
     };
-    connect();
     document.addEventListener("visibilitychange", onVisibility);
     return () => {
       document.removeEventListener("visibilitychange", onVisibility);
-      disconnect();
-      if (poll) clearInterval(poll);
+      for (const o of off) o();
     };
   }, [onNotification]);
+  useEffect(() => {
+    if (transport !== "off") return;
+    const poll = setInterval(() => {
+      void unreadCountAction().then((n) => n !== null && setUnread(n));
+    }, POLL_MS);
+    return () => clearInterval(poll);
+  }, [transport]);
 
   const load = (cursor?: string | null) =>
     startLoading(async () => {
@@ -192,7 +201,15 @@ export function NotificationBell({
       }}
     >
       <PopoverTrigger
-        render={<Button variant="ghost" size="icon" aria-label={label} className="relative" />}
+        render={
+          <Button
+            variant="ghost"
+            size="icon"
+            aria-label={label}
+            className="relative"
+            data-live={transport}
+          />
+        }
       >
         <BellIcon className="size-5" />
         {unread > 0 && (

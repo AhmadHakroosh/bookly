@@ -97,8 +97,13 @@ export async function subscribe(vapidKey: string): Promise<PushSubscription | nu
 }
 
 /** Shows a notification from the open page (used when Web Push is not configured). */
-export async function showLocal(title: string, body: string | null, url: string, tag: string) {
-  if (pushSupport() !== "granted") return;
+export async function showLocal(
+  title: string,
+  body: string | null,
+  url: string,
+  tag: string,
+): Promise<boolean> {
+  if (pushSupport() !== "granted") return false;
   const reg = await registerWorker();
   if (reg) {
     await reg.showNotification(title, {
@@ -108,11 +113,12 @@ export async function showLocal(title: string, body: string | null, url: string,
       tag,
       data: { url },
     });
-    return;
+    return true;
   }
   const n = new Notification(title, { body: body ?? "", icon: "/notification-icon.png", tag });
   n.onclick = () => {
     window.focus();
     window.location.assign(url);
   };
+  return true;
 }

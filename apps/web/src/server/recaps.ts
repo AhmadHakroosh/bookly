@@ -5,7 +5,6 @@ import { generateText } from "ai";
 import { and, desc, eq, isNull, schema } from "@bookly/db";
 import { loadEnv } from "@bookly/config";
 import type { Booking, EventType, MeetingRecap, Task, Workspace } from "@bookly/db/schema";
-import { sendEmail } from "@bookly/email";
 import { db } from "@/lib/db";
 import { fmtDateTime } from "@/lib/time";
 import { serializeTask } from "./api";
@@ -13,7 +12,7 @@ import { assistantConfigured } from "./brief";
 import { addTask } from "./capture";
 import { dueDate } from "./capture-text";
 import { logContactEvent, setStage, trackBooking, noteToCrm } from "./contacts";
-import { notify, wantsEmail } from "./notifications";
+import { notify } from "./notifications";
 import { parseRecap, RECAP_SYSTEM, type Recap } from "./recap-text";
 import { getProfileByUser } from "./scheduling";
 import { bookingNotes } from "./meeting-notes";
@@ -126,19 +125,13 @@ export async function generateRecap(
   return row ?? null;
 }
 
-/** Emails the host that a recap (or, without the assistant, a transcript) is waiting. */
+/** Tells the host that a recap (or, without the assistant, a transcript) is waiting. */
 export async function notifyRecapReady(
   ws: Workspace,
   booking: Booking,
   recap: MeetingRecap | null,
 ) {
-  const [host, user] = await Promise.all([
-    getProfileByUser(ws.id, booking.hostUserId),
-    db().query.users.findFirst({
-      where: eq(schema.users.id, booking.hostUserId),
-      columns: { email: true },
-    }),
-  ]);
+  const host = await getProfileByUser(ws.id, booking.hostUserId);
   const link = `${adminBaseUrl(ws)}/admin/bookings/${booking.id}`;
   const r = recapOf(recap);
   const when = fmtDateTime(booking.startAt, host?.timezone ?? ws.timezone);
@@ -148,8 +141,7 @@ export async function notifyRecapReady(
   const text = r
     ? `Your call with ${booking.attendeeName} (${when}):\n\n${r.summary}\n\n${r.actions.length ? `Action items:\n${r.actions.map((a) => `- ${a.owner === "them" ? `${booking.attendeeName}: ` : ""}${a.title}`).join("\n")}\n\n` : ""}${r.nextStep ? `Next step: ${r.nextStep}\n\n` : ""}Review and act with one click: ${link}`
     : `The transcript of your call with ${booking.attendeeName} (${when}) is ready. Review it and turn it into notes, tasks and a follow-up:\n\n${link}`;
-  if (user?.email && (await wantsEmail(ws.id, booking.hostUserId, "recap.ready")))
-    await sendEmail({ to: user.email, subject, text }).catch(() => {});
+  // Realtime first (ADR 0007): the email is the fallback when the host has no Bookly tab open.
   void notify(ws, booking.hostUserId, {
     kind: "recap.ready",
     title: subject,
@@ -158,6 +150,7 @@ export async function notifyRecapReady(
     dedupeKey: `booking:${booking.id}:${r ? "recap" : "transcript"}`,
     bookingId: booking.id,
     text: `${subject}. ${link}`,
+    email: { subject, text },
   });
 }
 

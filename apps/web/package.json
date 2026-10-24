@@ -12,7 +12,7 @@
     "test": "node ../../scripts/ee-registry.mjs && vitest run",
     "e2e": "playwright test",
     "e2e:prepare": "pnpm --filter @bookly/db migrate && pnpm demo",
-    "e2e:build": "node ../../scripts/ee-registry.mjs && E2E=1 next build",
+    "e2e:build": "node ../../scripts/ee-registry.mjs && E2E=1 REALTIME_PORT=${E2E_REALTIME_PORT:-3012} next build",
     "e2e:cloud": "playwright test -c playwright.cloud.config.ts",
     "demo": "tsx scripts/demo.ts",
     "auth:generate": "pnpm dlx @better-auth/cli@latest generate --config src/lib/auth.ts --output ../../packages/db/src/schema/auth.ts -y"
@@ -29,6 +29,7 @@
     "@bookly/forms": "workspace:*",
     "@bookly/email": "workspace:*",
     "@bookly/jobs": "workspace:*",
+    "@bookly/realtime": "workspace:*",
     "@bookly/storage": "workspace:*",
     "@daily-co/daily-js": "^0.92.2",
     "@daily-co/daily-react": "^0.26.0",

@@ -7,7 +7,7 @@ import { defineConfig, devices } from "@playwright/test";
  * subdomains because the root has a dot. Build first with the same APP_URL / ROOT_DOMAIN.
  */
 export const CLOUD = {
-  port: 3011,
+  port: Number(process.env.CLOUD_PORT ?? 3011),
   root: process.env.CLOUD_ROOT ?? "bookly.test",
   admin: "demo@example.com",
 };
@@ -41,6 +41,8 @@ export default defineConfig({
       EMAIL_PROVIDER: "console",
       JOBS_WORKER: "false",
       TELEMETRY: "off",
+      // Same build as the single-tenant suite (e2e:build bakes the /realtime rewrite to 3012).
+      REALTIME_PORT: process.env.E2E_REALTIME_PORT ?? "3012",
     },
   },
 });

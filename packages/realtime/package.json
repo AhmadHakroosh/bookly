@@ -1,0 +1,30 @@
+{
+  "name": "@bookly/realtime",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./server": "./src/server.ts"
+  },
+  "bin": {
+    "bookly-realtime": "./src/bin.ts"
+  },
+  "scripts": {
+    "start": "node src/bin.ts",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "pg": "catalog:",
+    "ws": "^8.18.3"
+  },
+  "devDependencies": {
+    "@types/node": "catalog:",
+    "@types/pg": "catalog:",
+    "@types/ws": "^8.18.1",
+    "typescript": "catalog:",
+    "@typescript/native": "catalog:",
+    "vitest": "catalog:"
+  }
+}

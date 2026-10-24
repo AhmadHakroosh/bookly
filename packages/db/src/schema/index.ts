@@ -10,3 +10,4 @@ export * from "./audit";
 export * from "./files";
 export * from "./notifications";
 export * from "./messages";
+export * from "./realtime";

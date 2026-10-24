@@ -43,7 +43,7 @@ type Handler<N extends JobName> = (data: Jobs[N]) => Promise<void>;
 async function handlers(): Promise<{ [N in JobName]: Handler<N> }> {
   // Lazy so this module can be imported from the proxy-free edge of the app without pulling
   // every server module in.
-  const [reminders, webhooks, integrations, transcripts, crm, contacts, pipelines] =
+  const [reminders, webhooks, integrations, transcripts, crm, contacts, pipelines, notifications] =
     await Promise.all([
       import("./reminders"),
       import("./webhooks"),
@@ -52,6 +52,7 @@ async function handlers(): Promise<{ [N in JobName]: Handler<N> }> {
       import("./crm"),
       import("./contacts"),
       import("./pipelines"),
+      import("./notifications"),
     ]);
   return {
     "booking.reminders": async () => {
@@ -88,6 +89,9 @@ async function handlers(): Promise<{ [N in JobName]: Handler<N> }> {
     "pipelines.backfill": async () => {
       const n = await pipelines.backfillClientPipelines();
       if (n) console.log(`[pipelines] gave ${n} contacts their client stage`);
+    },
+    "notifications.fallback": async ({ id }) => {
+      await notifications.sendFallback(id);
     },
   };
 }

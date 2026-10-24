@@ -70,6 +70,11 @@ test("a client's conversation: booking note, email out, reply in, internal note,
     "http://x",
   ).searchParams.get("entry")!;
 
+  // Close the conversation: with it open, a reply that arrives is read on the spot (it shows
+  // live in the pane), so it would never count as unread.
+  await page.goto("/admin/messages");
+  await expect(row).not.toContainText("(unread)");
+
   // The guest answers that email: it comes in through the webhook and makes the thread unread.
   const emailId = `em_msg_${run}`;
   received.set(emailId, {
@@ -94,6 +99,8 @@ test("a client's conversation: booking note, email out, reply in, internal note,
     headers: svixHeaders(body),
   });
   expect(res.status(), await res.text()).toBe(200);
+  // The open list hears about it live (realtime, ADR 0007): no reload.
+  await expect(row).toContainText("(unread)", { timeout: 10_000 });
 
   await page.goto("/admin/messages?box=unread");
   await expect(row).toContainText("(unread)");

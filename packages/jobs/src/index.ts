@@ -29,6 +29,8 @@ export type Jobs = {
   "crm.note": { workspaceId: string; contactId: string; text: string };
   /** Until 1.1: client pipeline for every workspace, a stage for every contact (ADR 0001). */
   "pipelines.backfill": Record<string, never>;
+  /** A connected member's notification, once its grace period is over (ADR 0007). */
+  "notifications.fallback": { id: string };
 };
 
 export const JOB_NAMES = [
@@ -42,6 +44,7 @@ export const JOB_NAMES = [
   "crm.sync",
   "crm.note",
   "pipelines.backfill",
+  "notifications.fallback",
 ] as const satisfies readonly (keyof Jobs)[];
 
 export type JobName = keyof Jobs;

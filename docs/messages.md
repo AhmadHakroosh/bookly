@@ -34,7 +34,9 @@ teammate's email or note, does.
 people in it, and optionally the contact it is about. Only the people in a thread see it; anyone
 `@`-mentioned joins it, and **Add people** brings more in. Everyone in the thread is notified of
 new messages (**Team message** on the Notifications page; mentions are **Mentioned in
-Messages**). Files attached to a message can be opened by everyone in the thread.
+Messages**). Realtime first: a teammate with Bookly open sees it there and gets no email or
+push; one who is away gets the channels they chose. Files attached to a message can be opened
+by everyone in the thread.
 
 ## Inbox, unread and closing
 
@@ -43,8 +45,8 @@ Messages**). Files attached to a message can be opened by everyone in the thread
 - Opening a conversation marks it read for you only.
 - **Close thread** takes it out of the inbox; a client writing again reopens it.
 - Search finds conversations by the contact's name or email and threads by subject.
-- With notifications on, the sidebar count and an open Messages page update live (the same
-  stream as the bell, `docs/notifications.md`).
+- With notifications on, the sidebar count and an open Messages page update live, within a
+  second of a message, note or reply (the bell's live connection, `docs/notifications.md`).
 
 ## Plans
 
@@ -58,4 +60,6 @@ Gates are checked on the server. Every write (opening a conversation, sending, n
 messages, people added, closing and reopening) is in the activity log; read marks are not.
 Conversations, notes and team threads are part of the workspace export; the emails themselves
 are on the contacts' timelines. WhatsApp and text messages join the conversation once texting is
-reliable; the client's own view of it comes with the guest portal.
+reliable; the client's own view of it comes with the guest portal. Until then clients always get
+your messages by email, which is also how they answer; once a guest page shows the conversation,
+it will reach them there first and email them only if they do not see it within 15 minutes.

@@ -6,7 +6,8 @@ import { defineConfig, devices } from "@playwright/test";
  * starts (Playwright launches `webServer` before `globalSetup`, so the prep lives in the command).
  * Locally: `pnpm --filter @bookly/web e2e` (builds if needed). CI runs the same.
  */
-const port = 3010;
+// E2E_PORT: another checkout's e2e server may hold 3010 (locally Playwright reuses whatever answers).
+const port = Number(process.env.E2E_PORT ?? 3010);
 
 export default defineConfig({
   testDir: "./tests/e2e",
@@ -35,6 +36,8 @@ export default defineConfig({
       APP_URL: `http://localhost:${port}`,
       EMAIL_PROVIDER: "console",
       JOBS_WORKER: "false",
+      // The in-process socket server behind /realtime; e2e:build bakes the same port.
+      REALTIME_PORT: process.env.E2E_REALTIME_PORT ?? "3012",
       // Specs call the tick (/api/cron/tick); a test server never pings the real update check.
       TELEMETRY: "off",
       // Guest replies: tests sign webhook calls with this secret and stand in for Resend's API.

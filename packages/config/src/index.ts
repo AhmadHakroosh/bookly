@@ -143,6 +143,20 @@ export const envSchema = z.object({
   QSTASH_CURRENT_SIGNING_KEY: z.string().optional(),
   QSTASH_NEXT_SIGNING_KEY: z.string().optional(),
   UPSTASH_REDIS_REST_TOKEN: z.string().optional(),
+  /**
+   * Realtime delivery (ADR 0007). With a port, the app runs its websocket server in-process on
+   * 127.0.0.1:<port> and browsers reach it through the app's own `/realtime` (the Docker image
+   * sets 3003; build and runtime must agree). REALTIME_URL overrides where browsers connect: a
+   * path on the app's origin or a ws(s):// URL of a standalone server. Neither = the bell and
+   * Messages use Server-Sent Events, which keep presence too.
+   */
+  REALTIME_PORT: z.coerce.number().int().positive().optional(),
+  REALTIME_URL: z
+    .string()
+    .regex(/^(wss?:\/\/|\/)/, "REALTIME_URL is a path or a ws:// / wss:// URL")
+    .optional(),
+  /** A direct (unpooled) connection for LISTEN; defaults to DATABASE_URL. */
+  REALTIME_DATABASE_URL: z.url().optional(),
   TELEMETRY_URL: z.url().default("https://bookly-app.io/api/telemetry"),
   /**
    * Bookly Enterprise license key (`bookly_lic_1.…`), verified offline (ADR 0006). Without one

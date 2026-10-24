@@ -3,10 +3,10 @@
 import { useSyncExternalStore } from "react";
 
 /*
- * Messages' live state in the tab. The bell's notification stream (one EventSource per tab)
- * also carries a `messages` event (unread count and newest activity); it publishes here, and
- * the nav badge and the Messages page subscribe. Without the stream, the server-rendered
- * numbers stand.
+ * Messages' live state in the tab. The bell's live connection (`lib/realtime-client.ts`, one per
+ * tab) hears when a thread moves and publishes the member's unread count and newest activity
+ * here; the nav badge and the Messages page subscribe. Without a connection, the
+ * server-rendered numbers stand.
  */
 
 type Pulse = { unread: number; latest: string | null };
