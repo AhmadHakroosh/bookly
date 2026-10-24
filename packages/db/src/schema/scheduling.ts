@@ -12,6 +12,7 @@ import {
   uniqueIndex,
 } from "drizzle-orm/pg-core";
 import { users } from "./auth";
+import { pipelineStages } from "./pipelines";
 import { workspaces } from "./workspaces";
 import type { NotificationKind } from "./notifications";
 
@@ -261,7 +262,11 @@ export const contacts = pgTable(
     company: text("company"),
     phone: text("phone"),
     tags: jsonb("tags").$type<string[]>().notNull().default([]),
+    /** Legacy stage, written alongside `stage_id` through 1.0.x and dropped in 1.1 (ADR 0001). */
     stage: text("stage").$type<ContactStage>().notNull().default("lead"),
+    /** The contact's stage in the workspace's client pipeline; null = not a client (e.g. only a candidate). */
+    stageId: text("stage_id").references(() => pipelineStages.id, { onDelete: "set null" }),
+    stageEnteredAt: timestamp("stage_entered_at", { withTimezone: true }),
     /** Free-form host notes (markdown-ish plain text). */
     notes: text("notes"),
     /** When the host wants to be nudged about this person. */
@@ -276,6 +281,7 @@ export const contacts = pgTable(
   (t) => [
     uniqueIndex("contacts_ws_email_idx").on(t.workspaceId, t.email),
     index("contacts_ws_stage_idx").on(t.workspaceId, t.stage),
+    index("contacts_ws_stage_id_idx").on(t.workspaceId, t.stageId, t.lastActivityAt),
     index("contacts_ws_activity_idx").on(t.workspaceId, t.lastActivityAt),
   ],
 );

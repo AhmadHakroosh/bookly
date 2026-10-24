@@ -2,7 +2,8 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    # v2 takes finished branches by direct merge (no PR), so it is checked on push too.
+    branches: [main, v2]
   pull_request:
 
 concurrency:

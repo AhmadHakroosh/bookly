@@ -31,6 +31,11 @@ export async function register() {
   if (process.env.NEXT_PHASE === "phase-production-build") return;
   try {
     const { jobDriver, runJob, ensureSchedules, SCHEDULES } = await import("@/server/jobs");
+    // Until 1.1: every workspace has its client pipeline and every contact a stage (ADR 0001).
+    // Two cheap statements when there is nothing to do; never blocks the boot.
+    void runJob("pipelines.backfill", {}).catch((e) =>
+      console.error("[pipelines] backfill failed", e),
+    );
     if (jobDriver() === "qstash") {
       const n = await ensureSchedules();
       console.log(`[jobs] driver: qstash (QSTASH_TOKEN set); ${n} schedules ensured`);
