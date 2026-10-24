@@ -1,7 +1,7 @@
 // Writes apps/web/src/server/editions/registry.generated.ts: static imports of the commercial
 // modules installed under ee/ (ADR 0006). With ee/ deleted it writes an empty registry, so the
 // AGPL core builds, tests and runs on its own. Run before dev, build, typecheck and test.
-import { existsSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -33,5 +33,7 @@ const lines = [
   "",
 ];
 const next = lines.join("\n");
+// The folder holds only this generated file, so a fresh checkout does not have it yet.
+mkdirSync(path.dirname(out), { recursive: true });
 if (!existsSync(out) || readFileSync(out, "utf8") !== next) writeFileSync(out, next);
 console.log(`[ee] registry: ${modules.length} module${modules.length === 1 ? "" : "s"}`);
