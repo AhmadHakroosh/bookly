@@ -7,6 +7,8 @@ import { BackLink, ExternalLink } from "@/components/links";
 import { notFound } from "next/navigation";
 import { and, eq, schema } from "@bookly/db";
 import { Badge } from "@/components/ui/badge";
+import { PaneHeader } from "@/components/ui/pane-header";
+import { StatusChip, type StatusTone } from "@/components/ui/status-chip";
 import { AiLabel } from "@/components/ai-label";
 import { SubmitButton } from "@/components/submit-button";
 import { db } from "@/lib/db";
@@ -26,6 +28,7 @@ import { getRecap, recapOf } from "@/server/recaps";
 import { getTranscript } from "@/server/transcripts";
 import { getProfileByUser, locationLabel } from "@/server/scheduling";
 import { requireStaff } from "@/server/session";
+import { bookingsVisibleTo } from "@/server/access/hiring";
 import { getCurrentWorkspace } from "@/server/workspace";
 import { responseFiles } from "@/server/forms";
 import { fileUrl } from "@/lib/files";
@@ -33,12 +36,34 @@ import { regenerateBrief } from "../scheduling-actions";
 import { sessionSummary } from "@/server/sessions";
 import { CheckIcon, ClockIcon, UsersIcon } from "lucide-react";
 
+/** A booking's status as a chip: waiting on someone is a warning, ended badly is destructive. */
+const STATUS_TONE: Record<string, StatusTone> = {
+  awaiting_payment: "warning",
+  pending: "warning",
+  confirmed: "success",
+  cancelled: "destructive",
+  rescheduled: "info",
+  completed: "neutral",
+  no_show: "destructive",
+};
+
 export async function BookingDetail({ id, inPane = false }: { id: string; inPane?: boolean }) {
-  const [, ws] = await Promise.all([requireStaff(), getCurrentWorkspace()]);
+  const [{ session: signedIn }, ws] = await Promise.all([requireStaff(), getCurrentWorkspace()]);
+  const viewer = signedIn.user.id;
   if (!ws) return null;
-  const b = await db().query.bookings.findFirst({
-    where: and(eq(schema.bookings.id, id), eq(schema.bookings.workspaceId, ws.id)),
-  });
+  // An interview opens only for people who may see its application (ADR 0005).
+  // A plain select: the predicate names the table, which relational queries alias.
+  const [b] = await db()
+    .select()
+    .from(schema.bookings)
+    .where(
+      and(
+        eq(schema.bookings.id, id),
+        eq(schema.bookings.workspaceId, ws.id),
+        bookingsVisibleTo(viewer),
+      ),
+    )
+    .limit(1);
   if (!b) notFound();
   const hostProfile = await getProfileByUser(ws.id, b.hostUserId);
   const tz = hostProfile?.timezone ?? ws.timezone;
@@ -48,7 +73,7 @@ export async function BookingDetail({ id, inPane = false }: { id: string; inPane
   const [brief, tasks, timeline, transcript, recapRow, sentFiles] = await Promise.all([
     briefForBooking(ws, b, et ?? null),
     listOpenTasks(ws.id, { bookingId: b.id }),
-    b.contactId ? contactTimeline(b.contactId, 50) : Promise.resolve([]),
+    b.contactId ? contactTimeline(b.contactId, 50, viewer) : Promise.resolve([]),
     b.transcriptStatus ? getTranscript(b.id) : Promise.resolve(null),
     getRecap(b.id),
     responseFiles(ws.id, b.id),
@@ -74,44 +99,52 @@ export async function BookingDetail({ id, inPane = false }: { id: string; inPane
   const notesHere =
     b.meetingProvider === "daily" && !!room && b.startAt <= new Date() && (await notesOn(ws));
   const session = await sessionSummary(b, et ?? null);
+  const title = (
+    <>
+      {et?.title ?? "Meeting"} with{" "}
+      {b.contactId ? (
+        <Link href={`/admin/contacts/${b.contactId}`} className="hover:underline">
+          {b.attendeeName}
+        </Link>
+      ) : (
+        b.attendeeName
+      )}
+    </>
+  );
+  const when = (
+    <p className="flex flex-wrap items-center gap-x-1.5 gap-y-1">
+      <span>{fmtDateTime(b.startAt, tz)} ·</span>
+      {b.seriesCount && (
+        <span>
+          Session {b.seriesIndex} of {b.seriesCount} ·
+        </span>
+      )}
+      {b.meetingUrl ? (
+        <ExternalLink href={b.meetingUrl}>Join meeting</ExternalLink>
+      ) : (
+        <span>{locationLabel(b.location)}</span>
+      )}
+    </p>
+  );
+  const status = (
+    <StatusChip tone={STATUS_TONE[b.status]} dot className="capitalize">
+      {b.status.replace("_", " ")}
+    </StatusChip>
+  );
   return (
     <div className={inPane ? "space-y-5" : "max-w-2xl space-y-6"}>
-      <div>
-        {!inPane && <BackLink href="/admin/bookings">Bookings</BackLink>}
-        <h1
-          className={
-            inPane
-              ? "pr-10 text-xl font-semibold tracking-tight"
-              : "mt-1 text-2xl font-semibold tracking-tight"
-          }
-        >
-          {et?.title ?? "Meeting"} with{" "}
-          {b.contactId ? (
-            <Link href={`/admin/contacts/${b.contactId}`} className="hover:underline">
-              {b.attendeeName}
-            </Link>
-          ) : (
-            b.attendeeName
-          )}
-        </h1>
-        <p className="flex flex-wrap items-center gap-x-1.5 gap-y-1 text-sm text-muted-foreground">
-          <span>{fmtDateTime(b.startAt, tz)} ·</span>
-          {b.seriesCount && (
-            <span>
-              Session {b.seriesIndex} of {b.seriesCount} ·
-            </span>
-          )}
-          {b.meetingUrl ? (
-            <ExternalLink href={b.meetingUrl}>Join meeting</ExternalLink>
-          ) : (
-            <span>{locationLabel(b.location)}</span>
-          )}
-          <span>·</span>
-          <Badge variant="secondary" className="capitalize">
-            {b.status.replace("_", " ")}
-          </Badge>
-        </p>
-      </div>
+      {inPane ? (
+        <PaneHeader as="h1" title={title} subtitle={when} status={status} />
+      ) : (
+        <div>
+          <BackLink href="/admin/bookings">Bookings</BackLink>
+          <h1 className="mt-1 text-2xl font-semibold tracking-tight">{title}</h1>
+          <div className="mt-1 flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+            {when}
+            {status}
+          </div>
+        </div>
+      )}
       {b.guests.length > 0 && (
         <p className="text-sm text-muted-foreground">Guests: {b.guests.join(", ")}</p>
       )}

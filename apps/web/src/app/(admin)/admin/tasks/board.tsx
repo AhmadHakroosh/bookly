@@ -38,6 +38,7 @@ import { CSS } from "@dnd-kit/utilities";
 import { CalendarIcon, MessageSquareIcon, PlusIcon, UserIcon } from "lucide-react";
 import type { TaskFilters } from "@bookly/db/schema";
 import { Button } from "@/components/ui/button";
+import { KanbanCard, KanbanColumn, KanbanList } from "@/components/ui/kanban";
 import { cardOf, type CardTask } from "@/lib/task-card";
 import { cn } from "@/lib/utils";
 import { createTaskAction, loadColumnAction, moveTaskAction, type ActionResult } from "./actions";
@@ -63,13 +64,7 @@ function Card({
   showAssignee: boolean;
 }) {
   return (
-    <div
-      className={cn(
-        "rounded-lg border bg-card p-2.5 text-sm shadow-xs",
-        overlay && "rotate-2 shadow-lg ring-2 ring-ring/40",
-      )}
-      data-href={href}
-    >
+    <KanbanCard lifted={overlay} className="p-2.5" data-href={href}>
       <p className="leading-snug font-medium">{task.title}</p>
       {(task.contact || task.booking) && (
         <p className="mt-1 truncate text-xs text-muted-foreground">
@@ -100,7 +95,7 @@ function Card({
           </span>
         )}
       </div>
-    </div>
+    </KanbanCard>
   );
 }
 
@@ -135,7 +130,7 @@ function SortableCard({
           listeners?.onKeyDown?.(e);
           if (e.key === "Enter" && !e.defaultPrevented) router.push(href, { scroll: false });
         }}
-        className="cursor-grab touch-manipulation rounded-lg focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none active:cursor-grabbing"
+        className="cursor-grab touch-manipulation rounded-xl focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none active:cursor-grabbing"
       >
         <Card task={task} showAssignee={showAssignee} />
       </div>
@@ -208,30 +203,33 @@ function ColumnView({
   const { status } = column;
   const over = status.wipLimit !== null && column.total > status.wipLimit;
   return (
-    <section
+    <KanbanColumn
       ref={setNodeRef}
-      aria-label={status.name}
-      className={cn(
-        "flex w-72 shrink-0 flex-col rounded-xl border bg-muted/30",
-        isOver && "ring-2 ring-ring/30",
-      )}
-    >
-      <header className="flex items-center gap-2 px-3 pt-3 pb-2">
-        <span className="size-2.5 rounded-full" style={{ background: status.color }} aria-hidden />
-        <h2 className="truncate text-sm font-semibold">{status.name}</h2>
-        <span
-          className={cn(
-            "ml-auto text-xs tabular-nums",
-            over ? "font-medium text-warning" : "text-muted-foreground",
+      title={status.name}
+      color={status.color}
+      count={`${column.total}${status.wipLimit !== null ? ` / ${status.wipLimit}` : ""}`}
+      countTone={over ? "warning" : "default"}
+      countLabel={over ? `More than the ${status.wipLimit} this column should hold` : undefined}
+      highlight={isOver}
+      footer={
+        <>
+          {column.next && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="w-full"
+              onClick={onMore}
+              disabled={loadingMore}
+            >
+              Show more
+            </Button>
           )}
-          title={over ? `More than the ${status.wipLimit} this column should hold` : undefined}
-        >
-          {column.total}
-          {status.wipLimit !== null && ` / ${status.wipLimit}`}
-        </span>
-      </header>
+          {children}
+        </>
+      }
+    >
       <SortableContext items={tasks.map((t) => t.id)} strategy={verticalListSortingStrategy}>
-        <ul className="flex min-h-16 flex-1 flex-col gap-2 px-2 pb-2">
+        <KanbanList>
           {tasks.map((t) => (
             <SortableCard key={t.id} task={t} href={hrefFor(t.id)} showAssignee={showAssignee} />
           ))}
@@ -240,23 +238,9 @@ function ColumnView({
               {status.isDone ? "Drop finished tasks here" : "No tasks"}
             </li>
           )}
-        </ul>
+        </KanbanList>
       </SortableContext>
-      <div className="space-y-1 px-2 pb-2">
-        {column.next && (
-          <Button
-            variant="ghost"
-            size="sm"
-            className="w-full"
-            onClick={onMore}
-            disabled={loadingMore}
-          >
-            Show more
-          </Button>
-        )}
-        {children}
-      </div>
-    </section>
+    </KanbanColumn>
   );
 }
 

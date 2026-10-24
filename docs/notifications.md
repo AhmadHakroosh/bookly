@@ -1,7 +1,7 @@
 # Host notifications and text reminders
 
 Attendees always get email: confirmation with calendar invite, 24-hour and 1-hour reminders,
-cancellation. Hosts choose how they hear about things under **Admin → Personal → Notifications**.
+cancellation. Hosts choose how they hear about things under **Notifications** in your menu at the top right (or ⌘K).
 
 ## In Bookly, on the desktop, by email (beta)
 
@@ -28,7 +28,7 @@ What creates one, and the defaults:
 | Team message          | on        | on      | off                           |
 | Mentioned in Messages | on        | on      | on                            |
 
-Each member changes these under **Admin → Personal → Notifications → What you hear about**;
+Each member changes these under **Notifications → What you hear about** (your menu at the top right);
 the email column also governs the host copies Bookly always sent (booking, cancellation,
 reminder, recap). Texts and Slack keep following the switches below it. Desktop, email, texts
 and Slack are used only when you are not in Bookly (below).

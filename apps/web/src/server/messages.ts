@@ -3,6 +3,7 @@ import { cache } from "react";
 import { and, asc, desc, eq, ilike, inArray, isNotNull, isNull, or, schema, sql } from "@bookly/db";
 import type { Contact, ContactEventType, Thread, Workspace } from "@bookly/db/schema";
 import { db } from "@/lib/db";
+import { contactsVisibleTo } from "./access/hiring";
 import { canSeeFile } from "./drive";
 import { hasFlag } from "./flags";
 import { hasFeature, LimitError } from "./limits";
@@ -38,8 +39,13 @@ const isParticipant = (userId: string) =>
 
 /** Threads this member may see: guest threads (Pro) and the team threads they are in (Team). */
 export function visibleThreads(v: Viewer) {
+  // A guest who exists only as a candidate: their conversation only for their team (ADR 0005).
+  const guestVisible = sql`(${t.contactId} is null or exists (
+    select 1 from ${schema.contacts} where ${schema.contacts.id} = ${t.contactId}
+      and ${contactsVisibleTo(v.userId)}
+  ))`;
   const kinds = [
-    ...(canGuest(v.ws) ? [eq(t.kind, "guest")] : []),
+    ...(canGuest(v.ws) ? [and(eq(t.kind, "guest"), guestVisible)!] : []),
     ...(canTeam(v.ws) ? [and(eq(t.kind, "team"), isParticipant(v.userId))] : []),
   ];
   return and(eq(t.workspaceId, v.ws.id), kinds.length ? or(...kinds) : sql`false`)!;
@@ -66,19 +72,25 @@ const unreadCount = cache(async (ws: Workspace, userId: string): Promise<number>
 
 export const unreadThreads = (v: Viewer) => unreadCount(v.ws, v.userId);
 
-/** For the live stream: the unread count and the newest activity, so tabs refresh when either moves. */
+/** The newest activity in any thread this member sees: tabs refresh when it moves. */
+export async function latestActivity(v: Viewer): Promise<string | null> {
+  const [row] = await db()
+    .select({ at: sql<string | null>`max(${t.lastActivityAt})::text` })
+    .from(t)
+    .where(visibleThreads(v));
+  return row?.at ?? null;
+}
+
+/** For the live connection: the unread count and the newest activity, so tabs refresh when either moves. */
 export async function messagesPulse(v: Viewer): Promise<{ unread: number; latest: string | null }> {
-  const [[counts], [latest]] = await Promise.all([
+  const [[counts], latest] = await Promise.all([
     db()
       .select({ n: sql<number>`count(*)::int` })
       .from(t)
       .where(and(visibleThreads(v), isNull(t.closedAt), unread(v.userId))),
-    db()
-      .select({ at: sql<string | null>`max(${t.lastActivityAt})::text` })
-      .from(t)
-      .where(visibleThreads(v)),
+    latestActivity(v),
   ]);
-  return { unread: counts?.n ?? 0, latest: latest?.at ?? null };
+  return { unread: counts?.n ?? 0, latest };
 }
 
 /**

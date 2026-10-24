@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { audit } from "@/server/audit";
-import { getContact } from "@/server/contacts";
+import { contactVisible, getContact } from "@/server/contacts";
 import { hasFlag } from "@/server/flags";
 import { inboundOn } from "@/server/inbound";
 import { hasFeature } from "@/server/limits";
@@ -21,9 +21,9 @@ export async function loadTimelineAction(
   const [{ session }, ws] = await Promise.all([requireStaff(), getCurrentWorkspace()]);
   if (!ws || !(await hasFlag(ws, "timeline_v2"))) return null;
   const c = await getContact(ws.id, contactId);
-  if (!c) return null;
+  if (!c || !(await contactVisible(ws.id, c.id, session.user.id))) return null;
   const tz = (await getProfileByUser(ws.id, session.user.id))?.timezone ?? ws.timezone;
-  return timelineWindow(ws.id, c.id, tz, decodeTimelineCursor(cursor));
+  return timelineWindow(ws.id, c.id, tz, decodeTimelineCursor(cursor), undefined, session.user.id);
 }
 
 export type ReplyState = { ok?: boolean; error?: string };

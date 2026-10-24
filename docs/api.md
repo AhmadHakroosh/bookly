@@ -38,6 +38,7 @@ Typical assistant flow: `GET /event-types` → `GET /availability` → `POST /bo
 
 ### Contacts and tasks
 
+- Hiring data stays out of the API until it gets its own `hiring:read` and `hiring:write` scopes: people who exist only as candidates are not listed by `GET /contacts`, interviews appear in `GET /bookings` as "Interview" with no attendee details, and `GET /bookings/{id}` answers `404` for an interview.
 - `GET /contacts?q=&stage=&stageId=&limit=` (scope `bookings:read`) and `POST /contacts` (scope `bookings:write`, body `{ email, name?, company?, phone?, tags?, stage?, stageId?, notes? }`, upsert by email). `stage` is a stage key of the workspace's client pipeline (`lead`, `active`, `won`, `lost` or one the workspace added, such as `proposal-sent`); an unknown key or id is a `400`. Each contact carries `stageId`, `stageKey` and `stageName` next to the classic `stage` (`lead`, `active`, `won` or `lost`, which an added open stage reads as `lead`; it goes in 1.1).
 - `GET /pipelines` (scope `bookings:read`): the client pipeline and its stages in order, each `{ id, key, name, category, color, isEntry, priorityScheduling }`. Keys are stable across renames.
 - `GET /tasks?contactId=&limit=` (scope `bookings:read`): open tasks, soonest due first.

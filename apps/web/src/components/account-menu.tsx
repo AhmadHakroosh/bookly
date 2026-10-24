@@ -2,8 +2,19 @@
 
 import Link from "next/link";
 import { useState, useTransition } from "react";
-import { ChevronDownIcon, LogOutIcon, UserRoundIcon } from "lucide-react";
+import {
+  BellIcon,
+  CalendarDaysIcon,
+  ChevronDownIcon,
+  ChevronsUpDownIcon,
+  ExternalLinkIcon,
+  LogOutIcon,
+  UserRoundIcon,
+  VideoIcon,
+} from "lucide-react";
 import { BusyOverlay } from "@/components/busy-overlay";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { initialsOf } from "@/components/ui/avatar-stack";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -16,36 +27,77 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 /**
- * The signed-in person's menu in the admin header: the account page (sign-in methods,
- * passkeys, password, deletion) and sign-out. Workspace things stay in the sidebar.
+ * The signed-in person's menu: their account (sign-in methods, passkeys, password, deletion),
+ * their notifications and connections, their public booking page, and sign-out. Opened from the
+ * avatar at the end of the top bar and from the account card at the foot of the sidebar, as
+ * `app ui.png` draws both. Light only: there is no theme choice (concept fidelity).
  */
 export function AccountMenu({
   email,
   name,
+  image,
+  bookingPageHref,
   signOut,
+  variant = "avatar",
 }: {
   email: string;
   name: string;
+  image?: string | null;
+  /** The member's public page, when they have one. */
+  bookingPageHref?: string | null;
   signOut: () => Promise<void>;
+  /** `avatar` in the top bar, `card` (picture, name and email) at the foot of the sidebar. */
+  variant?: "avatar" | "card";
 }) {
   // Signing out ends with a redirect; the page stays covered until it lands.
   const [leaving, setLeaving] = useState(false);
   const [, start] = useTransition();
+  const avatar = (size: string) => (
+    <Avatar size="sm" className={size} aria-hidden>
+      {image && <AvatarImage src={image} alt="" />}
+      <AvatarFallback className="bg-accent text-xs font-semibold text-accent-foreground">
+        {initialsOf(name || email)}
+      </AvatarFallback>
+    </Avatar>
+  );
   return (
     <>
       <BusyOverlay show={leaving} label="Signing out…" />
       <DropdownMenu>
-        <DropdownMenuTrigger
-          render={<Button variant="ghost" className="gap-1.5" aria-label={`Account: ${email}`} />}
+        {variant === "card" ? (
+          <DropdownMenuTrigger
+            render={
+              <Button
+                variant="ghost"
+                className="h-auto w-full justify-start gap-3 px-2 py-2 text-left font-normal"
+              />
+            }
+          >
+            {avatar("size-9")}
+            <span className="min-w-0 flex-1">
+              <span className="block truncate text-sm font-medium">{name}</span>
+              <span className="block truncate text-xs text-muted-foreground">{email}</span>
+            </span>
+            <ChevronsUpDownIcon className="size-4 text-muted-foreground" aria-hidden />
+          </DropdownMenuTrigger>
+        ) : (
+          <DropdownMenuTrigger
+            render={
+              <Button variant="ghost" className="gap-1.5 px-1.5" aria-label={`Account: ${email}`} />
+            }
+          >
+            {avatar("size-7")}
+            <ChevronDownIcon className="size-3.5 text-muted-foreground" aria-hidden />
+          </DropdownMenuTrigger>
+        )}
+        <DropdownMenuContent
+          align={variant === "card" ? "start" : "end"}
+          side={variant === "card" ? "top" : "bottom"}
+          className="w-64"
         >
-          <UserRoundIcon className="size-4 text-muted-foreground" aria-hidden />
-          <span className="hidden max-w-48 truncate text-sm md:inline">{email}</span>
-          <ChevronDownIcon className="size-3.5 text-muted-foreground" aria-hidden />
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-64">
           <DropdownMenuGroup>
             <DropdownMenuLabel className="font-normal">
-              <span className="block truncate text-sm font-medium">{name}</span>
+              <span className="block truncate text-sm font-medium text-foreground">{name}</span>
               <span className="block truncate text-xs text-muted-foreground">{email}</span>
             </DropdownMenuLabel>
           </DropdownMenuGroup>
@@ -54,6 +106,27 @@ export function AccountMenu({
             <UserRoundIcon className="size-4" aria-hidden />
             Account
           </DropdownMenuItem>
+          <DropdownMenuItem render={<Link href="/admin/notifications" />}>
+            <BellIcon className="size-4" aria-hidden />
+            Notifications
+          </DropdownMenuItem>
+          <DropdownMenuItem render={<Link href="/admin/calendars" />}>
+            <CalendarDaysIcon className="size-4" aria-hidden />
+            Calendars
+          </DropdownMenuItem>
+          <DropdownMenuItem render={<Link href="/admin/conferencing" />}>
+            <VideoIcon className="size-4" aria-hidden />
+            Conferencing
+          </DropdownMenuItem>
+          {bookingPageHref && (
+            <DropdownMenuItem
+              render={<a href={bookingPageHref} target="_blank" rel="noreferrer" />}
+            >
+              <ExternalLinkIcon className="size-4" aria-hidden />
+              Your booking page
+              <span className="sr-only">(opens in a new tab)</span>
+            </DropdownMenuItem>
+          )}
           <DropdownMenuSeparator />
           <DropdownMenuItem
             onClick={() => {

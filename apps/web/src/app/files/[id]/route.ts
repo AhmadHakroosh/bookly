@@ -1,5 +1,6 @@
 import { PREVIEWABLE, canSeeFile, readFileToken } from "@/server/drive";
 import { getFileAnywhere } from "@/server/files";
+import { hiddenByHiring } from "@/server/hiring/files";
 import { getStorage } from "@bookly/storage";
 import { getSession, getStaffRole } from "@/server/session";
 import { getCurrentWorkspace } from "@/server/workspace";
@@ -53,6 +54,9 @@ export async function GET(req: Request, ctx: RouteContext<"/files/[id]">) {
       return new Response("Not found", { status: 404 });
     // Drive files follow the drive's rules (someone's My files stay theirs).
     if (file.space && !(await canSeeFile({ userId: session.user.id, ws }, file.id)))
+      return new Response("Not found", { status: 404 });
+    // Candidates' files follow their application's access (ADR 0005).
+    if (await hiddenByHiring(file, session.user.id))
       return new Response("Not found", { status: 404 });
   }
   const body = await getStorage().stream(file.key);

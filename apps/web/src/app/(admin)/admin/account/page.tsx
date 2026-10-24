@@ -13,6 +13,7 @@ import { PasswordForm } from "./password-form";
 import { SetPasswordForm } from "./set-password-form";
 import { SignInMethods } from "./sign-in-methods";
 import { Passkeys } from "./passkeys";
+import { PageHeader } from "@/components/ui/page-header";
 
 export const metadata = { title: "Account" };
 
@@ -46,13 +47,15 @@ async function AccountPage({ searchParams }: PageProps<"/admin/account">) {
       : null;
   return (
     <div className="max-w-xl space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Account</h1>
-        <p className="text-sm text-muted-foreground">
-          Signed in as {session.user.email}. How you sign in applies to every workspace you belong
-          to.
-        </p>
-      </div>
+      <PageHeader
+        title="Account"
+        description={
+          <>
+            Signed in as {session.user.email}. How you sign in applies to every workspace you belong
+            to.
+          </>
+        }
+      />
       {linkError && (
         <p role="alert" className="rounded-md border border-destructive/40 p-3 text-sm">
           {linkError}

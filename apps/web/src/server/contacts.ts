@@ -14,6 +14,7 @@ import { serializeContact } from "./api";
 import { refreshWorkspace } from "./cache";
 import { emitEvent } from "./webhooks";
 import { enqueue } from "./jobs";
+import { bookingsVisibleTo, contactEventsVisibleTo, contactsVisibleTo } from "./access/hiring";
 import {
   clientEntryStage,
   clientStageByKey,
@@ -230,6 +231,21 @@ export async function setStage(
   if (to) await moveToStage({ workspaceId, contactId, toStageId: to.id, by });
 }
 
+/** Whether a member may open this contact's page (candidates only with their team). */
+export async function contactVisible(workspaceId: string, id: string, viewer: string) {
+  const [row] = await db()
+    .select({ id: schema.contacts.id })
+    .from(schema.contacts)
+    .where(
+      and(
+        eq(schema.contacts.workspaceId, workspaceId),
+        eq(schema.contacts.id, id),
+        contactsVisibleTo(viewer),
+      ),
+    );
+  return !!row;
+}
+
 export async function getContact(workspaceId: string, id: string): Promise<Contact | null> {
   return (
     (await db().query.contacts.findFirst({
@@ -251,9 +267,18 @@ export async function getContactByEmail(workspaceId: string, email: string) {
 
 export async function listContacts(
   workspaceId: string,
-  opts: { q?: string; stage?: string; limit?: number } = {},
+  opts: {
+    q?: string;
+    stage?: string;
+    limit?: number;
+    /** Who is looking: people who exist only as candidates show only to their team (ADR 0005). */
+    viewer?: string | null;
+  } = {},
 ): Promise<Contact[]> {
-  const conds = [eq(schema.contacts.workspaceId, workspaceId)];
+  const conds = [
+    eq(schema.contacts.workspaceId, workspaceId),
+    contactsVisibleTo(opts.viewer ?? null),
+  ];
   if (opts.stage) {
     // A stage key of the client pipeline (any of the workspace's own), else a legacy value.
     const stage = (await clientStages(workspaceId)).find((s) => s.key === opts.stage);
@@ -281,21 +306,30 @@ export async function listContacts(
     .limit(opts.limit ?? 200);
 }
 
-export async function contactTimeline(contactId: string, limit = 100): Promise<ContactEvent[]> {
+/**
+ * A contact's timeline, newest first. Hiring entries show only to `viewer` when they may see the
+ * application; without a viewer (briefings, AI context) never (ADR 0005, deny by default).
+ */
+export async function contactTimeline(
+  contactId: string,
+  limit = 100,
+  viewer: string | null = null,
+): Promise<ContactEvent[]> {
   return db()
     .select()
     .from(schema.contactEvents)
-    .where(eq(schema.contactEvents.contactId, contactId))
+    .where(and(eq(schema.contactEvents.contactId, contactId), contactEventsVisibleTo(viewer)))
     .orderBy(desc(schema.contactEvents.createdAt))
     .limit(limit);
 }
 
-export async function contactBookings(contactId: string) {
+/** A contact's bookings; interviews only for a viewer who may see their application. */
+export async function contactBookings(contactId: string, viewer: string | null = null) {
   const rows = await db()
     .select({ b: schema.bookings, eventTitle: schema.eventTypes.title })
     .from(schema.bookings)
     .leftJoin(schema.eventTypes, eq(schema.eventTypes.id, schema.bookings.eventTypeId))
-    .where(eq(schema.bookings.contactId, contactId))
+    .where(and(eq(schema.bookings.contactId, contactId), bookingsVisibleTo(viewer)))
     .orderBy(asc(schema.bookings.startAt));
   return rows.map((r) => ({ ...r.b, eventTitle: r.eventTitle }));
 }
@@ -379,6 +413,8 @@ export async function staleContacts(workspaceId: string, quietDays = 7, limit = 
     .where(
       and(
         eq(schema.contacts.workspaceId, workspaceId),
+        // Client work only: candidates are followed up in hiring.
+        contactsVisibleTo(null),
         or(
           sql`${schema.contacts.nextFollowUpAt} <= now()`,
           and(await inEntryStage(workspaceId), sql`${schema.contacts.lastActivityAt} <= ${cutoff}`),

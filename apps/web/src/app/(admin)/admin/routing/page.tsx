@@ -7,6 +7,7 @@ import { listRoutingForms } from "@/server/routing";
 import { requireStaff } from "@/server/session";
 import { getCurrentWorkspace } from "@/server/workspace";
 import { createRoutingForm } from "./actions";
+import { PageHeader } from "@/components/ui/page-header";
 
 export const metadata = { title: "Routing forms" };
 
@@ -16,17 +17,17 @@ async function RoutingListPage() {
   const forms = await listRoutingForms(ws.id);
   return (
     <div className="space-y-6">
-      <div className="flex items-end justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Routing forms</h1>
-          <p className="text-sm text-muted-foreground">
-            Ask a few questions, then send people to the right event type, link or message.
-          </p>
-        </div>
-        <form action={createRoutingForm}>
-          <SubmitButton>New form</SubmitButton>
-        </form>
-      </div>
+      <PageHeader
+        title="Routing forms"
+        description={
+          <>Ask a few questions, then send people to the right event type, link or message.</>
+        }
+        actions={
+          <form action={createRoutingForm}>
+            <SubmitButton>New form</SubmitButton>
+          </form>
+        }
+      />
       <ul className="space-y-2">
         {forms.map((f) => (
           <li

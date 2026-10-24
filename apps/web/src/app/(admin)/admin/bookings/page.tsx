@@ -39,6 +39,7 @@ import { requireStaff } from "@/server/session";
 import { listWaitlist } from "@/server/waitlist";
 import { getCurrentWorkspace } from "@/server/workspace";
 import { hostCancel, hostConfirm, hostMark, hostRemoveWaitlist } from "../scheduling-actions";
+import { PageHeader } from "@/components/ui/page-header";
 
 export const metadata = { title: "Bookings" };
 
@@ -229,14 +230,15 @@ function BookingList({
                             : " unpaid"}
                       </Badge>
                     )}
-                    {(b.paymentStatus === "paid" || b.paymentStatus === "refunded") && (
-                      <Link
-                        href={`/booking/${b.manageToken}/receipt`}
-                        className="text-xs underline underline-offset-4"
-                      >
-                        Receipt
-                      </Link>
-                    )}
+                    {b.manageToken &&
+                      (b.paymentStatus === "paid" || b.paymentStatus === "refunded") && (
+                        <Link
+                          href={`/booking/${b.manageToken}/receipt`}
+                          className="text-xs underline underline-offset-4"
+                        >
+                          Receipt
+                        </Link>
+                      )}
                     {b.paymentRef?.receiptUrl && (
                       <a
                         href={b.paymentRef.receiptUrl}
@@ -294,30 +296,31 @@ function BookingList({
                               : b.paymentStatus === "paid"
                                 ? " paid"
                                 : " unpaid"}
-                            {(b.paymentStatus === "paid" || b.paymentStatus === "refunded") && (
-                              <>
-                                {" · "}
-                                <Link
-                                  href={`/booking/${b.manageToken}/receipt`}
-                                  className="underline underline-offset-4"
-                                >
-                                  Receipt
-                                </Link>
-                                {b.paymentRef?.receiptUrl && (
-                                  <>
-                                    {" · "}
-                                    <a
-                                      href={b.paymentRef.receiptUrl}
-                                      target="_blank"
-                                      rel="noreferrer"
-                                      className="underline underline-offset-4"
-                                    >
-                                      Stripe
-                                    </a>
-                                  </>
-                                )}
-                              </>
-                            )}{" "}
+                            {b.manageToken &&
+                              (b.paymentStatus === "paid" || b.paymentStatus === "refunded") && (
+                                <>
+                                  {" · "}
+                                  <Link
+                                    href={`/booking/${b.manageToken}/receipt`}
+                                    className="underline underline-offset-4"
+                                  >
+                                    Receipt
+                                  </Link>
+                                  {b.paymentRef?.receiptUrl && (
+                                    <>
+                                      {" · "}
+                                      <a
+                                        href={b.paymentRef.receiptUrl}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        className="underline underline-offset-4"
+                                      >
+                                        Stripe
+                                      </a>
+                                    </>
+                                  )}
+                                </>
+                              )}{" "}
                             ·
                           </span>
                         )}
@@ -418,20 +421,28 @@ async function LegacyBookings({ past }: { past: boolean }) {
   if (!ws) return null;
   const mine = role !== "owner" && role !== "admin";
   const [rows, profile, waitlist] = await Promise.all([
-    listBookings(ws.id, { upcoming: !past, userId: mine ? session.user.id : undefined }),
+    listBookings(ws.id, {
+      upcoming: !past,
+      userId: mine ? session.user.id : undefined,
+      viewer: session.user.id,
+    }),
     getProfileByUser(ws.id, session.user.id),
     past ? Promise.resolve([]) : listWaitlist(ws.id, mine ? session.user.id : undefined),
   ]);
   const tz = profile?.timezone ?? ws.timezone;
   return (
     <div className="space-y-6">
-      <div className="flex items-end justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Bookings</h1>
-          <p className="text-sm text-muted-foreground">Times shown in {tz}.</p>
-        </div>
-        <TimeTabs past={past} upcomingHref="/admin/bookings" pastHref="/admin/bookings?view=past" />
-      </div>
+      <PageHeader
+        title="Bookings"
+        description={<>Times shown in {tz}.</>}
+        actions={
+          <TimeTabs
+            past={past}
+            upcomingHref="/admin/bookings"
+            pastHref="/admin/bookings?view=past"
+          />
+        }
+      />
       <BookingList rows={rows} waitlist={waitlist} tz={tz} past={past} />
     </div>
   );
@@ -485,6 +496,7 @@ async function BookingsWorkspace({
   cookieMode?: string;
 }) {
   const [{ session, role }, ws] = await Promise.all([requireStaff(), getCurrentWorkspace()]);
+  const viewer = session.user.id;
   if (!ws) return null;
   const manager = isManager(role);
   const profile = await getProfileByUser(ws.id, session.user.id);
@@ -532,10 +544,10 @@ async function BookingsWorkspace({
   let waitlist: Waits = [];
   if (mode === "calendar") {
     const range = viewRange(cal, date, tz);
-    ({ rows, capped } = await listBookingsRange(ws.id, { ...range, hostUserId }));
+    ({ rows, capped } = await listBookingsRange(ws.id, { ...range, hostUserId, viewer }));
   } else {
     [{ rows, next }, waitlist] = await Promise.all([
-      listBookingsPage(ws.id, { past, hostUserId, cursor }),
+      listBookingsPage(ws.id, { past, hostUserId, cursor, viewer }),
       past ? Promise.resolve([] as Waits) : listWaitlist(ws.id, hostUserId),
     ]);
   }
@@ -548,35 +560,33 @@ async function BookingsWorkspace({
 
   return (
     <div className="space-y-5">
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <h1 className="flex items-center gap-2 text-2xl font-semibold tracking-tight">
-            Bookings
-            {(await inBeta(ws, "bookings_calendar")) && <BetaBadge />}
-          </h1>
-          <p className="text-sm text-muted-foreground">Times shown in {tz}.</p>
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
-          {mode === "list" && (
-            <TimeTabs
-              past={past}
-              upcomingHref={hrefFor({ view: null, after: null, booking: null })}
-              pastHref={hrefFor({ view: "past", after: null, booking: null })}
+      <PageHeader
+        title="Bookings"
+        badge={(await inBeta(ws, "bookings_calendar")) && <BetaBadge />}
+        description={<>Times shown in {tz}.</>}
+        actions={
+          <>
+            {mode === "list" && (
+              <TimeTabs
+                past={past}
+                upcomingHref={hrefFor({ view: null, after: null, booking: null })}
+                pastHref={hrefFor({ view: "past", after: null, booking: null })}
+              />
+            )}
+            <ViewToggle
+              mode={mode}
+              listHref={hrefFor({ mode: "list", cal: null, date: null, booking: null })}
+              calendarHref={hrefFor({
+                mode: "calendar",
+                view: null,
+                after: null,
+                booking: null,
+                cal: cal,
+              })}
             />
-          )}
-          <ViewToggle
-            mode={mode}
-            listHref={hrefFor({ mode: "list", cal: null, date: null, booking: null })}
-            calendarHref={hrefFor({
-              mode: "calendar",
-              view: null,
-              after: null,
-              booking: null,
-              cal: cal,
-            })}
-          />
-        </div>
-      </div>
+          </>
+        }
+      />
 
       {(manager && profiles.length > 1) || legend.length > 0 ? (
         <div className="flex flex-wrap items-center gap-x-4 gap-y-2">

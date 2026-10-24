@@ -2,6 +2,7 @@ import "server-only";
 import { and, asc, desc, eq, gte, inArray, isNull, lt, or, schema } from "@bookly/db";
 import type { ContactEvent } from "@bookly/db/schema";
 import { db } from "@/lib/db";
+import { contactEventsVisibleTo } from "./access/hiring";
 import { addDays, todayIn, utcToZoned, zonedToUtc } from "@/lib/time";
 
 /*
@@ -146,11 +147,14 @@ export async function timelineWindow(
   tz: string,
   cursor: TimelineCursor | null = null,
   size = WINDOW,
+  /** Who is looking: hiring entries only with their application (ADR 0005). */
+  viewer: string | null = null,
 ): Promise<{ days: TimelineDay[]; next: string | null }> {
   const mine = and(
     eq(schema.contactEvents.workspaceId, workspaceId),
     eq(schema.contactEvents.contactId, contactId),
     isNull(schema.contactEvents.parentId),
+    contactEventsVisibleTo(viewer),
   );
   const order = [desc(schema.contactEvents.createdAt), desc(schema.contactEvents.id)];
   const top = await db()
@@ -306,14 +310,25 @@ async function enrich(rows: ContactEvent[], tz: string): Promise<TimelineItem[]>
 }
 
 /** One entry with its whole thread, for the side pane. */
-export async function timelineEntry(workspaceId: string, contactId: string, id: string) {
-  const e = await db().query.contactEvents.findFirst({
-    where: and(
-      eq(schema.contactEvents.id, id),
-      eq(schema.contactEvents.workspaceId, workspaceId),
-      eq(schema.contactEvents.contactId, contactId),
-    ),
-  });
+export async function timelineEntry(
+  workspaceId: string,
+  contactId: string,
+  id: string,
+  viewer: string | null = null,
+) {
+  // A plain select: the predicate names the table, which relational queries alias.
+  const [e] = await db()
+    .select()
+    .from(schema.contactEvents)
+    .where(
+      and(
+        eq(schema.contactEvents.id, id),
+        eq(schema.contactEvents.workspaceId, workspaceId),
+        eq(schema.contactEvents.contactId, contactId),
+        contactEventsVisibleTo(viewer),
+      ),
+    )
+    .limit(1);
   if (!e) return null;
   const rootId = e.parentId ?? e.id;
   const thread = await db()
@@ -323,6 +338,7 @@ export async function timelineEntry(workspaceId: string, contactId: string, id: 
       and(
         eq(schema.contactEvents.contactId, contactId),
         or(eq(schema.contactEvents.id, rootId), eq(schema.contactEvents.parentId, rootId)),
+        contactEventsVisibleTo(viewer),
       ),
     )
     .orderBy(asc(schema.contactEvents.createdAt), asc(schema.contactEvents.id))

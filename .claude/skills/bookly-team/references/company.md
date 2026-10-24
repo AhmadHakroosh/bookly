@@ -276,7 +276,8 @@ Server-Sent Events stream.
 - Branch names: `v2-<area>-<topic>` (e.g. `v2-brand-tokens`, `v2-hiring-schema`). Not
   `v2/…`: git cannot hold a branch `v2` and branches under `v2/` at the same time.
 - Several sessions work in parallel worktrees against one local Postgres. Run the e2e suite on
-  a port and database of your own (`E2E_PORT=30xx`, `DATABASE_URL=…/bookly_e2e_<branch>`):
+  a port and database of your own (`E2E_PORT=30xx`, `DATABASE_URL=…/bookly_e2e_<branch>`; the
+  realtime socket and the fake Resend follow the port, so build with the same `E2E_PORT`):
   the default `3010` and `bookly_e2e` collide when two runs overlap. New migrations go after
   merging `v2` into your branch, so numbers never clash.
 

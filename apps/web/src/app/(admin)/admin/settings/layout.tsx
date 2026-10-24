@@ -5,6 +5,7 @@ import { requireManager } from "@/server/session";
 import { hasFlag } from "@/server/flags";
 import { getCurrentWorkspace } from "@/server/workspace";
 import { SettingsNav, type SettingsTab } from "./settings-nav";
+import { PageHeader } from "@/components/ui/page-header";
 
 export const metadata = { title: "Settings" };
 
@@ -38,12 +39,10 @@ async function SettingsShell({ children }: { children: React.ReactNode }) {
   ];
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Settings</h1>
-        <p className="text-sm text-muted-foreground">
-          Shared by everyone in the workspace. Owners and admins can change these.
-        </p>
-      </div>
+      <PageHeader
+        title="Settings"
+        description={<>Shared by everyone in the workspace. Owners and admins can change these.</>}
+      />
       <SettingsNav tabs={tabs} />
       {children}
     </div>

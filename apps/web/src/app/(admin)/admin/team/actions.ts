@@ -1,6 +1,7 @@
 "use server";
 
 import { hasFlag } from "@/server/flags";
+import { purgeHiringAccess } from "@/server/hiring/team";
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
@@ -101,6 +102,8 @@ export async function removeMember(memberId: string) {
     })
     .catch(() => null);
   await syncSeats(ws);
+  // Their hiring grants (team roles, application access, reviews owed) go with them.
+  if (r) await purgeHiringAccess(ws.id, r.member.userId);
   if (r)
     await audit({
       action: "member.removed",

@@ -8,6 +8,7 @@ import { stageChoices } from "@/server/pipelines";
 import { getProfileByUser } from "@/server/scheduling";
 import { requireStaff } from "@/server/session";
 import { getCurrentWorkspace } from "@/server/workspace";
+import { PageHeader } from "@/components/ui/page-header";
 
 export const metadata = { title: "Contacts" };
 
@@ -23,7 +24,7 @@ async function ContactsPage({ searchParams }: PageProps<"/admin/contacts">) {
   const { choices, keyOf } = await stageChoices(ws);
   const choice = (key: string) => choices.find((s) => s.key === key);
   const stage = typeof sp.stage === "string" && choice(sp.stage) ? sp.stage : undefined;
-  const rows = await listContacts(ws.id, { q, stage });
+  const rows = await listContacts(ws.id, { q, stage, viewer: session.user.id });
   const href = (over: { q?: string; stage?: string }) => {
     const p = new URLSearchParams();
     const merged = { q, stage: stage ?? "", ...over };
@@ -34,12 +35,12 @@ async function ContactsPage({ searchParams }: PageProps<"/admin/contacts">) {
   };
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Contacts</h1>
-        <p className="text-sm text-muted-foreground">
-          Everyone who booked, joined a waitlist or filled a routing form, with their history.
-        </p>
-      </div>
+      <PageHeader
+        title="Contacts"
+        description={
+          <>Everyone who booked, joined a waitlist or filled a routing form, with their history.</>
+        }
+      />
       <div className="flex flex-wrap items-center gap-2">
         <form className="flex gap-2">
           {stage && <input type="hidden" name="stage" value={stage} />}

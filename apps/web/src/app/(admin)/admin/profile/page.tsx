@@ -6,6 +6,7 @@ import { getProfileByUser } from "@/server/scheduling";
 import { requireWorkspaceUser } from "@/server/session";
 import { getCurrentWorkspace } from "@/server/workspace";
 import { ProfileForm } from "./profile-form";
+import { PageHeader } from "@/components/ui/page-header";
 
 export const metadata = { title: "Booking page" };
 
@@ -23,14 +24,16 @@ async function ProfilePage({ searchParams }: PageProps<"/admin/profile">) {
     .replace(/^-+|-+$/g, "");
   return (
     <div className="max-w-xl space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Your booking page</h1>
-        <p className="text-sm text-muted-foreground">
-          {sp.setup === "1"
-            ? "Set up your public page first, then create event types."
-            : "Public profile shown at /<username>."}
-        </p>
-      </div>
+      <PageHeader
+        title="Your booking page"
+        description={
+          <>
+            {sp.setup === "1"
+              ? "Set up your public page first, then create event types."
+              : "Public profile shown at /<username>."}
+          </>
+        }
+      />
       <ProfileForm
         initial={{
           username: p?.username ?? suggested,

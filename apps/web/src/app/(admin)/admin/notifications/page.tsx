@@ -15,6 +15,7 @@ import { DevicePanel } from "./device-panel";
 import { KindsForm } from "./kinds-form";
 import { PrefsForm } from "./prefs-form";
 import { VerifyPanel } from "./verify-panel";
+import { PageHeader } from "@/components/ui/page-header";
 
 export const metadata = { title: "Notifications" };
 
@@ -39,13 +40,15 @@ async function NotificationsPage() {
     : [];
   return (
     <div className="max-w-2xl space-y-10">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Notifications</h1>
-        <p className="text-sm text-muted-foreground">
-          Attendees always get email confirmations and reminders. This page is about how{" "}
-          <em>you</em> hear about bookings; teammates set their own.
-        </p>
-      </div>
+      <PageHeader
+        title="Notifications"
+        description={
+          <>
+            Attendees always get email confirmations and reminders. This page is about how{" "}
+            <em>you</em> hear about bookings; teammates set their own.
+          </>
+        }
+      />
       {profile ? (
         <>
           {flagged && (

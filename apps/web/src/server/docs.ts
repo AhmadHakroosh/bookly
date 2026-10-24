@@ -15,6 +15,7 @@ export type Heading = { id: string; text: string; level: 2 | 3 };
 
 const ORDER = [
   "self-hosting",
+  "admin",
   "scheduling",
   "contacts",
   "tasks",

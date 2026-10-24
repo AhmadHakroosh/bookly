@@ -9,7 +9,7 @@ const buttonVariants = cva(
       variant: {
         default: "bg-primary text-primary-foreground not-disabled:hover:bg-primary-hover",
         // The dark button of the concepts ("Join meeting", "Create"): Ink, inverted in dark mode.
-        ink: "bg-ink text-ink-foreground not-disabled:hover:bg-ink/85",
+        ink: "bg-ink text-ink-foreground not-disabled:hover:bg-ink-hover",
         outline:
           "border-border bg-background not-disabled:hover:bg-muted not-disabled:hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50",
         secondary:

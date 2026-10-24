@@ -3,6 +3,7 @@ import { deleteWorkspaceFiles } from "./files";
 import { eq, inArray, schema } from "@bookly/db";
 import type { Workspace } from "@bookly/db/schema";
 import { db } from "@/lib/db";
+import { hiringExport } from "./hiring/export";
 import { refreshWorkspace } from "./cache";
 import { isCloud } from "./platform";
 import { paymentsConfigured, stripe } from "./payments";
@@ -174,6 +175,7 @@ export async function exportWorkspace(ws: Workspace) {
     webhooks,
     apiKeys,
     domains,
+    hiring: await hiringExport(ws.id),
   };
 }
 
