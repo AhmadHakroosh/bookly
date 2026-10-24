@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync, statSync } from "node:fs";
 import path from "node:path";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { and, createDb, eq, inArray, schema, type Database } from "@bookly/db";
@@ -10,6 +10,7 @@ import {
   canOnOpportunity,
   contactEventsVisibleTo,
   contactsVisibleTo,
+  filesVisibleToHiring,
   redactInterview,
   reviewsVisibleTo,
   roleOn,
@@ -74,6 +75,10 @@ describe("hiring write checks", () => {
       applicationId: "a",
       brief: "b",
       meetingUrl: "https://meet",
+      stageId: "s",
+      manageToken: "tok",
+      cancelReason: "r",
+      paymentRef: { receiptUrl: "https://receipt" },
       hostUserId: "h",
     });
     expect(b).toMatchObject({
@@ -85,12 +90,40 @@ describe("hiring write checks", () => {
       guests: [],
       brief: null,
       meetingUrl: null,
+      manageToken: "",
+      paymentRef: null,
       hostUserId: "h",
     });
   });
 });
 
 describe("hiring read guard", () => {
+  it("never hands an access predicate to a relational query (they alias the table it names)", () => {
+    const walk = (dir: string): string[] =>
+      readdirSync(dir).flatMap((f) => {
+        const p = path.join(dir, f);
+        if (statSync(p).isDirectory()) return f === "__tests__" ? [] : walk(p);
+        return /\.(ts|tsx)$/.test(f) ? [p] : [];
+      });
+    const offenders: string[] = [];
+    for (const file of walk(path.join(__dirname, ".."))) {
+      const src = readFileSync(file, "utf8");
+      for (const m of src.matchAll(/\.query\.\w+\.find(?:First|Many)\(/g)) {
+        // The call's arguments: up to the matching close paren.
+        let depth = 0;
+        let end = m.index! + m[0].length - 1;
+        for (; end < src.length; end++) {
+          if (src[end] === "(") depth++;
+          else if (src[end] === ")" && --depth === 0) break;
+        }
+        const call = src.slice(m.index!, end);
+        if (/VisibleTo\(|canSeeApplication\(/.test(call))
+          offenders.push(path.relative(path.join(__dirname, ".."), file));
+      }
+    }
+    expect(offenders).toEqual([]);
+  });
+
   it("takes the actor first in every exported hiring query", () => {
     const src = readFileSync(path.join(__dirname, "../server/hiring/queries.ts"), "utf8");
     const exported = [...src.matchAll(/^export async function (\w+)\(([^,)]*)/gm)];
@@ -413,6 +446,54 @@ describe.skipIf(!realDb)("hiring access matrix (seeded database)", () => {
       submittedAt: new Date(),
     });
     expect((await reviewsSeen(rev1)).sort()).toEqual([id("rv1"), id("rv2")].sort());
+  });
+
+  it("never lets a stale coordinator row make a collaborator a coordinator", async () => {
+    await db
+      .update(schema.opportunityMembers)
+      .set({ role: "coordinator" })
+      .where(eq(schema.opportunityMembers.userId, collab));
+    const asCoordinator = actor(collab, "collaborator", { [opp]: "coordinator" }, ws);
+    expect(roleOn(asCoordinator, opp)).toBeNull();
+    const ids = (
+      await db
+        .select({ id: schema.applications.id })
+        .from(schema.applications)
+        .where(and(eq(schema.applications.workspaceId, ws), applicationsVisibleTo(asCoordinator)))
+    ).map((r) => r.id);
+    expect(ids).toEqual([]);
+    await db
+      .update(schema.opportunityMembers)
+      .set({ role: "reviewer" })
+      .where(eq(schema.opportunityMembers.userId, collab));
+  });
+
+  it("keeps candidates' files to their team", async () => {
+    const file = (key: string, contactId: string | null) => ({
+      id: crypto.randomUUID(),
+      workspaceId: ws,
+      kind: "attachment" as const,
+      key: id(`key_${key}`),
+      name: `${key}.pdf`,
+      mime: "application/pdf",
+      size: 10,
+      status: "ready" as const,
+      contactId,
+    });
+    const [cv, contract] = [file("cv", p1), file("contract", p3)];
+    await db.insert(schema.files).values([cv, contract]);
+    const seen = async (u: string | null) =>
+      (
+        await db
+          .select({ id: schema.files.id })
+          .from(schema.files)
+          .where(and(eq(schema.files.workspaceId, ws), filesVisibleToHiring(u)))
+      )
+        .map((r) => r.id)
+        .sort();
+    expect(await seen(rev1)).toEqual([cv.id, contract.id].sort());
+    expect(await seen(outsider)).toEqual([contract.id]);
+    expect(await seen(null)).toEqual([contract.id]);
   });
 
   it("blinds a coordinator who owes a review on that stage until they submit", async () => {

@@ -316,14 +316,19 @@ export async function timelineEntry(
   id: string,
   viewer: string | null = null,
 ) {
-  const e = await db().query.contactEvents.findFirst({
-    where: and(
-      eq(schema.contactEvents.id, id),
-      eq(schema.contactEvents.workspaceId, workspaceId),
-      eq(schema.contactEvents.contactId, contactId),
-      contactEventsVisibleTo(viewer),
-    ),
-  });
+  // A plain select: the predicate names the table, which relational queries alias.
+  const [e] = await db()
+    .select()
+    .from(schema.contactEvents)
+    .where(
+      and(
+        eq(schema.contactEvents.id, id),
+        eq(schema.contactEvents.workspaceId, workspaceId),
+        eq(schema.contactEvents.contactId, contactId),
+        contactEventsVisibleTo(viewer),
+      ),
+    )
+    .limit(1);
   if (!e) return null;
   const rootId = e.parentId ?? e.id;
   const thread = await db()

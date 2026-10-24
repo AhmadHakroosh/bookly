@@ -39,13 +39,18 @@ export async function BookingDetail({ id, inPane = false }: { id: string; inPane
   const viewer = signedIn.user.id;
   if (!ws) return null;
   // An interview opens only for people who may see its application (ADR 0005).
-  const b = await db().query.bookings.findFirst({
-    where: and(
-      eq(schema.bookings.id, id),
-      eq(schema.bookings.workspaceId, ws.id),
-      bookingsVisibleTo(viewer),
-    ),
-  });
+  // A plain select: the predicate names the table, which relational queries alias.
+  const [b] = await db()
+    .select()
+    .from(schema.bookings)
+    .where(
+      and(
+        eq(schema.bookings.id, id),
+        eq(schema.bookings.workspaceId, ws.id),
+        bookingsVisibleTo(viewer),
+      ),
+    )
+    .limit(1);
   if (!b) notFound();
   const hostProfile = await getProfileByUser(ws.id, b.hostUserId);
   const tz = hostProfile?.timezone ?? ws.timezone;

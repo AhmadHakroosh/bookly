@@ -24,6 +24,7 @@ export async function GET(req: Request) {
     userId: profile?.userId,
     upcoming,
     limit,
+    withoutInterviews: true,
   });
   const filtered = status ? rows.filter((b) => b.status === status) : rows;
   return json(

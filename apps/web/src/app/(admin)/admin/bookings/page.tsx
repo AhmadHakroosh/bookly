@@ -229,14 +229,15 @@ function BookingList({
                             : " unpaid"}
                       </Badge>
                     )}
-                    {(b.paymentStatus === "paid" || b.paymentStatus === "refunded") && (
-                      <Link
-                        href={`/booking/${b.manageToken}/receipt`}
-                        className="text-xs underline underline-offset-4"
-                      >
-                        Receipt
-                      </Link>
-                    )}
+                    {b.manageToken &&
+                      (b.paymentStatus === "paid" || b.paymentStatus === "refunded") && (
+                        <Link
+                          href={`/booking/${b.manageToken}/receipt`}
+                          className="text-xs underline underline-offset-4"
+                        >
+                          Receipt
+                        </Link>
+                      )}
                     {b.paymentRef?.receiptUrl && (
                       <a
                         href={b.paymentRef.receiptUrl}
@@ -294,30 +295,31 @@ function BookingList({
                               : b.paymentStatus === "paid"
                                 ? " paid"
                                 : " unpaid"}
-                            {(b.paymentStatus === "paid" || b.paymentStatus === "refunded") && (
-                              <>
-                                {" · "}
-                                <Link
-                                  href={`/booking/${b.manageToken}/receipt`}
-                                  className="underline underline-offset-4"
-                                >
-                                  Receipt
-                                </Link>
-                                {b.paymentRef?.receiptUrl && (
-                                  <>
-                                    {" · "}
-                                    <a
-                                      href={b.paymentRef.receiptUrl}
-                                      target="_blank"
-                                      rel="noreferrer"
-                                      className="underline underline-offset-4"
-                                    >
-                                      Stripe
-                                    </a>
-                                  </>
-                                )}
-                              </>
-                            )}{" "}
+                            {b.manageToken &&
+                              (b.paymentStatus === "paid" || b.paymentStatus === "refunded") && (
+                                <>
+                                  {" · "}
+                                  <Link
+                                    href={`/booking/${b.manageToken}/receipt`}
+                                    className="underline underline-offset-4"
+                                  >
+                                    Receipt
+                                  </Link>
+                                  {b.paymentRef?.receiptUrl && (
+                                    <>
+                                      {" · "}
+                                      <a
+                                        href={b.paymentRef.receiptUrl}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        className="underline underline-offset-4"
+                                      >
+                                        Stripe
+                                      </a>
+                                    </>
+                                  )}
+                                </>
+                              )}{" "}
                             ·
                           </span>
                         )}

@@ -59,7 +59,7 @@ async function AdminHome() {
     staleContacts(workspace.id),
     listOpenTasks(workspace.id, { userId: session.user.id, limit: 30 }),
     listWaitlist(workspace.id, mine ? session.user.id : undefined),
-    recapsToReview(workspace.id, mine ? session.user.id : undefined),
+    recapsToReview(workspace.id, mine ? session.user.id : undefined, 10, session.user.id),
   ]);
   const stageNames = await stageChoices(workspace);
   const stageName = (c: (typeof stale)[number]) => {
@@ -286,17 +286,18 @@ async function AdminHome() {
                           : b.paymentStatus === "paid"
                             ? " paid"
                             : " unpaid"}
-                        {(b.paymentStatus === "paid" || b.paymentStatus === "refunded") && (
-                          <>
-                            {" · "}
-                            <Link
-                              href={`/booking/${b.manageToken}/receipt`}
-                              className="underline underline-offset-4"
-                            >
-                              Receipt
-                            </Link>
-                          </>
-                        )}
+                        {b.manageToken &&
+                          (b.paymentStatus === "paid" || b.paymentStatus === "refunded") && (
+                            <>
+                              {" · "}
+                              <Link
+                                href={`/booking/${b.manageToken}/receipt`}
+                                className="underline underline-offset-4"
+                              >
+                                Receipt
+                              </Link>
+                            </>
+                          )}
                       </>
                     )}
                   </p>

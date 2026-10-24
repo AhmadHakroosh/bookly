@@ -1,42 +1,37 @@
 import "server-only";
-import { and, eq, inArray, isNotNull, schema } from "@bookly/db";
+import { and, eq, schema } from "@bookly/db";
 import type { StoredFile } from "@bookly/db/schema";
 import { db } from "@/lib/db";
-import { canSeeApplication } from "../access/hiring";
+import { bookingsVisibleTo, filesVisibleToHiring } from "../access/hiring";
 
 /**
- * Whether a file belongs to an application the user may not see (ADR 0005): linked to it, or
- * sent with its form. Files of no application are left to the drive's own rules.
+ * Whether hiring access hides a file from this user (ADR 0005): tied to an application they may
+ * not see, or to a person who exists only as a candidate outside their team.
  */
-export async function hiddenByHiring(
-  file: Pick<StoredFile, "id" | "ownerType" | "ownerId">,
-  userId: string,
-): Promise<boolean> {
-  const [linked, sent] = await Promise.all([
-    db()
-      .select({ id: schema.fileLinks.targetId })
-      .from(schema.fileLinks)
-      .where(
-        and(eq(schema.fileLinks.fileId, file.id), eq(schema.fileLinks.targetType, "application")),
-      ),
-    file.ownerType === "form_response" && file.ownerId
-      ? db()
-          .select({ id: schema.formResponses.applicationId })
-          .from(schema.formResponses)
-          .where(
-            and(
-              eq(schema.formResponses.id, file.ownerId),
-              isNotNull(schema.formResponses.applicationId),
-            ),
-          )
-      : Promise.resolve([]),
-  ]);
-  const ids = [...linked, ...sent].map((r) => r.id).filter((x): x is string => !!x);
-  if (!ids.length) return false;
-  const [visible] = await db()
-    .select({ id: schema.applications.id })
-    .from(schema.applications)
-    .where(and(inArray(schema.applications.id, ids), canSeeApplication(userId)))
+export async function hiddenByHiring(file: Pick<StoredFile, "id">, userId: string) {
+  const [row] = await db()
+    .select({ id: schema.files.id })
+    .from(schema.files)
+    .where(and(eq(schema.files.id, file.id), filesVisibleToHiring(userId)))
     .limit(1);
-  return !visible;
+  return !row;
+}
+
+/**
+ * Whether an API key may act on a booking: interviews are hiring data, out of the API until its
+ * hiring scopes exist (ADR 0005). Unknown ids read as not allowed.
+ */
+export async function apiMayTouchBooking(workspaceId: string, bookingId: string) {
+  const [row] = await db()
+    .select({ id: schema.bookings.id, status: schema.bookings.status })
+    .from(schema.bookings)
+    .where(
+      and(
+        eq(schema.bookings.id, bookingId),
+        eq(schema.bookings.workspaceId, workspaceId),
+        bookingsVisibleTo(null),
+      ),
+    )
+    .limit(1);
+  return row ?? null;
 }

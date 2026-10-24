@@ -508,6 +508,8 @@ export async function listBookings(
     limit?: number;
     /** Who is looking; interviews they may not see show as "Interview" (ADR 0005). */
     viewer?: string | null;
+    /** Leave interviews out instead (the API, until it has hiring scopes). */
+    withoutInterviews?: boolean;
   } = {},
 ): Promise<
   (Booking & {
@@ -520,6 +522,7 @@ export async function listBookings(
   if (opts.userId) conds.push(eq(schema.bookings.hostUserId, opts.userId));
   if (opts.upcoming === true) conds.push(gte(schema.bookings.endAt, new Date()));
   if (opts.upcoming === false) conds.push(lte(schema.bookings.endAt, new Date()));
+  if (opts.withoutInterviews) conds.push(bookingsVisibleTo(null));
   const rows = await db()
     .select({
       b: schema.bookings,

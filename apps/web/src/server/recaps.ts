@@ -6,6 +6,7 @@ import { and, desc, eq, isNull, schema } from "@bookly/db";
 import { loadEnv } from "@bookly/config";
 import type { Booking, EventType, MeetingRecap, Task, Workspace } from "@bookly/db/schema";
 import { db } from "@/lib/db";
+import { bookingsVisibleTo } from "./access/hiring";
 import { fmtDateTime } from "@/lib/time";
 import { serializeTask } from "./api";
 import { assistantConfigured } from "./brief";
@@ -246,7 +247,13 @@ export async function noteRecapEmail(bookingId: string, kind: "followUpAt" | "re
 }
 
 /** Recaps nobody has looked at yet, for Home. */
-export async function recapsToReview(workspaceId: string, hostUserId?: string, limit = 10) {
+export async function recapsToReview(
+  workspaceId: string,
+  hostUserId?: string,
+  limit = 10,
+  /** Who is looking: interview recaps only with their application (ADR 0005). */
+  viewer: string | null = null,
+) {
   const rows = await db()
     .select({ r: schema.meetingRecaps, b: schema.bookings, eventTitle: schema.eventTypes.title })
     .from(schema.meetingRecaps)
@@ -256,6 +263,7 @@ export async function recapsToReview(workspaceId: string, hostUserId?: string, l
       and(
         eq(schema.meetingRecaps.workspaceId, workspaceId),
         isNull(schema.meetingRecaps.reviewedAt),
+        bookingsVisibleTo(viewer),
       ),
     )
     .orderBy(desc(schema.meetingRecaps.createdAt))

@@ -1,5 +1,5 @@
 import { schema, sql, type SQL } from "@bookly/db";
-import type { OpportunityRole } from "@bookly/db/schema";
+import type { Booking, OpportunityRole } from "@bookly/db/schema";
 import type { Actor } from "./actor";
 
 /** Owners and admins (kept here, not imported from the session module, so this file stays pure). */
@@ -33,7 +33,13 @@ export function canSeeApplication(userId: string, app: typeof a = a): SQL {
       select 1 from ${schema.opportunityMembers} om
       where om.opportunity_id = ${app.opportunityId} and om.user_id = ${userId}
         and (
-          om.role in ('coordinator', 'viewer')
+          om.role = 'viewer'
+          -- A collaborator never coordinates, whatever a stale row says (ADR 0005).
+          or (om.role = 'coordinator' and not exists (
+            select 1 from ${schema.members} m2
+            join ${schema.workspaces} w2 on w2.organization_id = m2.organization_id
+            where w2.id = ${app.workspaceId} and m2.user_id = ${userId} and m2.role = 'collaborator'
+          ))
           or (om.role = 'reviewer' and exists (
             select 1 from ${schema.opportunities} o
             where o.id = ${app.opportunityId}
@@ -89,6 +95,48 @@ export function bookingsVisibleTo(userId: string | null): SQL {
 }
 
 /**
+ * Files a user may see as far as hiring goes (the drive and `/files` add their own rules): a file
+ * tied to applications (linked to one, sent with one's form, on one's timeline entry) needs one of
+ * them visible; a file of a candidate-only person, or shared in their conversation, needs that
+ * person visible. Null: none of those files.
+ */
+export function filesVisibleToHiring(userId: string | null): SQL {
+  const f = schema.files;
+  const visibleApp = (id: SQL) =>
+    userId
+      ? sql`exists (select 1 from ${a} where ${a.id} = ${id} and ${canSeeApplication(userId)})`
+      : sql`false`;
+  const visibleContact = (id: SQL) =>
+    sql`exists (select 1 from ${schema.contacts} where ${schema.contacts.id} = ${id} and ${contactsVisibleTo(userId)})`;
+  return sql`(
+    (not exists (
+      select 1 from ${schema.fileLinks} l where l.file_id = ${f.id} and l.target_type = 'application'
+    ) or exists (
+      select 1 from ${schema.fileLinks} l
+      where l.file_id = ${f.id} and l.target_type = 'application' and ${visibleApp(sql`l.target_id`)}
+    ))
+    and not exists (
+      select 1 from ${schema.formResponses} r
+      where ${f.ownerType} = 'form_response' and r.id = ${f.ownerId} and r.application_id is not null
+        and not ${visibleApp(sql`r.application_id`)}
+    )
+    and not exists (
+      select 1 from ${schema.fileLinks} l join ${schema.contactEvents} ev on ev.id = l.target_id
+      where l.file_id = ${f.id} and l.target_type = 'contact_event' and ev.application_id is not null
+        and not ${visibleApp(sql`ev.application_id`)}
+    )
+    and (${f.contactId} is null or ${visibleContact(sql`${f.contactId}`)})
+    and not exists (
+      select 1 from ${schema.fileLinks} l
+      join ${schema.threadMessages} m on m.id = l.target_id
+      join ${schema.threads} th on th.id = m.thread_id
+      where l.file_id = ${f.id} and l.target_type = 'thread_message' and th.contact_id is not null
+        and not ${visibleContact(sql`th.contact_id`)}
+    )
+  )`;
+}
+
+/**
  * Reviews of one application the actor may read (the independence rule): their own, draft or
  * submitted; others' submitted reviews only for a stage where the actor owes no review and has
  * either submitted their own, coordinates the opportunity, or views it with `viewersSeeReviews`.
@@ -128,34 +176,41 @@ export function reviewsVisibleTo(
  * An interview as people outside its application see it in booking lists and calendars: its time
  * and host, never the person or what they said (ADR 0005, "Interview" without the candidate).
  */
-export function redactInterview<
-  B extends {
-    attendeeName: string;
-    attendeeEmail: string;
-    attendeePhone: string | null;
-    notes: string | null;
-    answers: Record<string, string>;
-    guests: unknown;
-    contactId: string | null;
-    applicationId: string | null;
-    brief: string | null;
-    meetingUrl: string | null;
-  },
->(b: B): B {
-  return {
-    ...b,
+type InterviewPersonal =
+  | "attendeeName"
+  | "attendeeEmail"
+  | "attendeePhone"
+  | "notes"
+  | "answers"
+  | "guests"
+  | "contactId"
+  | "applicationId"
+  | "stageId"
+  | "brief"
+  | "meetingUrl"
+  | "manageToken"
+  | "cancelReason"
+  | "paymentRef";
+
+export function redactInterview<B extends Pick<Booking, InterviewPersonal>>(b: B): B {
+  const blank: Pick<Booking, InterviewPersonal> = {
     attendeeName: "Interview",
     attendeeEmail: "",
     attendeePhone: null,
     notes: null,
     answers: {},
-    guests: [] as unknown as B["guests"],
+    guests: [],
     contactId: null,
     applicationId: null,
+    stageId: null,
     brief: null,
     meetingUrl: null,
-    ...("contactCompany" in b ? { contactCompany: null } : {}),
+    // The manage link opens the candidate's booking and lets its holder change it.
+    manageToken: "",
+    cancelReason: null,
+    paymentRef: null,
   };
+  return { ...b, ...blank, ...("contactCompany" in b ? { contactCompany: null } : {}) };
 }
 
 /* ---------------- Writes ---------------- */
@@ -163,7 +218,9 @@ export function redactInterview<
 /** The actor's role on an opportunity: owners and admins coordinate everywhere. */
 export function roleOn(actor: Actor, opportunityId: string): OpportunityRole | null {
   if (isManager(actor.workspaceRole)) return "coordinator";
-  return actor.opportunityRoles.get(opportunityId) ?? null;
+  const role = actor.opportunityRoles.get(opportunityId) ?? null;
+  // A collaborator never coordinates, whatever a stale team row says.
+  return role === "coordinator" && actor.workspaceRole === "collaborator" ? null : role;
 }
 
 /** What a role may do on its opportunity (ADR 0005's matrix). Reads go through the predicates. */
