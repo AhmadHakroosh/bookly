@@ -21,3 +21,6 @@ packages/db/dist
 test-results
 playwright-report
 apps/web/tests/e2e/.auth
+
+# Strategy and planning notes (local only)
+/planning/
