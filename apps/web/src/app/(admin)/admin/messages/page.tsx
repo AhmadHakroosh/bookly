@@ -23,6 +23,7 @@ import {
   BOXES,
   canGuest,
   canTeam,
+  latestActivity,
   listThreads,
   markThreadRead,
   threadDetails,
@@ -83,12 +84,13 @@ async function MessagesPage({ searchParams }: PageProps<"/admin/messages">) {
 
   const box = BOXES.find((b) => b === one(sp.box)) ?? "inbox";
   const q = one(sp.q)?.trim() ?? "";
-  const [beta, unread, list, profile, people] = await Promise.all([
+  const [beta, unread, list, profile, people, latest] = await Promise.all([
     inBeta(ws, "messages"),
     unreadThreads(v),
     listThreads(v, { box, q, after: one(sp.after) }),
     getProfileByUser(ws.id, session.user.id),
     listProfiles(ws.id),
+    latestActivity(v),
   ]);
   const tz = profile?.timezone ?? ws.timezone;
   const hrefFor = (patch: Record<string, string | null>) => {
@@ -110,7 +112,7 @@ async function MessagesPage({ searchParams }: PageProps<"/admin/messages">) {
 
   return (
     <div className="space-y-6">
-      <LiveRefresh />
+      <LiveRefresh rendered={latest} />
       <PageHeader
         title="Messages"
         badge={beta && <BetaBadge />}
