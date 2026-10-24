@@ -3,7 +3,7 @@ import type { Answers } from "@bookly/forms";
 import { rawFrom, type Uploaded } from "@/components/forms/raw";
 import { ApplyForm } from "@/components/hiring/apply-form";
 import { LocalTime } from "@/components/hiring/local-time";
-import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
 import { applyWindow, type PublicOpportunity } from "@/server/hiring/apply";
 import {
   COPY,
@@ -91,9 +91,9 @@ export function ApplyView({
             </p>
           )}
           {taking && !draft && (
-            <Button variant="ink" size="lg" nativeButton={false} render={<a href="#application" />}>
+            <a href="#application" className={buttonVariants({ variant: "ink", size: "lg" })}>
               {COPY.start}
-            </Button>
+            </a>
           )}
         </header>
 

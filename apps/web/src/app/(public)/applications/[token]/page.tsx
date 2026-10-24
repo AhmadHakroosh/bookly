@@ -11,7 +11,7 @@ import {
   RecoverForm,
   WithdrawButton,
 } from "@/components/hiring/status-actions";
-import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
 import { hasFlag } from "@/server/flags";
 import { statusByToken } from "@/server/hiring/apply";
 import { COPY, DELETION_DAYS, fmtDay, statusCard } from "@/server/hiring/apply-text";
@@ -89,14 +89,13 @@ async function StatusPage({ params, searchParams }: PageProps<"/applications/[to
             </p>
             <div className="flex flex-wrap gap-2 print:hidden">
               {v.cohort?.decidesBy && (
-                <Button
-                  variant="outline"
-                  nativeButton={false}
-                  render={<a href={`/applications/${token}/calendar`} />}
+                <a
+                  href={`/applications/${token}/calendar`}
+                  className={buttonVariants({ variant: "outline" })}
                 >
-                  <CalendarPlusIcon data-icon="inline-start" />
+                  <CalendarPlusIcon data-icon="inline-start" aria-hidden />
                   Add the decision date to your calendar
-                </Button>
+                </a>
               )}
               <PrintButton />
             </div>
@@ -172,14 +171,12 @@ async function StatusPage({ params, searchParams }: PageProps<"/applications/[to
               Your application
             </h2>
             {v.editable && (
-              <Button
-                variant="outline"
-                size="sm"
-                nativeButton={false}
-                render={<Link href={`/applications/${token}/edit`} />}
+              <Link
+                href={`/applications/${token}/edit`}
+                className={buttonVariants({ variant: "outline", size: "sm" })}
               >
                 {COPY.editButton}
-              </Button>
+              </Link>
             )}
           </div>
           {!v.editable && app.state === "active" && (
@@ -239,14 +236,14 @@ async function StatusPage({ params, searchParams }: PageProps<"/applications/[to
             Download everything you sent us, or ask us to delete your application.
           </p>
           <div className="flex flex-wrap gap-2">
-            <Button
-              variant="outline"
-              nativeButton={false}
-              render={<a href={`/applications/${token}/data`} download />}
+            <a
+              href={`/applications/${token}/data`}
+              download
+              className={buttonVariants({ variant: "outline" })}
             >
-              <DownloadIcon data-icon="inline-start" />
+              <DownloadIcon data-icon="inline-start" aria-hidden />
               Download my data
-            </Button>
+            </a>
             {!v.request && <DeleteButton token={token} />}
           </div>
         </section>

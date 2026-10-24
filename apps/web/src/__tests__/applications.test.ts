@@ -72,7 +72,9 @@ describe("the application window", () => {
   it("opens, schedules and closes by the round's dates", () => {
     const now = day("2026-11-01");
     expect(applicationWindow({ ...base, closesAt: day("2026-11-15"), now })).toBe("open");
-    expect(applicationWindow({ ...base, opensAt: day("2026-11-05"), closesAt: null, now })).toBe("scheduled");
+    expect(applicationWindow({ ...base, opensAt: day("2026-11-05"), closesAt: null, now })).toBe(
+      "scheduled",
+    );
     expect(applicationWindow({ ...base, closesAt: day("2026-10-30"), now })).toBe("closed");
     expect(applicationWindow({ ...base, status: "draft", closesAt: null, now })).toBe("closed");
   });
@@ -82,8 +84,22 @@ describe("the application window", () => {
     const now = new Date("2026-11-16T01:00:00Z");
     const before = new Date("2026-11-15T20:00:00Z");
     expect(applicationWindow({ ...base, closesAt, now, draftStartedAt: before })).toBe("grace");
-    expect(applicationWindow({ ...base, closesAt, now, draftStartedAt: new Date("2026-11-16T00:10:00Z") })).toBe("closed");
-    expect(applicationWindow({ ...base, closesAt, now: new Date("2026-11-16T02:30:00Z"), draftStartedAt: before })).toBe("closed");
+    expect(
+      applicationWindow({
+        ...base,
+        closesAt,
+        now,
+        draftStartedAt: new Date("2026-11-16T00:10:00Z"),
+      }),
+    ).toBe("closed");
+    expect(
+      applicationWindow({
+        ...base,
+        closesAt,
+        now: new Date("2026-11-16T02:30:00Z"),
+        draftStartedAt: before,
+      }),
+    ).toBe("closed");
     expect(applicationWindow({ ...base, closesAt, now, draftStartedAt: null })).toBe("closed");
   });
 });
@@ -146,7 +162,12 @@ describe("helpers", () => {
     expect(minutesToComplete(schema)).toBe(15);
   });
   it("lets a candidate edit only while the application is new", () => {
-    const base = { state: "active" as const, isEntry: true, submittedReviews: 0, window: "open" as const };
+    const base = {
+      state: "active" as const,
+      isEntry: true,
+      submittedReviews: 0,
+      window: "open" as const,
+    };
     expect(mayEdit(base)).toBe(true);
     expect(mayEdit({ ...base, submittedReviews: 1 })).toBe(false);
     expect(mayEdit({ ...base, isEntry: false })).toBe(false);
@@ -165,7 +186,12 @@ describe.skipIf(!realDb)("applying (seeded database)", () => {
   const id = (k: string) => `h2_${run}_${k}`;
   const ws = id("ws");
   const owner = id("owner");
-  const me = { userId: owner, workspaceId: ws, workspaceRole: "owner", opportunityRoles: new Map() } as unknown as Actor;
+  const me = {
+    userId: owner,
+    workspaceId: ws,
+    workspaceRole: "owner",
+    opportunityRoles: new Map(),
+  } as unknown as Actor;
   let workspace: typeof schema.workspaces.$inferSelect;
   let apply: typeof import("@/server/hiring/apply");
   let setup: typeof import("@/server/hiring/setup");
@@ -187,7 +213,9 @@ describe.skipIf(!realDb)("applying (seeded database)", () => {
       createdAt: now,
       updatedAt: now,
     });
-    await db.insert(schema.organizations).values({ id: id("org"), name: "H2", slug: id("org"), createdAt: now });
+    await db
+      .insert(schema.organizations)
+      .values({ id: id("org"), name: "H2", slug: id("org"), createdAt: now });
     await db.insert(schema.members).values({
       id: id("m"),
       organizationId: id("org"),
@@ -246,7 +274,10 @@ describe.skipIf(!realDb)("applying (seeded database)", () => {
       consent: false,
       futureContact: false,
     });
-    expect(missing).toEqual({ ok: false, errors: { consent: "Agree to the privacy notice to apply." } });
+    expect(missing).toEqual({
+      ok: false,
+      errors: { consent: "Agree to the privacy notice to apply." },
+    });
     const r = await apply.submitApplication(workspace, slug, {
       token: null,
       answers: answers(email),
@@ -257,11 +288,18 @@ describe.skipIf(!realDb)("applying (seeded database)", () => {
     expect(r).toMatchObject({ ok: true, email: "m•••@example.test" });
     const [contact] = await contactsNamed(email);
     expect(contact).toMatchObject({ name: "Maya Chen", stageId: null });
-    const app = await db.query.applications.findFirst({ where: eq(schema.applications.contactId, contact!.id) });
+    const app = await db.query.applications.findFirst({
+      where: eq(schema.applications.contactId, contact!.id),
+    });
     expect(app).toMatchObject({ state: "active", futureContact: true, opportunityId: oppId });
-    const entry = await db.query.pipelineStages.findFirst({ where: eq(schema.pipelineStages.id, app!.stageId!) });
+    const entry = await db.query.pipelineStages.findFirst({
+      where: eq(schema.pipelineStages.id, app!.stageId!),
+    });
     expect(entry?.isEntry).toBe(true);
-    expect(sent.events.at(-1)).toMatchObject({ event: "application.submitted", payload: { id: app!.id } });
+    expect(sent.events.at(-1)).toMatchObject({
+      event: "application.submitted",
+      payload: { id: app!.id },
+    });
     expect(JSON.stringify(sent.events.at(-1))).not.toContain(email);
     expect(sent.notify.at(-1)).toEqual({ userId: owner, kind: "application.submitted" });
     const mail = sent.email.at(-1)!;
@@ -295,10 +333,12 @@ describe.skipIf(!realDb)("applying (seeded database)", () => {
     });
     expect(again).toEqual({ ok: false, duplicate: true, email: "t•••@example.test" });
     // The old link stops working; the new one, sent by email, opens the application.
-    expect((await apply.statusByToken(workspace, (first as { statusToken: string }).statusToken)).kind).toBe(
-      "missing",
+    expect(
+      (await apply.statusByToken(workspace, (first as { statusToken: string }).statusToken)).kind,
+    ).toBe("missing");
+    expect((await apply.statusByToken(workspace, tokenFrom(sent.email.at(-1)!.text))).kind).toBe(
+      "ok",
     );
-    expect((await apply.statusByToken(workspace, tokenFrom(sent.email.at(-1)!.text))).kind).toBe("ok");
   });
 
   it("edits as a new revision while new, then locks once a review is in", async () => {
@@ -333,7 +373,13 @@ describe.skipIf(!realDb)("applying (seeded database)", () => {
     });
     const [as] = await db
       .insert(schema.reviewAssignments)
-      .values({ workspaceId: ws, applicationId: app.id, stageId: stage, reviewerUserId: id("rev"), status: "submitted" })
+      .values({
+        workspaceId: ws,
+        applicationId: app.id,
+        stageId: stage,
+        reviewerUserId: id("rev"),
+        status: "submitted",
+      })
       .returning();
     await db.insert(schema.reviews).values({
       workspaceId: ws,
@@ -345,9 +391,9 @@ describe.skipIf(!realDb)("applying (seeded database)", () => {
       status: "submitted",
       submittedAt: new Date(),
     });
-    await expect(apply.saveEdit(workspace, r.statusToken, { draftToken: null, answers: answers(email) })).rejects.toThrow(
-      /being reviewed/,
-    );
+    await expect(
+      apply.saveEdit(workspace, r.statusToken, { draftToken: null, answers: answers(email) }),
+    ).rejects.toThrow(/being reviewed/);
     await db.delete(schema.users).where(eq(schema.users.id, id("rev")));
   });
 
@@ -362,13 +408,17 @@ describe.skipIf(!realDb)("applying (seeded database)", () => {
     })) as { statusToken: string };
     const req = await apply.requestDeletion(workspace, r.statusToken);
     expect(req).toMatchObject({ status: "open", contactEmail: email });
-    expect(sent.email.at(-1)!.subject).toMatch(/^We'll delete your application to Horizon round by /);
+    expect(sent.email.at(-1)!.subject).toMatch(
+      /^We'll delete your application to Horizon round by /,
+    );
     const status = await apply.statusByToken(workspace, r.statusToken);
     expect(status.kind === "ok" && status.view.application.state).toBe("withdrawn");
     expect(sent.events.at(-1)?.event).toBe("application.withdrawn");
     // Day 7: the coordinators are reminded; day 31: it is gone.
     await apply.sweepDataRequests(new Date(Date.now() + 8 * 86_400_000));
-    const reminded = await db.query.dataRequests.findFirst({ where: eq(schema.dataRequests.id, req.id) });
+    const reminded = await db.query.dataRequests.findFirst({
+      where: eq(schema.dataRequests.id, req.id),
+    });
     expect(reminded?.remindersSent).toEqual(["d7"]);
     await apply.sweepDataRequests(new Date(Date.now() + 31 * 86_400_000));
     expect(await contactsNamed(email)).toEqual([]);
@@ -395,7 +445,9 @@ describe.skipIf(!realDb)("applying (seeded database)", () => {
 
   it("sends new links without saying whether an application exists", async () => {
     const before = sent.email.length;
-    expect(await apply.recoverLinks(workspace, `nobody-${run}@example.test`, "1.2.3.4")).toBe("sent");
+    expect(await apply.recoverLinks(workspace, `nobody-${run}@example.test`, "1.2.3.4")).toBe(
+      "sent",
+    );
     expect(sent.email.length).toBe(before);
     expect(await apply.recoverLinks(workspace, `maya-${run}@example.test`, "1.2.3.4")).toBe("sent");
     expect(sent.email.length).toBe(before + 1);
@@ -403,7 +455,10 @@ describe.skipIf(!realDb)("applying (seeded database)", () => {
 
   it("shows a draft opportunity only with its preview token, and stops after the grace period", async () => {
     const draftOpp = await setup.createFromTemplate(me, workspace, "blank");
-    const [o] = await db.select().from(schema.opportunities).where(eq(schema.opportunities.id, draftOpp));
+    const [o] = await db
+      .select()
+      .from(schema.opportunities)
+      .where(eq(schema.opportunities.id, draftOpp));
     expect(await apply.publicOpportunity(workspace, o!.slug)).toBeNull();
     expect(await apply.publicOpportunity(workspace, o!.slug, { preview: "wrong" })).toBeNull();
     expect(
@@ -428,7 +483,12 @@ describe.skipIf(!realDb)("applying (seeded database)", () => {
     await db
       .update(schema.formResponses)
       .set({ createdAt: new Date(Date.now() - 2 * 3600_000) })
-      .where(eq(schema.formResponses.resumeTokenHash, (await import("node:crypto")).createHash("sha256").update(d.token).digest("hex")));
+      .where(
+        eq(
+          schema.formResponses.resumeTokenHash,
+          (await import("node:crypto")).createHash("sha256").update(d.token).digest("hex"),
+        ),
+      );
     expect(
       await apply.submitApplication(workspace, slug, {
         token: d.token,

@@ -196,8 +196,13 @@ export function ApplyForm({
   const fail = (e: Record<string, string>) => {
     setErrors(e);
     setSummary(Object.keys(e));
-    requestAnimationFrame(() => summaryRef.current?.focus());
+    setShown((n) => n + 1);
   };
+  // The summary takes focus once it is on screen (submit runs in a transition).
+  const [shown, setShown] = useState(0);
+  useEffect(() => {
+    if (shown) summaryRef.current?.focus();
+  }, [shown]);
   const labelOf = (id: string) =>
     id === "consent"
       ? "Privacy notice"

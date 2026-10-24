@@ -98,7 +98,61 @@ is **Scheduled** when its window starts later), the team is told, invitations go
 `opportunity.published` webhook fires. On the hosted Free plan one opportunity can be open at a
 time.
 
-The application page itself arrives in the next hiring beta release.
+**Open full preview** (in the preview panel, and on a draft's page) opens the real application
+page with a "Preview — not live" banner; nothing submitted there is kept.
+
+## The application page
+
+Applicants apply at `/apply/<link>` on your workspace's address. No account: the page reads well
+on a phone before any script loads, and the form opens below it.
+
+- **The top** shows the title and cohort, when applications close (in the applicant's own time
+  zone, with yours when they differ), about how long it takes, the decisions-by date, **What
+  happens next** (built from your stages and dates), who sees an application, the 16+ rule and
+  your privacy notice.
+- **The form** goes one section at a time. Once an email is filled in, every change is saved;
+  **Save and finish later** emails a link that reopens the draft on any device until
+  applications close. Drafts never reach your team: the opportunity page shows only how many
+  were started and not sent.
+- **Adjustments and access** comes before the end (never first). A request is kept apart,
+  encrypted, and only coordinators see it.
+- **Review and submit** lists the answers with Edit links, the privacy notice, the required
+  consent and an optional "keep my details for future opportunities". Problems are listed at
+  the top, each linking to its answer.
+- **After applications close**, a draft started before the deadline can still be sent for the
+  grace period (2 hours by default).
+
+Applying again with the same email to the same round sends the applicant their status link
+instead and says nothing more on screen. Each application starts at the first stage, with the
+first stage's routing applied (a track, or a flag for a coordinator; never a rejection), the
+first stage's email (the template's "We've received your application"), a notification for the
+coordinators and the `application.submitted` webhook (ids only).
+
+## The status page
+
+Every email to an applicant carries their status link, `/applications/<token>`. It shows:
+
+- the status in plain words ("Submitted", "Under review"): never an internal stage name, a hold
+  or a decision that hasn't been released;
+- what to do, the timeline and their answers. **Edit my application** works while the
+  application is still in the first stage and nobody has submitted a review; each edit keeps the
+  earlier answers as a previous version;
+- their adjustments request, which they can change;
+- **Download my data** and **Delete my application**, and **Withdraw**.
+
+Links work for 30 days after the last email that carried one. An expired or lost link offers a
+new one by email, with the same answer whether or not an application exists.
+
+## Withdrawals and deletion requests
+
+Withdrawing stops the review, cancels interviews still to come and tells the coordinators.
+Asking for deletion withdraws at once and emails a receipt with the latest deletion date: 30 days
+later. Coordinators find requests under **Edit setup → Privacy → Data requests**: **Delete now**,
+or **Record a legal hold** with the reason (the applicant is told it, in your words). Coordinators
+are reminded at day 7 and day 21, and Bookly deletes the application itself at day 30 unless a
+hold is recorded. Deleting removes the answers (every version), documents, the adjustments
+request, reviews, interviews and the person, when this application was all you had of them; a
+record that the request was honoured stays, with only the email.
 
 ## After publishing
 

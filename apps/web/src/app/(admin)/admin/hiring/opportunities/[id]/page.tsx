@@ -15,7 +15,7 @@ import { OpportunityMenu, PublishedToast } from "@/components/hiring/opportunity
 import { StageChip } from "@/components/hiring/stage-chip";
 import { TeamStep } from "@/components/hiring/team-step";
 import { OpportunitySkeleton } from "@/components/skeletons/pages";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { KanbanBoard, KanbanColumn, KanbanList } from "@/components/ui/kanban";
 import { PageHeader } from "@/components/ui/page-header";
@@ -99,20 +99,16 @@ async function OpportunityPage({
           setup.canConfigure && (
             <>
               {/* hiring.png's outline action: the live page, or the full preview of a draft. */}
-              <Button
-                variant="outline"
-                nativeButton={false}
-                render={
-                  <a
-                    href={`${base}/apply/${opp.slug}${opp.status === "draft" ? `?preview=${previewToken(opp.id)}` : ""}`}
-                    target="_blank"
-                    rel="noreferrer"
-                  />
-                }
+              <a
+                href={`${base}/apply/${opp.slug}${opp.status === "draft" ? `?preview=${previewToken(opp.id)}` : ""}`}
+                target="_blank"
+                rel="noreferrer"
+                className={buttonVariants({ variant: "outline" })}
               >
                 {opp.status === "draft" ? "Open full preview" : "View application page"}
-                <ExternalLinkIcon data-icon="inline-end" />
-              </Button>
+                <ExternalLinkIcon data-icon="inline-end" aria-hidden />
+                <span className="sr-only"> (opens in a new tab)</span>
+              </a>
               {opp.status === "draft" ? (
                 <Button
                   variant="ink"
