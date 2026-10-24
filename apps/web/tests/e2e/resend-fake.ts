@@ -1,12 +1,14 @@
 import { createHmac } from "node:crypto";
 import { createServer, type Server } from "node:http";
-import { RESEND_FAKE_PORT } from "./ports";
 
 /*
  * Stand-ins for Resend in e2e: the signed reply address Bookly puts on an email, Svix headers
  * for the inbound webhook, and a local server for Resend's received-emails API (the e2e server
  * points RESEND_API_URL at it). Specs run one at a time, so each starts and stops its own.
  */
+
+/** Next to the e2e server's port, as playwright.config.ts computes it: 3999 by default. */
+const RESEND_FAKE_PORT = (Number(process.env.E2E_PORT) || 3010) + 989;
 
 const WEBHOOK_SECRET = Buffer.from("e2e-webhook-secret-0123456789");
 export const DOMAIN = "reply.bookly.test";
