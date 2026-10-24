@@ -23,6 +23,7 @@ async function marketingSitemap(base: string): Promise<MetadataRoute.Sitemap> {
     { url: `${base}/pricing`, changeFrequency: "monthly", priority: 0.9 },
     { url: `${base}/about`, changeFrequency: "yearly", priority: 0.5 },
     { url: `${base}/contact`, changeFrequency: "yearly", priority: 0.5 },
+    { url: `${base}/press`, changeFrequency: "yearly", priority: 0.4 },
     { url: `${base}/security`, lastModified: legal, changeFrequency: "yearly", priority: 0.5 },
     { url: `${base}/privacy`, lastModified: legal, changeFrequency: "yearly", priority: 0.3 },
     { url: `${base}/terms`, lastModified: legal, changeFrequency: "yearly", priority: 0.3 },

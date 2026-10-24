@@ -4,6 +4,15 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 ## [Unreleased]
 
+### Changed
+
+- **A new mark.** The logo is now a lowercase b drawn as a speech bubble with a second bubble answering it, in Bookly Orange, with a lowercase "bookly" wordmark. It replaces the buckle mark everywhere: the app and marketing headers, booking and meeting pages (still in the workspace's own colour where it has one), the favicon, touch and notification icons, the email logo and `brand/`. The brand colour (`--brand`) moves to Bookly Orange in light and dark themes
+- `brand/` is generated from vectors: `brand/source/build.py` draws the mark, wordmark and lockups, `brand/source/render.mjs` renders the PNGs, app icons, favicon and press kit
+
+### Added
+
+- **Press and brand page** at `/press` on the platform host: logos in SVG and PNG with a one-file press kit, usage rules, colours, type, product design previews, the story of the mark and boilerplate copy; linked from the footer and listed in the sitemap
+
 ## [0.20.1] - 2026-10-17
 
 ### Changed
