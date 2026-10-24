@@ -159,7 +159,7 @@ export function AdminNav({
       : GROUPS;
   const groups = manager ? [...scheduling, WORKSPACE(cloud)] : scheduling;
   const itemClass = (on: boolean) =>
-    `flex items-center gap-2 rounded-md px-2 py-1.5 ${on ? "bg-muted font-medium text-foreground" : "text-muted-foreground hover:bg-muted/60 hover:text-foreground"}`;
+    `flex items-center gap-2 rounded-md px-2 py-1.5 ${on ? "bg-accent font-medium text-accent-foreground" : "text-muted-foreground hover:bg-muted hover:text-foreground"}`;
   const External = ({ it }: { it: Item }) => (
     <a href={it.href} target="_blank" rel="noreferrer" className={itemClass(false)}>
       <it.icon className="size-4 shrink-0" aria-hidden />

@@ -407,7 +407,7 @@ function Item({ it, tz, contactId }: { it: ThreadItem; tz: string; contactId: st
     <li
       className={cn(
         "rounded-xl border p-3 text-sm",
-        it.source === "note" && "border-amber-300/60 bg-amber-50/60 dark:bg-amber-950/20",
+        it.source === "note" && "border-warning/30 bg-warning-muted",
         it.ours && it.source !== "note" && "bg-muted/40",
       )}
     >

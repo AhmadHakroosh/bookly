@@ -1,8 +1,8 @@
 import type { Workspace } from "@bookly/db/schema";
 import { hasFeature } from "@/server/limits";
 
-/** Bookly's own accent: the buckle's prong. */
-export const BOOKLY_ACCENT = "#e8965a";
+/** Bookly's own accent: Bookly Orange, the colour of the mark. */
+export const BOOKLY_ACCENT = "#e85d2c";
 
 /**
  * How a workspace presents itself to guests, on booking pages and in email. One plan feature

@@ -73,6 +73,23 @@ inverts in dark mode), `--apricot`, `--reply`, and semantic `--success`, `--warn
 concepts' success chip ("Open", "Connected") is `#E8F4E8` with green text: use it as
 `--success-muted`.
 
+## Shipped (2026-10-24, `v2-brand-tokens`)
+
+The mapping above is live in `globals.css`, with these additional pairs computed from the
+OKLCH values:
+
+| Pair                                              | Ratio              | Verdict              |
+| ------------------------------------------------- | ------------------ | -------------------- |
+| `muted-foreground` `oklch(0.5 0.008 70)` on Paper | 5.67               | AA text              |
+| same on Sand / Peach / white                      | 5.38 / 5.10 / 6.01 | AA text              |
+| `success` `#21763C` on Paper / `success-muted`    | 5.36 / 5.03        | AA text              |
+| `warning` `#8D5E00` on Paper / `warning-muted`    | 5.30 / 5.00        | AA text              |
+| `info` `#1666AA` on Paper / `info-muted`          | 5.66 / 5.35        | AA text              |
+| dark `muted-foreground` on Night / Char           | 7.61 / 6.91        | AA text              |
+| dark Orange lifted on dark `accent`               | 5.31               | AA text (active nav) |
+
+Neutrals use hue ≈ 70–85 with chroma ≤ 0.008. Charts: Bookly Orange, Reply, Ink, muted, Apricot.
+
 ## How to check a new pair
 
 Relative luminance with sRGB linearisation, ratio (L1 + 0.05) / (L2 + 0.05). Record the pair

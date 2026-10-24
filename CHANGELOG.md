@@ -9,6 +9,11 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 - **A new mark.** The logo is now a lowercase b drawn as a speech bubble with a second bubble answering it, in Bookly Orange, with a lowercase "bookly" wordmark. It replaces the buckle mark everywhere: the app and marketing headers, booking and meeting pages (still in the workspace's own colour where it has one), the favicon, touch and notification icons, the email logo and `brand/`. The brand colour (`--brand`) moves to Bookly Orange in light and dark themes
 - `brand/` is generated from vectors: `brand/source/build.py` draws the mark, wordmark and lockups, `brand/source/render.mjs` renders the PNGs, app icons, favicon and press kit
 
+- **The v1.0 colours.** Warm Paper pages, white cards, a Sand sidebar and Ink text replace the neutral greys. Primary buttons, links, checkboxes and unread counts turn Ember (a deep orange that keeps white labels readable), the active nav item and selected rows sit on Peach, and focus rings are Bookly Orange; dark mode moves to warm Night and Char with a lighter orange. Bookly's default accent for booking pages, emails and the meeting room is Bookly Orange (`#e85d2c`), and the social card and browser theme colours follow
+- New button variant `ink` (the dark button) and badge variants `success`, `warning`, `info`; status colours that were hard-coded (task board overdue, internal notes, handle availability, console health) use the new semantic tokens
+- The meeting room's Join button uses the primary colour, so its label stays readable on Bookly Orange and on a workspace's own colour
+- Task board cards are list items again for screen readers: the draggable button (dnd-kit's `role="button"`) moved inside each `<li>`, which axe flagged as a broken list
+
 ### Added
 
 - **Press and brand page** at `/press` on the platform host: logos in SVG and PNG with a one-file press kit, usage rules, colours, type, product design previews, the story of the mark and boilerplate copy; linked from the footer and listed in the sitemap

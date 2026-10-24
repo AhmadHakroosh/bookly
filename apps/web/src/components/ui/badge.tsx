@@ -13,6 +13,10 @@ const badgeVariants = cva(
         destructive:
           "bg-destructive/10 text-destructive focus-visible:ring-destructive/20 dark:bg-destructive/20 dark:focus-visible:ring-destructive/40 [a]:hover:bg-destructive/20",
         outline: "border-border text-foreground [a]:hover:bg-muted [a]:hover:text-muted-foreground",
+        // Status is semantic, never brand orange (DESIGN.md).
+        success: "bg-success-muted text-success",
+        warning: "bg-warning-muted text-warning",
+        info: "bg-info-muted text-info",
         ghost: "hover:bg-muted hover:text-muted-foreground dark:hover:bg-muted/50",
         link: "text-primary underline-offset-4 hover:underline",
       },

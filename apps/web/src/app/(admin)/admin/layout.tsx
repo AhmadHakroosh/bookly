@@ -140,7 +140,7 @@ async function AdminShell({ children }: { children: React.ReactNode }) {
         </div>
       </header>
       <div className="flex flex-1">
-        <aside className="sticky top-14 hidden h-[calc(100vh-3.5rem)] w-56 shrink-0 overflow-y-auto border-r p-4 lg:block">
+        <aside className="sticky top-14 hidden h-[calc(100vh-3.5rem)] w-56 shrink-0 overflow-y-auto border-r bg-sidebar p-4 lg:block">
           <AdminNav
             cloud={isCloud()}
             manager={isManager(role)}

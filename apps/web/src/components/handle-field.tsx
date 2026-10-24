@@ -103,7 +103,7 @@ function HandleBadge({ status }: { status: HandleStatus }) {
     );
   if (status.state === "ok")
     return (
-      <span className="flex shrink-0 items-center gap-1.5 border-l border-input px-2.5 text-xs text-emerald-600 dark:text-emerald-400">
+      <span className="flex shrink-0 items-center gap-1.5 border-l border-input px-2.5 text-xs text-success">
         <CheckIcon className="size-3.5" aria-hidden />
         Available
       </span>
