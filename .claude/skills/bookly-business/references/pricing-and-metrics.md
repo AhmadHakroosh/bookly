@@ -5,12 +5,12 @@ assumptions. Replace them with real invoices before using them in a decision.
 
 ## Tier map (open core)
 
-| Tier             | Contract                                     | Includes                                                                                                    | Revenue                                          |
-| ---------------- | -------------------------------------------- | ----------------------------------------------------------------------------------------------------------- | ------------------------------------------------ |
-| Community        | AGPL-3.0, no contract                        | Complete core, self-hosted, no limits                                                                       | None directly; funnel, credibility, contributors |
-| Cloud Free       | Terms of service                             | Core with Free limits                                                                                       | 5% platform fee on paid bookings                 |
-| Cloud Pro / Team | Terms, monthly or yearly                     | Core with plan limits, managed video and capture                                                            | Subscription + capture overage                   |
-| Enterprise       | Order form + Bookly Commercial License + DPA | Core + commercial modules (SSO, SCIM, hiring compliance, ATS/HRIS connectors, residency, audit export), SLA | Annual contract                                  |
+| Tier             | Contract                            | Includes                                                                                                    | Revenue                                          |
+| ---------------- | ----------------------------------- | ----------------------------------------------------------------------------------------------------------- | ------------------------------------------------ |
+| Community        | AGPL-3.0, no contract               | Complete core, self-hosted, no limits                                                                       | None directly; funnel, credibility, contributors |
+| Cloud Free       | Terms of service                    | Core with Free limits                                                                                       | 5% platform fee on paid bookings                 |
+| Cloud Pro / Team | Terms, monthly or yearly            | Core with plan limits, managed video and capture                                                            | Subscription + capture overage                   |
+| Enterprise       | Order form + ELv2 license key + DPA | Core + commercial modules (SSO, SCIM, hiring compliance, ATS/HRIS connectors, residency, audit export), SLA | Annual contract                                  |
 
 ## Cost model per workspace per month (fill with real numbers)
 

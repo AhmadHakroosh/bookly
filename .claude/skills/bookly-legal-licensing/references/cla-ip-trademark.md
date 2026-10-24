@@ -82,7 +82,7 @@ trademark rights; say so.
 ## 5. Order of operations
 
 1. IP assignment signed.
-2. Bookly Commercial License drafted and approved; `packages/cloud/LICENSE` replaced.
+2. Elastic License 2.0 confirmed by counsel; `packages/cloud/LICENSE` replaced.
 3. CLA approved, tooling required on `main` and `v2`, CONTRIBUTING updated.
 4. Copy changes across the license surface in one PR (see `license-surface.md`).
 5. Trademark clearance opinion before paid global marketing; `TRADEMARKS.md` published.

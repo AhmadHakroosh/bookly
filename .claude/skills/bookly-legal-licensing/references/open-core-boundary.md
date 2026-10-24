@@ -17,11 +17,11 @@ DRAFT — for review by qualified counsel and the founder. Not legal advice.
 
 ## The model
 
-| Tier           | License                        | Who                                 | What they get                                        |
-| -------------- | ------------------------------ | ----------------------------------- | ---------------------------------------------------- |
-| **Community**  | AGPL-3.0                       | Anyone, self-hosted                 | The complete core, no limits, no key                 |
-| **Cloud**      | Terms of service (+ AGPL core) | Free / Pro / Team on bookly-app.io  | Core run for them, plan limits from `packages/cloud` |
-| **Enterprise** | Bookly Commercial License      | Organisations, cloud or self-hosted | Core + commercial modules, license key, SLA, DPA     |
+| Tier           | License                            | Who                                 | What they get                                        |
+| -------------- | ---------------------------------- | ----------------------------------- | ---------------------------------------------------- |
+| **Community**  | AGPL-3.0                           | Anyone, self-hosted                 | The complete core, no limits, no key                 |
+| **Cloud**      | Terms of service (+ AGPL core)     | Free / Pro / Team on bookly-app.io  | Core run for them, plan limits from `packages/cloud` |
+| **Enterprise** | Elastic License 2.0 (+ order form) | Organisations, cloud or self-hosted | Core + commercial modules, license key, SLA, DPA     |
 
 "Open code" across all three: the source of every module, commercial ones included, is
 published in the repository.
@@ -62,35 +62,48 @@ Open questions:
   legal requirement behind a paywall needs a product and ethics decision, not only a license
   decision.
 
-## The Bookly Commercial License (to draft)
+## The commercial license: Elastic License 2.0 (decided 2026-10-24)
 
-Model on established source-available terms (for example the Cal.com `/ee` and GitLab EE
-licenses) and `packages/cloud/LICENSE`. Must cover:
+Decided by `bookly-business` + `bookly-legal-licensing` at the founder's request. DRAFT reasoning
+for counsel to confirm before the first commercial module ships.
 
-- Copyright: Cloudeo Solutions, LLC (after the IP assignment).
-- Permitted without a subscription: reading, modifying and running for development and testing.
-- Production use: only with a valid subscription or license key for the number of seats paid.
-- No redistribution or offering as a hosted service to third parties.
-- Contributions to commercial directories: core team only (as CONTRIBUTING.md says today for
-  `packages/cloud`).
-- Relationship to AGPL: core files stay AGPL; the commercial license applies only to files in
-  directories that carry it.
+| Option                                        | Production use of paid features without paying                    | Blocks a competing hosted service | Drafting cost / procurement familiarity              | Verdict                                     |
+| --------------------------------------------- | ----------------------------------------------------------------- | --------------------------------- | ---------------------------------------------------- | ------------------------------------------- |
+| Custom EE license (GitLab EE / Cal.com style) | No (subscription clause)                                          | Yes                               | High / medium (each buyer's lawyer reads a new text) | Fallback                                    |
+| **Elastic License 2.0**                       | No, with license-key gating (circumventing the key is prohibited) | Yes (no managed service)          | None / high (widely reviewed)                        | **Chosen**                                  |
+| Functional Source License (FSL)               | **Yes**: any non-competing use, internal production included      | Yes (competing use only)          | None / medium                                        | Rejected: gives enterprise features away    |
+| Business Source License (BUSL)                | Depends on the Additional Use Grant                               | Yes                               | Medium / medium                                      | Rejected: per-release change dates add work |
+
+Why ELv2: one standard text covers both commercial directories. `packages/cloud` needs "no
+competing hosted service" (today's custom wording says the same). `ee/` needs "pay to use"
+(license-key gating, and the license forbids getting around it). It is short and well known to
+enterprise procurement, and it is source-available, which fits Cloudeo's "open code" principle.
+
+What the code must do for ELv2 to work:
+
+- Every `ee/` feature checks a valid, signed license key (offline-verifiable, seat count,
+  expiry, grace period). No key, no feature. Cloud workspaces get the entitlement from their plan.
+- Free development/trial keys on request, so evaluation stays easy.
+- The core builds and runs with `ee/` deleted. Forks that redistribute the AGPL core drop `ee/`
+  unless they hold a license (counsel to confirm the AGPL/ELv2 combination wording in README).
+- Copyright notices name Cloudeo Solutions, LLC (after the IP assignment).
+- Contributions to commercial directories: core team only, under the CLA.
 
 ## Repository layout (for the architect)
 
 ```
 LICENSE                       AGPL-3.0 (unchanged)
-packages/cloud/LICENSE        Bookly Commercial License (replaces today's text)
-packages/ee-<module>/LICENSE  Bookly Commercial License
+packages/cloud/LICENSE        Elastic License 2.0 (replaces today's text)
+ee/LICENSE (or packages/ee-*)  Elastic License 2.0
 NOTICE / THIRD_PARTY_NOTICES  to build
 ```
 
 SPDX headers: core files `// SPDX-License-Identifier: AGPL-3.0-only`; commercial files
-`// SPDX-License-Identifier: LicenseRef-Bookly-Commercial`. Add to new files immediately; backfill
+`// SPDX-License-Identifier: Elastic-2.0`. Add to new files immediately; backfill
 existing files in one mechanical commit.
 
 ## Decision log
 
-| Date | Module | Placement | Deciding test | Notes |
-| ---- | ------ | --------- | ------------- | ----- |
-|      |        |           |               |       |
+| Date       | Module                    | Placement | Deciding test | Notes                               |
+| ---------- | ------------------------- | --------- | ------------- | ----------------------------------- |
+| 2026-10-24 | Commercial license choice | ELv2      | n.a.          | See table above; counsel to confirm |

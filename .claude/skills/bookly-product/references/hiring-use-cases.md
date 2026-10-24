@@ -5,6 +5,18 @@ conversations. One model (Opportunity → Application → Stages → Reviews →
 covers all of these; each type is a **template** that pre-fills the pipeline, form, review plan
 and copy. Templates are data, not code paths.
 
+**Decided 2026-10-24: cohorts first.** The first hiring release is scoped and tested on cohort
+selection (the Cohort, Fellowship, Program, Internship and Admissions rows below); jobs follow on
+the same model. Two requirements from the founder shape every spec:
+
+1. **Customers define the stages.** Add, rename, reorder and remove stages per opportunity; each
+   stage keeps a category (open, hold, won, lost) so reporting survives any naming.
+2. **Customers choose how each stage uses Bookly's modules** (Forms, Reviews, Scheduling, Video +
+   capture, Messages, Tasks, Files, Payments, Routing, Decisions) and the rules that fire on
+   entering or leaving a stage. The module table is in the canon
+   (`bookly-team/references/company.md`). A spec that needs a stage behaviour no module offers
+   adds a module option, never a use-case-specific code path.
+
 | Type                | Example                                                              | Pipeline template                                             | Distinctive needs                                                                                                             |
 | ------------------- | -------------------------------------------------------------------- | ------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
 | **Job**             | "Senior engineer, Berlin"                                            | Applied → Screen → Interview → Panel → Decision → Offer       | Rolling intake, hiring manager + recruiter roles, offer stage, salary range (pay transparency), job boards / careers page     |

@@ -74,7 +74,7 @@ Cloud
    release with changelog notes → `migrate` against `PRODUCTION_DATABASE_URL` → fast-forward the
    `release` branch, which is what Vercel production deploys.
 
-v2: releases stay on `main` until v2 ships. v2 pre-releases (`2.0.0-alpha.N`) are tagged from `v2`
+v2: releases stay on `main` until v2 ships. v2 ships as **1.0.0**; its pre-releases (`1.0.0-alpha.N`, `1.0.0-beta.N`) are tagged from `v2`
 only after the release workflow is taught not to move `latest` or the `release` branch for
 pre-release tags (**to build**). Merge `main` into `v2` weekly; regenerate v2's pending migrations
 after each merge.

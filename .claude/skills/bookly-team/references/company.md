@@ -66,6 +66,34 @@ context), scheduling engine, messages, tasks, files, capture/recaps, notificatio
   decision meeting. Every decision is attributable and auditable.
 - **Cohort**: an intake round of an opportunity (e.g. "2027 Horizon Fellowship — Spring cohort").
 
+### Hiring: cohorts first, built to bend (decided 2026-10-24)
+
+- **Cohorts lead.** The first hiring release targets cohort-based selection: fellowships,
+  accelerators, internships, bootcamps, scholarships, admissions, residencies. Jobs follow on the
+  same model; nothing in the data model may assume a single hire or a single opening.
+- **Customers define the pipeline.** Stages are created, renamed, reordered, removed per
+  opportunity (from a template, or from scratch); each stage has a category (open, hold, won,
+  lost) so reports work whatever the names are. No stage name is hard-coded anywhere.
+- **Customers choose the modules per stage.** Every stage is composed from Bookly's existing
+  modules, switched on and configured by the customer, not built per use case:
+
+  | Module          | What it does on a stage                                                                                    |
+  | --------------- | ---------------------------------------------------------------------------------------------------------- |
+  | Forms           | Collect answers and documents (application, follow-up questions, references)                               |
+  | Reviews         | Structured scorecards, assigned reviewers, independent until submitted                                     |
+  | Scheduling      | 1:1 or panel interviews, self-scheduling links, group sessions (info sessions, assessment days) with seats |
+  | Video + capture | Bookly video or Meet/Zoom/Teams, consent-based transcript and recap                                        |
+  | Messages        | Templated emails/SMS on entering or leaving the stage; candidate replies land in one conversation          |
+  | Tasks           | Coordinator checklists created when an application reaches the stage                                       |
+  | Files           | Required documents, shared folders per application or cohort                                               |
+  | Payments        | Application fees or deposits through the workspace's Stripe account                                        |
+  | Routing         | Send applicants to tracks, reviewers or sub-cohorts by their answers                                       |
+  | Decisions       | Per-person or batch decisions with a decision meeting                                                      |
+
+  Stage rules ("when an application enters this stage, send the booking link and create the
+  checklist") are data, so a customer can model a fellowship, a hiring loop or an admissions
+  round without code. The architect owns the model (`pipeline_stages` + stage modules config).
+
 ### Hiring guardrails (non-negotiable)
 
 - AI may summarise, extract, schedule and draft. **AI never ranks, scores, rejects or recommends
@@ -78,38 +106,55 @@ context), scheduling engine, messages, tasks, files, capture/recaps, notificatio
 - Candidates get: a clear privacy notice on the application page, data access/deletion, a status
   they can see, and retention that defaults to deletion after the cycle (configurable per region).
 
-## Brand v2: exploration **02 "Open Dialogue"** (chosen)
+## Brand v2: the **02 "Open Dialogue"** mark in the **concept palette** (decided)
 
-Source sheet: `planning/v2/concepts/logo.png` (local, git-ignored; original in
-`~/Downloads/bookly_v2`). The other four explorations are rejected; don't mix them in.
+Two sources, one identity (decided by the founder, 2026-10-24):
 
-- **Mark**: a lowercase **b** whose bowl is a speech bubble (tail at the lower left), with a
-  second, lighter bubble overlapping behind it to the right: a reply. Two sides in dialogue,
-  which keeps the old story (بُكلة, a buckle fastens two sides; so does a meeting).
-- **Wordmark**: "bookly", lowercase, heavy geometric sans, tight spacing, ink navy.
-- **App icon**: white b + light bubble on Dialogue Blue rounded square.
-- **Lockups**: mark + wordmark on paper; reversed (white) on ink navy; stacked tile with
+- **Shape** comes from logo exploration **02** in `planning/v2/concepts/logo.png` (local,
+  git-ignored; original in `~/Downloads/bookly_v2`). Only the shape: 02's blue palette is not used.
+- **Colour** comes from the **UI and marketing concepts** (`app ui.png`, `ui mocks.png`,
+  `mocks.png`, `hiring.png`, `marketing ui*.png`): warm orange on warm paper with near-black ink.
+- The other explorations (01, 03, 04, 05) are rejected; don't mix them in. No vector of 02 exists:
+  `bookly-design-system` draws it (`apps/web/src/components/brand/logo.tsx`, `brand/`).
+
+- **Mark**: a solid lowercase **b**. Tall stem with rounded top; the bowl is a rounded speech
+  bubble whose tail is the bottom of the stem, pointing down-left. Behind it, offset right and
+  lower, a second, lighter bubble with its tail pointing down-right: a reply. Two sides in
+  dialogue, which keeps the old story (بُكلة, a buckle fastens two sides; so does a meeting).
+- **Wordmark**: "bookly", lowercase, heavy geometric sans, tight spacing, Ink. Drawn as paths.
+- **App icon**: white b + Reply bubble on a Bookly Orange rounded square.
+- **Lockups**: mark + wordmark on Paper; reversed (white) on Ink; stacked tile with
   "People / Conversations / Progress".
-- **Palette** (from the sheet; confirm against the source vector before freezing):
+- **Palette** (sampled from the concepts; tokens and contrast in
+  `bookly-design-system/references/tokens.md`):
 
-  | Token         | Hex        | Role                                                       |
-  | ------------- | ---------- | ---------------------------------------------------------- |
-  | Dialogue Blue | `#3158D5`  | Brand, primary actions, active nav, links, focus ring      |
-  | Mist          | `#EAF0FF`  | Active nav background, selected rows, soft brand fills     |
-  | Ink           | `#19243B`  | Text, dark buttons, reversed surfaces, wordmark            |
-  | Paper         | `#F9FAFC`  | App and site background                                    |
-  | Reply Blue    | ≈`#A9C1F5` | The second bubble, illustrations only (sample from vector) |
+  | Token         | Hex       | Role                                                             |
+  | ------------- | --------- | ---------------------------------------------------------------- |
+  | Bookly Orange | `#E85D2C` | The mark, brand fills, large display type, icons, progress, dots |
+  | Ember         | `#B93E10` | Orange **text** and filled buttons with white labels (AA-safe)   |
+  | Peach         | `#FBE9DF` | Active nav, selected cards and rows, recap/attention cards       |
+  | Apricot       | `#FCDCC2` | Time chips ("In 15 min"), soft highlights; Ink text on it        |
+  | Reply         | `#F5B6A0` | The second bubble, illustrations                                 |
+  | Ink           | `#1C1C1C` | Text, dark buttons ("Join meeting", "Create"), reversed surfaces |
+  | Paper         | `#FAF8F4` | App and site background                                          |
+  | Sand          | `#F4F2EE` | Sidebar, secondary surfaces                                      |
 
-  Status colours are **semantic and separate from the brand**: success green, warning amber,
-  danger red, info = brand. The orange in the concept mocks ("Due today", count badges,
-  primary buttons) maps to brand blue for actions and to warning/danger for urgency.
+  **Accessibility rule:** Bookly Orange with white text is 3.48:1 and fails WCAG AA for normal
+  text. Use it for the mark, fills, icons, large type (≥ 24 px, or ≥ 18.66 px bold) and UI parts;
+  use **Ember** wherever orange carries small text (button labels on orange, links, active nav
+  text). Status colours stay **semantic and separate**: success green, warning amber, danger red;
+  "Due today" and count badges use warning/danger, not brand.
 
-- **Graphic language**: rounded bubble shapes and overlapping blue/light-blue forms (the pattern
-  strip on the sheet). Friendly, calm, precise. No gradients on UI chrome.
+- **Graphic language**: rounded bubble shapes, overlapping orange/reply forms. Friendly, warm,
+  precise. No gradients on UI chrome.
 - **Type**: Geist for UI and marketing (already shipped); display headlines bold with tight
   tracking (≈ -0.03em). The wordmark is artwork, not typed text.
 - **Taglines**: "People. Conversations. Progress." (brand), "A booking starts it. Bookly keeps
-  it moving." (client work), "The call ends. The context stays." (capture). Hiring line **(open)**.
+  it moving." (client work), "The call ends. The context stays." (capture). Hiring line: the
+  equivalent one-liner for the Hiring solution pages and ads **(open: `bookly-brand-marketing`
+  proposes, founder picks)**.
+- **Press page**: the platform host serves `/press` with the logo files, colours, type, product
+  UI and boilerplate (owned by `bookly-design-system`, copy by `bookly-brand-marketing`).
 
 ## UI v2 concepts (local, `planning/v2/concepts/`)
 
@@ -124,13 +169,13 @@ Source sheet: `planning/v2/concepts/logo.png` (local, git-ignored; original in
 - `marketing ui*.png` — Website: Home, Product, Solutions (consultants/coaches/agencies/teams),
   Pricing (Free/Pro/Team), Trust & ownership, Resources.
 
-The concepts are drawn in orange; v2 ships them in the 02 palette. Layout and IA are the
-reference, colour is not.
+The concepts are the reference for layout, IA **and colour**. Only the logo differs: they show
+an outlined orange "b"; v2 replaces it with the 02 mark in Bookly Orange.
 
 ## Licensing: open core (decided direction)
 
 - **Core: AGPL-3.0**, everything that makes Bookly a complete product for one team, self-hosted.
-- **Commercial modules: source-available** under the _Bookly Commercial License_ (to be drafted),
+- **Commercial modules: source-available** under the Elastic License 2.0 (see below),
   living in clearly marked directories (`packages/cloud` today; `ee/` or `packages/ee-*` next).
   Readable by anyone ("open code": every line that runs is published), usable in production only
   with a subscription or license key.
@@ -138,12 +183,18 @@ reference, colour is not.
   forever; enterprise value comes from new modules.
 - Inbound contributions need a **CLA** (license grant to Cloudeo Solutions, LLC) before the first
   external merge; the copyright holder should be the LLC (IP assignment from the founder).
-- "Bookly" faces a **likely trademark conflict** (an established WordPress booking plugin of the
-  same name in the same class). Clearance search before global marketing spend **(open)**.
+- **Commercial license: Elastic License 2.0** (decided by business + legal, 2026-10-24) for
+  `packages/cloud` and every `ee/` module, with license-key gating in code. Reasons and the
+  alternatives considered: `bookly-legal-licensing/references/open-core-boundary.md`. Counsel
+  confirms before the first commercial module ships; fallback is a custom EE license.
+- **Trademark: clearance started 2026-10-24.** "Bookly" is likely in conflict with an established
+  booking product of the same name. Preliminary knockout search in
+  `planning/v2/legal/trademark-clearance.md`; counsel's full search and opinion decide whether
+  to file, coexist or rename. No paid marketing of the name before that.
 
 Draft boundary (legal + product own it; see `bookly-legal-licensing`):
 
-| Core (AGPL)                                                                        | Commercial (source-available)                                                                                         |
+| Core (AGPL)                                                                        | Commercial (ELv2, source-available)                                                                                   |
 | ---------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
 | Scheduling, booking pages, routing, payments, calendars, video                     | SSO (SAML/OIDC), SCIM, directory sync                                                                                 |
 | People/contacts, pipelines, messages, tasks, files, notifications                  | Advanced roles/permissions, org-wide multi-workspace admin                                                            |
@@ -159,6 +210,11 @@ pnpm 11 + Turborepo, Node 24; dev on 3002, Postgres on 5433; tenancy by `workspa
 everywhere, resolved in `src/proxy.ts`; `XPage` + `XPageBoundary`; `"use cache"` + `workspaceTag`;
 `refreshWorkspace` in actions; `audit()` after every write; vendors behind interfaces; flags via
 `hasFlag`; every user-visible change updates `docs/` and `CHANGELOG.md`.
+
+### Versioning
+
+- **v2 ships as Bookly 1.0.0** (decided 2026-10-24). "v2" is the project and branch name; the
+  release is the first major version. 0.20.x stays the last 0.x line on `main`.
 
 ### Branching
 
