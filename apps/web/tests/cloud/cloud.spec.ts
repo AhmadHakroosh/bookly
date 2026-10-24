@@ -3,7 +3,7 @@ import { expect, test, type Page } from "@playwright/test";
 import { createEmailVerificationToken } from "better-auth/api";
 import { config } from "dotenv";
 import { platformUrl, tenantUrl } from "../../playwright.cloud.config";
-import { DEMO, upcomingWeekday } from "../e2e/helpers";
+import { DEMO, settled, upcomingWeekday } from "../e2e/helpers";
 
 // AUTH_SECRET signs the verification token the sign-up test mints for itself (the server reads the same files).
 config({ path: ["../../.env.local", "../../.env"] });
@@ -238,7 +238,9 @@ test.describe("sign-up and tenants", () => {
     await expect(page.getByText("Phone call to +1 201 555 0123")).toBeVisible();
   });
 
-  test("host signs in on the tenant, sees the switcher, chooser and console", async ({ page }) => {
+  test("host signs in on the tenant, sees the switcher, chooser, console and design gallery", async ({
+    page,
+  }) => {
     await page.goto(`${tenantUrl(DEMO.username)}/login?next=%2Fadmin`);
     await page.locator('input[name="email"]').fill(DEMO.email);
     await page.locator('input[name="password"]').fill(DEMO.password);
@@ -258,6 +260,28 @@ test.describe("sign-up and tenants", () => {
     await expect(page.getByText("Background jobs")).toBeVisible();
     await page.goto(`${platformUrl}/console/installs`);
     await expect(page.getByRole("heading", { name: "Self-hosted installs" })).toBeVisible();
+
+    // The cloud shell (switcher open) and the console's design gallery. Here rather than in a
+    // test of its own: sign-ins are rate limited.
+    test.setTimeout(90_000);
+    const scan = async (where: string) => {
+      await page.waitForLoadState("networkidle");
+      await settled(page);
+      const r = await new AxeBuilder({ page })
+        .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"])
+        // Base UI's focus guards around an open menu: aria-hidden and focusable on purpose,
+        // they hand focus straight back to the menu (Floating UI's focus management).
+        .exclude("[data-base-ui-focus-guard]")
+        .analyze();
+      expect(r.violations, `${where}: ${JSON.stringify(r.violations, null, 2)}`).toEqual([]);
+    };
+    await page.goto(`${tenantUrl(DEMO.username)}/admin`);
+    await page.getByRole("button", { name: /Switch workspace/ }).click();
+    await expect(page.getByRole("menu")).toBeVisible();
+    await scan("workspace switcher");
+    await page.goto(`${platformUrl}/console/design`);
+    await expect(page.getByRole("heading", { name: "Kanban" })).toBeVisible();
+    await scan("/console/design");
   });
 });
 

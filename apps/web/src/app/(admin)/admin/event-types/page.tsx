@@ -7,6 +7,7 @@ import { getProfileByUser, listAllEventTypes, locationLabel } from "@/server/sch
 import { isManager, requireStaff } from "@/server/session";
 import { getCurrentWorkspace } from "@/server/workspace";
 import { createEventType } from "../scheduling-actions";
+import { PageHeader } from "@/components/ui/page-header";
 
 export const metadata = { title: "Event types" };
 
@@ -35,10 +36,10 @@ async function EventTypesPage({ searchParams }: PageProps<"/admin/event-types">)
           </Link>
         </p>
       )}
-      <div className="flex items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Event types</h1>
-          <p className="text-sm text-muted-foreground">
+      <PageHeader
+        title="Event types"
+        description={
+          <>
             {profile ? (
               <>
                 Your page:{" "}
@@ -58,12 +59,14 @@ async function EventTypesPage({ searchParams }: PageProps<"/admin/event-types">)
                 first.
               </>
             )}
-          </p>
-        </div>
-        <form action={createEventType}>
-          <SubmitButton>New event type</SubmitButton>
-        </form>
-      </div>
+          </>
+        }
+        actions={
+          <form action={createEventType}>
+            <SubmitButton>New event type</SubmitButton>
+          </form>
+        }
+      />
       <ul className="space-y-2">
         {active.map((e) => (
           <li key={e.id}>

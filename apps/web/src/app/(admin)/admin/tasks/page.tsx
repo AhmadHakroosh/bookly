@@ -46,6 +46,7 @@ import { TaskFiles } from "./task-files";
 import { taskFiles } from "@/server/drive";
 import { CommentForm, DeleteTaskButton, NewTaskButton, TaskEditForm, TaskPane } from "./task-forms";
 import { TasksToolbar } from "./toolbar";
+import { PageHeader } from "@/components/ui/page-header";
 
 export const metadata = { title: "Tasks" };
 
@@ -120,29 +121,26 @@ async function TasksPage({ searchParams }: PageProps<"/admin/tasks">) {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <h1 className="flex items-center gap-2 text-2xl font-semibold tracking-tight">
-            Tasks {beta && <BetaBadge />}
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            Follow-ups from your meetings and everything else on your plate.
-          </p>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          {manager && canBoard && (
-            <Suspense fallback={null}>
-              <StatusesButton workspaceId={ws.id} />
-            </Suspense>
-          )}
-          <NewTaskButton
-            statuses={statuses.map((s) => ({ id: s.id, name: s.name }))}
-            people={people.map((p) => ({ id: p.userId, name: p.displayName }))}
-            canBoard={canBoard}
-            canAssign={canAssign}
-          />
-        </div>
-      </div>
+      <PageHeader
+        title="Tasks"
+        badge={beta && <BetaBadge />}
+        description={<>Follow-ups from your meetings and everything else on your plate.</>}
+        actions={
+          <>
+            {manager && canBoard && (
+              <Suspense fallback={null}>
+                <StatusesButton workspaceId={ws.id} />
+              </Suspense>
+            )}
+            <NewTaskButton
+              statuses={statuses.map((s) => ({ id: s.id, name: s.name }))}
+              people={people.map((p) => ({ id: p.userId, name: p.displayName }))}
+              canBoard={canBoard}
+              canAssign={canAssign}
+            />
+          </>
+        }
+      />
 
       <TasksToolbar
         layout={layout}

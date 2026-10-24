@@ -2,236 +2,122 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { GitHubIcon } from "@/components/brand/logo";
+import { useState } from "react";
 import { useMessagesUnread } from "@/lib/messages-live";
+import { cn } from "@/lib/utils";
 import {
-  BookOpenIcon,
-  CalendarClockIcon,
-  CalendarDaysIcon,
-  CalendarIcon,
-  BellIcon,
-  BuildingIcon,
-  CreditCardIcon,
-  ExternalLinkIcon,
-  GlobeIcon,
-  LifeBuoyIcon,
-  HomeIcon,
-  MessagesSquareIcon,
-  LayoutGridIcon,
-  PlugIcon,
-  FolderIcon,
-  SettingsIcon,
-  SquareKanbanIcon,
-  SplitIcon,
-  UserIcon,
-  UsersIcon,
-  VideoIcon,
-  type LucideIcon,
-} from "lucide-react";
-
-type Item = {
-  href: string;
-  label: string;
-  icon: LucideIcon;
-  external?: boolean;
-  /** Messages: the unread count, kept live by the notification stream. */
-  unread?: number;
-};
+  isActive,
+  navSections,
+  solutionOf,
+  type NavItem,
+  type NavOptions,
+  type Solution,
+} from "@/components/shell/nav";
 
 function UnreadBadge({ initial }: { initial: number }) {
   const n = useMessagesUnread(initial);
   if (!n) return null;
   return (
-    <span className="ml-auto rounded-full bg-primary px-1.5 text-xs font-medium text-primary-foreground tabular-nums">
+    <span className="ms-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-xs font-semibold text-primary-foreground tabular-nums">
       {n > 99 ? "99+" : n}
       <span className="sr-only"> unread</span>
     </span>
   );
 }
-type Group = { label: string; icon: LucideIcon; items: Item[] };
+
+function Items({ items, pathname }: { items: NavItem[]; pathname: string }) {
+  return (
+    <ul className="space-y-0.5">
+      {items.map((it) => {
+        const on = isActive(pathname, it.href);
+        return (
+          <li key={it.href}>
+            <Link
+              href={it.href}
+              aria-current={on ? "page" : undefined}
+              className={cn(
+                "flex h-10 items-center gap-3 rounded-lg px-3 outline-none focus-visible:ring-3 focus-visible:ring-sidebar-ring/50",
+                on
+                  ? "bg-sidebar-accent font-medium text-sidebar-accent-foreground"
+                  : "text-sidebar-foreground hover:bg-[color-mix(in_oklch,var(--sidebar),var(--foreground)_6%)]",
+              )}
+            >
+              <it.icon
+                className={cn("size-5 shrink-0", !on && "text-muted-foreground")}
+                aria-hidden
+              />
+              <span className="truncate">{it.label}</span>
+              {it.unread !== undefined && <UnreadBadge initial={it.unread} />}
+            </Link>
+          </li>
+        );
+      })}
+    </ul>
+  );
+}
 
 /**
- * Three kinds of pages: your scheduling, your own connections, and the workspace everyone
- * shares. The Workspace group is for owners and admins; members never see it.
+ * The sidebar's navigation as `app ui.png` draws it: the primary items, a divider, the
+ * scheduling items, and Settings and Team pinned to the bottom, with no group headings. In the
+ * hiring beta a switch above swaps in Hiring's own items (`hiring.png`); Messages, Files,
+ * Settings and Team keep whichever side you came from. Collaborators (ADR 0005) only get their
+ * own profile, schedule and connections.
  */
-const GROUPS: Group[] = [
-  {
-    label: "Scheduling",
-    icon: CalendarDaysIcon,
-    items: [
-      { href: "/admin/profile", label: "Booking page", icon: UserIcon },
-      { href: "/admin/event-types", label: "Event types", icon: LayoutGridIcon },
-      { href: "/admin/availability", label: "Availability", icon: CalendarClockIcon },
-      { href: "/admin/bookings", label: "Bookings", icon: CalendarIcon },
-      { href: "/admin/contacts", label: "Contacts", icon: UsersIcon },
-      { href: "/admin/routing", label: "Routing forms", icon: SplitIcon },
-    ],
-  },
-  {
-    label: "Personal",
-    icon: PlugIcon,
-    items: [
-      { href: "/admin/calendars", label: "Calendars", icon: CalendarDaysIcon },
-      { href: "/admin/conferencing", label: "Conferencing", icon: VideoIcon },
-      { href: "/admin/notifications", label: "Notifications", icon: BellIcon },
-    ],
-  },
-];
-
-/** What a collaborator (outside reviewer or interviewer, ADR 0005) sees in 1.0. */
-const COLLABORATOR: Group = {
-  label: "You",
-  icon: UserIcon,
-  items: [
-    { href: "/admin/profile", label: "Profile", icon: UserIcon },
-    { href: "/admin/availability", label: "Availability", icon: CalendarClockIcon },
-    { href: "/admin/calendars", label: "Calendars", icon: CalendarDaysIcon },
-    { href: "/admin/conferencing", label: "Conferencing", icon: VideoIcon },
-    { href: "/admin/notifications", label: "Notifications", icon: BellIcon },
-  ],
-};
-
-const WORKSPACE = (cloud: boolean): Group => ({
-  label: "Workspace",
-  icon: BuildingIcon,
-  items: [
-    { href: "/admin/settings", label: "Settings", icon: SettingsIcon },
-    { href: "/admin/team", label: "Team", icon: UsersIcon },
-    { href: "/admin/domains", label: "Domains", icon: GlobeIcon },
-    ...(cloud ? [{ href: "/admin/billing", label: "Billing", icon: CreditCardIcon }] : []),
-  ],
-});
-
-/** Pinned to the bottom of the sidebar: help links that never move. */
-const HELP = (supportHref: string): Item[] => [
-  { href: "/docs", label: "Documentation", icon: BookOpenIcon, external: true },
-  { href: supportHref, label: "Support", icon: LifeBuoyIcon, external: true },
-  {
-    href: "https://github.com/AhmadHakroosh/bookly",
-    label: "GitHub",
-    icon: GitHubIcon as unknown as LucideIcon,
-    external: true,
-  },
-];
-
-export function AdminNav({
-  cloud = false,
-  manager = false,
-  collaborator = false,
-  tasks = false,
-  files = false,
-  messages = null,
-  supportHref = "https://github.com/AhmadHakroosh/bookly/issues",
-}: {
-  cloud?: boolean;
-  /** The drive is enabled (its feature flag): adds Files after Tasks / Contacts. */
-  files?: boolean;
-  /** Messages are enabled and on the plan: adds Messages after Contacts, with the unread count. */
-  messages?: { unread: number } | null;
-  /** The task board is enabled (its feature flag): adds Tasks after Contacts. */
-  tasks?: boolean;
-  /** Owner or admin: shows the Workspace group. */
-  manager?: boolean;
-  /** An outside reviewer or interviewer: only their own profile, schedule and connections. */
-  collaborator?: boolean;
-  /** Where "Support" goes: a mailto in cloud mode, the issue tracker when self-hosted. */
-  supportHref?: string;
-}) {
+export function AdminNav(props: NavOptions) {
   const pathname = usePathname();
-  const active = (href: string) =>
-    href === "/admin" ? pathname === href : pathname.startsWith(href);
-  const scheduling =
-    tasks || files || messages
-      ? GROUPS.map((g, i) =>
-          i === 0
-            ? {
-                ...g,
-                items: g.items.flatMap((it) =>
-                  it.href === "/admin/contacts"
-                    ? [
-                        it,
-                        ...(messages
-                          ? [
-                              {
-                                href: "/admin/messages",
-                                label: "Messages",
-                                icon: MessagesSquareIcon,
-                                unread: messages.unread,
-                              },
-                            ]
-                          : []),
-                        ...(tasks
-                          ? [{ href: "/admin/tasks", label: "Tasks", icon: SquareKanbanIcon }]
-                          : []),
-                        ...(files
-                          ? [{ href: "/admin/files", label: "Files", icon: FolderIcon }]
-                          : []),
-                      ]
-                    : [it],
-                ),
-              }
-            : g,
-        )
-      : GROUPS;
-  const groups = collaborator
-    ? [COLLABORATOR]
-    : manager
-      ? [...scheduling, WORKSPACE(cloud)]
-      : scheduling;
-  const itemClass = (on: boolean) =>
-    `flex items-center gap-2 rounded-md px-2 py-1.5 ${on ? "bg-accent font-medium text-accent-foreground" : "text-muted-foreground hover:bg-muted hover:text-foreground"}`;
-  const External = ({ it }: { it: Item }) => (
-    <a href={it.href} target="_blank" rel="noreferrer" className={itemClass(false)}>
-      <it.icon className="size-4 shrink-0" aria-hidden />
-      <span className="flex-1">{it.label}</span>
-      <ExternalLinkIcon className="size-3 opacity-60" aria-hidden />
-      <span className="sr-only">(opens in a new tab)</span>
-    </a>
-  );
+  // Hiring pages open the Hiring side, client pages the Clients side; shared pages stay put.
+  const [solution, setSolution] = useState<Solution>(solutionOf(pathname) ?? "clients");
+  const [seen, setSeen] = useState(pathname);
+  if (seen !== pathname) {
+    setSeen(pathname);
+    const next = solutionOf(pathname);
+    if (next && next !== solution) setSolution(next);
+  }
+  const switchable = !!props.hiring && !props.collaborator;
+  const sections = navSections(props, switchable ? solution : "clients");
+  const bottom = sections.find((s) => s.id === "bottom" && s.items.length);
   return (
-    <nav className="flex min-h-full flex-col gap-4 text-sm" aria-label="Admin">
-      {!collaborator && (
-        <Link href="/admin" className={itemClass(active("/admin"))}>
-          <HomeIcon className="size-4 shrink-0" aria-hidden />
-          Home
-        </Link>
-      )}
-      {groups.map((g) => (
-        <div key={g.label} className="border-t pt-3">
-          <p className="mb-1.5 flex items-center gap-2 px-2 text-xs font-semibold tracking-wider text-foreground uppercase">
-            <g.icon className="size-4 text-muted-foreground" aria-hidden />
-            {g.label}
-          </p>
-          <ul className="space-y-0.5">
-            {g.items.map((it) => (
-              <li key={it.href}>
-                {it.external ? (
-                  <External it={it} />
-                ) : (
-                  <Link href={it.href} className={itemClass(active(it.href))}>
-                    <it.icon className="size-4 shrink-0" aria-hidden />
-                    {it.label}
-                    {it.unread !== undefined && <UnreadBadge initial={it.unread} />}
-                  </Link>
-                )}
-              </li>
-            ))}
-          </ul>
-        </div>
-      ))}
-      <div className="mt-auto border-t pt-3">
-        <p className="mb-1.5 flex items-center gap-2 px-2 text-xs font-semibold tracking-wider text-foreground uppercase">
-          <LifeBuoyIcon className="size-4 text-muted-foreground" aria-hidden />
-          Help
-        </p>
-        <ul className="space-y-0.5">
-          {HELP(supportHref).map((it) => (
-            <li key={it.href}>
-              <External it={it} />
-            </li>
+    <nav className="flex flex-1 flex-col gap-4 text-sm" aria-label="Admin">
+      {switchable && (
+        <div
+          role="group"
+          aria-label="Solution"
+          className="grid grid-cols-2 gap-1 rounded-lg bg-[color-mix(in_oklch,var(--sidebar),var(--foreground)_6%)] p-1 text-sm font-medium"
+        >
+          {(
+            [
+              ["clients", "Clients", "/admin"],
+              ["hiring", "Hiring", "/admin/hiring"],
+            ] as const
+          ).map(([key, label, href]) => (
+            <Link
+              key={key}
+              href={href}
+              aria-current={solution === key ? "true" : undefined}
+              className={cn(
+                "rounded-md px-2 py-1.5 text-center outline-none focus-visible:ring-3 focus-visible:ring-sidebar-ring/50",
+                solution === key
+                  ? "bg-card text-foreground shadow-xs"
+                  : "text-muted-foreground hover:text-foreground",
+              )}
+            >
+              {label}
+            </Link>
           ))}
-        </ul>
-      </div>
+        </div>
+      )}
+      {sections
+        .filter((s) => s.id !== "bottom" && s.items.length)
+        .map((s, i) => (
+          <div key={s.id} className={cn(i > 0 && "border-t border-sidebar-border pt-4")}>
+            <Items items={s.items} pathname={pathname} />
+          </div>
+        ))}
+      {bottom && (
+        <div className="mt-auto pt-4">
+          <Items items={bottom.items} pathname={pathname} />
+        </div>
+      )}
     </nav>
   );
 }

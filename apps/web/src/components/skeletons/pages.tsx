@@ -151,6 +151,15 @@ export function AvailabilitySkeleton() {
   );
 }
 
+export function HiringSkeleton() {
+  return (
+    <Shell className="space-y-6">
+      <Heading width="w-28" />
+      <Skeleton className="h-56 w-full rounded-xl" />
+    </Shell>
+  );
+}
+
 export function ContactsSkeleton() {
   return (
     <Shell className="space-y-6">

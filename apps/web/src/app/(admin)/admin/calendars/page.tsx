@@ -13,6 +13,7 @@ import { FeedsCard } from "./feeds-card";
 import { requireWorkspaceUser } from "@/server/session";
 import { CalendarCard } from "./calendar-card";
 import { IntegrationError } from "../integration-errors";
+import { PageHeader } from "@/components/ui/page-header";
 
 export const metadata = { title: "Calendars" };
 
@@ -31,13 +32,15 @@ async function CalendarsPage({ searchParams }: PageProps<"/admin/calendars">) {
     (conns.find((c) => c.provider === p) as (Integration & { provider: P }) | undefined) ?? null;
   return (
     <div className="max-w-2xl space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Calendars</h1>
-        <p className="text-sm text-muted-foreground">
-          Connect a calendar to hide times you are already busy and to add bookings to it
-          automatically. Google also enables Google Meet links, Microsoft enables Teams.
-        </p>
-      </div>
+      <PageHeader
+        title="Calendars"
+        description={
+          <>
+            Connect a calendar to hide times you are already busy and to add bookings to it
+            automatically. Google also enables Google Meet links, Microsoft enables Teams.
+          </>
+        }
+      />
       <IntegrationError code={typeof sp.error === "string" ? sp.error : undefined} />
       {typeof sp.connected === "string" && (
         <p className="rounded-md border p-3 text-sm">

@@ -20,6 +20,11 @@ The palette comes from the v1.0 product concepts; values and contrast checks liv
 | `sidebar`, `muted`, `secondary`             | Sand          | Sidebar, quiet surfaces                                     |
 | `success`, `warning`, `info`, `destructive` | semantic      | Status only, with `-muted` fills for chips                  |
 
+Hover states are solid tokens, never a see-through fill: `primary-hover` darkens Ember and
+`ink-hover` lifts Ink a step, so a label keeps its contrast while the pointer is on it. Bookly is
+light only (founder, 2026-10-25): the app ignores a dark system setting and offers no theme
+toggle; the `.dark` values left in `globals.css` are for reversed brand uses only.
+
 Bookly Orange never carries small text: white on it is 3.48:1. Status is never brand orange:
 "Due today", "Feedback missing" and overdue counts are `warning` or `destructive`. A workspace's
 own colour replaces `primary` and `ring` on its public pages (`accentVars` in
@@ -49,6 +54,62 @@ Form controls share the 40 px default height: `Input`, `Select`, `DatePicker`, `
 `ColorPicker`, `HandleField`, and, through a base rule in `globals.css`, every native text
 `<input>` and single `<select>`. A text field and the button beside it line up without classes;
 add `h-8` (and a `size="sm"` button) only inside tables and chips.
+
+## The shell
+
+Every admin page sits in one frame (`app/(admin)/admin/layout.tsx`, parts in
+`components/shell/`), drawn as `app ui.png` and specified in
+`planning/v2/ux/concept-fidelity.md` §2, which is binding:
+
+- **Sidebar** (Sand, 240 px, `lg` and up): the Bookly lockup; the workspace switcher (a card with
+  the workspace's logo or initial on Ink); the primary items (Home, Bookings, Contacts, Messages,
+  Tasks, Files), a divider, the scheduling items (Booking page, Event types, Availability,
+  Routing); Settings and Team pinned to the bottom for owners and admins; a divider and the
+  account card (picture, name, email). **No group headings**: the dividers are the only
+  grouping. The active item is Peach with Ember text and `aria-current="page"`; Messages carries
+  its unread count. Collaborators keep their own short list (ADR 0005).
+- **Clients | Hiring**: where the `hiring` flag is on, a two-way switch under the workspace
+  swaps in Hiring's own items (`hiring.png`, decision D1). Messages, Files, Settings and Team
+  are shared and keep the side you came from.
+- **Top bar** (56 px, sticky): breadcrumb ("Workspace / Home", "Hiring / Overview"; stops before
+  an id), the search-or-jump field (⌘K) in the middle, then the bell, Help (icon and word) and
+  the avatar. No theme toggle. Personal pages (Account, Notifications, Calendars, Conferencing,
+  the public booking page) live in the account menu; Domains and Billing are reached from ⌘K
+  until Settings is regrouped (§4.11).
+- **Phone and narrow windows**: the sidebar becomes a sheet behind a menu button; the logo mark,
+  a search button, the bell, Help and the avatar stay in the bar.
+- **⌘K** (`shell/command-menu.tsx`) is Base UI Autocomplete in a Dialog: every page the member
+  can open, settings tabs, their own things, and contacts searched on the server as you type.
+
+`shell/nav.ts` holds the sidebar, the breadcrumb and the ⌘K pages: add a page there and it is
+navigable, named and searchable.
+
+## Page anatomy
+
+1. `PageHeader`: the title (the page's one `h1`, a noun), an optional badge (`BetaBadge`,
+   `StatusChip`), one line of context, and at most two actions on the right: outline, then the
+   primary (`default` or `ink`).
+2. Optionally a `StatStrip` of counts right under it ("3 meetings today").
+3. The content: lists, an `Agenda`, a `KanbanBoard`; an `EmptyState` when there is nothing yet.
+4. Side panes (`PaneHost`) open over the page and start with a `PaneHeader`.
+
+## Components
+
+Built on Base UI and the tokens; all in `components/ui`. The operator console has a gallery at
+`/console/design` with each one in sample use, for review in both themes.
+
+| Component                                                 | Use                                                                                                                                                                  |
+| --------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `PageHeader`                                              | Top of every admin page (above).                                                                                                                                     |
+| `StatStrip`, `Stat`                                       | A row of counts in one card; `tone="warning"` only when a count needs action.                                                                                        |
+| `StatusChip`                                              | Status beside a title or in a row: `success`, `warning`, `destructive`, `info`, `neutral`, and `accent` (Peach, emphasis that is not a status, such as "In 15 min"). |
+| `Agenda`, `AgendaItem`                                    | A day as a timeline: times on a rail, a card per meeting, the current or next one `active`.                                                                          |
+| `KanbanBoard`, `KanbanColumn`, `KanbanList`, `KanbanCard` | Boards (tasks by status, applications by stage). Dragging stays with the caller.                                                                                     |
+| `PaneHeader`                                              | The top of a side pane: picture, title, context, status, actions; leaves room for the close button.                                                                  |
+| `AvatarStack`                                             | People on a meeting or a panel, "+N" past three; screen readers hear the names once.                                                                                 |
+| `Progress`                                                | Bookly Orange on Sand, always labelled ("2 of 3 submitted").                                                                                                         |
+| `EmptyState`                                              | An icon in the mark's speech bubble, a title that says what will be here, how it fills, and the action.                                                              |
+| `Kbd`                                                     | Keys and shortcuts.                                                                                                                                                  |
 
 ## Pointers
 

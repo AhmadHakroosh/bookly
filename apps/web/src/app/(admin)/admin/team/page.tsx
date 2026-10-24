@@ -10,6 +10,7 @@ import { getCurrentWorkspace } from "@/server/workspace";
 import { cancelInvite, removeMember, setRole } from "./actions";
 import { hasFlag } from "@/server/flags";
 import { InviteForm } from "./invite-form";
+import { PageHeader } from "@/components/ui/page-header";
 
 export const metadata = { title: "Team" };
 
@@ -44,13 +45,15 @@ async function TeamPage({ searchParams }: PageProps<"/admin/team">) {
   const username = new Map(profiles.map((p) => [p.userId, p.username]));
   return (
     <div className="max-w-3xl space-y-8">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Team</h1>
-        <p className="text-sm text-muted-foreground">
-          Each member gets their own booking page, availability and event types. Round-robin and
-          collective event types spread bookings across members.
-        </p>
-      </div>
+      <PageHeader
+        title="Team"
+        description={
+          <>
+            Each member gets their own booking page, availability and event types. Round-robin and
+            collective event types spread bookings across members.
+          </>
+        }
+      />
       {sp.invited === "1" && <p className="rounded-xl border p-3 text-sm">Invitation sent.</p>}
       {typeof sp.error === "string" && sp.error && (
         <p className="rounded-xl border border-destructive/40 p-3 text-sm">{sp.error}</p>

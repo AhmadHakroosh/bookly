@@ -41,6 +41,7 @@ import { GuestComposer, TeamComposer } from "./composer";
 import { NewMessageButton } from "./new-message";
 import { LiveRefresh, ThreadSheet } from "./thread-sheet";
 import { AddPeopleButton, CloseButton } from "./thread-controls";
+import { PageHeader } from "@/components/ui/page-header";
 
 type SP = Record<string, string | string[] | undefined>;
 const one = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v) || undefined;
@@ -112,43 +113,40 @@ async function MessagesPage({ searchParams }: PageProps<"/admin/messages">) {
   return (
     <div className="space-y-6">
       <LiveRefresh rendered={latest} />
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <h1 className="flex items-center gap-2 text-2xl font-semibold tracking-tight">
-            Messages {beta && <BetaBadge />}
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            {shownUnread ? `${shownUnread} unread` : "All caught up"}
-          </p>
-        </div>
-        <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
-          <form
-            method="get"
-            action="/admin/messages"
-            className="relative w-full sm:w-64"
-            role="search"
-          >
-            <SearchIcon
-              className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground"
-              aria-hidden
+      <PageHeader
+        title="Messages"
+        badge={beta && <BetaBadge />}
+        description={<>{shownUnread ? `${shownUnread} unread` : "All caught up"}</>}
+        actions={
+          <>
+            <form
+              method="get"
+              action="/admin/messages"
+              className="relative w-full sm:w-64"
+              role="search"
+            >
+              <SearchIcon
+                className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground"
+                aria-hidden
+              />
+              {box !== "inbox" && <input type="hidden" name="box" value={box} />}
+              <Input
+                name="q"
+                defaultValue={q}
+                placeholder="Search messages"
+                aria-label="Search messages"
+                className="pl-9"
+              />
+            </form>
+            <NewMessageButton
+              canGuest={guest}
+              canTeam={team}
+              teamPlan={PLANS[planFor("teamMessages")].name}
+              people={others}
             />
-            {box !== "inbox" && <input type="hidden" name="box" value={box} />}
-            <Input
-              name="q"
-              defaultValue={q}
-              placeholder="Search messages"
-              aria-label="Search messages"
-              className="pl-9"
-            />
-          </form>
-          <NewMessageButton
-            canGuest={guest}
-            canTeam={team}
-            teamPlan={PLANS[planFor("teamMessages")].name}
-            people={others}
-          />
-        </div>
-      </div>
+          </>
+        }
+      />
       <div className="grid gap-6 md:grid-cols-[180px_1fr]">
         <nav aria-label="Mailboxes" className="flex gap-1 overflow-x-auto md:flex-col">
           {BOXES.filter((b) => (b !== "team" || team) && (b !== "guests" || guest)).map((b) => {

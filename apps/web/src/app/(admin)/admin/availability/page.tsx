@@ -23,6 +23,7 @@ import {
 } from "../scheduling-actions";
 import { OverrideForm } from "./override-form";
 import { ScheduleForm } from "./schedule-form";
+import { PageHeader } from "@/components/ui/page-header";
 
 export const metadata = { title: "Availability" };
 
@@ -59,13 +60,15 @@ async function AvailabilityPage({ searchParams }: PageProps<"/admin/availability
   const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
   return (
     <div className="max-w-2xl space-y-10">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Availability</h1>
-        <p className="text-sm text-muted-foreground">
-          Tick the days you take calls and set the hours. Existing bookings, buffers and minimum
-          notice are removed from these hours automatically.
-        </p>
-      </div>
+      <PageHeader
+        title="Availability"
+        description={
+          <>
+            Tick the days you take calls and set the hours. Existing bookings, buffers and minimum
+            notice are removed from these hours automatically.
+          </>
+        }
+      />
       <section className="space-y-3">
         <div className="flex flex-wrap items-center gap-2">
           {all.map((x) => (
