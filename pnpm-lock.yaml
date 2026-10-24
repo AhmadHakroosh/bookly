@@ -145,6 +145,9 @@ importers:
       '@bookly/email':
         specifier: workspace:*
         version: link:../../packages/email
+      '@bookly/forms':
+        specifier: workspace:*
+        version: link:../../packages/forms
       '@bookly/jobs':
         specifier: workspace:*
         version: link:../../packages/jobs
@@ -359,6 +362,9 @@ importers:
       '@bookly/config':
         specifier: workspace:*
         version: link:../config
+      '@bookly/forms':
+        specifier: workspace:*
+        version: link:../forms
       drizzle-orm:
         specifier: 'catalog:'
         version: 0.45.3(@opentelemetry/api@1.9.1)(@types/pg@8.23.1)(kysely@0.29.6)(pg@8.23.1)
@@ -430,6 +436,25 @@ importers:
       typescript:
         specifier: 'catalog:'
         version: '@typescript/typescript6@6.0.2'
+
+  packages/forms:
+    dependencies:
+      zod:
+        specifier: 'catalog:'
+        version: 4.6.5
+    devDependencies:
+      '@types/node':
+        specifier: 'catalog:'
+        version: 24.19.0
+      '@typescript/native':
+        specifier: 'catalog:'
+        version: typescript@7.0.2
+      typescript:
+        specifier: 'catalog:'
+        version: '@typescript/typescript6@6.0.2'
+      vitest:
+        specifier: 'catalog:'
+        version: 5.0.3(@opentelemetry/api@1.9.1)(@types/node@24.19.0)(happy-dom@20.14.5)(vite@8.3.0(@types/node@24.19.0)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.15))
 
   packages/jobs:
     dependencies:

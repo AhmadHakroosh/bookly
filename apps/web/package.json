@@ -26,6 +26,7 @@
     "@bookly/config": "workspace:*",
     "@bookly/db": "workspace:*",
     "@bookly/editions": "workspace:*",
+    "@bookly/forms": "workspace:*",
     "@bookly/email": "workspace:*",
     "@bookly/jobs": "workspace:*",
     "@bookly/storage": "workspace:*",

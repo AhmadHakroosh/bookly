@@ -1,24 +1,13 @@
 /**
  * Pure routing-form evaluation: first rule whose conditions hold wins, else the fallback.
- * Comparisons are case-insensitive and trimmed so "Yes" matches "yes ".
+ * Comparisons are case-insensitive and trimmed so "Yes" matches "yes ". The conditions are
+ * evaluated by the forms engine (ADR 0004), the one evaluator shared with forms and stage rules.
  */
 import type { RoutingCondition, RoutingDestination, RoutingRule } from "@bookly/db/schema";
-
-const norm = (s: string | undefined) => (s ?? "").trim().toLowerCase();
+import { conditionHolds as formConditionHolds } from "@bookly/forms";
 
 export function conditionHolds(c: RoutingCondition, answers: Record<string, string>): boolean {
-  const a = norm(answers[c.questionId]);
-  const v = norm(c.value);
-  switch (c.op) {
-    case "equals":
-      return a === v;
-    case "not_equals":
-      return a !== v;
-    case "contains":
-      return v.length > 0 && a.includes(v);
-    case "not_empty":
-      return a.length > 0;
-  }
+  return formConditionHolds({ fieldId: c.questionId, op: c.op, value: c.value }, answers);
 }
 
 export function ruleMatches(rule: RoutingRule, answers: Record<string, string>): boolean {

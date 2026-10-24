@@ -6,6 +6,7 @@ import { z } from "zod";
 import { and, eq, inArray, isNull, schema } from "@bookly/db";
 import type { EventLocation, EventType } from "@bookly/db/schema";
 import { db } from "@/lib/db";
+import { syncInlineForm } from "@/server/forms";
 import { audit, diff } from "@/server/audit";
 import { fmtDateTime, hhmmToMin, isValidTimezone } from "@/lib/time";
 import { revalidatePath } from "next/cache";
@@ -587,6 +588,15 @@ export async function saveEventType(_prev: EventTypeSaveState, formData: FormDat
     currency: d.price > 0 ? d.currency : null,
   };
   await db().update(schema.eventTypes).set(patch).where(eq(schema.eventTypes.id, d.id));
+  // The same questions as a versioned form (ADR 0004); a new version only when they changed.
+  await syncInlineForm({
+    workspaceId: ws.id,
+    purpose: "booking",
+    name: d.title,
+    owner: { table: "event_types", id: d.id, formId: existing.formId },
+    questions: patch.questions,
+    userId: c.session.user.id,
+  });
   await audit({
     action: "event_type.updated",
     target: { type: "event_type", id: d.id, label: d.title },

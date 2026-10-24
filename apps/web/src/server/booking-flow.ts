@@ -6,6 +6,7 @@ import { and, asc, eq, gt, inArray, ne, schema } from "@bookly/db";
 import type { Booking, EventType, Workspace } from "@bookly/db/schema";
 import { sendEmail } from "@bookly/email";
 import { db } from "@/lib/db";
+import { formQuestions, recordResponse } from "./forms";
 import {
   attendeeConfirmation,
   guestInvitation,
@@ -294,7 +295,7 @@ export async function createBooking(
   eventType: EventType,
   input: BookingInput,
 ): Promise<BookingResult> {
-  for (const q of eventType.questions) {
+  for (const q of await formQuestions(workspace, eventType)) {
     if (q.required && !input.answers[q.id]?.trim())
       throw new BookingError(`Please answer: ${q.label}`);
   }
@@ -408,6 +409,15 @@ export async function createBooking(
     )
     .returning();
   const first = rows[0]!;
+  // Behind forms_v2 the answers are also kept as a form response (ADR 0004); a reschedule
+  // carries the original answers, so it records nothing new.
+  if (!rescheduledFromId)
+    await recordResponse({
+      ws: workspace,
+      formId: eventType.formId,
+      answers: input.answers,
+      bookingId: first.id,
+    });
 
   // Paid bookings are finalised by the Stripe webhook (see finalizePaidBooking).
   if (needsPayment) {

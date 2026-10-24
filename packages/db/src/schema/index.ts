@@ -3,6 +3,7 @@ export * from "./workspaces";
 export * from "./scheduling";
 export * from "./pipelines";
 export * from "./editions";
+export * from "./forms";
 export * from "./integrations";
 export * from "./api";
 export * from "./audit";

@@ -26,6 +26,7 @@ export const FLAGS = {
   meeting_notes: "In-meeting host notes (0.20.0)",
   session_packs: "Session packs and balances (0.21.0)",
   guest_portal: "Guest portal (0.22.0)",
+  forms_v2: "Booking and routing questions served from versioned forms (1.0, ADR 0004)",
 } as const;
 
 export type FlagKey = keyof typeof FLAGS;

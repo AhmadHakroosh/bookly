@@ -4,6 +4,7 @@ import { hashPassword } from "better-auth/crypto";
 import { and, eq, schema } from "@bookly/db";
 import { loadEnv } from "@bookly/config";
 import { db } from "@/lib/db";
+import { syncInlineForm } from "./forms";
 import { ensureDefaultSchedule } from "./scheduling";
 
 export const DEMO_EMAIL = "demo@example.com";
@@ -169,7 +170,7 @@ export async function seedDemo() {
       columns: { id: true },
     });
     if (exists) continue;
-    await db()
+    const [inserted] = await db()
       .insert(schema.eventTypes)
       .values({
         workspaceId: ws.id,
@@ -190,7 +191,17 @@ export async function seedDemo() {
           { type: "custom", value: "Video call, link sent by email" },
           { type: "phone", value: "We call you" },
         ],
-      });
+      })
+      .returning({ id: schema.eventTypes.id });
+    // Its questions as a versioned form, as the editor does on save (ADR 0004).
+    await syncInlineForm({
+      workspaceId: ws.id,
+      purpose: "booking",
+      name: e.title,
+      owner: { table: "event_types", id: inserted!.id, formId: null },
+      questions: e.questions ?? [],
+      userId: user.id,
+    });
     created++;
   }
   return {

@@ -22,6 +22,7 @@ COPY packages/email/package.json packages/email/
 COPY packages/jobs/package.json packages/jobs/
 COPY packages/storage/package.json packages/storage/
 COPY packages/editions/package.json packages/editions/
+COPY packages/forms/package.json packages/forms/
 # Commercial modules (ELv2): inert without a license key; the -core image is built without them.
 COPY ee/licensing/package.json ee/licensing/
 RUN --mount=type=cache,id=pnpm-store,target=/pnpm/store \

@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { and, eq, schema } from "@bookly/db";
 import { db } from "@/lib/db";
+import { syncInlineForm } from "@/server/forms";
 import { audit, diff } from "@/server/audit";
 import { refreshWorkspace } from "@/server/cache";
 import { parseQuestionsJson } from "@/server/questions";
@@ -55,7 +56,7 @@ export async function saveRoutingForm(
   _prev: RoutingSaveState,
   formData: FormData,
 ): Promise<RoutingSaveState> {
-  const { ws } = await ctx();
+  const { ws, session } = await ctx();
   const parsed = formSchema.safeParse({
     ...Object.fromEntries(formData),
     active: formData.get("active") ? "on" : "off",
@@ -92,6 +93,15 @@ export async function saveRoutingForm(
     active: d.active === "on",
   };
   await db().update(schema.routingForms).set(patch).where(eq(schema.routingForms.id, d.id));
+  // The same questions as a versioned form (ADR 0004); a new version only when they changed.
+  await syncInlineForm({
+    workspaceId: ws.id,
+    purpose: "routing",
+    name: d.name,
+    owner: { table: "routing_forms", id: d.id, formId: existing.formId },
+    questions: patch.questions,
+    userId: session.user.id,
+  });
   await audit({
     action: "routing_form.updated",
     target: { type: "routing_form", id: d.id, label: d.name },
