@@ -194,8 +194,22 @@ Two sources, one identity (decided by the founder, 2026-10-24):
 - `marketing ui*.png` — Website: Home, Product, Solutions (consultants/coaches/agencies/teams),
   Pricing (Free/Pro/Team), Trust & ownership, Resources.
 
-The concepts are the reference for layout, IA **and colour**. Only the logo differs: they show
-an outlined orange "b"; v2 replaces it with the 02 mark in Bookly Orange.
+**The concepts are binding** (founder, 2026-10-25): the new app and the new marketing site look,
+navigate and connect exactly as they draw it: their sidebars (no invented group headings), top
+bar, page headers, screens, and the links between parts and modules (the contact workspace as
+the hub, the client journey Booked → Prepared → Met → Followed up → Paid, the hiring pipeline →
+candidate pane → interviews → reviews → decision). The screen-by-screen spec, the conflicts
+between sheets and their resolutions are in `planning/v2/ux/concept-fidelity.md`; every UI slice
+is checked against it with concept-vs-build screenshots. `https://hiresam.local` (the founder's
+Sam site) is the second reference for what the concepts do not show (marketing IA, mega menus,
+comparison pages, FAQ, footer, one account for every workspace), never for colour.
+
+**Light only.** The dark theme is retired (founder, 2026-10-25), as the concepts are light: no
+`.dark` tokens, no theme toggle. Logos on dark backgrounds stay a brand use (press page, CTA
+bands).
+
+Only the logo differs from the concepts: they show an outlined orange "b"; v2 replaces it with
+the 02 mark in Bookly Orange.
 
 ## Licensing: open core (decided direction)
 
