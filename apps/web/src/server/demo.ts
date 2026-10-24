@@ -9,6 +9,8 @@ import { ensureDefaultSchedule } from "./scheduling";
 
 export const DEMO_EMAIL = "demo@example.com";
 export const DEMO_PASSWORD = "demo-password-1234";
+/** An outside reviewer in the demo workspace (ADR 0005), same password. */
+export const DEMO_COLLABORATOR_EMAIL = "collaborator@example.com";
 
 type DemoEvent = {
   slug: string;
@@ -150,6 +152,7 @@ export async function seedDemo() {
       role: "admin",
       createdAt: new Date(),
     });
+  await seedCollaborator(ws.organizationId);
   const profile = await db().query.profiles.findFirst({
     where: and(eq(schema.profiles.workspaceId, ws.id), eq(schema.profiles.userId, user.id)),
   });
@@ -212,4 +215,45 @@ export async function seedDemo() {
     eventTypesCreated: created,
     signIn: `${env.APP_URL}/login`,
   };
+}
+
+/** The demo collaborator: a member of the workspace who sees only their own profile and schedule. */
+async function seedCollaborator(organizationId: string) {
+  let c = await db().query.users.findFirst({
+    where: eq(schema.users.email, DEMO_COLLABORATOR_EMAIL),
+  });
+  if (!c) {
+    const id = crypto.randomUUID();
+    await db().insert(schema.users).values({
+      id,
+      name: "Demo Reviewer",
+      email: DEMO_COLLABORATOR_EMAIL,
+      emailVerified: true,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
+    await db()
+      .insert(schema.accounts)
+      .values({
+        id: crypto.randomUUID(),
+        accountId: id,
+        providerId: "credential",
+        userId: id,
+        password: await hashPassword(DEMO_PASSWORD),
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+    c = (await db().query.users.findFirst({ where: eq(schema.users.id, id) }))!;
+  }
+  const membership = await db().query.members.findFirst({
+    where: and(eq(schema.members.organizationId, organizationId), eq(schema.members.userId, c.id)),
+  });
+  if (!membership)
+    await db().insert(schema.members).values({
+      id: crypto.randomUUID(),
+      organizationId,
+      userId: c.id,
+      role: "collaborator",
+      createdAt: new Date(),
+    });
 }

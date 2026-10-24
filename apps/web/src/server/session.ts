@@ -4,6 +4,7 @@ import { cache } from "react";
 import { and, eq, schema } from "@bookly/db";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { isCollaborator } from "@/lib/roles";
 import { getCurrentWorkspace } from "./workspace";
 
 export const getSession = cache(async () => auth.api.getSession({ headers: await headers() }));
@@ -14,7 +15,10 @@ export async function requireSession() {
   return session;
 }
 
-/** Staff = a member of the organization that owns the current workspace (owner, admin, member). */
+/**
+ * The current user's role in the organization that owns the workspace: owner, admin, member or
+ * collaborator. Staff are the first three; collaborators are outside reviewers (ADR 0005).
+ */
 export const getStaffRole = cache(async (): Promise<string | null> => {
   const [session, workspace] = await Promise.all([getSession(), getCurrentWorkspace()]);
   if (!session || !workspace) return null;
@@ -28,12 +32,27 @@ export const getStaffRole = cache(async (): Promise<string | null> => {
   return row?.role ?? null;
 });
 
-/** Use in every admin page/action. */
-export async function requireStaff() {
+/**
+ * Anyone in the workspace, collaborators included. Only for what a collaborator may use: the
+ * admin shell, their own profile, availability, calendars, conferencing, account and
+ * notifications. Everything else uses `requireStaff()`.
+ */
+export async function requireWorkspaceUser() {
   const session = await requireSession();
   const role = await getStaffRole();
   if (!role) redirect("/login?error=staff");
   return { session, role };
+}
+
+/**
+ * Use in every admin page/action: the workspace's own people (owner, admin, member). A
+ * collaborator is sent to their profile, so new pages are closed to them unless they opt in
+ * with `requireWorkspaceUser()`.
+ */
+export async function requireStaff() {
+  const user = await requireWorkspaceUser();
+  if (isCollaborator(user.role)) redirect("/admin/profile");
+  return user;
 }
 
 /** Owners and admins manage the workspace; members manage their own scheduling. */

@@ -8,6 +8,12 @@ single-tenant mode) and lands on their booking-page setup. Roles: **owner** (one
 **admin** (manages everything), **member** (own booking page, availability, event types and
 bookings).
 
+Where hiring is on, a fourth role appears: **collaborator**, for outside reviewers and
+interviewers. A collaborator sees only their own profile, availability, calendars, conferencing
+and notifications (and, with hiring, the opportunities they are added to); never the
+workspace's clients, bookings, messages, files, tasks or settings. Collaborators are not billed
+as seats: Free includes 2, Pro and Team include 5.
+
 ## The activity log
 
 Every change in a workspace is recorded: who did it (a member, a guest through a booking link,

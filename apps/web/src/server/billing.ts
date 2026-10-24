@@ -11,9 +11,10 @@ import {
 import type { MeetingTranscript } from "@bookly/db/schema";
 import { captureBudgetFor, captureMinutesThisMonth, overageAllowed } from "./limits";
 import { loadEnv } from "@bookly/config";
-import { and, eq, isNotNull, schema } from "@bookly/db";
+import { and, eq, isNotNull, schema, inArray } from "@bookly/db";
 import type { Workspace } from "@bookly/db/schema";
 import { db } from "@/lib/db";
+import { BILLABLE_ROLES } from "@/lib/roles";
 import { refreshWorkspace } from "./cache";
 import { getState, setState } from "./ops";
 import { paymentsConfigured, stripe } from "./payments";
@@ -353,11 +354,17 @@ export async function billingPortal(ws: Workspace) {
   return s.url;
 }
 
+/** Billed seats: owners, admins and members (collaborators are priced on their own, canon X3). */
 async function memberCount(ws: Workspace) {
   const rows = await db()
     .select({ id: schema.members.id })
     .from(schema.members)
-    .where(eq(schema.members.organizationId, ws.organizationId));
+    .where(
+      and(
+        eq(schema.members.organizationId, ws.organizationId),
+        inArray(schema.members.role, [...BILLABLE_ROLES]),
+      ),
+    );
   return rows.length;
 }
 

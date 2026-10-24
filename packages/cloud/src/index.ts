@@ -9,8 +9,14 @@ export type PlanId = "free" | "pro" | "team";
 export type Limits = {
   /** Active event types per workspace (null = unlimited). */
   eventTypes: number | null;
-  /** Members (hosts) per workspace. */
+  /** Members (hosts) per workspace: owners, admins and members, the billed seats. */
   members: number | null;
+  /**
+   * Collaborators (outside reviewers and interviewers, ADR 0005) included with the plan; they
+   * are not billed as seats (canon X3: 2 on Free, 5 on Pro and Team, then $6 each, billed once
+   * hiring ships; until then the included number is the limit).
+   */
+  collaborators: number | null;
   /** Connected calendar / conferencing accounts per member. */
   integrations: number | null;
   /** Verified custom domains. */
@@ -101,6 +107,7 @@ export const PLANS: Record<PlanId, Plan> = {
     limits: {
       eventTypes: 2,
       members: 1,
+      collaborators: 2,
       integrations: 1,
       domains: 0,
       bookingsPerMonth: 100,
@@ -152,6 +159,7 @@ export const PLANS: Record<PlanId, Plan> = {
     limits: {
       eventTypes: null,
       members: 1,
+      collaborators: 5,
       integrations: null,
       domains: 1,
       bookingsPerMonth: null,
@@ -208,6 +216,7 @@ export const PLANS: Record<PlanId, Plan> = {
     limits: {
       eventTypes: null,
       members: 25,
+      collaborators: 5,
       integrations: null,
       domains: 3,
       bookingsPerMonth: null,
@@ -260,6 +269,7 @@ export const PLANS: Record<PlanId, Plan> = {
 export const UNLIMITED: Limits = {
   eventTypes: null,
   members: null,
+  collaborators: null,
   integrations: null,
   domains: null,
   bookingsPerMonth: null,
@@ -369,7 +379,8 @@ export function limitsFor(plan: string, status?: string | null): Limits {
   return effectivePlan(plan, status)?.limits ?? UNLIMITED;
 }
 
-export type CountableLimit = "eventTypes" | "members" | "integrations" | "domains";
+export type CountableLimit =
+  "eventTypes" | "members" | "collaborators" | "integrations" | "domains";
 export type RateLimitKey = "bookingsPerMonth" | "apiRequestsPerMinute";
 export type FeatureLimit =
   | "booklyVideo"
@@ -398,6 +409,7 @@ export function withinLimit(limits: Limits, what: CountableLimit, current: numbe
 export const LIMIT_LABELS: Record<CountableLimit, string> = {
   eventTypes: "event types",
   members: "members",
+  collaborators: "collaborators",
   integrations: "connected accounts",
   domains: "custom domains",
 };

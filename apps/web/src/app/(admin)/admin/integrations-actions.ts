@@ -18,18 +18,18 @@ import {
   updateIntegrationSettings,
 } from "@/server/integrations";
 import { assertWithinLimit, LimitError } from "@/server/limits";
-import { requireStaff } from "@/server/session";
+import { requireWorkspaceUser } from "@/server/session";
 import { getCurrentWorkspace } from "@/server/workspace";
 
 async function who() {
-  const { session } = await requireStaff();
+  const { session } = await requireWorkspaceUser();
   return session.user.id;
 }
 
 /** Begins the OAuth round trip; the provider sends the user back to /api/integrations/<p>/callback. */
 export async function startConnect(provider: string, back: string) {
   if (!isProvider(provider)) return;
-  const [{ session }, ws] = await Promise.all([requireStaff(), getCurrentWorkspace()]);
+  const [{ session }, ws] = await Promise.all([requireWorkspaceUser(), getCurrentWorkspace()]);
   if (!ws) return;
   const dest = back.startsWith("/admin") ? back : "/admin/calendars";
   if (!providerConfigured(provider)) redirect(`${dest}?error=not_configured`);

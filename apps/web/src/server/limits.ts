@@ -15,9 +15,10 @@ import {
   type FeatureLimit,
   type Limits,
 } from "@bookly/cloud";
-import { and, eq, gte, isNotNull, schema, sql } from "@bookly/db";
+import { and, eq, gte, isNotNull, schema, sql, inArray } from "@bookly/db";
 import type { Workspace } from "@bookly/db/schema";
 import { db } from "@/lib/db";
+import { BILLABLE_ROLES } from "@/lib/roles";
 
 export class LimitError extends Error {
   constructor(
@@ -45,12 +46,21 @@ async function count(ws: Workspace, what: CountableLimit, userId?: string): Prom
         )[0]?.n ?? 0
       );
     case "members":
+    case "collaborators":
+      // Seats are owners, admins and members; collaborators are counted on their own.
       return (
         (
           await db()
             .select({ n })
             .from(schema.members)
-            .where(eq(schema.members.organizationId, ws.organizationId))
+            .where(
+              and(
+                eq(schema.members.organizationId, ws.organizationId),
+                what === "members"
+                  ? inArray(schema.members.role, [...BILLABLE_ROLES])
+                  : eq(schema.members.role, "collaborator"),
+              ),
+            )
         )[0]?.n ?? 0
       );
     case "integrations":
@@ -270,15 +280,24 @@ export type UsageRow = {
 /** Current usage for the billing page. */
 export async function usageSummary(ws: Workspace): Promise<UsageRow[]> {
   const limits = workspaceLimits(ws);
-  const keys: CountableLimit[] = ["eventTypes", "members", "integrations", "domains"];
+  const keys: CountableLimit[] = [
+    "eventTypes",
+    "members",
+    "collaborators",
+    "integrations",
+    "domains",
+  ];
   const counts = await Promise.all(keys.map((k) => count(ws, k)));
   return [
-    ...keys.map((k, i) => ({
-      key: k as string,
-      label: LIMIT_LABELS[k],
-      used: counts[i]!,
-      max: limits[k],
-    })),
+    ...keys
+      .map((k, i) => ({
+        key: k as string,
+        label: LIMIT_LABELS[k],
+        used: counts[i]!,
+        max: limits[k],
+      }))
+      // Collaborators come with hiring: listed once a workspace has any.
+      .filter((r) => r.key !== "collaborators" || r.used > 0),
     {
       key: "bookingsPerMonth",
       label: "bookings this month",

@@ -7,7 +7,8 @@ import { Input } from "@/components/ui/input";
 import { inviteMember, type TeamState } from "./actions";
 import { Dropdown } from "@/components/dropdown";
 
-export function InviteForm() {
+/** `collaborators`: hiring is live here, so outside reviewers can be invited (ADR 0005). */
+export function InviteForm({ collaborators = false }: { collaborators?: boolean }) {
   const [state, action] = useActionState(inviteMember, {} as TeamState);
   useEffect(() => {
     if (state.ok) toast.success("Invitation sent");
@@ -30,6 +31,9 @@ export function InviteForm() {
         options={[
           { value: "member", label: "Member (own booking page)" },
           { value: "admin", label: "Admin (manages everything)" },
+          ...(collaborators
+            ? [{ value: "collaborator", label: "Collaborator (reviews and interviews only)" }]
+            : []),
         ]}
       />
       <SubmitButton pendingText="Sending…">Invite</SubmitButton>

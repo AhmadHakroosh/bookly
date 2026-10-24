@@ -1,5 +1,7 @@
 "use server";
 
+import { hasFlag } from "@/server/flags";
+
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { headers } from "next/headers";
@@ -23,21 +25,28 @@ async function manager() {
 
 export async function inviteMember(_prev: TeamState, formData: FormData): Promise<TeamState> {
   const parsed = z
-    .object({ email: z.email(), role: z.enum(["member", "admin"]).default("member") })
+    .object({
+      email: z.email(),
+      role: z.enum(["member", "admin", "collaborator"]).default("member"),
+    })
     .safeParse({
       email: String(formData.get("email") ?? "").trim(),
       role: formData.get("role") ?? "member",
     });
   if (!parsed.success) return { error: "Enter a valid email." };
   const { ws, h } = await manager();
+  // Collaborators (outside reviewers, ADR 0005) come with hiring and are not billed seats.
+  const collaborator = parsed.data.role === "collaborator";
+  if (collaborator && !(await hasFlag(ws, "hiring")))
+    return { error: "Collaborators come with hiring, which isn't on for this workspace yet." };
   try {
-    await assertWithinLimit(ws, "members");
+    await assertWithinLimit(ws, collaborator ? "collaborators" : "members");
   } catch (e) {
     if (e instanceof LimitError) return { error: `${e.message} See Billing.` };
     throw e;
   }
   // A member past the seats already billed costs money once they accept: show that first.
-  if (formData.get("confirmed") !== "1" && (await previewSeatAdd(ws))) {
+  if (!collaborator && formData.get("confirmed") !== "1" && (await previewSeatAdd(ws))) {
     const q = new URLSearchParams({ email: parsed.data.email, role: parsed.data.role });
     redirect(`/admin/team/invite?${q}`);
   }

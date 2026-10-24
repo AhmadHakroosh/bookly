@@ -10,7 +10,7 @@ import {
 import { getProfileByUser } from "@/server/scheduling";
 import { getCurrentWorkspace } from "@/server/workspace";
 import { FeedsCard } from "./feeds-card";
-import { requireStaff } from "@/server/session";
+import { requireWorkspaceUser } from "@/server/session";
 import { CalendarCard } from "./calendar-card";
 import { IntegrationError } from "../integration-errors";
 
@@ -18,7 +18,7 @@ export const metadata = { title: "Calendars" };
 
 async function CalendarsPage({ searchParams }: PageProps<"/admin/calendars">) {
   const [{ session }, sp, ws] = await Promise.all([
-    requireStaff(),
+    requireWorkspaceUser(),
     searchParams,
     getCurrentWorkspace(),
   ]);

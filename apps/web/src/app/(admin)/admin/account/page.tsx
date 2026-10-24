@@ -5,7 +5,7 @@ import { loadEnv } from "@bookly/config";
 import { auth } from "@/lib/auth";
 import { configuredSocialProviders, socialErrorMessage } from "@/lib/social-providers";
 import { getProfileByUser } from "@/server/scheduling";
-import { requireStaff } from "@/server/session";
+import { requireWorkspaceUser } from "@/server/session";
 import { getCurrentWorkspace } from "@/server/workspace";
 import { ownerOf } from "@/server/data-rights";
 import { DeleteAccount } from "./delete-account";
@@ -22,7 +22,7 @@ export const metadata = { title: "Account" };
  */
 async function AccountPage({ searchParams }: PageProps<"/admin/account">) {
   const [{ session }, ws, sp] = await Promise.all([
-    requireStaff(),
+    requireWorkspaceUser(),
     getCurrentWorkspace(),
     searchParams,
   ]);

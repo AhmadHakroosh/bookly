@@ -78,6 +78,19 @@ const GROUPS: Group[] = [
   },
 ];
 
+/** What a collaborator (outside reviewer or interviewer, ADR 0005) sees in 1.0. */
+const COLLABORATOR: Group = {
+  label: "You",
+  icon: UserIcon,
+  items: [
+    { href: "/admin/profile", label: "Profile", icon: UserIcon },
+    { href: "/admin/availability", label: "Availability", icon: CalendarClockIcon },
+    { href: "/admin/calendars", label: "Calendars", icon: CalendarDaysIcon },
+    { href: "/admin/conferencing", label: "Conferencing", icon: VideoIcon },
+    { href: "/admin/notifications", label: "Notifications", icon: BellIcon },
+  ],
+};
+
 const WORKSPACE = (cloud: boolean): Group => ({
   label: "Workspace",
   icon: BuildingIcon,
@@ -104,6 +117,7 @@ const HELP = (supportHref: string): Item[] => [
 export function AdminNav({
   cloud = false,
   manager = false,
+  collaborator = false,
   tasks = false,
   files = false,
   messages = null,
@@ -118,6 +132,8 @@ export function AdminNav({
   tasks?: boolean;
   /** Owner or admin: shows the Workspace group. */
   manager?: boolean;
+  /** An outside reviewer or interviewer: only their own profile, schedule and connections. */
+  collaborator?: boolean;
   /** Where "Support" goes: a mailto in cloud mode, the issue tracker when self-hosted. */
   supportHref?: string;
 }) {
@@ -157,7 +173,11 @@ export function AdminNav({
             : g,
         )
       : GROUPS;
-  const groups = manager ? [...scheduling, WORKSPACE(cloud)] : scheduling;
+  const groups = collaborator
+    ? [COLLABORATOR]
+    : manager
+      ? [...scheduling, WORKSPACE(cloud)]
+      : scheduling;
   const itemClass = (on: boolean) =>
     `flex items-center gap-2 rounded-md px-2 py-1.5 ${on ? "bg-accent font-medium text-accent-foreground" : "text-muted-foreground hover:bg-muted hover:text-foreground"}`;
   const External = ({ it }: { it: Item }) => (
@@ -170,10 +190,12 @@ export function AdminNav({
   );
   return (
     <nav className="flex min-h-full flex-col gap-4 text-sm" aria-label="Admin">
-      <Link href="/admin" className={itemClass(active("/admin"))}>
-        <HomeIcon className="size-4 shrink-0" aria-hidden />
-        Home
-      </Link>
+      {!collaborator && (
+        <Link href="/admin" className={itemClass(active("/admin"))}>
+          <HomeIcon className="size-4 shrink-0" aria-hidden />
+          Home
+        </Link>
+      )}
       {groups.map((g) => (
         <div key={g.label} className="border-t pt-3">
           <p className="mb-1.5 flex items-center gap-2 px-2 text-xs font-semibold tracking-wider text-foreground uppercase">

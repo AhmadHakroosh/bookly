@@ -19,7 +19,7 @@ import {
   type ClientNotification,
 } from "@/server/notifications";
 import { deviceLabel, pushToUser } from "@/server/push";
-import { requireStaff } from "@/server/session";
+import { requireWorkspaceUser } from "@/server/session";
 import { getCurrentWorkspace } from "@/server/workspace";
 
 /*
@@ -28,7 +28,7 @@ import { getCurrentWorkspace } from "@/server/workspace";
  */
 
 async function me() {
-  const [{ session }, ws] = await Promise.all([requireStaff(), getCurrentWorkspace()]);
+  const [{ session }, ws] = await Promise.all([requireWorkspaceUser(), getCurrentWorkspace()]);
   if (!ws || !(await hasFlag(ws, "notifications"))) return null;
   return { ws, user: session.user };
 }
