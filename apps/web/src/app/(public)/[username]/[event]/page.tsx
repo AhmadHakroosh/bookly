@@ -2,6 +2,7 @@ import { EventPublicSkeleton } from "@/components/skeletons/pages";
 import type { Metadata } from "next";
 import type { EventType } from "@bookly/db/schema";
 import Link from "next/link";
+import { connection } from "next/server";
 import { BackLink } from "@/components/links";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
@@ -80,6 +81,8 @@ async function EventPage({ params, searchParams }: PageProps<"/[username]/[event
   const country = await detectCountry();
   const tzParam = typeof sp.tz === "string" ? canonicalTimezone(sp.tz) : null;
   const tz = tzParam ?? profile.timezone;
+  // Today's date is request data: the rest of the page renders at request time, not in a prerender.
+  await connection();
   const today = todayIn(tz);
   const month =
     typeof sp.month === "string" && /^\d{4}-\d{2}$/.test(sp.month) ? sp.month : today.slice(0, 7);
