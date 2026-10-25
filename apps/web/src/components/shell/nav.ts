@@ -35,6 +35,8 @@ export type NavItem = {
   unread?: number;
   /** Extra words ⌘K matches on ("schedule" finds Availability). */
   keywords?: string;
+  /** Other pages this item stands for in the sidebar: Availability is also Routing's tab. */
+  also?: string[];
 };
 
 export type Solution = "clients" | "hiring";
@@ -145,9 +147,9 @@ export function navSections(o: NavOptions, solution: Solution = "clients"): NavS
           href: "/admin/availability",
           label: "Availability",
           icon: CalendarClockIcon,
-          keywords: "hours schedule",
+          keywords: "hours schedule overrides priority routing",
+          also: ["/admin/routing"],
         },
-        { href: "/admin/routing", label: "Routing", icon: SplitIcon, keywords: "forms questions" },
       ],
     },
     { id: "bottom", items: bottom(o) },
@@ -181,6 +183,11 @@ export function navPages(o: NavOptions): { item: NavItem; solution: Solution }[]
   if (o.hiring && !o.collaborator)
     for (const sec of navSections(o, "hiring")) for (const i of sec.items) add(i, "hiring");
   if (!o.collaborator) {
+    // A tab of Availability & routing (`mocks.png` 03), not a sidebar item of its own.
+    add(
+      { href: "/admin/routing", label: "Routing", icon: SplitIcon, keywords: "forms questions" },
+      "clients",
+    );
     add(
       {
         href: "/admin/calendars",

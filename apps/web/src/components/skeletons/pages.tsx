@@ -25,6 +25,7 @@ import {
   Stats,
   Subheading,
   Table,
+  TabsRow,
   Toolbar,
   WeekRows,
 } from "./primitives";
@@ -122,31 +123,22 @@ export function EventTypeEditorSkeleton() {
 
 export function AvailabilitySkeleton() {
   return (
-    <Shell className="max-w-2xl space-y-10">
-      <Heading width="w-32" />
-      <section className="space-y-3">
-        <div className="flex flex-wrap items-center gap-2">
-          <Skeleton className="h-10 w-32 rounded-lg" />
-          <Skeleton className="h-10 w-28 rounded-lg" />
-          <Skeleton className="h-10 w-56 rounded-lg" />
-        </div>
-        <Line width="w-96" className="h-3" />
-      </section>
-      <div className="space-y-6">
-        <FieldGrid cols={2} labels={["w-28", "w-40"]} />
-        <WeekRows />
-        <Button width="w-36" />
+    <Shell className="space-y-6">
+      <Heading width="w-72" />
+      <TabsRow />
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <Skeleton className="h-8 w-44 rounded-lg" />
+        <Skeleton className="h-8 w-64 rounded-lg" />
       </div>
-      <section className="space-y-3">
-        <Subheading width="w-32" />
-        <div className="flex flex-wrap gap-2">
-          <Skeleton className="h-10 w-40 rounded-lg" />
-          <Skeleton className="h-10 w-24 rounded-lg" />
-          <Skeleton className="h-10 w-24 rounded-lg" />
-          <Skeleton className="h-10 w-28 rounded-lg" />
+      <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
+        <div className="space-y-5 rounded-xl border p-5 md:p-6">
+          <Subheading width="w-32" />
+          <FieldGrid cols={2} labels={["w-20", "w-28"]} />
+          <WeekRows />
+          <Button width="w-36" />
         </div>
-        <Line width="w-32" />
-      </section>
+        <Card height="h-56" />
+      </div>
     </Shell>
   );
 }
@@ -254,7 +246,8 @@ export function ContactSkeleton() {
 export function RoutingFormsSkeleton() {
   return (
     <Shell className="space-y-6">
-      <HeadingWithAction width="w-40" />
+      <HeadingWithAction width="w-72" />
+      <TabsRow />
       <CardList rows={2} height="h-16" gap="space-y-2" />
     </Shell>
   );

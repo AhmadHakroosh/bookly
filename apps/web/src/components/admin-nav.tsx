@@ -29,7 +29,7 @@ function Items({ items, pathname }: { items: NavItem[]; pathname: string }) {
   return (
     <ul className="space-y-0.5">
       {items.map((it) => {
-        const on = isActive(pathname, it.href);
+        const on = [it.href, ...(it.also ?? [])].some((h) => isActive(pathname, h));
         return (
           <li key={it.href}>
             <Link

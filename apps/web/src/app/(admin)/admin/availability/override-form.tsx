@@ -13,7 +13,7 @@ import { addOverride } from "../scheduling-actions";
 export function OverrideForm({ scheduleId, multi }: { scheduleId: string; multi: boolean }) {
   const [blocked, setBlocked] = useState(false);
   return (
-    <form action={addOverride} className="space-y-3 rounded-xl border p-4 text-sm">
+    <form action={addOverride} className="space-y-3 rounded-xl border bg-background p-4 text-sm">
       <input type="hidden" name="scheduleId" value={scheduleId} />
       <div className="grid grid-cols-3 gap-2">
         <label className="block min-w-0">
