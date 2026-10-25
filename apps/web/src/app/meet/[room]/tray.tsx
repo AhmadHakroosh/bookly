@@ -13,21 +13,19 @@ import {
   useVideoTrack,
 } from "@daily-co/daily-react";
 import {
+  EllipsisIcon,
   FlagIcon,
   HandIcon,
   MaximizeIcon,
-  MessageSquareIcon,
   MicIcon,
   MicOffIcon,
   MinimizeIcon,
   MonitorUpIcon,
-  NotebookPenIcon,
+  PanelRightIcon,
   PhoneOffIcon,
   PictureInPicture2Icon,
-  SettingsIcon,
   SmilePlusIcon,
   SparklesIcon,
-  UsersIcon,
   VideoIcon,
   VideoOffIcon,
   WifiIcon,
@@ -35,8 +33,8 @@ import {
   WifiZeroIcon,
 } from "lucide-react";
 import { useEffect, useState, type RefObject } from "react";
-import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
+import { CallControl, CallControls } from "@/components/ui/call-controls";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -45,20 +43,25 @@ import {
   DropdownMenuLabel,
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
+  DropdownMenuItem,
   DropdownMenuSeparator,
+  DropdownMenuShortcut,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { EffectsPopover, rememberNoiseCancellation } from "./effects";
 import { REACTIONS } from "./messages";
 
-export type Panel = "chat" | "people" | "notes" | null;
+export type Panel = "notes" | "transcript" | "chat" | "people";
 
-/** The control bar: media toggles, share, hand, reactions, panels, settings, leave. */
+/**
+ * The control bar as `mocks.png` 04 draws it: Mute, Stop video, Share, then the rest (hand,
+ * reactions, the side panel, More for devices, effects and the window) as labelled round
+ * buttons, and Leave on its own in red. Keyboard: ⌘/Ctrl+D mic, ⌘/Ctrl+E camera.
+ */
 export function Tray({
-  panel,
-  onPanel,
+  panelOpen,
+  onTogglePanel,
   unread,
   waitingCount,
   notes,
@@ -66,12 +69,13 @@ export function Tray({
   onLeave,
   stageRef,
 }: {
-  panel: Panel;
-  onPanel: (p: Panel) => void;
+  panelOpen: boolean;
+  onTogglePanel: () => void;
+  /** Chat lines and knocks the member has not seen; shown on the panel button. */
   unread: number;
   waitingCount: number;
-  /** The member's in-meeting notes are on: Notes and Mark moment buttons. */
-  notes: { onMark: () => void; count: number } | null;
+  /** The member's in-meeting notes are on: Mark moment in More. */
+  notes: { onMark: () => void } | null;
   onReaction: (emoji: string) => void;
   onLeave: () => void;
   stageRef: RefObject<HTMLDivElement | null>;
@@ -87,6 +91,7 @@ export function Tray({
   const { inputSettings, updateInputSettings } = useInputSettings();
   const { threshold } = useNetwork();
   const [fullscreen, setFullscreen] = useState(false);
+  const [effects, setEffects] = useState(false);
   const [support] = useState(() => DailyIframe.supportedBrowser());
   const noise = inputSettings?.audio?.processor?.type === "noise-cancellation";
   const canShare = typeof navigator !== "undefined" && !!navigator.mediaDevices?.getDisplayMedia;
@@ -99,6 +104,7 @@ export function Tray({
   }, []);
 
   const toggleHand = () => void call?.setUserData({ ...(userData ?? {}), hand: !hand });
+  const share = () => (isSharingScreen ? stopScreenShare() : startScreenShare());
   const togglePip = async () => {
     const el = stageRef.current?.querySelector("video");
     if (!el) return;
@@ -121,261 +127,164 @@ export function Tray({
     threshold === "very-low" ? WifiZeroIcon : threshold === "low" ? WifiLowIcon : WifiIcon;
 
   return (
-    <div className="flex flex-wrap items-center justify-center gap-1.5 border-t bg-card px-2 py-2 sm:gap-2">
-      <TrayButton
-        label={audio.isOff ? "Unmute (⌘D)" : "Mute (⌘D)"}
-        active={!audio.isOff}
-        danger={audio.isOff}
-        onClick={() => call?.setLocalAudio(audio.isOff)}
-      >
-        {audio.isOff ? <MicOffIcon /> : <MicIcon />}
-      </TrayButton>
-      <TrayButton
-        label={video.isOff ? "Camera on (⌘E)" : "Camera off (⌘E)"}
-        active={!video.isOff}
-        danger={video.isOff}
-        onClick={() => call?.setLocalVideo(video.isOff)}
-      >
-        {video.isOff ? <VideoOffIcon /> : <VideoIcon />}
-      </TrayButton>
-      {canShare && (
-        <TrayButton
-          label={isSharingScreen ? "Stop sharing" : "Share screen"}
-          active={isSharingScreen}
-          highlight={isSharingScreen}
-          onClick={() => (isSharingScreen ? stopScreenShare() : startScreenShare())}
-        >
-          <MonitorUpIcon />
-        </TrayButton>
-      )}
-      <TrayButton
-        label={hand ? "Lower hand" : "Raise hand"}
-        active={hand}
-        highlight={hand}
-        onClick={toggleHand}
-      >
-        <HandIcon />
-      </TrayButton>
-      <Popover>
-        <Tooltip>
-          <TooltipTrigger
-            render={
-              <PopoverTrigger
-                render={<Button variant="outline" size="icon-lg" aria-label="Send a reaction" />}
-              />
-            }
-          >
-            <SmilePlusIcon />
-          </TooltipTrigger>
-          <TooltipContent>React</TooltipContent>
-        </Tooltip>
-        <PopoverContent className="flex w-auto flex-row gap-1 p-1.5" align="center">
-          {REACTIONS.map((emoji) => (
-            <button
-              key={emoji}
-              type="button"
-              className="rounded-md px-2 py-1 text-xl transition-transform hover:scale-125 focus-visible:ring-2 focus-visible:ring-ring"
-              aria-label={`React ${emoji}`}
-              onClick={() => onReaction(emoji)}
-            >
-              {emoji}
-            </button>
-          ))}
-        </PopoverContent>
-      </Popover>
-      {support.supportsVideoProcessing && (
+    <div className="border-t bg-card px-2 pt-2 pb-1 sm:px-4">
+      <CallControls className="mx-auto max-w-5xl [scrollbar-width:none] overflow-x-auto">
+        <CallControl
+          icon={audio.isOff ? MicOffIcon : MicIcon}
+          label={audio.isOff ? "Unmute" : "Mute"}
+          title={audio.isOff ? "Unmute (⌘D)" : "Mute (⌘D)"}
+          tone={audio.isOff ? "alert" : "default"}
+          aria-pressed={audio.isOff}
+          onClick={() => call?.setLocalAudio(audio.isOff)}
+        />
+        <CallControl
+          icon={video.isOff ? VideoOffIcon : VideoIcon}
+          label={video.isOff ? "Start video" : "Stop video"}
+          title={video.isOff ? "Start video (⌘E)" : "Stop video (⌘E)"}
+          tone={video.isOff ? "alert" : "default"}
+          aria-pressed={video.isOff}
+          onClick={() => call?.setLocalVideo(video.isOff)}
+        />
+        {/* Share and Raise hand sit in More on a phone, where the bar has room for five. */}
+        {canShare && (
+          <CallControl
+            icon={MonitorUpIcon}
+            label={isSharingScreen ? "Stop share" : "Share"}
+            pressed={isSharingScreen}
+            className="hidden sm:flex"
+            onClick={share}
+          />
+        )}
+        <CallControl
+          icon={HandIcon}
+          label={hand ? "Lower hand" : "Raise hand"}
+          pressed={hand}
+          className="hidden sm:flex"
+          onClick={toggleHand}
+        />
         <Popover>
-          <Tooltip>
-            <TooltipTrigger
-              render={
-                <PopoverTrigger
-                  render={
-                    <Button variant="outline" size="icon-lg" aria-label="Background effects" />
-                  }
-                />
-              }
-            >
-              <SparklesIcon />
-            </TooltipTrigger>
-            <TooltipContent>Background effects</TooltipContent>
-          </Tooltip>
-          <PopoverContent className="w-80 p-3" align="center">
-            <EffectsPopover />
+          <PopoverTrigger render={<CallControl icon={SmilePlusIcon} label="React" />} />
+          <PopoverContent className="flex w-auto flex-row gap-1 p-1.5" align="center">
+            {REACTIONS.map((emoji) => (
+              <button
+                key={emoji}
+                type="button"
+                className="rounded-md px-2 py-1 text-xl transition-transform hover:scale-125 focus-visible:ring-2 focus-visible:ring-ring"
+                aria-label={`React ${emoji}`}
+                onClick={() => onReaction(emoji)}
+              >
+                {emoji}
+              </button>
+            ))}
           </PopoverContent>
         </Popover>
-      )}
-      <TrayButton
-        label="Chat"
-        active={panel === "chat"}
-        highlight={panel === "chat"}
-        onClick={() => onPanel("chat")}
-        badge={unread}
-      >
-        <MessageSquareIcon />
-      </TrayButton>
-      {notes && (
-        <>
-          <TrayButton
-            label="Notes"
-            active={panel === "notes"}
-            highlight={panel === "notes"}
-            onClick={() => onPanel("notes")}
-          >
-            <NotebookPenIcon />
-          </TrayButton>
-          <TrayButton label="Mark moment (⌘/Ctrl+Shift+M)" onClick={notes.onMark}>
-            <FlagIcon />
-          </TrayButton>
-        </>
-      )}
-      <TrayButton
-        label="People"
-        active={panel === "people"}
-        highlight={panel === "people"}
-        onClick={() => onPanel("people")}
-        badge={waitingCount}
-      >
-        <UsersIcon />
-      </TrayButton>
-      <DropdownMenu>
-        <Tooltip>
-          <TooltipTrigger
-            render={
-              <DropdownMenuTrigger
-                render={<Button variant="outline" size="icon-lg" aria-label="Settings" />}
-              />
-            }
-          >
-            <SettingsIcon />
-          </TooltipTrigger>
-          <TooltipContent>Settings</TooltipContent>
-        </Tooltip>
-        <DropdownMenuContent align="end" className="w-72">
-          <DeviceGroup
-            label="Camera"
-            devices={devices.cameras}
-            current={devices.currentCam?.device.deviceId}
-            onPick={(id) => void devices.setCamera(id)}
-          />
-          <DropdownMenuSeparator />
-          <DeviceGroup
-            label="Microphone"
-            devices={devices.microphones}
-            current={devices.currentMic?.device.deviceId}
-            onPick={(id) => void devices.setMicrophone(id)}
-          />
-          {devices.speakers.length > 0 && (
-            <>
+        <CallControl
+          icon={PanelRightIcon}
+          label={panelOpen ? "Hide panel" : "Panel"}
+          pressed={panelOpen}
+          badge={panelOpen ? 0 : unread + waitingCount}
+          onClick={onTogglePanel}
+        />
+        <DropdownMenu>
+          <DropdownMenuTrigger render={<CallControl icon={EllipsisIcon} label="More" />} />
+          <DropdownMenuContent align="end" side="top" className="w-72">
+            <DropdownMenuGroup className="sm:hidden">
+              {canShare && (
+                <DropdownMenuItem onClick={share}>
+                  <MonitorUpIcon />
+                  {isSharingScreen ? "Stop sharing" : "Share screen"}
+                </DropdownMenuItem>
+              )}
+              <DropdownMenuItem onClick={toggleHand}>
+                <HandIcon />
+                {hand ? "Lower hand" : "Raise hand"}
+              </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DeviceGroup
-                label="Speaker"
-                devices={devices.speakers}
-                current={devices.currentSpeaker?.device.deviceId}
-                onPick={(id) => void devices.setSpeaker(id)}
-              />
-            </>
-          )}
-          <DropdownMenuSeparator />
-          <DropdownMenuGroup>
-            <DropdownMenuLabel>Audio</DropdownMenuLabel>
-            <DropdownMenuCheckboxItem
-              checked={noise}
-              disabled={!support.supportsAudioProcessing}
-              onCheckedChange={(on) => {
-                rememberNoiseCancellation(on);
-                void updateInputSettings({
-                  audio: { processor: { type: on ? "noise-cancellation" : "none" } },
-                });
-              }}
-            >
-              Cancel background noise
-            </DropdownMenuCheckboxItem>
-          </DropdownMenuGroup>
-          <DropdownMenuSeparator />
-          <DropdownMenuGroup>
-            <DropdownMenuLabel className="flex items-center gap-2 font-normal text-muted-foreground">
-              <NetIcon className="size-3.5" />
-              Connection:{" "}
-              {threshold === "very-low" ? "poor" : threshold === "low" ? "fair" : "good"}
-            </DropdownMenuLabel>
-          </DropdownMenuGroup>
-        </DropdownMenuContent>
-      </DropdownMenu>
-      {canPip && (
-        <TrayButton label="Picture in picture" onClick={() => void togglePip()}>
-          <PictureInPicture2Icon />
-        </TrayButton>
-      )}
-      <TrayButton
-        label={fullscreen ? "Exit full screen" : "Full screen"}
-        onClick={() => void toggleFullscreen()}
-      >
-        {fullscreen ? <MinimizeIcon /> : <MaximizeIcon />}
-      </TrayButton>
-      <Tooltip>
-        <TooltipTrigger
-          render={
-            <Button
-              variant="destructive"
-              size="lg"
-              aria-label="Leave call"
-              onClick={onLeave}
-              className="ml-1 bg-red-600 text-white hover:bg-red-700 sm:ml-3"
-            />
-          }
-        >
-          <PhoneOffIcon />
-          <span className="hidden sm:inline">Leave</span>
-        </TooltipTrigger>
-        <TooltipContent>Leave the call</TooltipContent>
-      </Tooltip>
-    </div>
-  );
-}
-
-function TrayButton({
-  label,
-  active,
-  danger = false,
-  highlight = false,
-  badge = 0,
-  onClick,
-  children,
-}: {
-  label: string;
-  active?: boolean;
-  danger?: boolean;
-  highlight?: boolean;
-  badge?: number;
-  onClick: () => void;
-  children: React.ReactNode;
-}) {
-  return (
-    <Tooltip>
-      <TooltipTrigger
-        render={
-          <Button
-            variant={danger ? "destructive" : "outline"}
-            size="icon-lg"
-            aria-label={label}
-            aria-pressed={active}
-            onClick={onClick}
-            className={cn(
-              "relative",
-              highlight && "border-brand bg-brand/15 text-brand hover:bg-brand/25",
+            </DropdownMenuGroup>
+            {notes && (
+              <>
+                <DropdownMenuItem onClick={notes.onMark}>
+                  <FlagIcon />
+                  Mark moment
+                  <DropdownMenuShortcut>⌘⇧M</DropdownMenuShortcut>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+              </>
             )}
-          />
-        }
-      >
-        {children}
-        {badge > 0 && (
-          <span className="absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-brand px-1 text-[10px] font-semibold text-white">
-            {badge > 9 ? "9+" : badge}
-          </span>
-        )}
-      </TooltipTrigger>
-      <TooltipContent>{label}</TooltipContent>
-    </Tooltip>
+            {support.supportsVideoProcessing && (
+              <DropdownMenuItem onClick={() => setEffects(true)}>
+                <SparklesIcon />
+                Background effects
+              </DropdownMenuItem>
+            )}
+            {canPip && (
+              <DropdownMenuItem onClick={() => void togglePip()}>
+                <PictureInPicture2Icon />
+                Picture in picture
+              </DropdownMenuItem>
+            )}
+            <DropdownMenuItem onClick={() => void toggleFullscreen()}>
+              {fullscreen ? <MinimizeIcon /> : <MaximizeIcon />}
+              {fullscreen ? "Exit full screen" : "Full screen"}
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DeviceGroup
+              label="Camera"
+              devices={devices.cameras}
+              current={devices.currentCam?.device.deviceId}
+              onPick={(id) => void devices.setCamera(id)}
+            />
+            <DropdownMenuSeparator />
+            <DeviceGroup
+              label="Microphone"
+              devices={devices.microphones}
+              current={devices.currentMic?.device.deviceId}
+              onPick={(id) => void devices.setMicrophone(id)}
+            />
+            {devices.speakers.length > 0 && (
+              <>
+                <DropdownMenuSeparator />
+                <DeviceGroup
+                  label="Speaker"
+                  devices={devices.speakers}
+                  current={devices.currentSpeaker?.device.deviceId}
+                  onPick={(id) => void devices.setSpeaker(id)}
+                />
+              </>
+            )}
+            <DropdownMenuSeparator />
+            <DropdownMenuGroup>
+              <DropdownMenuCheckboxItem
+                checked={noise}
+                disabled={!support.supportsAudioProcessing}
+                onCheckedChange={(on) => {
+                  rememberNoiseCancellation(on);
+                  void updateInputSettings({
+                    audio: { processor: { type: on ? "noise-cancellation" : "none" } },
+                  });
+                }}
+              >
+                Cancel background noise
+              </DropdownMenuCheckboxItem>
+              <DropdownMenuLabel className="flex items-center gap-2 font-normal text-muted-foreground">
+                <NetIcon className="size-3.5" />
+                Connection:{" "}
+                {threshold === "very-low" ? "poor" : threshold === "low" ? "fair" : "good"}
+              </DropdownMenuLabel>
+            </DropdownMenuGroup>
+          </DropdownMenuContent>
+        </DropdownMenu>
+        <CallControl icon={PhoneOffIcon} label="Leave" tone="end" onClick={onLeave} />
+      </CallControls>
+      <Dialog open={effects} onOpenChange={setEffects}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Background effects</DialogTitle>
+          </DialogHeader>
+          <EffectsPopover />
+        </DialogContent>
+      </Dialog>
+    </div>
   );
 }
 

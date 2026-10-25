@@ -1,17 +1,15 @@
 import { Suspense } from "react";
-import { paymentsConfigured } from "@/server/payments";
-import { isCloud } from "@/server/platform";
 import { requireManager } from "@/server/session";
-import { hasFlag } from "@/server/flags";
 import { getCurrentWorkspace } from "@/server/workspace";
-import { SettingsNav, type SettingsTab } from "./settings-nav";
-import { PageHeader } from "@/components/ui/page-header";
+import { settingsGroups } from "./groups";
+import { SettingsHeader } from "./settings-header";
 
 export const metadata = { title: "Settings" };
 
 /**
- * Workspace settings, one page per concern. The role check lives here so every tab and every
- * form under /admin/settings is owner/admin only; members are sent back to Home.
+ * Workspace settings and Brand & communications, one page per concern. The role check lives
+ * here so every tab and every form under /admin/settings is owner/admin only; members are sent
+ * back to Home. Domains, outside this folder, draws the same header.
  */
 export default function SettingsLayout({ children }: LayoutProps<"/admin/settings">) {
   return (
@@ -23,27 +21,9 @@ export default function SettingsLayout({ children }: LayoutProps<"/admin/setting
 
 async function SettingsShell({ children }: { children: React.ReactNode }) {
   const [, ws] = await Promise.all([requireManager(), getCurrentWorkspace()]);
-  const pipelines = !!ws && (await hasFlag(ws, "pipelines"));
-  const tabs: SettingsTab[] = [
-    { href: "/admin/settings", label: "General" },
-    { href: "/admin/settings/branding", label: "Branding" },
-    { href: "/admin/settings/emails", label: "Emails" },
-    { href: "/admin/settings/integrations", label: "Integrations" },
-    ...(pipelines ? [{ href: "/admin/settings/pipeline", label: "Pipeline" }] : []),
-    ...(isCloud() && paymentsConfigured()
-      ? [{ href: "/admin/settings/payments", label: "Payments" }]
-      : []),
-    { href: "/admin/settings/data", label: "Data" },
-    // The install's Enterprise license; on the hosted service the operator holds it.
-    ...(isCloud() ? [] : [{ href: "/admin/settings/license", label: "License" }]),
-  ];
   return (
     <div className="space-y-6">
-      <PageHeader
-        title="Settings"
-        description={<>Shared by everyone in the workspace. Owners and admins can change these.</>}
-      />
-      <SettingsNav tabs={tabs} />
+      <SettingsHeader groups={await settingsGroups(ws)} />
       {children}
     </div>
   );

@@ -10,7 +10,7 @@ export const INTEGRATION_ERRORS: Record<string, string> = {
   limit: "Your plan's limit on connected accounts per member is reached.",
 };
 
-/** The error banner for the Calendars and Conferencing pages; plan limits link to Billing. */
+/** The error banner for Calendars & conferencing; plan limits link to Billing. */
 export function IntegrationError({ code }: { code: string | undefined }) {
   if (!code) return null;
   return (

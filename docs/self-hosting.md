@@ -164,7 +164,7 @@ and its MX record in your DNS, create a webhook for `email.received` to
 
 ## Export and deletion
 
-Admin → Settings → Data lets the workspace owner download everything as one JSON file
+Admin → Settings → Privacy lets the workspace owner download everything as one JSON file
 (workspace, members, event types, availability, bookings, contacts and timeline, tasks, routing
 forms, transcripts, recaps; tokens and keys excluded) and delete the workspace permanently.
 Deletion removes the owning organization, which cascades through every table; on a

@@ -10,7 +10,6 @@ import {
   InboxIcon,
   PencilIcon,
 } from "lucide-react";
-import { cn } from "cn";
 import { eq, schema } from "@bookly/db";
 import { BetaBadge } from "@/components/beta-badge";
 import { ApplicationPane } from "@/components/hiring/application-pane";
@@ -23,6 +22,7 @@ import { OpportunitySkeleton } from "@/components/skeletons/pages";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { AttentionItem, AttentionStrip } from "@/components/ui/attention-strip";
+import { PageTabs } from "@/components/ui/page-tabs";
 import { PageHeader } from "@/components/ui/page-header";
 import { SegmentedTabs } from "@/components/ui/segmented-tabs";
 import { StatusChip } from "@/components/ui/status-chip";
@@ -143,34 +143,19 @@ async function OpportunityPage({
           )
         }
       >
-        <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-2 border-b">
-          <nav aria-label="Opportunity" className="-mb-px flex gap-1 overflow-x-auto">
-            {TABS.map((t) => (
-              <Link
-                key={t.id}
-                href={
-                  t.id === "pipeline" ? opportunityPath(id) : opportunityPath(id, `?tab=${t.id}`)
-                }
-                aria-current={tab === t.id ? "page" : undefined}
-                className={cn(
-                  "border-b-2 px-3 py-2 text-sm font-medium whitespace-nowrap",
-                  tab === t.id
-                    ? "border-primary text-primary"
-                    : "border-transparent text-muted-foreground hover:text-foreground",
-                )}
-              >
-                {t.label}
-              </Link>
-            ))}
-          </nav>
-          <p className="pb-2 text-sm text-muted-foreground">
-            {[
-              n(counts.applications, "application"),
-              `${n(counts.interviews, "interview")} this week`,
-              `${n(counts.reviews, "review")} pending`,
-            ].join(" · ")}
-          </p>
-        </div>
+        <PageTabs
+          label="Opportunity"
+          items={TABS.map((t) => ({
+            href: t.id === "pipeline" ? opportunityPath(id) : opportunityPath(id, `?tab=${t.id}`),
+            label: t.label,
+            active: tab === t.id,
+          }))}
+          aside={[
+            n(counts.applications, "application"),
+            `${n(counts.interviews, "interview")} this week`,
+            `${n(counts.reviews, "review")} pending`,
+          ].join(" · ")}
+        />
       </PageHeader>
       {tab === "pipeline" && (
         <Pipeline actor={c.actor} setup={setup} drafts={drafts} view={view} filter={filter} />

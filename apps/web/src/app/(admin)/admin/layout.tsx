@@ -13,6 +13,8 @@ import { CommandMenu } from "@/components/shell/command-menu";
 import { HelpMenu } from "@/components/shell/help-menu";
 import { MobileNav } from "@/components/shell/mobile-nav";
 import type { NavOptions } from "@/components/shell/nav";
+import { getActor } from "@/server/access";
+import { reviewsOwed } from "@/server/hiring/queries";
 import { UpdateNotice } from "@/components/update-notice";
 import { hasFlag } from "@/server/flags";
 import { canGuest, canTeam, unreadThreads } from "@/server/messages";
@@ -60,6 +62,9 @@ async function AdminShell({ children }: { children: React.ReactNode }) {
       ? { unread: await unreadThreads({ userId: session.user.id, ws: workspace }) }
       : null;
   const profile = workspace ? await getProfileByUser(workspace.id, session.user.id) : null;
+  // The hiring sidebar's Reviews count: what this member owes.
+  const actor = hiring && !isCollaborator(role) ? await getActor() : null;
+  const owed = actor ? await reviewsOwed(actor) : 0;
   const bookingPageHref = profile ? `/${profile.username}` : null;
 
   const signOut = async () => {
@@ -94,6 +99,7 @@ async function AdminShell({ children }: { children: React.ReactNode }) {
     files,
     messages,
     hiring,
+    reviewsOwed: owed,
   };
   const account = {
     email: session.user.email,

@@ -77,6 +77,8 @@ async function MeetPage({ params, searchParams }: PageProps<"/meet/[room]">) {
   let initialName = "";
   // In-meeting notes: members only (they join as the room's owner), on a plan and flag with notes.
   let notes = false;
+  // Where a member finds the recap once the call is over: the booking, on the app's own host.
+  let recap: string | null = null;
   try {
     if (session) {
       const member = ws
@@ -100,6 +102,7 @@ async function MeetPage({ params, searchParams }: PageProps<"/meet/[room]">) {
           expiresAt: new Date(b.endAt.getTime() + 2 * 3600_000),
         });
         notes = !!ws && (await notesOn(ws));
+        recap = loadEnv().MEET_URL ? null : `/admin/bookings/${b.id}`;
       }
     } else if (typeof sp.t === "string" && sp.t === b.manageToken) {
       initialName = b.attendeeName;
@@ -114,52 +117,51 @@ async function MeetPage({ params, searchParams }: PageProps<"/meet/[room]">) {
   }
   return (
     <div className="flex h-dvh flex-col bg-background text-foreground" style={style}>
-      <header className="flex items-center justify-between gap-3 border-b px-4 py-2.5 text-sm">
-        <span className="flex min-w-0 items-center gap-2.5">
-          {brand.own ? (
-            <span className="flex shrink-0 items-center gap-2 font-semibold tracking-tight">
-              {brand.logoUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={brand.logoUrl} alt="" className="size-6 rounded-md object-contain" />
-              ) : (
-                <LogoMark className="size-6" accent={brand.accent} />
-              )}
-              <span className="hidden sm:inline">{brand.name}</span>
-            </span>
-          ) : (
-            <Logo size={22} className="shrink-0" />
-          )}
-          <span className="truncate font-medium">
-            {et?.title ?? "Meeting"} with {host?.displayName ?? "your host"}
-          </span>
-        </span>
-        <span className="shrink-0 text-muted-foreground">{fmtDateTime(b.startAt, b.timezone)}</span>
-      </header>
-      {capture && (
-        <p className="bg-amber-500/15 px-4 py-1.5 text-center text-xs text-amber-200">
-          This call is transcribed so both sides get notes and action items afterwards.
-        </p>
-      )}
-      {!token && !session && (
-        <p className="bg-muted px-4 py-1.5 text-center text-xs text-muted-foreground">
-          Hosting this call?{" "}
-          <a className="underline underline-offset-2" href={signInUrl}>
-            Sign in
-          </a>{" "}
-          to open it as the host.
-        </p>
-      )}
       <Call
         url={dailyRoomUrl(room)}
         token={token}
         room={room}
         capture={capture}
+        consent={capture && et?.autoCapture === "ask"}
         encrypted={encrypted}
         hostName={host?.displayName ?? ""}
         attendeeName={b.attendeeName}
         initialName={initialName}
         needsName={!token}
         notes={notes}
+        recap={recap}
+        when={fmtDateTime(b.startAt, b.timezone)}
+        title={
+          <span className="flex min-w-0 items-center gap-2.5">
+            {brand.own ? (
+              <span className="flex shrink-0 items-center gap-2 font-semibold tracking-tight">
+                {brand.logoUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={brand.logoUrl} alt="" className="size-6 rounded-md object-contain" />
+                ) : (
+                  <LogoMark className="size-6" accent={brand.accent} />
+                )}
+                <span className="hidden sm:inline">{brand.name}</span>
+              </span>
+            ) : (
+              <Logo size={22} className="shrink-0" />
+            )}
+            <span className="truncate font-medium">
+              {et?.title ?? "Meeting"} with {host?.displayName ?? "your host"}
+            </span>
+          </span>
+        }
+        hint={
+          !token && !session ? (
+            <p className="bg-muted px-4 py-1.5 text-center text-xs text-muted-foreground">
+              Hosting this call?{" "}
+              <a className="underline underline-offset-2" href={signInUrl}>
+                Sign in
+              </a>{" "}
+              to open it as the host.
+            </p>
+          ) : null
+        }
       />
     </div>
   );

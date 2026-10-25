@@ -42,11 +42,12 @@ export function useModKey() {
 }
 
 const SETTINGS: [string, string][] = [
-  ["/admin/settings", "General settings"],
-  ["/admin/settings/branding", "Branding"],
-  ["/admin/settings/emails", "Emails"],
+  ["/admin/settings", "Workspace settings"],
   ["/admin/settings/integrations", "Integrations"],
-  ["/admin/settings/data", "Data and activity"],
+  ["/admin/settings/api", "API keys and webhooks"],
+  ["/admin/settings/data", "Privacy, export and activity"],
+  ["/admin/settings/branding", "Brand & communications"],
+  ["/admin/settings/emails", "Emails"],
 ];
 
 function jumpGroups(nav: NavOptions, bookingPageHref?: string | null): JumpGroup[] {

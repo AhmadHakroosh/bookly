@@ -18,8 +18,8 @@ import { assertManager, requireStaff } from "@/server/session";
 import { getCurrentWorkspace } from "@/server/workspace";
 
 /*
- * Settings is one page per concern (general, branding, emails, integrations), each with its
- * own form. Every form posts a hidden `section` so only that section's fields are validated
+ * Settings is one page per concern (general, branding, emails, integrations, privacy), each with
+ * its own form. Every form posts a hidden `section` so only that section's fields are validated
  * and merged; saving Branding never touches the email templates and vice versa.
  */
 
@@ -62,9 +62,13 @@ const crmSchema = z.object({
   crmCompanyDomain: z.string().trim().max(100).default(""),
 });
 
+/** Transcript retention choices (Settings → Privacy), in days. */
+const RETENTION = ["30", "90", "180", "365"] as const;
+const privacySchema = z.object({ retentionDays: z.enum(RETENTION) });
+
 export type SettingsState = { ok?: boolean; error?: string; fields?: Record<string, string[]> };
 
-type Section = "general" | "branding" | "emails" | "integrations";
+type Section = "general" | "branding" | "emails" | "integrations" | "privacy";
 
 export async function updateWorkspaceSettings(
   _prev: SettingsState,
@@ -173,6 +177,14 @@ export async function updateWorkspaceSettings(
       crmApiKey: c?.apiKey ?? null,
     });
     changes = diff(crmFields(s.crm), crmFields(settings.crm));
+  } else if (section === "privacy") {
+    const parsed = privacySchema.safeParse(raw);
+    if (!parsed.success) return fail(parsed.error);
+    settings = {
+      ...s,
+      capture: { ...s.capture, retentionDays: Number(parsed.data.retentionDays) },
+    };
+    changes = diff(s.capture ?? {}, settings.capture ?? {}, ["retentionDays"]);
   } else {
     return { error: "Unknown settings section." };
   }

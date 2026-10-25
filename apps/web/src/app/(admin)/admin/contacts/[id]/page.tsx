@@ -26,7 +26,7 @@ import { connection } from "next/server";
 import { Suspense } from "react";
 import { PaneHost } from "@/components/pane";
 import { and, eq, inArray, schema } from "@bookly/db";
-import { cn } from "cn";
+import { PageTabs } from "@/components/ui/page-tabs";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { initialsOf } from "@/components/ui/avatar-stack";
 import { FileTypeIcon } from "@/components/ui/file-row";
@@ -218,27 +218,15 @@ async function ContactPage({ params, searchParams }: PageProps<"/admin/contacts/
 
       <JourneyStrip steps={journey} />
 
-      <nav
-        aria-label="Contact"
-        className="flex [scrollbar-width:none] gap-1 overflow-x-auto border-b"
-      >
-        {TABS.map((t) => (
-          <Link
-            key={t}
-            href={href(t)}
-            aria-current={tab === t ? "page" : undefined}
-            className={cn(
-              "-mb-px border-b-2 px-3 py-2 text-sm font-medium whitespace-nowrap",
-              tab === t
-                ? "border-primary text-primary"
-                : "border-transparent text-muted-foreground hover:text-foreground",
-            )}
-          >
-            {TAB_LABEL[t]}
-            {counts[t] !== null && <span className="ms-1 tabular-nums">({counts[t]})</span>}
-          </Link>
-        ))}
-      </nav>
+      <PageTabs
+        label="Contact"
+        items={TABS.map((t) => ({
+          href: href(t),
+          label: TAB_LABEL[t],
+          active: tab === t,
+          count: counts[t],
+        }))}
+      />
 
       {tab === "overview" && (
         <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,22rem)]">

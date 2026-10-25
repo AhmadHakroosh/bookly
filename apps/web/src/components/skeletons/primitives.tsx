@@ -336,3 +336,14 @@ export function PublicFrame({
     </div>
   );
 }
+
+/** A page's tabs under its header (`PageTabs`): a few short labels on a hairline. */
+export function TabsRow({ tabs = 4 }: { tabs?: number }) {
+  return (
+    <div className="flex gap-5 border-b pb-2.5">
+      {Array.from({ length: tabs }, (_, i) => (
+        <Skeleton key={i} className="h-4 w-20" />
+      ))}
+    </div>
+  );
+}

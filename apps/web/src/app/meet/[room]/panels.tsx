@@ -46,7 +46,7 @@ export function ChatPanel({
 }: {
   messages: Extract<CallMessage, { kind: "chat" }>[];
   onSend: (text: string) => void;
-  onClose: () => void;
+  onClose?: () => void;
 }) {
   const [text, setText] = useState("");
   const list = useRef<HTMLOListElement>(null);
@@ -55,7 +55,7 @@ export function ChatPanel({
   }, [messages.length]);
   return (
     <>
-      <PanelHeader title="Chat" onClose={onClose} />
+      {onClose && <PanelHeader title="Chat" onClose={onClose} />}
       <ol
         ref={list}
         className="min-h-0 flex-1 space-y-3 overflow-y-auto px-4 py-3 text-sm"
@@ -118,12 +118,12 @@ export function PeoplePanel({
   waiting: { id: string; name?: string }[];
   onAdmit: (id: string) => void;
   onDeny: (id: string) => void;
-  onClose: () => void;
+  onClose?: () => void;
 }) {
   const ids = useParticipantIds({ sort: "joined_at" });
   return (
     <>
-      <PanelHeader title="People" onClose={onClose} />
+      {onClose && <PanelHeader title="People" onClose={onClose} />}
       <div className="min-h-0 flex-1 overflow-y-auto px-2 py-2 text-sm">
         {isOwner && waiting.length > 0 && (
           <section className="mb-3">
@@ -133,7 +133,7 @@ export function PeoplePanel({
             <ul className="space-y-1">
               {waiting.map((w) => (
                 <li key={w.id} className="flex items-center gap-2 rounded-lg px-2 py-1.5">
-                  <span className="flex size-7 items-center justify-center rounded-full bg-brand/20 text-xs font-semibold text-brand">
+                  <span className="flex size-7 items-center justify-center rounded-full bg-accent text-xs font-semibold text-accent-foreground">
                     {initials(w.name || "?")}
                   </span>
                   <span className="min-w-0 flex-1 truncate">{w.name || "Someone"}</span>
@@ -177,7 +177,7 @@ function PersonRow({ id, local }: { id: string; local: boolean }) {
         {local ? " (You)" : ""}
         {owner === true && <span className="ml-1.5 text-[11px] text-muted-foreground">Host</span>}
       </span>
-      {hand && <HandIcon className="size-4 text-brand" aria-label="Hand raised" />}
+      {hand && <HandIcon className="size-4 text-primary" aria-label="Hand raised" />}
       {audio.isOff ? (
         <MicOffIcon className="size-4 text-red-400" aria-label="Muted" />
       ) : (

@@ -16,7 +16,8 @@ describe("admin sidebar (concept fidelity §2)", () => {
   it("draws app ui.png: primary items, scheduling items, Settings and Team at the bottom", () => {
     expect(sidebar({ manager: true, tasks: true, files: true, messages: { unread: 2 } })).toEqual([
       ["primary", ["Home", "Bookings", "Contacts", "Messages", "Tasks", "Files"]],
-      ["scheduling", ["Booking page", "Event types", "Availability", "Routing"]],
+      // Routing is Availability & routing's tab (mocks.png 03), not an item of its own.
+      ["scheduling", ["Booking page", "Event types", "Availability"]],
       ["bottom", ["Settings", "Team"]],
     ]);
     // Members do not manage the workspace: nothing pinned at the bottom.
@@ -25,15 +26,20 @@ describe("admin sidebar (concept fidelity §2)", () => {
 
   it("swaps in Hiring's own items only where the flag is on", () => {
     expect(sidebar({ hiring: true, manager: true, files: true }, "hiring")).toEqual([
-      ["primary", ["Overview", "Opportunities", "Files"]],
+      ["primary", ["Overview", "Opportunities", "Candidates", "Interviews", "Reviews", "Files"]],
       ["bottom", ["Settings", "Team"]],
     ]);
+    // The reviews the member owes ride on Reviews.
+    const reviews = navSections({ hiring: true, reviewsOwed: 3 }, "hiring")[0]!.items.find(
+      (i) => i.label === "Reviews",
+    );
+    expect(reviews?.count).toBe(3);
     expect(sidebar({ manager: true }, "hiring")[0]![1]).toContain("Home");
   });
 
   it("keeps collaborators to their own profile and schedule (ADR 0005)", () => {
     expect(sidebar({ collaborator: true, manager: true, hiring: true }, "hiring")).toEqual([
-      ["primary", ["Profile", "Availability", "Calendars", "Conferencing", "Notifications"]],
+      ["primary", ["Profile", "Availability", "Calendars & conferencing", "Notifications"]],
     ]);
   });
 
@@ -46,7 +52,14 @@ describe("admin sidebar (concept fidelity §2)", () => {
 
   it("finds every page for ⌘K, the ones off the sidebar included", () => {
     const hrefs = navPages({ manager: true, cloud: true, hiring: true }).map((p) => p.item.href);
-    for (const h of ["/admin/calendars", "/admin/domains", "/admin/billing", "/admin/hiring"])
+    for (const h of [
+      "/admin/calendars",
+      "/admin/routing",
+      "/admin/domains",
+      "/admin/billing",
+      "/admin/hiring",
+      "/admin/hiring/reviews",
+    ])
       expect(hrefs).toContain(h);
     expect(navPages({}).map((p) => p.item.href)).not.toContain("/admin/domains");
     expect(new Set(hrefs).size).toBe(hrefs.length);
@@ -70,9 +83,10 @@ describe("breadcrumb", () => {
     expect(trail("/admin/settings/data/activity", { manager: true }).map((c) => c.label)).toEqual([
       "Workspace",
       "Settings",
-      "Data",
+      "Privacy",
       "Activity",
     ]);
+    expect(trail("/admin/settings/api", { manager: true }).at(-1)?.label).toBe("API");
   });
 
   it("marks only Opportunities active below it, not Hiring's Overview", () => {
@@ -97,7 +111,10 @@ describe("breadcrumb", () => {
 
   it("names the member's own pages outside the sidebar", () => {
     expect(trail("/admin/account", {}).map((c) => c.label)).toEqual(["Workspace", "Account"]);
-    expect(trail("/admin/calendars", {}).map((c) => c.label)).toEqual(["Workspace", "Calendars"]);
+    expect(trail("/admin/calendars", {}).map((c) => c.label)).toEqual([
+      "Workspace",
+      "Calendars & conferencing",
+    ]);
   });
 });
 

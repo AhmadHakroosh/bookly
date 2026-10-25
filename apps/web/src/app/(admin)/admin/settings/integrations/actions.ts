@@ -41,7 +41,7 @@ export async function createApiKey(_prev: KeyState, formData: FormData): Promise
     target: { type: "api_key", id: key?.id, label: `${name} (${prefix}…)` },
     changes: { scopes: { to: scopes } },
   });
-  revalidatePath("/admin/settings/integrations");
+  revalidatePath("/admin/settings/api");
   return { created: { name, raw } };
 }
 
@@ -57,7 +57,7 @@ export async function revokeApiKey(id: string) {
       action: "api_key.revoked",
       target: { type: "api_key", id: key.id, label: `${key.name} (${key.prefix}…)` },
     });
-  revalidatePath("/admin/settings/integrations");
+  revalidatePath("/admin/settings/api");
 }
 
 export type HookState = { created?: { url: string; secret: string }; error?: string };
@@ -90,7 +90,7 @@ export async function createWebhook(_prev: HookState, formData: FormData): Promi
     target: { type: "webhook", id: hook?.id, label: url.data },
     changes: { events: { to: events } },
   });
-  revalidatePath("/admin/settings/integrations");
+  revalidatePath("/admin/settings/api");
   return { created: { url: url.data, secret } };
 }
 
@@ -106,7 +106,7 @@ export async function toggleWebhook(id: string, active: boolean) {
       action: `webhook.${active ? "enabled" : "disabled"}`,
       target: { type: "webhook", id: hook.id, label: hook.url },
     });
-  revalidatePath("/admin/settings/integrations");
+  revalidatePath("/admin/settings/api");
 }
 
 export async function deleteWebhook(id: string) {
@@ -120,7 +120,7 @@ export async function deleteWebhook(id: string) {
       action: "webhook.deleted",
       target: { type: "webhook", id: hook.id, label: hook.url },
     });
-  revalidatePath("/admin/settings/integrations");
+  revalidatePath("/admin/settings/api");
 }
 
 export async function retryDelivery(id: string) {
@@ -143,7 +143,7 @@ export async function retryDelivery(id: string) {
       changes: { delivery: { to: d[0].id }, event: { to: d[0].event } },
     });
   }
-  revalidatePath("/admin/settings/integrations");
+  revalidatePath("/admin/settings/api");
 }
 
 /** Sends a signed `ping` delivery so the receiver can be verified. */
@@ -167,5 +167,5 @@ export async function pingWebhook(id: string) {
     target: { type: "webhook", id: hook.id, label: hook.url },
     changes: { delivery: { to: d!.id } },
   });
-  revalidatePath("/admin/settings/integrations");
+  revalidatePath("/admin/settings/api");
 }

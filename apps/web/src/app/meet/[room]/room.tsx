@@ -15,28 +15,47 @@ import {
   useVideoTrack,
   useWaitingParticipants,
 } from "@daily-co/daily-react";
-import { MicOffIcon } from "lucide-react";
+import { MicOffIcon, XIcon } from "lucide-react";
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { VideoTile } from "@/components/ui/call-controls";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { Captions, TranscriptPanel, type Line } from "./captions";
 import { gridColumns, messageId, parseCallMessage, tileWidth, type CallMessage } from "./messages";
 import { initials } from "./messages";
 import { NotesPanel, useMeetingNotes } from "./notes";
 import { ChatPanel, PeoplePanel, ReactionsOverlay, type Reaction } from "./panels";
 import { Tray, type Panel } from "./tray";
 
-/** The call itself: stage (tiles or screen share), side panel, tray, remote audio. */
+/** What the side panel's Transcript tab shows: the live lines, labelled with names. */
+export type LiveTranscript = { lines: Line[]; hostName: string; attendeeName: string };
+
+const PANEL_LABEL: Record<Panel, string> = {
+  notes: "Notes",
+  transcript: "Transcript",
+  chat: "Chat",
+  people: "People",
+};
+
+/**
+ * The call itself (`mocks.png` 04): the stage with the tiles, the side panel with its tabs
+ * (Notes for the member taking them, Transcript while capture is on, Chat, People), the control
+ * bar, remote audio. The panel starts open on a wide screen and closed on a phone.
+ */
 export function Room({
   hostName,
   room,
   notesEnabled,
+  transcript,
   onLeave,
 }: {
   hostName: string;
   room: string;
   /** In-meeting notes for this member (signed in, on a plan with notes). */
   notesEnabled: boolean;
+  /** Capture is on: the Transcript tab, and the last lines under the stage while it is hidden. */
+  transcript: LiveTranscript | null;
   onLeave: () => void;
 }) {
   const call = useDaily();
@@ -56,12 +75,22 @@ export function Room({
   useEffect(() => {
     markRef.current = markMoment;
   }, [markMoment]);
-  const [panel, setPanel] = useState<Panel>(null);
+  const tabs: Panel[] = [
+    ...(canNote ? (["notes"] as const) : []),
+    ...(transcript ? (["transcript"] as const) : []),
+    "chat",
+    "people",
+  ];
+  const [open, setOpen] = useState(
+    () => typeof window !== "undefined" && window.matchMedia("(min-width: 1024px)").matches,
+  );
+  const [chosen, setChosen] = useState<Panel | null>(null);
+  const tab = chosen && tabs.includes(chosen) ? chosen : tabs[0]!;
   // Read by the app-message handler (an event callback) to count unread chat lines.
-  const panelRef = useRef<Panel>(null);
+  const chatVisible = useRef(false);
   useEffect(() => {
-    panelRef.current = panel;
-  }, [panel]);
+    chatVisible.current = open && tab === "chat";
+  }, [open, tab]);
   const [messages, setMessages] = useState<Extract<CallMessage, { kind: "chat" }>[]>([]);
   const [unread, setUnread] = useState(0);
   const [reactions, setReactions] = useState<Reaction[]>([]);
@@ -78,7 +107,7 @@ export function Room({
         if (!m) return;
         if (m.kind === "chat") {
           setMessages((prev) => [...prev, m]);
-          if (panelRef.current !== "chat") setUnread((u) => u + 1);
+          if (!chatVisible.current) setUnread((u) => u + 1);
         } else addReaction({ id: m.id, emoji: m.emoji, name: m.name });
       },
       [addReaction],
@@ -95,8 +124,9 @@ export function Room({
     sendAppMessage(m);
     addReaction({ id: m.id, emoji, name: "You" });
   };
-  const openPanel = (p: Panel) => {
-    setPanel((cur) => (cur === p ? null : p));
+  const show = (p: Panel) => {
+    setChosen(p);
+    setOpen(true);
     if (p === "chat") setUnread(0);
   };
 
@@ -143,7 +173,7 @@ export function Room({
       <div className="relative flex min-h-0 flex-1 flex-col">
         {waiting.length > 0 && (
           <div
-            className="flex flex-wrap items-center justify-center gap-2 border-b bg-brand/15 px-4 py-2 text-sm"
+            className="flex flex-wrap items-center justify-center gap-2 border-b bg-accent px-4 py-2 text-sm"
             role="status"
           >
             <span>
@@ -164,48 +194,98 @@ export function Room({
           </div>
         )}
         {minutesLeft !== null && minutesLeft <= 10 && minutesLeft > 0 && (
-          <p className="bg-amber-500/15 px-4 py-1 text-center text-xs text-amber-200" role="status">
+          <p className="bg-warning-muted px-4 py-1 text-center text-xs text-warning" role="status">
             This room closes in {minutesLeft} minute{minutesLeft === 1 ? "" : "s"}.
           </p>
         )}
         <div className="relative flex min-h-0 flex-1">
-          <div ref={stageRef} className="relative min-h-0 min-w-0 flex-1">
-            <Stage localId={localId} hostName={hostName} />
-            <ReactionsOverlay items={reactions} />
+          <div ref={stageRef} className="relative flex min-h-0 min-w-0 flex-1 flex-col">
+            <div className="relative min-h-0 flex-1">
+              <Stage localId={localId} hostName={hostName} />
+              <ReactionsOverlay items={reactions} />
+            </div>
+            {transcript && !(open && tab === "transcript") && (
+              <Captions {...transcript} lines={transcript.lines.slice(-3)} />
+            )}
           </div>
           {marked && (
             <p
-              className="absolute top-3 left-1/2 z-20 -translate-x-1/2 rounded-full bg-amber-500/90 px-3 py-1 text-xs font-medium text-neutral-950"
+              className="absolute top-3 left-1/2 z-20 -translate-x-1/2 rounded-full bg-ink px-3 py-1 text-xs font-medium text-ink-foreground"
               role="status"
             >
               Moment marked
             </p>
           )}
-          {panel && (
-            <aside className="absolute inset-y-0 right-0 z-10 flex w-full max-w-sm flex-col border-l bg-background md:static md:w-80">
-              {panel === "chat" ? (
-                <ChatPanel messages={messages} onSend={sendChat} onClose={() => setPanel(null)} />
-              ) : panel === "notes" && canNote ? (
-                <NotesPanel notes={notes} onClose={() => setPanel(null)} />
-              ) : (
-                <PeoplePanel
-                  localId={localId}
-                  isOwner={isOwner}
-                  waiting={waiting}
-                  onAdmit={grantAccess}
-                  onDeny={denyAccess}
-                  onClose={() => setPanel(null)}
-                />
-              )}
+          {open && (
+            <aside
+              aria-label="Side panel"
+              className="absolute inset-y-0 right-0 z-10 flex w-full max-w-sm flex-col border-l bg-background lg:static lg:w-[22rem]"
+            >
+              <div className="flex items-center gap-1 border-b px-2">
+                <div role="tablist" aria-label="Side panel" className="flex min-w-0 flex-1 gap-1">
+                  {tabs.map((t) => (
+                    <button
+                      key={t}
+                      type="button"
+                      role="tab"
+                      aria-selected={tab === t}
+                      onClick={() => show(t)}
+                      className={cn(
+                        "-mb-px border-b-2 px-2.5 py-2.5 text-sm font-medium whitespace-nowrap outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
+                        tab === t
+                          ? "border-primary text-primary"
+                          : "border-transparent text-muted-foreground hover:text-foreground",
+                      )}
+                    >
+                      {PANEL_LABEL[t]}
+                      {t === "chat" && unread > 0 && (
+                        <span className="ms-1 tabular-nums">({unread})</span>
+                      )}
+                      {t === "people" && waiting.length > 0 && (
+                        <span className="ms-1 tabular-nums">({waiting.length})</span>
+                      )}
+                    </button>
+                  ))}
+                </div>
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
+                  aria-label="Hide the panel"
+                  onClick={() => setOpen(false)}
+                >
+                  <XIcon />
+                </Button>
+              </div>
+              <div
+                role="tabpanel"
+                aria-label={PANEL_LABEL[tab]}
+                className="flex min-h-0 flex-1 flex-col"
+              >
+                {tab === "notes" && canNote ? (
+                  <NotesPanel notes={notes} />
+                ) : tab === "transcript" && transcript ? (
+                  <TranscriptPanel {...transcript} />
+                ) : tab === "chat" ? (
+                  <ChatPanel messages={messages} onSend={sendChat} />
+                ) : (
+                  <PeoplePanel
+                    localId={localId}
+                    isOwner={isOwner}
+                    waiting={waiting}
+                    onAdmit={grantAccess}
+                    onDeny={denyAccess}
+                  />
+                )}
+              </div>
             </aside>
           )}
         </div>
         <Tray
-          panel={panel}
-          onPanel={openPanel}
+          panelOpen={open}
+          onTogglePanel={() => (open ? setOpen(false) : show(tab))}
           unread={unread}
           waitingCount={waiting.length}
-          notes={canNote ? { onMark: markMoment, count: notes.entries.length } : null}
+          notes={canNote ? { onMark: markMoment } : null}
           onReaction={sendReaction}
           onLeave={onLeave}
           stageRef={stageRef}
@@ -236,7 +316,7 @@ function Stage({ localId, hostName }: { localId: string; hostName: string }) {
   if (screen)
     return (
       <div className="flex h-full min-h-0 flex-col gap-2 p-2">
-        <div className="relative min-h-0 flex-1 overflow-hidden rounded-xl bg-black">
+        <div className="relative min-h-0 flex-1 overflow-hidden rounded-xl bg-neutral-900">
           <DailyVideo
             sessionId={screen.session_id}
             type="screenVideo"
@@ -300,17 +380,30 @@ function Tile({
   const hand = (userData as { hand?: boolean } | null | undefined)?.hand === true;
   const isHost = owner === true || (!!hostName && label.toLowerCase() === hostName.toLowerCase());
   return (
-    <div
-      className={cn(
-        "relative aspect-video w-full overflow-hidden rounded-xl bg-muted",
-        speaking && "ring-2 ring-brand",
-      )}
+    <VideoTile
+      className={cn("w-full", speaking && "ring-2 ring-primary")}
+      name={
+        <>
+          {audio.isOff && (
+            <MicOffIcon className="size-3.5 shrink-0 text-red-300" aria-label="Muted" />
+          )}
+          <span className="truncate">
+            {label}
+            {local ? " (You)" : ""}
+          </span>
+          {isHost && !compact && (
+            <span className="rounded bg-white/20 px-1 py-px text-[10px] tracking-wide uppercase">
+              Host
+            </span>
+          )}
+        </>
+      }
     >
       {video.isOff ? (
         <div className="flex h-full items-center justify-center">
           <span
             className={cn(
-              "flex items-center justify-center rounded-full bg-brand/20 font-semibold text-brand",
+              "flex items-center justify-center rounded-full bg-white/10 font-semibold text-white",
               compact ? "size-9 text-sm" : "size-16 text-xl sm:size-20 sm:text-2xl",
             )}
           >
@@ -332,20 +425,6 @@ function Tile({
           ✋
         </span>
       )}
-      <div className="absolute inset-x-0 bottom-0 flex items-center gap-1.5 bg-gradient-to-t from-black/60 to-transparent px-2 py-1.5 text-xs text-white">
-        <span className="truncate font-medium">
-          {label}
-          {local ? " (You)" : ""}
-        </span>
-        {isHost && !compact && (
-          <span className="rounded bg-white/20 px-1 py-px text-[10px] tracking-wide uppercase">
-            Host
-          </span>
-        )}
-        <span className="ml-auto flex items-center gap-1">
-          {audio.isOff && <MicOffIcon className="size-3.5 text-red-300" aria-label="Muted" />}
-        </span>
-      </div>
-    </div>
+    </VideoTile>
   );
 }

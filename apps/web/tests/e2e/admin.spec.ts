@@ -46,10 +46,11 @@ test.describe("admin", () => {
     const page = await (await browser.newContext({ storageState: STORAGE })).newPage();
     for (const [path, heading] of [
       ["/admin/event-types", "Event types"],
-      ["/admin/availability", "Availability"],
+      ["/admin/availability", "Availability & routing"],
       ["/admin/contacts", "Contacts"],
-      ["/admin/routing", "Routing forms"],
-      ["/admin/settings", "Settings"],
+      ["/admin/routing", "Availability & routing"],
+      ["/admin/calendars", "Calendars & conferencing"],
+      ["/admin/settings", "Workspace settings"],
       ["/admin/account", "Account"],
     ] as const) {
       await page.goto(path);
@@ -57,26 +58,35 @@ test.describe("admin", () => {
     }
   });
 
-  test("settings pages share the tab strip and the old API page redirects", async ({ browser }) => {
+  test("settings pages share their half's tab strip and the old API page redirects", async ({
+    browser,
+  }) => {
     const page = await (await browser.newContext({ storageState: STORAGE })).newPage();
-    for (const [path, heading] of [
-      ["/admin/settings/branding", "Branding"],
-      ["/admin/settings/emails", "Emails"],
-      ["/admin/settings/integrations", "Integrations"],
-      ["/admin/settings/data", "Data"],
+    // mocks.png 08 and 06: Workspace settings, and Brand & communications (Domains among them).
+    for (const [path, title, tab] of [
+      ["/admin/settings/integrations", "Workspace settings", "Integrations"],
+      ["/admin/settings/api", "Workspace settings", "API"],
+      ["/admin/settings/data", "Workspace settings", "Privacy"],
+      ["/admin/settings/branding", "Brand & communications", "Branding"],
+      ["/admin/settings/emails", "Brand & communications", "Emails"],
+      ["/admin/domains", "Brand & communications", "Domains"],
     ] as const) {
       await page.goto(path);
       // The layout heading streams in after the shell; give a cold production server room.
       await expect(
-        page.getByRole("heading", { name: "Settings", level: 1 }),
+        page.getByRole("heading", { name: title, level: 1 }),
         `${path} landed on ${page.url()}: ${(await page.locator("body").innerText()).slice(0, 400)}`,
       ).toBeVisible({ timeout: 15_000 });
       await expect(
-        page.getByRole("navigation", { name: "Settings" }).getByRole("link", { name: heading }),
+        page
+          .getByRole("navigation", { name: title.replace("&", "and") })
+          .getByRole("link", { name: tab, exact: true }),
       ).toHaveAttribute("aria-current", "page");
     }
     await page.goto("/admin/api");
-    await expect(page).toHaveURL(/\/admin\/settings\/integrations$/);
+    await expect(page).toHaveURL(/\/admin\/settings\/api$/);
+    await page.goto("/admin/conferencing");
+    await expect(page).toHaveURL(/\/admin\/calendars/);
   });
 
   test("a profile photo can be uploaded and is served from /files", async ({ browser }) => {

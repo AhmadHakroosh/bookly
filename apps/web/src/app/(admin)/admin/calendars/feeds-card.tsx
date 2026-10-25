@@ -45,71 +45,74 @@ export function FeedsCard({
   }, [state]);
 
   return (
-    <section className="space-y-4 rounded-xl border p-5">
+    <section aria-labelledby="feeds-title" className="space-y-3">
       <div>
-        <h2 className="text-base font-semibold tracking-tight">Calendar feeds</h2>
+        <h2 id="feeds-title" className="text-base font-semibold tracking-tight">
+          Calendar feeds
+        </h2>
         <p className="text-sm text-muted-foreground">
-          Subscribe to any calendar by its private ICS address to hide the times it marks busy.
-          Works with Google (&ldquo;Secret address in iCal format&rdquo;), Outlook (&ldquo;Publish
-          calendar&rdquo;), iCloud and Fastmail. Read-only: bookings are not added to it, and the
-          feed is refreshed every 15 minutes.
+          No account to connect? Subscribe to any calendar by its private ICS address (Google, a
+          published Outlook calendar, iCloud, Fastmail) to hide the times it marks busy. Read-only,
+          refreshed every 15 minutes.
         </p>
       </div>
-      {feeds.length > 0 && (
-        <ul className="divide-y text-sm">
-          {feeds.map((f) => (
-            <li key={f.id} className="flex flex-wrap items-center justify-between gap-3 py-2.5">
-              <div className="min-w-0">
-                <p className="font-medium">{f.label}</p>
-                <p className="text-xs text-muted-foreground">
-                  {f.status === "error"
-                    ? `Last fetch failed: ${f.lastError ?? "unknown error"}`
-                    : `${f.eventCount} events · updated ${f.lastSyncedAt ? fmtDateTime(new Date(f.lastSyncedAt), timezone) : "never"}`}
-                </p>
-              </div>
-              <div className="flex gap-2">
-                <form action={refreshFeedAction.bind(null, f.id)}>
-                  <SubmitButton variant="outline" size="sm">
-                    Refresh
-                  </SubmitButton>
-                </form>
-                <form action={removeFeedAction.bind(null, f.id)}>
-                  <SubmitButton variant="ghost" size="sm">
-                    Remove
-                  </SubmitButton>
-                </form>
-              </div>
-            </li>
-          ))}
-        </ul>
-      )}
-      {feeds.length < max ? (
-        <form ref={form} action={action} className="flex flex-wrap items-end gap-2 text-sm">
-          <div className="min-w-0 flex-1 basis-72">
-            <label htmlFor="feed-url" className="mb-1 block font-medium">
-              Feed address
-            </label>
-            <Input
-              id="feed-url"
-              name="url"
-              type="url"
-              placeholder="https://calendar.google.com/calendar/ical/…/basic.ics"
-              required
-              autoComplete="off"
-              spellCheck={false}
-            />
-          </div>
-          <div className="w-full sm:w-44">
-            <label htmlFor="feed-label" className="mb-1 block font-medium">
-              Name <span className="font-normal text-muted-foreground">(optional)</span>
-            </label>
-            <Input id="feed-label" name="label" placeholder="Work calendar" maxLength={80} />
-          </div>
-          <SubmitButton pendingText="Checking…">Add feed</SubmitButton>
-        </form>
-      ) : (
-        <p className="text-xs text-muted-foreground">Up to {max} feeds per person.</p>
-      )}
+      <div className="space-y-4 rounded-xl border bg-card p-4 sm:p-5">
+        {feeds.length > 0 && (
+          <ul className="divide-y text-sm">
+            {feeds.map((f) => (
+              <li key={f.id} className="flex flex-wrap items-center justify-between gap-3 py-2.5">
+                <div className="min-w-0">
+                  <p className="font-medium">{f.label}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {f.status === "error"
+                      ? `Last fetch failed: ${f.lastError ?? "unknown error"}`
+                      : `${f.eventCount} events · updated ${f.lastSyncedAt ? fmtDateTime(new Date(f.lastSyncedAt), timezone) : "never"}`}
+                  </p>
+                </div>
+                <div className="flex gap-2">
+                  <form action={refreshFeedAction.bind(null, f.id)}>
+                    <SubmitButton variant="outline" size="sm">
+                      Refresh
+                    </SubmitButton>
+                  </form>
+                  <form action={removeFeedAction.bind(null, f.id)}>
+                    <SubmitButton variant="ghost" size="sm">
+                      Remove
+                    </SubmitButton>
+                  </form>
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+        {feeds.length < max ? (
+          <form ref={form} action={action} className="flex flex-wrap items-end gap-2 text-sm">
+            <div className="min-w-0 flex-1 basis-72">
+              <label htmlFor="feed-url" className="mb-1 block font-medium">
+                Feed address
+              </label>
+              <Input
+                id="feed-url"
+                name="url"
+                type="url"
+                placeholder="https://calendar.google.com/calendar/ical/…/basic.ics"
+                required
+                autoComplete="off"
+                spellCheck={false}
+              />
+            </div>
+            <div className="w-full sm:w-44">
+              <label htmlFor="feed-label" className="mb-1 block font-medium">
+                Name <span className="font-normal text-muted-foreground">(optional)</span>
+              </label>
+              <Input id="feed-label" name="label" placeholder="Work calendar" maxLength={80} />
+            </div>
+            <SubmitButton pendingText="Checking…">Add feed</SubmitButton>
+          </form>
+        ) : (
+          <p className="text-xs text-muted-foreground">Up to {max} feeds per person.</p>
+        )}
+      </div>
     </section>
   );
 }

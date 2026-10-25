@@ -23,7 +23,7 @@ the opportunity's team at the same time. See [Hiring](hiring.md#team-and-access)
 Every change in a workspace is recorded: who did it (a member, a guest through a booking link,
 an API key, an integration or Bookly itself), what (the action, in plain words), on which
 booking, contact, event type or setting, and which fields changed, with the time, the request
-id and the client address. Owners and admins read it under **Admin → Settings → Data →
+id and the client address. Owners and admins read it under **Admin → Settings → Privacy →
 Activity**, newest first, with filters by person, action, target and date, and a "Show earlier"
 button that loads the next page without reloading the ones you have. Pro and Team can download
 the filtered log as CSV.

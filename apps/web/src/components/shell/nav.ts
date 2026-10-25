@@ -4,6 +4,7 @@ import {
   CalendarClockIcon,
   CalendarDaysIcon,
   CalendarIcon,
+  ClipboardCheckIcon,
   CreditCardIcon,
   FolderIcon,
   GlobeIcon,
@@ -15,7 +16,6 @@ import {
   SquareKanbanIcon,
   UserIcon,
   UsersIcon,
-  VideoIcon,
   type LucideIcon,
 } from "lucide-react";
 
@@ -33,8 +33,12 @@ export type NavItem = {
   icon: LucideIcon;
   /** Messages: the unread count, kept live by the notification stream. */
   unread?: number;
+  /** A count that needs the member (reviews owed), read with the page. */
+  count?: number;
   /** Extra words ⌘K matches on ("schedule" finds Availability). */
   keywords?: string;
+  /** Other pages this item stands for in the sidebar: Availability is also Routing's tab. */
+  also?: string[];
 };
 
 export type Solution = "clients" | "hiring";
@@ -56,14 +60,20 @@ export type NavOptions = {
   messages?: { unread: number } | null;
   /** The `hiring` flag is on for this workspace: the Clients | Hiring switch. */
   hiring?: boolean;
+  /** Reviews the member owes, beside Reviews in the hiring sidebar. */
+  reviewsOwed?: number;
 };
 
 /** What a collaborator sees in 1.0: their own profile, schedule and connections. */
 const COLLABORATOR: NavItem[] = [
   { href: "/admin/profile", label: "Profile", icon: UserIcon },
   { href: "/admin/availability", label: "Availability", icon: CalendarClockIcon },
-  { href: "/admin/calendars", label: "Calendars", icon: CalendarDaysIcon },
-  { href: "/admin/conferencing", label: "Conferencing", icon: VideoIcon },
+  {
+    href: "/admin/calendars",
+    label: "Calendars & conferencing",
+    icon: CalendarDaysIcon,
+    also: ["/admin/conferencing"],
+  },
   { href: "/admin/notifications", label: "Notifications", icon: BellIcon },
 ];
 
@@ -94,7 +104,9 @@ const bottom = (o: NavOptions): NavItem[] =>
           href: "/admin/settings",
           label: "Settings",
           icon: SettingsIcon,
-          keywords: "branding emails",
+          keywords: "workspace integrations api privacy brand emails",
+          // Domains is a Brand & communications tab that lives outside /admin/settings.
+          also: ["/admin/domains"],
         },
         { href: "/admin/team", label: "Team", icon: UsersIcon, keywords: "members invite" },
       ]
@@ -120,7 +132,25 @@ export function navSections(o: NavOptions, solution: Solution = "clients"): NavS
             icon: BriefcaseIcon,
             keywords: "fellowship internship program admissions jobs selection round",
           },
-          // Candidates, Interviews and Reviews join as their pages ship.
+          {
+            href: "/admin/hiring/candidates",
+            label: "Candidates",
+            icon: UsersIcon,
+            keywords: "applicants applications people",
+          },
+          {
+            href: "/admin/hiring/interviews",
+            label: "Interviews",
+            icon: CalendarIcon,
+            keywords: "interview schedule panel",
+          },
+          {
+            href: "/admin/hiring/reviews",
+            label: "Reviews",
+            icon: ClipboardCheckIcon,
+            keywords: "review scorecard feedback owed",
+            count: o.reviewsOwed,
+          },
           ...shared(o).filter((i) => i.href !== "/admin/tasks"),
         ],
       },
@@ -145,9 +175,9 @@ export function navSections(o: NavOptions, solution: Solution = "clients"): NavS
           href: "/admin/availability",
           label: "Availability",
           icon: CalendarClockIcon,
-          keywords: "hours schedule",
+          keywords: "hours schedule overrides priority routing",
+          also: ["/admin/routing"],
         },
-        { href: "/admin/routing", label: "Routing", icon: SplitIcon, keywords: "forms questions" },
       ],
     },
     { id: "bottom", items: bottom(o) },
@@ -181,21 +211,17 @@ export function navPages(o: NavOptions): { item: NavItem; solution: Solution }[]
   if (o.hiring && !o.collaborator)
     for (const sec of navSections(o, "hiring")) for (const i of sec.items) add(i, "hiring");
   if (!o.collaborator) {
+    // A tab of Availability & routing (`mocks.png` 03), not a sidebar item of its own.
     add(
-      {
-        href: "/admin/calendars",
-        label: "Calendars",
-        icon: CalendarDaysIcon,
-        keywords: "google outlook connect",
-      },
+      { href: "/admin/routing", label: "Routing", icon: SplitIcon, keywords: "forms questions" },
       "clients",
     );
     add(
       {
-        href: "/admin/conferencing",
-        label: "Conferencing",
-        icon: VideoIcon,
-        keywords: "zoom meet video",
+        href: "/admin/calendars",
+        label: "Calendars & conferencing",
+        icon: CalendarDaysIcon,
+        keywords: "google outlook connect zoom meet teams video conferencing",
       },
       "clients",
     );
@@ -243,6 +269,12 @@ const words = (s: string) => {
   return t.charAt(0).toUpperCase() + t.slice(1);
 };
 
+/** Sub-pages whose address is not their name: the Privacy tab lives at /data. */
+const SEGMENT: Record<string, string> = {
+  "/admin/settings/api": "API",
+  "/admin/settings/data": "Privacy",
+};
+
 /** Pages outside the sidebar that still deserve a name. */
 const OWN: Record<string, string> = {
   "/admin/account": "Account",
@@ -270,7 +302,7 @@ export function trail(pathname: string, nav: NavOptions): Crumb[] {
       whole = false;
       break;
     }
-    out.push({ label: words(seg), href });
+    out.push({ label: SEGMENT[href] ?? words(seg), href });
   }
   // On a page below the trail (a contact, a booking), every crumb stays a link back up.
   if (whole && out.length > 1) out[out.length - 1] = { ...out.at(-1)!, current: true };

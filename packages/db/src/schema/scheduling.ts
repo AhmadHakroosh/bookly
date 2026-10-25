@@ -55,6 +55,8 @@ export const profiles = pgTable(
     /** The code currently out for `phone`, hashed; cleared once verified or replaced. */
     phoneVerification: jsonb("phone_verification").$type<PhoneVerification>(),
     notifications: jsonb("notifications").$type<HostNotifications>().notNull().default({}),
+    /** The video tool new event types start with (Calendars & conferencing); null = Bookly video. */
+    defaultConferencing: text("default_conferencing").$type<ConferencingType>(),
     ...timestamps,
   },
   (t) => [
@@ -153,6 +155,8 @@ export const scheduleOverrides = pgTable(
 
 export type LocationType =
   "daily" | "google_meet" | "zoom" | "teams" | "phone" | "in_person" | "custom";
+/** The locations that are a video call made by a connected tool. */
+export type ConferencingType = Extract<LocationType, "daily" | "google_meet" | "zoom" | "teams">;
 /**
  * `encrypted` applies to Bookly video only: the call runs peer-to-peer (end-to-end encrypted),
  * which limits it to two people and rules out transcription.

@@ -473,7 +473,7 @@ export default function DesignPage() {
             <CallControl icon={VideoOffIcon} label="Stop video" pressed />
             <CallControl icon={MonitorUpIcon} label="Share" />
             <CallControl icon={EllipsisIcon} label="More" />
-            <CallControl icon={EllipsisIcon} label="End" tone="end" />
+            <CallControl label="End" tone="end" />
           </CallControls>
         </div>
       </Section>
