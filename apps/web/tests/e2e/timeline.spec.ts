@@ -187,6 +187,7 @@ test("a guest's reply lands under the email it answers, and the host answers fro
   await admin.waitForLoadState("networkidle");
   const axe = await new AxeBuilder({ page: admin })
     .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"])
+    .disableRules(["color-contrast"])
     .analyze();
   expect(axe.violations, JSON.stringify(axe.violations, null, 2)).toEqual([]);
 

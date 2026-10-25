@@ -4,7 +4,7 @@ import { cn } from "cn";
 
 /**
  * "Next actions" on a contact (`ui mocks.png` 03): the steps the person's journey calls for,
- * one per row. The suggested one is Peach with Ember text ("Create proposal"), the rest are
+ * one per row. The suggested one is Peach with orange text ("Create proposal"), the rest are
  * plain rows ("Send payment request", "Add follow-up").
  */
 function ActionList({ className, ...props }: React.ComponentProps<"ul">) {

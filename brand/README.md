@@ -28,8 +28,7 @@ The renderer also writes the app's `favicon.ico`, `apple-icon.png`, `public/logo
 (email logo, README, JSON-LD), the notification icon and badge, and the press kit served at
 `/press` (`apps/web/public/press/`).
 
-Colours: Bookly Orange `#E85D2C` (mark, highlights, large type), Ember `#B93E10` (orange text
-and buttons), Peach `#FBE9DF`, Ink `#1C1C1C`, Paper `#FAF8F4`, Reply `#F5B6A0`. The wordmark is
+Colours: Bookly Orange `#E85D2C` (the mark, buttons, links and highlights), Peach `#FCEAE1`, Ink `#1C1C1C`, Paper `#FAF8F4`, Reply `#F5B6A0`. The wordmark is
 Geist Extra Bold (SIL OFL 1.1) converted to outlines.
 
 ## Regenerating

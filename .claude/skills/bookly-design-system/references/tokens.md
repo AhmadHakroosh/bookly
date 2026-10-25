@@ -6,19 +6,21 @@ sRGB → OKLab transform. Contrast is WCAG 2.x relative luminance.
 
 ## Brand colours
 
-| Name          | Hex       | OKLCH                     | Sampled from                                 | Use                                       |
-| ------------- | --------- | ------------------------- | -------------------------------------------- | ----------------------------------------- |
-| Bookly Orange | `#E85D2C` | `oklch(0.651 0.183 38.6)` | Logo, "Review recap", "Complete your review" | Mark, `--brand`, fills, icons, large type |
-| Ember         | `#B93E10` | `oklch(0.535 0.167 37.9)` | Derived (darker step of Bookly Orange)       | `--primary`, orange text, button labels   |
-| Peach         | `#FBE9DF` | `oklch(0.946 0.024 51.2)` | Active nav, selected card, recap card        | `--accent`, selected rows                 |
-| Apricot       | `#FCDCC2` | `oklch(0.914 0.050 61.2)` | "In 15 min" chip                             | Time chips, soft highlights (Ink text)    |
-| Reply         | `#F5B6A0` | `oklch(0.829 0.080 40.1)` | Bookly Orange 55% toward white               | Second bubble of the mark, illustration   |
-| Ink           | `#1C1C1C` | `oklch(0.226 0.000 89.9)` | "Create", "Join meeting", headings           | `--foreground`, ink button                |
-| Paper         | `#FAF8F4` | `oklch(0.980 0.006 84.6)` | Page background (app and site)               | `--background`                            |
-| Sand          | `#F4F2EE` | `oklch(0.962 0.006 84.6)` | Sidebar                                      | `--sidebar`, secondary surfaces           |
+| Name          | Hex       | OKLCH                     | Sampled from                             | Use                                     |
+| ------------- | --------- | ------------------------- | ---------------------------------------- | --------------------------------------- |
+| Bookly Orange | `#E85D2C` | `oklch(0.651 0.183 38.6)` | "Complete your review", badges, progress | `--brand`, `--primary`, every orange    |
+| Orange hover  | `#D2501F` | `oklch(0.599 0.175 39.0)` | Derived (one solid step darker)          | `--primary-hover`                       |
+| Peach         | `#FCEAE1` | `oklch(0.949 0.023 48.5)` | Active nav, selected card, stage chip    | `--accent`, selected rows               |
+| Apricot       | `#FCDCC2` | `oklch(0.914 0.050 61.2)` | "In 15 min" chip                         | Time chips, soft highlights (Ink text)  |
+| Reply         | `#F5B6A0` | `oklch(0.829 0.080 40.1)` | Bookly Orange 55% toward white           | Second bubble of the mark, illustration |
+| Ink           | `#1C1C1C` | `oklch(0.226 0.000 89.9)` | "Create", "Join meeting", headings       | `--foreground`, ink button              |
+| Paper         | `#FAF8F4` | `oklch(0.980 0.006 84.6)` | Page background (app and site)           | `--background`                          |
+| Sand          | `#F4F2EE` | `oklch(0.962 0.006 84.6)` | Sidebar                                  | `--sidebar`, secondary surfaces         |
 
-The marketing concepts render the orange slightly hotter (`#FC5014` on "Review & send"); treat
-that as rendering noise and use Bookly Orange everywhere.
+Sampled again on 2026-10-25 (the dominant solid orange of each mock): `hiring.png` `#E86028`
+(its "Complete your review" button `#E85D27`), `app ui.png` `#E66436`; the marketing mocks run
+hotter and vary among themselves (`#F25E28`, `#FC5214`, `#FE4E00`). Bookly Orange `#E85D2C` is
+the app mocks' orange within rendering noise, so the mark and the UI share that one hex.
 
 Dark mode was **retired** on 2026-10-25 (light only, as the concepts) and its tokens were removed
 from `globals.css` (Phase 2.5). These values are a record only; a dark brand surface (logo on
@@ -32,24 +34,25 @@ dark, CTA bands) uses `--ink`:
 
 ## Contrast checks (computed)
 
-| Pair                            | Ratio | Verdict                                       |
-| ------------------------------- | ----- | --------------------------------------------- |
-| White on Bookly Orange          | 3.48  | **Fails AA text.** Large text / UI parts only |
-| Bookly Orange on Paper          | 3.28  | Large display type, icons, mark only          |
-| Bookly Orange on Peach          | 2.95  | Fails: never orange text on Peach             |
-| White on Ember                  | 5.59  | AA text: filled orange buttons                |
-| Ember on Paper                  | 5.27  | AA text: links, orange labels                 |
-| Ember on Peach                  | 4.74  | AA text: active nav item                      |
-| Ember on Apricot                | 4.30  | Fails AA text: use Ink on Apricot             |
-| Ink on Paper                    | 16.07 | AAA                                           |
-| Ink on Peach                    | 14.46 | AAA                                           |
-| Orange lifted on Night          | 6.77  | AA text (dark mode links, nav)                |
-| Ink/Night text on Orange lifted | 6.77  | AA text (dark mode filled buttons)            |
+| Pair                            | Ratio | Verdict                                  |
+| ------------------------------- | ----- | ---------------------------------------- |
+| White on Bookly Orange          | 3.48  | Under AA text (4.5): accepted, buttons   |
+| Bookly Orange on Paper          | 3.29  | Under AA text: accepted, links           |
+| Bookly Orange on Peach          | 2.96  | Under AA text: accepted, active nav item |
+| Bookly Orange on white          | 3.48  | Passes 3:1 for UI parts and large text   |
+| Ink on Paper                    | 16.07 | AAA                                      |
+| Ink on Peach                    | 14.46 | AAA                                      |
+| Orange lifted on Night          | 6.77  | AA text (dark mode links, nav)           |
+| Ink/Night text on Orange lifted | 6.77  | AA text (dark mode filled buttons)       |
 
-**The two-orange rule.** Bookly Orange is the colour people remember; Ember is the colour that
-carries small text. A filled primary button is Ember with white text (the concepts' look,
-one step deeper). Large hero type ("Bookly keeps it moving.") may use Bookly Orange because it
-is large text (≥ 24 px regular or ≥ 18.66 px bold needs 3:1).
+**One orange (founder, 2026-10-25).** The UI matches the mocks exactly: buttons, links, active
+nav text and warnings are all Bookly Orange `#E85D2C`, as drawn. This replaced the earlier
+two-orange rule (a deeper Ember, `#B93E10`, for anything carrying small text), which kept WCAG
+AA text contrast but did not look like the concepts. The trade-off is deliberate and recorded:
+white labels on orange measure 3.48:1 and orange text on Peach 2.96:1, so the e2e axe scans
+disable `color-contrast`; every other axe rule still runs. Revisit before any customer contract
+that requires WCAG AA (public sector, EAA), where a deeper step (`#CC4B1A`, 4.58:1 with white)
+is the closest orange that passes.
 
 ## Mapping onto today's variables (`apps/web/src/app/globals.css`)
 
@@ -59,14 +62,14 @@ is large text (≥ 24 px regular or ≥ 18.66 px bold needs 3:1).
 | `--background`                              | white                 | Paper                                           | Night                                        |
 | `--foreground`                              | `oklch(0.145 0 0)`    | Ink                                             | `oklch(0.97 0.006 84.6)`                     |
 | `--card`, `--popover`                       | white                 | white                                           | Char                                         |
-| `--primary`                                 | near-black            | Ember                                           | Orange lifted                                |
+| `--primary`                                 | near-black            | Bookly Orange                                   | Orange lifted                                |
 | `--primary-foreground`                      | near-white            | white                                           | Night                                        |
-| `--primary-hover`                           | (none)                | Ember darkened, `oklch(0.48 0.155 37.9)`        | Orange lifted further, `oklch(0.77 0.14 43)` |
+| `--primary-hover`                           | (none)                | Orange hover, `oklch(0.599 0.175 39)`           | Orange lifted further, `oklch(0.77 0.14 43)` |
 | `--accent`                                  | `oklch(0.97 0 0)`     | Peach                                           | `oklch(0.28 0.04 40)`                        |
-| `--accent-foreground`                       | near-black            | Ember                                           | Orange lifted                                |
+| `--accent-foreground`                       | near-black            | Bookly Orange                                   | Orange lifted                                |
 | `--ring`                                    | grey                  | Bookly Orange                                   | Orange lifted                                |
 | `--sidebar`                                 | `oklch(0.985 0 0)`    | Sand                                            | Char                                         |
-| `--sidebar-primary`                         | near-black            | Ember                                           | Orange lifted                                |
+| `--sidebar-primary`                         | near-black            | Bookly Orange                                   | Orange lifted                                |
 | `--sidebar-accent`                          | grey                  | Peach                                           | as `--accent`                                |
 | neutrals (`--muted`, `--border`, `--input`) | pure grey (chroma 0)  | same lightness, hue ≈ 85, chroma ≤ 0.008 (warm) | same                                         |
 
@@ -98,14 +101,14 @@ Neutrals use hue ≈ 70–85 with chroma ≤ 0.008. Charts: Bookly Orange, Reply
 `--ink-hover` joins `--primary-hover`: hovers are solid, never a see-through fill. Pairs the
 components pass added:
 
-| Pair                                                                | Ratio        | Verdict                   |
-| ------------------------------------------------------------------- | ------------ | ------------------------- |
-| white on `ink-hover` `oklch(0.33 0.004 70)`                         | 12.22        | AAA (ink button, hovered) |
-| Night on dark `ink-hover` `oklch(0.88 0.008 84.6)`                  | 13.15        | AAA                       |
-| `muted-foreground` / Ink on the active agenda card (Peach 55%)      | 5.51 / 15.65 | AA text                   |
-| dark `muted-foreground` on the active agenda card                   | 6.35         | AA text                   |
-| Ember on Peach (⌘K highlighted row, `accent` chip, avatar initials) | 4.74         | AA text                   |
-| white on Ember (unread count in the sidebar)                        | 5.58         | AA text                   |
+| Pair                                                                 | Ratio        | Verdict                   |
+| -------------------------------------------------------------------- | ------------ | ------------------------- |
+| white on `ink-hover` `oklch(0.33 0.004 70)`                          | 12.22        | AAA (ink button, hovered) |
+| Night on dark `ink-hover` `oklch(0.88 0.008 84.6)`                   | 13.15        | AAA                       |
+| `muted-foreground` / Ink on the active agenda card (Peach 55%)       | 5.51 / 15.65 | AA text                   |
+| dark `muted-foreground` on the active agenda card                    | 6.35         | AA text                   |
+| Orange on Peach (⌘K highlighted row, `accent` chip, avatar initials) | 2.96         | Under AA: accepted        |
+| white on orange (unread count in the sidebar)                        | 3.48         | Under AA: accepted        |
 
 ## How to check a new pair
 

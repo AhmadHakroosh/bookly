@@ -154,20 +154,19 @@ Two sources, one identity (decided by the founder, 2026-10-24):
 
   | Token         | Hex       | Role                                                             |
   | ------------- | --------- | ---------------------------------------------------------------- |
-  | Bookly Orange | `#E85D2C` | The mark, brand fills, large display type, icons, progress, dots |
-  | Ember         | `#B93E10` | Orange **text** and filled buttons with white labels (AA-safe)   |
-  | Peach         | `#FBE9DF` | Active nav, selected cards and rows, recap/attention cards       |
+  | Bookly Orange | `#E85D2C` | The mark, fills, buttons, links, active text, icons, progress    |
+  | Peach         | `#FCEAE1` | Active nav, selected cards and rows, recap/attention cards       |
   | Apricot       | `#FCDCC2` | Time chips ("In 15 min"), soft highlights; Ink text on it        |
   | Reply         | `#F5B6A0` | The second bubble, illustrations                                 |
   | Ink           | `#1C1C1C` | Text, dark buttons ("Join meeting", "Create"), reversed surfaces |
   | Paper         | `#FAF8F4` | App and site background                                          |
   | Sand          | `#F4F2EE` | Sidebar, secondary surfaces                                      |
 
-  **Accessibility rule:** Bookly Orange with white text is 3.48:1 and fails WCAG AA for normal
-  text. Use it for the mark, fills, icons, large type (≥ 24 px, or ≥ 18.66 px bold) and UI parts;
-  use **Ember** wherever orange carries small text (button labels on orange, links, active nav
-  text). Status colours stay **semantic and separate**: success green, warning amber, danger red;
-  "Due today" and count badges use warning/danger, not brand.
+  **One orange (founder, 2026-10-25):** the product matches the mocks exactly, so buttons,
+  links and active text are Bookly Orange too, though white on it is 3.48:1 (under WCAG AA's
+  4.5:1). The trade-off is recorded in `bookly-design-system/references/tokens.md`; revisit
+  before a contract that requires WCAG AA. Status colours stay **semantic and separate**:
+  success green, danger red; "Due today" uses the orange `warning`, as the concepts draw it.
 
 - **Graphic language**: rounded bubble shapes, overlapping orange/reply forms. Friendly, warm,
   precise. No gradients on UI chrome.

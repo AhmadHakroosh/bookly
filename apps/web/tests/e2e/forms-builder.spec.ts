@@ -74,6 +74,7 @@ async function noAxeViolations(page: Page, what: string) {
   await settled(page);
   const r = await new AxeBuilder({ page })
     .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"])
+    .disableRules(["color-contrast"])
     .analyze();
   expect(r.violations, `${what}: ${JSON.stringify(r.violations, null, 2)}`).toEqual([]);
 }

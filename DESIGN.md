@@ -13,23 +13,25 @@ The palette comes from the v1.0 product concepts; values and contrast checks liv
 | Token                                       | Light         | Use                                                         |
 | ------------------------------------------- | ------------- | ----------------------------------------------------------- |
 | `brand`                                     | Bookly Orange | The mark, fills, icons, progress, timeline dots, large type |
-| `primary`                                   | Ember         | Primary buttons (white label), orange text and links        |
-| `accent`, `sidebar-accent`                  | Peach         | Active nav item, selected rows and cards (Ember text)       |
+| `primary`                                   | Bookly Orange | Primary buttons (white label), orange text and links        |
+| `accent`, `sidebar-accent`                  | Peach         | Active nav item, selected rows and cards (orange text)      |
 | `ink`                                       | Ink           | The dark button and reversed surfaces                       |
 | `background` / `card`                       | Paper / white | Page / cards and popovers                                   |
 | `sidebar`, `muted`, `secondary`             | Sand          | Sidebar, quiet surfaces                                     |
 | `success`, `warning`, `info`, `destructive` | semantic      | Status only, with `-muted` fills for chips                  |
 
-Hover states are solid tokens, never a see-through fill: `primary-hover` darkens Ember and
+Hover states are solid tokens, never a see-through fill: `primary-hover` darkens the orange and
 `ink-hover` lifts Ink a step, so a label keeps its contrast while the pointer is on it. Bookly is
 light only (founder, 2026-10-25): there is no dark theme, no `.dark` tokens, no `dark:`
 utilities and no theme toggle, and pages declare `color-scheme: light`. A dark surface is a
 brand use (the logo tiles on `/press`, a CTA band) drawn with `ink`, never a theme. Video tiles
 stay dark because video is.
 
-Bookly Orange never carries small text: white on it is 3.48:1. Status is never Bookly Orange:
-"Due today", "Feedback missing" and overdue dates are `warning`, which is Ember, as the concepts
-draw them (on its own tint for chips, 4.92:1); failures and deletions are `destructive`. A workspace's
+There is one orange, Bookly Orange `#E85D2C`, as the concepts draw it (founder, 2026-10-25: match the mocks exactly).
+It carries buttons, links, active text and warnings as drawn, at a known cost: white labels on it
+measure 3.5:1 and orange text on Peach 3:1, under WCAG AA's 4.5:1, so the e2e axe scans leave
+`color-contrast` out. "Due today", "Feedback missing" and overdue dates are `warning`, the same
+orange, as the concepts draw them; failures and deletions are `destructive`. A workspace's
 own colour replaces `primary` and `ring` on its public pages (`accentVars` in
 `server/brand.ts`), so public UI uses `primary`, not `brand`, for anything interactive.
 
@@ -48,7 +50,7 @@ elements; a link that looks like a button is `<Button nativeButton={false} rende
 
 Text is `font-semibold`. Icons inside a button carry `data-icon="inline-start"` or
 `"inline-end"` so the padding on that side tightens; the icon is 16 px (20 px on `lg`).
-Variants: `default` (primary, Ember), `ink` (the dark button: "Join meeting", "Create"),
+Variants: `default` (primary, Bookly Orange), `ink` (the dark button: "Join meeting", "Create"),
 `outline` (secondary), `ghost` (tertiary, in rows and menus), `destructive`, `secondary`, `link`.
 Still one primary per page: `default` or `ink`, not both. Badges add `success`, `warning` and
 `info` for status chips.
@@ -69,7 +71,7 @@ Every admin page sits in one frame (`app/(admin)/admin/layout.tsx`, parts in
   Tasks, Files), a divider, the scheduling items (Booking page, Event types, Availability,
   Routing); Settings and Team pinned to the bottom for owners and admins; a divider and the
   account card (picture, name, email). **No group headings**: the dividers are the only
-  grouping. The active item is Peach with Ember text and `aria-current="page"`; Messages carries
+  grouping. The active item is Peach with orange text and `aria-current="page"`; Messages carries
   its unread count. Collaborators keep their own short list (ADR 0005).
 - **Clients | Hiring**: where the `hiring` flag is on, a two-way switch under the workspace
   swaps in Hiring's own items (`hiring.png`, decision D1). Messages, Files, Settings and Team
@@ -117,12 +119,12 @@ Built on Base UI and the tokens; all in `components/ui`. The operator console ha
 | `JourneyStrip`                                            | Booked → Prepared → Met → Followed up → Paid on every contact (D3); done, current and to-do steps, each linking to its record.                                       |
 | `Timeline`, `TimelineEntry`                               | A contact's history: coloured icon per kind, time, what happened, a View link.                                                                                       |
 | `ActionList`, `ActionItem`                                | "Next actions": the suggested step in Peach, the rest as plain rows.                                                                                                 |
-| `ChecklistRow`                                            | A task with its checkbox, who it is for, and the due date (Ember when today or late).                                                                                |
+| `ChecklistRow`                                            | A task with its checkbox, who it is for, and the due date (orange when today or late).                                                                               |
 | `ListRow`                                                 | A person in a list: picture, name, subject, preview, time, unread dot; actions sit outside the link.                                                                 |
 | `FileRow`, `FileTypeIcon`                                 | A file with its coloured type icon (PDF red, doc blue, sheet green), one line and the date.                                                                          |
 | `AttentionStrip`, `AttentionItem`                         | "Needs attention": what waits on the team, and the link that deals with it.                                                                                          |
-| `RecapCard`                                               | "Recap ready" in Peach with the action (Ember, not the concept's Bookly Orange fill, for contrast).                                                                  |
-| `UsageBar`                                                | A plan limit and its use; Ember at the limit.                                                                                                                        |
+| `RecapCard`                                               | "Recap ready" in Peach with the action (Bookly Orange, as the concept fills it).                                                                                     |
+| `UsageBar`                                                | A plan limit and its use; orange at the limit.                                                                                                                       |
 | `VideoTile`, `CallControls`, `CallControl`                | The call: dark video tiles with names, labelled controls, a red End.                                                                                                 |
 | `Kbd`                                                     | Keys and shortcuts.                                                                                                                                                  |
 

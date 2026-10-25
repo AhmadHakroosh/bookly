@@ -72,9 +72,9 @@
 :root {
   /*
    * The v1.0 palette, from the product concepts (bookly-design-system/references/tokens.md).
-   * Two oranges: Bookly Orange (--brand) for the mark, fills, icons and large type; Ember
-   * (--primary) wherever orange carries small text, because white on Bookly Orange is 3.48:1.
-   * Neutrals are warm (hue ≈ 85): Paper page, white cards, Sand sidebar, Ink text.
+   * One orange, the concepts' #E85D2C, for the mark, fills, icons, buttons, links and active
+   * text, on a Peach tint. Neutrals are warm (hue ≈ 85): Paper page, white cards, Sand sidebar,
+   * Ink text.
    */
   --brand: oklch(0.651 0.183 38.6);
   --background: oklch(0.98 0.006 84.6);
@@ -83,16 +83,22 @@
   --card-foreground: oklch(0.226 0 0);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.226 0 0);
-  --primary: oklch(0.535 0.167 37.9);
+  /*
+   * The concepts' orange exactly (#E85D2C), for buttons, links and active text alike (founder,
+   * 2026-10-25). White labels on it measure 3.5:1 and orange text on Peach 3:1, under WCAG AA's
+   * 4.5:1: a chosen trade-off, and why the e2e axe scans leave out color-contrast.
+   */
+  --primary: oklch(0.651 0.183 38.6);
   --primary-foreground: oklch(1 0 0);
-  /* Hover darkens Ember: a see-through Ember over Paper drops white text under 4.5:1. */
-  --primary-hover: oklch(0.48 0.155 37.9);
+  /* Hover is a solid darker step (#D2501F), never a see-through fill. */
+  --primary-hover: oklch(0.599 0.175 39);
   --secondary: oklch(0.955 0.006 84.6);
   --secondary-foreground: oklch(0.226 0 0);
   --muted: oklch(0.955 0.006 84.6);
   --muted-foreground: oklch(0.5 0.008 70);
-  --accent: oklch(0.946 0.024 51.2);
-  --accent-foreground: oklch(0.535 0.167 37.9);
+  /* Peach, the concepts' tint (#FCEAE1): the active nav item, selected rows and cards. */
+  --accent: oklch(0.949 0.023 48.5);
+  --accent-foreground: oklch(0.651 0.183 38.6);
   /* Deeper than shadcn's red so text on its 10% tint over Paper stays above 4.5:1 (4.88). */
   --destructive: oklch(0.52 0.2 27);
   --border: oklch(0.915 0.008 80);
@@ -109,8 +115,8 @@
   --success: oklch(0.5 0.12 150);
   --success-foreground: oklch(1 0 0);
   --success-muted: oklch(0.955 0.03 150);
-  /* Warnings are Ember, as the concepts draw "Due today" and "Feedback missing" (4.92 on the tint). */
-  --warning: oklch(0.535 0.167 37.9);
+  /* Warnings are the concepts' orange, as they draw "Due today" and "Feedback missing". */
+  --warning: oklch(0.651 0.183 38.6);
   --warning-foreground: oklch(1 0 0);
   --warning-muted: oklch(0.96 0.025 45);
   --info: oklch(0.5 0.13 250);
@@ -124,10 +130,10 @@
   --radius: 0.625rem;
   --sidebar: oklch(0.962 0.006 84.6);
   --sidebar-foreground: oklch(0.226 0 0);
-  --sidebar-primary: oklch(0.535 0.167 37.9);
+  --sidebar-primary: oklch(0.651 0.183 38.6);
   --sidebar-primary-foreground: oklch(1 0 0);
-  --sidebar-accent: oklch(0.946 0.024 51.2);
-  --sidebar-accent-foreground: oklch(0.535 0.167 37.9);
+  --sidebar-accent: oklch(0.949 0.023 48.5);
+  --sidebar-accent-foreground: oklch(0.651 0.183 38.6);
   --sidebar-border: oklch(0.915 0.008 80);
   --sidebar-ring: oklch(0.651 0.183 38.6);
 }

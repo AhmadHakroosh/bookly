@@ -26,7 +26,7 @@ function Progress({
   showValue?: boolean;
   /** Keep the label for screen readers only, when the text around the bar already says it. */
   hideLabel?: boolean;
-  /** `warning` (Ember) once a limit is reached; brand otherwise. */
+  /** `warning` (orange) once a limit is reached; brand otherwise. */
   tone?: "brand" | "warning";
   className?: string;
 }) {

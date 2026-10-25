@@ -40,7 +40,7 @@ with what the license really says (open core, not "everything is open source").
    "beta" or "coming". Licensing claims follow `bookly-legal-licensing`; privacy and AI claims
    follow `bookly-legal-privacy`.
 5. **Apply the identity** with `bookly-design-system`: 02 mark and wordmark, the concept palette
-   (Bookly Orange for highlights and large type, Ember for small orange text, Ink for headlines,
+   (Bookly Orange for highlights, buttons and links, Ink for headlines,
    Paper backgrounds), bubble shapes for illustration.
 6. **Review** with `marketing:brand-review` or `brand-voice:brand-voice-enforcement` against the
    voice rules below, then ship through `bookly-builder` with a changelog line if the site
@@ -69,7 +69,7 @@ with what the license really says (open core, not "everything is open source").
 - Headline pattern from the concepts: first line Ink, second line Bookly Orange (large type, so
   it passes contrast): "A booking starts it. / Bookly keeps it moving."
 - Brand line: "People. Conversations. Progress." with "Progress." in Bookly Orange.
-- Primary buttons: Ink, or orange with Ember-safe labels (`bookly-design-system` tokens); one per
+- Primary buttons: Ink, or Bookly Orange with white labels (`bookly-design-system` tokens); one per
   view, as in the concepts ("Start free", "Review & send").
 - Social cards (`og/route.tsx`): 02 mark, Paper background, Ink title, orange accent.
 - `/press` is the public brand kit: keep its boilerplate, founder line and fact sheet current.

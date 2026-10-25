@@ -33,7 +33,7 @@ const LOGOS = [
     file: "bookly-logo-reversed",
     name: "Reversed",
     use: "All white, for photos and colour backgrounds.",
-    tile: "#B93E10",
+    tile: "#E85D2C",
   },
   {
     file: "bookly-logo-stacked",
@@ -61,10 +61,9 @@ const COLOURS = [
     name: "Bookly Orange",
     hex: "#E85D2C",
     ink: "#FFFFFF",
-    role: "The mark, highlights, large type",
+    role: "The mark, buttons, links and highlights",
   },
-  { name: "Ember", hex: "#B93E10", ink: "#FFFFFF", role: "Orange text and buttons" },
-  { name: "Peach", hex: "#FBE9DF", ink: "#1C1C1C", role: "Selected and active surfaces" },
+  { name: "Peach", hex: "#FCEAE1", ink: "#1C1C1C", role: "Selected and active surfaces" },
   { name: "Ink", hex: "#1C1C1C", ink: "#FFFFFF", role: "Text and dark surfaces" },
   { name: "Paper", hex: "#FAF8F4", ink: "#1C1C1C", role: "Backgrounds" },
   { name: "Reply", hex: "#F5B6A0", ink: "#1C1C1C", role: "The second bubble, illustration" },
@@ -293,7 +292,7 @@ export default function PressPage() {
       <Section
         id="colour"
         title="Colour"
-        lede="Warm paper, near-black ink and one orange. Bookly Orange is for the mark, highlights and large type; Ember carries orange text and buttons, where the brighter orange would be hard to read."
+        lede="Warm paper, near-black ink and one orange. Bookly Orange is the mark, the buttons, the links and every highlight."
       >
         <ul className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-6">
           {COLOURS.map((c) => (

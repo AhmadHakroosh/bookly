@@ -49,10 +49,11 @@ Bookly.
 2. **Start from tokens.** Any colour, radius, shadow or font in a component comes from a CSS
    variable in `globals.css`. If a mock needs a value with no token, add the token (light and
    dark) first. The press page is the one place raw hex is shown, because there it is the content.
-3. **The two-orange rule.** Bookly Orange (`#E85D2C`) is for the mark, fills, icons, progress and
-   large type. Small text in orange, and labels on orange buttons, use Ember (`#B93E10`): white
-   on Bookly Orange is 3.48:1 and fails WCAG AA.
-4. **Map the mocks to tokens.** Orange primary button → `default` Button on `--primary` (Ember).
+3. **One orange, as the mocks draw it.** Bookly Orange (`#E85D2C`) is the mark, fills, icons,
+   progress, buttons, links and active text (founder, 2026-10-25). White on it is 3.48:1, under
+   WCAG AA: a recorded trade-off, so e2e axe scans disable only `color-contrast` (see
+   `references/tokens.md` before any WCAG-bound customer).
+4. **Map the mocks to tokens.** Orange primary button → `default` Button on `--primary`.
    Black button → the ink variant. Peach active nav → `--accent`. "Due today", "Feedback
    missing" and count badges → semantic warning/destructive. Timeline dots and progress →
    `--brand`. Cream page → `--background` (Paper). Sidebar → `--sidebar` (Sand).
