@@ -41,8 +41,9 @@ export async function hiringExport(workspaceId: string) {
   return {
     opportunities,
     cohorts,
-    // Status-page token hashes stay in the database: they open a candidate's page.
-    applications: applications.map((a) => ({ ...a, statusTokenHash: null })),
+    // Status-page tokens (the hash and the encrypted link) stay in the database: they open a
+    // candidate's page.
+    applications: applications.map((a) => ({ ...a, statusTokenHash: null, statusTokenEnc: null })),
     opportunityMembers,
     applicationAccess,
     scorecards,

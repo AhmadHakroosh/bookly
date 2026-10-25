@@ -2,8 +2,10 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { Suspense } from "react";
 import {
+  AlertTriangleIcon,
   CalendarIcon,
   ClipboardCheckIcon,
+  ClockIcon,
   ExternalLinkIcon,
   InboxIcon,
   PencilIcon,
@@ -11,27 +13,28 @@ import {
 import { cn } from "cn";
 import { eq, schema } from "@bookly/db";
 import { BetaBadge } from "@/components/beta-badge";
+import { ApplicationPane } from "@/components/hiring/application-pane";
 import { OpportunityMenu, PublishedToast } from "@/components/hiring/opportunity-menu";
-import { StageChip } from "@/components/hiring/stage-chip";
+import { PipelineBoard, type PipelineCard } from "@/components/hiring/pipeline-board";
+import { FILTERS, type Filter } from "@/components/hiring/pipeline-filters";
+import { PaneHost } from "@/components/pane";
 import { TeamStep } from "@/components/hiring/team-step";
 import { OpportunitySkeleton } from "@/components/skeletons/pages";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
-import { KanbanBoard, KanbanColumn, KanbanList } from "@/components/ui/kanban";
+import { AttentionItem, AttentionStrip } from "@/components/ui/attention-strip";
 import { PageHeader } from "@/components/ui/page-header";
+import { SegmentedTabs } from "@/components/ui/segmented-tabs";
 import { StatusChip } from "@/components/ui/status-chip";
 import { db } from "@/lib/db";
 import { draftCount, previewToken } from "@/server/hiring/apply";
-import { opportunityCounts, stageTotals } from "@/server/hiring/queries";
+import type { Actor } from "@/server/access";
+import { boardData } from "@/server/hiring/pipeline";
+import { cardLine, initials } from "@/server/hiring/pipeline-text";
+import { opportunityCounts } from "@/server/hiring/queries";
 import { publicBaseUrl } from "@/server/urls";
 import { loadSetup, type Setup } from "@/server/hiring/setup";
-import {
-  candidateLabel,
-  isFinal,
-  opportunityMeta,
-  opportunityStatus,
-  ROLE_LABELS,
-} from "@/server/hiring/setup-text";
+import { opportunityMeta, opportunityStatus, ROLE_LABELS } from "@/server/hiring/setup-text";
 import { hiringContext, opportunityPath, setupPath } from "../../context";
 
 export const metadata = { title: "Opportunity" };
@@ -60,9 +63,12 @@ async function OpportunityPage({
   if (!setup) notFound();
   const opp = setup.opportunity;
   const tab: Tab = TABS.some((t) => t.id === sp.tab) ? (sp.tab as Tab) : "pipeline";
-  const [counts, totals, drafts, base] = await Promise.all([
+  const one = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v);
+  const view = one(sp.view) === "list" ? "list" : "board";
+  const filter = (FILTERS.find((f) => f.id === one(sp.filter))?.id ?? "all") as Filter;
+  const applicationId = one(sp.application) ?? null;
+  const [counts, drafts, base] = await Promise.all([
     opportunityCounts(c.actor, id),
-    stageTotals(c.actor, id),
     draftCount(c.actor, id),
     publicBaseUrl(c.ws),
   ]);
@@ -166,33 +172,80 @@ async function OpportunityPage({
           </p>
         </div>
       </PageHeader>
-      {tab === "pipeline" && <Pipeline setup={setup} totals={totals} drafts={drafts} />}
+      {tab === "pipeline" && (
+        <Pipeline actor={c.actor} setup={setup} drafts={drafts} view={view} filter={filter} />
+      )}
       {tab === "interviews" && <Interviews setup={setup} />}
       {tab === "review-plan" && <ReviewPlan setup={setup} />}
       {tab === "team" && <Team ctx={c} setup={setup} />}
+      <PaneHost param="application" id={applicationId} label="Application">
+        {applicationId && <ApplicationPane actor={c.actor} applicationId={applicationId} />}
+      </PaneHost>
     </div>
   );
 }
 
-function Pipeline({
+const ATTENTION_ICONS = {
+  feedback: ClipboardCheckIcon,
+  scheduling: CalendarIcon,
+  flagged: AlertTriangleIcon,
+  waiting: ClockIcon,
+} as const;
+
+async function Pipeline({
+  actor,
   setup,
-  totals,
   drafts,
+  view,
+  filter,
 }: {
+  actor: Actor;
   setup: Setup;
-  totals: Map<string, number>;
   drafts: number;
+  view: "board" | "list";
+  filter: Filter;
 }) {
-  const open = setup.stages.filter((s) => !isFinal(s.category));
-  const outcomes = setup.stages.filter((s) => isFinal(s.category));
-  const any = [...totals.values()].some(Boolean);
+  const id = setup.opportunity.id;
+  const board = await boardData(actor, id);
+  if (!board) notFound();
+  const tz = setup.basics.timezone;
+  const now = new Date();
+  const day = new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", timeZone: tz });
+  const limits = new Map(board.stages.map((s) => [s.id, s.attentionAfterDays]));
+  const cards: PipelineCard[] = board.cards.map((c) => {
+    const limit = c.stageId ? limits.get(c.stageId) : null;
+    return {
+      id: c.id,
+      name: c.name || c.email,
+      initials: initials(c.name, c.email),
+      applied: c.submittedAt ? `Applied ${day.format(c.submittedAt)}` : "Not submitted",
+      stageId: c.stageId,
+      line: cardLine(c.facts, tz, now),
+      is: {
+        flagged: c.facts.flags.length > 0,
+        feedback: c.facts.reviews.overdue > 0,
+        scheduling: c.facts.awaitingScheduling,
+        waiting:
+          !!limit &&
+          !!c.stageEnteredAt &&
+          now.getTime() - c.stageEnteredAt.getTime() > limit * 86_400_000,
+      },
+    };
+  });
+  const tabs = [
+    { href: opportunityPath(id), label: "Board", active: view === "board" },
+    { href: opportunityPath(id, "?view=list"), label: "List", active: view === "list" },
+  ];
   return (
     <div className="space-y-4">
-      {/* Drafts never reach the team: only how many there are. */}
-      {drafts > 0 && (
-        <p className="text-sm text-muted-foreground">{drafts} started, not submitted</p>
-      )}
-      {!any && (
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <SegmentedTabs items={tabs} label="Pipeline view" />
+        {/* Drafts never reach the team: only how many there are. */}
+        {drafts > 0 && (
+          <p className="text-sm text-muted-foreground">{drafts} started, not submitted</p>
+        )}
+      </div>
+      {cards.length === 0 && (
         <EmptyState
           size="sm"
           icon={InboxIcon}
@@ -204,39 +257,31 @@ function Pipeline({
           }
         />
       )}
-      {/* The board scrolls sideways: reachable and named for keyboard and screen readers. */}
-      <KanbanBoard
-        tabIndex={0}
-        role="region"
-        aria-label="Pipeline by stage"
-        className="rounded-xl outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
-      >
-        {open.map((s) => (
-          <KanbanColumn key={s.id} title={s.name} count={totals.get(s.id) ?? 0}>
-            <KanbanList>
-              <li className="px-2 py-6 text-center text-xs text-muted-foreground">
-                Applicants see &ldquo;{candidateLabel(s)}&rdquo;
-              </li>
-            </KanbanList>
-          </KanbanColumn>
-        ))}
-        <KanbanColumn
-          title="Outcomes"
-          count={outcomes.reduce((k, s) => k + (totals.get(s.id) ?? 0), 0)}
-        >
-          <KanbanList>
-            {outcomes.map((s) => (
-              <li
-                key={s.id}
-                className="flex items-center justify-between gap-2 px-2 py-1.5 text-sm"
-              >
-                <StageChip name={s.name} category={s.category} withCategory />
-                <span className="text-muted-foreground tabular-nums">{totals.get(s.id) ?? 0}</span>
-              </li>
-            ))}
-          </KanbanList>
-        </KanbanColumn>
-      </KanbanBoard>
+      <PipelineBoard
+        key={`${view}:${filter}`}
+        opportunityId={id}
+        stages={board.stages.map((s) => ({ id: s.id, name: s.name, category: s.category }))}
+        cards={cards}
+        canMove={board.role === "coordinator" && setup.opportunity.status !== "archived"}
+        view={view}
+        filter={filter}
+      />
+      {board.attention.length > 0 && (
+        <AttentionStrip>
+          {board.attention.map((a) => (
+            <AttentionItem
+              key={a.id}
+              icon={ATTENTION_ICONS[a.id]}
+              title={a.title}
+              detail={a.detail}
+              action={{
+                label: "View candidates",
+                href: opportunityPath(id, `?view=list&filter=${a.filter}`),
+              }}
+            />
+          ))}
+        </AttentionStrip>
+      )}
     </div>
   );
 }

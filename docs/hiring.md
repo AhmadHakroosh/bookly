@@ -154,6 +154,57 @@ hold is recorded. Deleting removes the answers (every version), documents, the a
 request, reviews, interviews and the person, when this application was all you had of them; a
 record that the request was honoured stays, with only the email.
 
+## The pipeline
+
+The opportunity's **Pipeline** tab shows a column for each stage with the people in it. Each card
+has the person's name, when they applied, and the one thing that matters next: a requirement they
+don't meet ("Doesn't meet: Eligible to work in the EU"), their next interview, feedback that is
+overdue, how many reviews are in, or that they're waiting for an interview time. **Board · List**
+switches to a table with filters (Flagged, Feedback missing, Awaiting scheduling, Waiting long), a
+stage picker and a search by name.
+
+**Moving people.** Coordinators drag a card to another stage, or use a card's **⋯ → Move to**
+(the way to move with a keyboard or a screen reader). Tick cards (or a whole column with its
+**⋯ → Select all**) and use **Move to…** in the bar that appears to move several at once. Every
+move is in the activity log, runs the stages' rules, and sends `application.stage_changed`.
+Outcomes (Admitted, Waitlist, Not selected and the like) are never reached by moving a card:
+people get there when someone records a decision.
+
+**Unfinished work is advice, not a wall.** When a stage has something unfinished, such as
+"1 of 3 reviews missing", moving on from it asks first ("1 of 3 reviews missing. Move anyway?").
+**Move anyway** moves them and records the check you overrode in the activity log.
+
+**Needs attention** under the board lists what is waiting on the team: overdue feedback, people
+waiting for an interview time, applications flagged for a requirement, and anyone in a stage
+longer than its "needs attention" setting. **View candidates** opens the list filtered to them.
+
+**The candidate pane.** Clicking a card opens the person beside the board (the address carries
+`?application=`, so you can share it with your team): their stage, with a menu to move them;
+**Overview** with the requirement flags, their answers and documents, the next interview, review
+progress and the decision status; **Interviews**; and **Feedback**. A requirement flag never
+rejects anyone: a coordinator looks, decides, and can **Clear** the flag (recorded). If the person
+asked for adjustments, coordinators see that they did, and **Show** reveals the request; each
+time it is read is in the activity log.
+
+### Who sees what
+
+| Role        | Board and list                     | Answers and documents | Review progress | Moves |
+| ----------- | ---------------------------------- | --------------------- | --------------- | ----- |
+| Coordinator | Every application                  | Yes                   | Yes             | Yes   |
+| Reviewer    | Applications assigned to them      | Yes                   | Their own only  | No    |
+| Viewer      | Every application, names and stage | No (no email either)  | No              | No    |
+
+Workspace owners and admins coordinate every opportunity. Adjustments requests are for
+coordinators only.
+
+**Stage rules for applications.** A stage's rules run when people enter or leave it: an email
+to the candidate (with a link to their status page), a note to the coordinators or the assigned
+reviewers, a tag, routing to a track or a requirement flag, and a move to another open stage.
+A rule never moves anyone to an outcome and outcome messages wait until decisions are released,
+even if a stage became an outcome after the rule was saved. Actions whose part of hiring isn't
+here yet (assigning reviewers, booking links, follow-up forms, payments) are skipped and say so
+in the run's results.
+
 ## After publishing
 
 The opportunity's page shows its status, cohort and dates, and **Pipeline · Interviews · Review

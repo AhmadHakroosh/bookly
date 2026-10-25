@@ -3,7 +3,7 @@ import { and, eq, schema } from "@bookly/db";
 import { decrypt, encrypt } from "@/lib/crypto";
 import { db } from "@/lib/db";
 import { audit } from "../audit";
-import { AccessError, type Actor } from "../access";
+import { AccessError, roleOn, type Actor } from "../access";
 
 /*
  * The one door to `application_sensitive` (ADR 0003): accommodation requests and voluntary
@@ -49,9 +49,27 @@ export async function writeSensitive(
  * when a coordinator chooses to.
  */
 export const mayReadAccommodations = (actor: Actor, opportunityId: string) =>
-  actor.workspaceRole === "owner" ||
-  actor.workspaceRole === "admin" ||
-  actor.opportunityRoles.get(opportunityId) === "coordinator";
+  roleOn(actor, opportunityId) === "coordinator";
+
+/** Whether an applicant asked for adjustments (not what), for a coordinator's pane. */
+export async function hasAccommodations(
+  actor: Actor,
+  application: ApplicationRef,
+): Promise<boolean> {
+  if (
+    actor.workspaceId !== application.workspaceId ||
+    !mayReadAccommodations(actor, application.opportunityId)
+  )
+    return false;
+  const row = await db().query.applicationSensitive.findFirst({
+    where: and(
+      eq(schema.applicationSensitive.applicationId, application.id),
+      eq(schema.applicationSensitive.workspaceId, application.workspaceId),
+    ),
+    columns: { accommodations: true },
+  });
+  return !!row?.accommodations;
+}
 
 /** An applicant's accommodation request, for a coordinator. Every read is in the activity log. */
 export async function readAccommodations(

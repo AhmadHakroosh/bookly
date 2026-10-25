@@ -1,7 +1,7 @@
 /** Which links open a side pane (see components/pane.tsx); pure, so it is unit-tested. */
 
 /** Every search parameter that opens a pane, and the ones that page inside one. */
-export const PANE_PARAMS = ["task", "thread", "file", "booking", "entry"] as const;
+export const PANE_PARAMS = ["task", "thread", "file", "booking", "entry", "application"] as const;
 export const INSIDE_PANE = ["before"];
 
 /**

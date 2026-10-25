@@ -62,7 +62,9 @@ export async function scheduleTransitionRules(
   const ws = await tx.query.workspaces.findFirst({
     where: eq(schema.workspaces.id, t.workspaceId),
   });
-  if (!ws || !(await hasFlag(ws, "stage_rules"))) return [];
+  // Hiring rules are part of hiring (free on every plan, ADR 0002); client rules are their own beta.
+  if (!ws || !(await hasFlag(ws, t.subjectType === "application" ? "hiring" : "stage_rules")))
+    return [];
   const rules = await tx
     .select()
     .from(schema.stageRules)
@@ -208,6 +210,18 @@ export async function runRule(runId: string): Promise<void> {
       where: eq(schema.stageRules.id, run.ruleId),
     });
     if (!rule || !rule.active) return finish(run, "skipped", ["skipped:inactive"]);
+    if (run.subjectType === "application") {
+      // Applications have their own executor (candidate emails, outcome guard); a throw retries.
+      const { runForApplication } = await import("../hiring/rule-actions");
+      const r = await runForApplication(run, rule, results, async (next) => {
+        results = next;
+        await db()
+          .update(schema.stageRuleRuns)
+          .set({ results: next })
+          .where(eq(schema.stageRuleRuns.id, run.id));
+      });
+      return finish(run, r.status, r.results);
+    }
     const [ws, contact, stage] = await Promise.all([
       db().query.workspaces.findFirst({ where: eq(schema.workspaces.id, run.workspaceId) }),
       run.subjectType === "contact"
@@ -393,7 +407,10 @@ export async function saveRule(
       .where(eq(schema.stageRules.stageId, stage.id)),
   ]);
   if (!pipeline) return { problems: ["That stage is gone."] };
-  const subject = pipeline.kind === "client" ? "contact" : "application";
+  // Hiring stages keep their rules in the opportunity's setup, with hiring's guardrails.
+  if (pipeline.kind !== "client")
+    return { problems: ["Edit this stage's rules in the opportunity's setup."] };
+  const subject = "contact";
   const existing = input.ruleId ? others.find((r) => r.id === input.ruleId) : null;
   if (input.ruleId && !existing) return { problems: ["That automation is gone."] };
   const keep = new Set(
