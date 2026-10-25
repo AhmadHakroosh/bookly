@@ -21,7 +21,8 @@ test.beforeAll(async () => {
 });
 test.afterAll(() => resend.close());
 
-const pane = (page: Page) => page.locator('[data-slot="sheet-content"]');
+// The open conversation sits beside the list (`ui mocks.png` 04).
+const pane = (page: Page) => page.getByRole("region", { name: "Conversation" });
 const actionDone = (page: Page) =>
   page.waitForResponse(
     (r) => r.request().method() === "POST" && !!r.request().headers()["next-action"],
@@ -46,7 +47,7 @@ test("a client's conversation: booking note, email out, reply in, internal note,
   await expect(row).toContainText("(unread)");
   await expect(row).toContainText("Confirmation email for");
   await row.click();
-  await expect(pane(page).getByRole("heading", { name, level: 1 })).toBeVisible();
+  await expect(pane(page).getByRole("heading", { name, level: 2 })).toBeVisible();
   await expect(pane(page).getByText("Could we talk about pricing?")).toBeVisible();
   await expect(pane(page).getByText("When booking")).toBeVisible();
   // The confirmation is an automatic email: folded.
@@ -147,7 +148,7 @@ test("a client's conversation: booking note, email out, reply in, internal note,
     .click();
   await page.waitForLoadState("networkidle");
   await page.getByRole("button", { name: "Open in Messages" }).click();
-  await expect(pane(page).getByRole("heading", { name, level: 1 })).toBeVisible();
+  await expect(pane(page).getByRole("heading", { name, level: 2 })).toBeVisible();
 });
 
 test("team threads: start one, post, close and reopen", async ({ page }) => {
@@ -160,7 +161,7 @@ test("team threads: start one, post, close and reopen", async ({ page }) => {
   await dialog.getByRole("textbox", { name: "Subject" }).fill(subject);
   await dialog.getByRole("textbox", { name: "Message" }).fill("Kick-off notes go here.");
   await dialog.getByRole("button", { name: "Start thread" }).click();
-  await expect(pane(page).getByRole("heading", { name: subject, level: 1 })).toBeVisible();
+  await expect(pane(page).getByRole("heading", { name: subject, level: 2 })).toBeVisible();
   await expect(pane(page).getByText("Kick-off notes go here.")).toBeVisible();
 
   await page.waitForLoadState("networkidle");
