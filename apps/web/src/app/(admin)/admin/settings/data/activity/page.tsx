@@ -59,7 +59,7 @@ async function ActivityPage({ searchParams }: { searchParams: Promise<Search> })
   const targets = [...new Set(facets.actions.map((a) => a.split(".")[0]!))];
   return (
     <div className="space-y-6">
-      <BackLink href="/admin/settings/data">Data</BackLink>
+      <BackLink href="/admin/settings/data">Privacy</BackLink>
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h2 className="text-lg font-semibold tracking-tight">Activity</h2>

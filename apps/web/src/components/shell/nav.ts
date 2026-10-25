@@ -99,7 +99,9 @@ const bottom = (o: NavOptions): NavItem[] =>
           href: "/admin/settings",
           label: "Settings",
           icon: SettingsIcon,
-          keywords: "branding emails",
+          keywords: "workspace integrations api privacy brand emails",
+          // Domains is a Brand & communications tab that lives outside /admin/settings.
+          also: ["/admin/domains"],
         },
         { href: "/admin/team", label: "Team", icon: UsersIcon, keywords: "members invite" },
       ]
@@ -244,6 +246,12 @@ const words = (s: string) => {
   return t.charAt(0).toUpperCase() + t.slice(1);
 };
 
+/** Sub-pages whose address is not their name: the Privacy tab lives at /data. */
+const SEGMENT: Record<string, string> = {
+  "/admin/settings/api": "API",
+  "/admin/settings/data": "Privacy",
+};
+
 /** Pages outside the sidebar that still deserve a name. */
 const OWN: Record<string, string> = {
   "/admin/account": "Account",
@@ -271,7 +279,7 @@ export function trail(pathname: string, nav: NavOptions): Crumb[] {
       whole = false;
       break;
     }
-    out.push({ label: words(seg), href });
+    out.push({ label: SEGMENT[href] ?? words(seg), href });
   }
   // On a page below the trail (a contact, a booking), every crumb stays a link back up.
   if (whole && out.length > 1) out[out.length - 1] = { ...out.at(-1)!, current: true };

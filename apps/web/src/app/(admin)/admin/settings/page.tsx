@@ -19,7 +19,7 @@ async function GeneralPage() {
   const optedOut = !!workspace.settings.betaOptOut;
   const betas = await betaFlagsFor(workspace);
   return (
-    <div className="max-w-2xl space-y-5">
+    <div className="max-w-3xl space-y-5">
       <section aria-labelledby="general-title" className="rounded-xl border bg-card p-5 md:p-6">
         <h2 id="general-title" className="text-base font-semibold tracking-tight">
           General
