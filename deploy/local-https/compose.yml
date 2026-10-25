@@ -1,0 +1,36 @@
+# Local HTTPS on the staging domain: Caddy on 127.0.0.1:443 (and :80, which redirects) with the
+# mkcert certificate, in front of `next dev` on the host's :3002, plus Mailpit for the email the
+# local app sends. Run it with `pnpm local:https proxy up` (scripts/local-https.mjs).
+#
+#   https://staging.bookly-app.io            the platform, served by this machine's dev server
+#   https://<slug>.staging.bookly-app.io     a workspace
+#   http://localhost:8025                    Mailpit (SMTP on 127.0.0.1:1025)
+#
+# Coexists with deploy/local-staging (3100, 5434, 8026) and the root docker-compose.yml (5433).
+name: bookly-https
+
+services:
+  caddy:
+    image: caddy:2.10-alpine
+    restart: unless-stopped
+    environment:
+      BOOKLY_DOMAIN: ${BOOKLY_DOMAIN:-staging.bookly-app.io}
+      BOOKLY_WEB_UPSTREAM: ${BOOKLY_WEB_UPSTREAM:-host.docker.internal:3002}
+    extra_hosts: ["host.docker.internal:host-gateway"]
+    ports: ["127.0.0.1:443:443", "127.0.0.1:80:80"]
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./certs:/certs:ro
+      - caddy-data:/data
+
+  mailpit:
+    image: axllent/mailpit:v1.31.6
+    restart: unless-stopped
+    environment:
+      # The app may send SMTP credentials left over from .env.local; take any.
+      MP_SMTP_AUTH_ACCEPT_ANY: "true"
+      MP_SMTP_AUTH_ALLOW_INSECURE: "true"
+    ports: ["127.0.0.1:1025:1025", "127.0.0.1:8025:8025"]
+
+volumes:
+  caddy-data:

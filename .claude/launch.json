@@ -12,6 +12,13 @@
       "url": "http://localhost:3100"
     },
     {
+      "name": "bookly-web-staging-https",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["scripts/local-https.mjs", "dev"],
+      "port": 3002,
+      "url": "https://staging.bookly-app.io"
+    },
+    {
       "name": "bookly-web-cloud",
       "runtimeExecutable": "env",
       "runtimeArgs": [
