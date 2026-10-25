@@ -304,13 +304,14 @@ describe.skipIf(!realDb)("the board (seeded database)", () => {
     ).toBeNull();
   });
 
-  it("gives viewers the pipeline facts without answers or email", async () => {
+  it("gives viewers the application and its contact details, never adjustments or reviews", async () => {
+    // ADR 0005: viewers see answers, documents and contact details; not accommodations.
     const d = (await pipeline.applicationDetail(viewer, apps[0]!))!;
-    expect(d.contact).toEqual({ name: "Maya Chen", email: null });
+    expect(d.contact.name).toBe("Maya Chen");
+    expect(d.contact.email).toContain("@example.test");
     expect(d.hasAccommodations).toBe(false);
-    expect((await pipeline.applicationDetail(me, apps[0]!))!.contact.email).toContain(
-      "@example.test",
-    );
+    expect(d.reviews).toMatchObject({ total: 0, submitted: 0 });
+    expect(d.checks).toEqual([]);
   });
 
   it("moves between open stages: history, rules, an audit and ids only out", async () => {

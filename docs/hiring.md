@@ -79,7 +79,7 @@ outside by email (owners and admins). Outside people join as **collaborators**: 
 interview or view, but don't host bookings or own pipelines, and they can't coordinate. Their
 invitations go out when you publish. Coordinators see every application and make decisions;
 reviewers see only the applications assigned to them and never accommodations requests; viewers
-see the pipeline without documents or reviews.
+see every application with its answers and documents, but not reviews or accommodations requests.
 
 ### Privacy and applicant experience
 
@@ -188,11 +188,11 @@ time it is read is in the activity log.
 
 ### Who sees what
 
-| Role        | Board and list                     | Answers and documents | Review progress | Moves |
-| ----------- | ---------------------------------- | --------------------- | --------------- | ----- |
-| Coordinator | Every application                  | Yes                   | Yes             | Yes   |
-| Reviewer    | Applications assigned to them      | Yes                   | Their own only  | No    |
-| Viewer      | Every application, names and stage | No (no email either)  | No              | No    |
+| Role        | Board and list                | Answers and documents | Review progress | Moves |
+| ----------- | ----------------------------- | --------------------- | --------------- | ----- |
+| Coordinator | Every application             | Yes                   | Yes             | Yes   |
+| Reviewer    | Applications assigned to them | Yes                   | Their own only  | No    |
+| Viewer      | Every application             | Yes                   | No              | No    |
 
 Workspace owners and admins coordinate every opportunity. Adjustments requests are for
 coordinators only.
