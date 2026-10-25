@@ -73,6 +73,61 @@ until you add their keys to `deploy/local-staging/.env` (git-ignored, created on
 fresh secrets). `REF=worktree scripts/local-staging.sh update` builds this checkout as it is
 instead; `status`, `logs` and `down` (`down --wipe` drops the data) do what they say.
 
+## Local HTTPS on the staging domain
+
+For maintainers with staging's variables (`.env.cloud.staging`): this machine can answer
+https://staging.bookly-app.io and every `https://<slug>.staging.bookly-app.io` itself, so `next
+dev` runs with staging's URLs, cookies, passkeys and OAuth apps over real HTTPS. The real staging
+is shadowed on this machine only while `dns on`. Everything goes through `pnpm local:https`
+(`scripts/local-https.mjs`); the reasoning is in the v2 decision "Local HTTPS on the staging
+domain".
+
+Once (no sudo): `brew install dnsmasq` (and `brew install stripe/stripe-cli/stripe` for billing
+work), `pnpm local:https setup` (a mkcert certificate in `deploy/local-https/certs/`, git-ignored,
+and a user LaunchAgent running dnsmasq on 127.0.0.1:5354), `pnpm dlx neonctl@2 auth`. Once, with
+your password:
+
+```bash
+mkcert -install                                   # trust mkcert's CA (Keychain, Firefox)
+sudo mkdir -p /etc/resolver
+printf 'nameserver 127.0.0.1\nport 5354\n' | sudo tee /etc/resolver/staging.bookly-app.io
+sudo killall -HUP mDNSResponder
+```
+
+Then:
+
+```bash
+pnpm local:https db branch      # a Neon branch of staging (local-<you>) → .env.cloud.staging.local
+pnpm local:https db migrate     # this checkout's migrations, on the branch only
+pnpm local:https proxy up       # Caddy on 127.0.0.1:443 + Mailpit (http://localhost:8025)
+pnpm local:https dns on         # staging.bookly-app.io → this machine (`dns off` gives it back)
+pnpm local:https dev            # next dev on :3002 behind the proxy, realtime on :3003
+```
+
+What differs from staging, by design (`pnpm local:https env` lists every variable's source, names
+only):
+
+- **Never staging's database.** `dev` refuses without a branch, and `pnpm db:migrate` refuses any
+  database named in `.env.cloud.staging`, `.env.cloud.preview` or `.env.cloud` unless it runs on
+  Vercel or CI (override: `BOOKLY_MIGRATE_SHARED=1`). `db reset` brings the branch back to
+  staging's current data.
+- **Jobs run in-process** (pg-boss on the branch): QStash is off, since it would call the real
+  staging back. Upstash is off too (rate limits per process).
+- **Nothing reaches real people** unless you pass `--live`: email goes to Mailpit, SMS (Twilio),
+  web push and Recall bots are off. The branch holds copies of staging's people and bookings, so
+  the local worker would otherwise send them reminders.
+- **Stripe** is off unless `.env.cloud.staging.local` carries a Stripe sandbox of its own (all
+  `STRIPE_*`); `--live` uses staging's test account, whose webhook then also receives your events.
+  `pnpm local:https webhooks` forwards Stripe events here; `dev` takes the signing secret from the
+  Stripe CLI.
+- OAuth sign-in and calendar connections, Anthropic, Daily and S3 use staging's own settings
+  unchanged (same host, same redirect URIs). Deleting a file locally deletes it from staging's
+  bucket.
+
+`bookly-web`, `bookly-web-cloud` and this all use port 3002, so run one at a time; local staging
+(`:3100`) runs beside any of them. In Claude Code the launch configuration is
+`bookly-web-staging-https`.
+
 ## End-to-end tests
 
 Two Playwright suites run in CI against a production build:

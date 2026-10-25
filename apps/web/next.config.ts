@@ -20,6 +20,12 @@ const storage = (() => {
   }
 })();
 
+/** ROOT_DOMAIN and its subdomains, for the dev server's cross-origin check (dev only). */
+function devRootOrigins(): string[] {
+  const host = (process.env.ROOT_DOMAIN ?? "").split(":")[0]!.toLowerCase();
+  return dev && host.includes(".") ? [host, `**.${host}`] : [];
+}
+
 /**
  * Realtime (ADR 0007). With REALTIME_PORT the app runs its socket server in-process and browsers
  * reach it at /realtime on the app's own origin (the Next server proxies the upgrade to the
@@ -93,7 +99,9 @@ const nextConfig: NextConfig = {
   // inlining it removes the render-blocking request that held the mobile LCP.
   experimental: { inlineCss: true, serverActions: { bodySizeLimit: "12mb" } },
   // Local multi-tenant testing: <slug>.lvh.me resolves to 127.0.0.1 and accepts subdomain cookies.
-  allowedDevOrigins: ["lvh.me", "*.lvh.me"],
+  // `pnpm local:https dev` serves the staging domain from this machine behind a local proxy, so
+  // the dev server also accepts ROOT_DOMAIN and every host under it.
+  allowedDevOrigins: ["lvh.me", "*.lvh.me", ...devRootOrigins()],
   transpilePackages: [
     "@bookly/cloud",
     "@bookly/config",

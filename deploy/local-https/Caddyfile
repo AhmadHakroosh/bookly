@@ -1,0 +1,29 @@
+# Local HTTPS for the staging domain: this machine answers https://staging.bookly-app.io and
+# every https://<host>.staging.bookly-app.io with a mkcert certificate, in front of `next dev`.
+# Started by `pnpm local:https proxy up` (deploy/local-https/compose.yml); see CONTRIBUTING.md
+# ("Local HTTPS on the staging domain") and planning/v2/decisions/local-https-staging.md.
+#
+# The dev server's /realtime rewrite hands the websocket to the in-process server on
+# 127.0.0.1:3003, exactly as the production image does, so one upstream covers pages, the
+# Turbopack HMR socket and realtime.
+#
+# Platform split (app, marketing and console as separate deployables): give each its own dev
+# port and route by host here, e.g.
+#   @marketing host {$BOOKLY_DOMAIN} www.{$BOOKLY_DOMAIN}       -> host.docker.internal:3004
+#   @console   host console.{$BOOKLY_DOMAIN}                     -> host.docker.internal:3005
+#   everything else (*.{$BOOKLY_DOMAIN}: workspaces)             -> host.docker.internal:3002
+{
+	# mkcert issues the certificate (pnpm local:https certs); Caddy never asks an ACME CA and
+	# never touches the system trust store.
+	auto_https disable_certs
+	skip_install_trust
+	admin off
+}
+
+{$BOOKLY_DOMAIN:staging.bookly-app.io}, *.{$BOOKLY_DOMAIN:staging.bookly-app.io} {
+	tls /certs/local.pem /certs/local-key.pem
+	reverse_proxy {$BOOKLY_WEB_UPSTREAM:host.docker.internal:3002} {
+		# Streamed pages, Server-Sent Events and RSC payloads pass through unbuffered.
+		flush_interval -1
+	}
+}

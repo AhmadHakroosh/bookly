@@ -70,6 +70,7 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 - Admin → Settings → License renders at request time, so expiry and grace are always current (it could fail the production build)
 - The core is proven to stand alone: a `core-only` CI job deletes `ee/` and builds, typechecks and tests; a guard test keeps core from importing `ee/` and `ee/` from importing the app
 - **Press and brand page** at `/press` on the platform host: logos in SVG and PNG with a one-file press kit, usage rules, colours, type, product design previews, the story of the mark and boilerplate copy; linked from the footer and listed in the sitemap
+- **Maintainers: staging on this machine, over HTTPS.** `pnpm local:https` serves https://staging.bookly-app.io and its workspaces from `next dev` with staging's variables, a mkcert certificate behind Caddy and a Neon branch of staging's database, with jobs in-process and email in Mailpit (CONTRIBUTING.md, "Local HTTPS on the staging domain"). `pnpm db:migrate` now refuses, outside Vercel and CI, a database named in the maintainer's `.env.cloud.staging`, `.env.cloud.preview` or `.env.cloud`; self-hosters have none of these files, so nothing changes for them
 
 ## [0.20.1] - 2026-10-17
 
