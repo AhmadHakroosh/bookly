@@ -36,6 +36,7 @@ import { ActionItem, ActionList } from "@/components/ui/action-list";
 import { AttentionItem, AttentionStrip } from "@/components/ui/attention-strip";
 import { CallControl, CallControls, VideoTile } from "@/components/ui/call-controls";
 import { FileRow } from "@/components/ui/file-row";
+import { FileTypeIcon } from "@/components/ui/file-type-icon";
 import { CLIENT_JOURNEY, JourneyStrip } from "@/components/ui/journey-strip";
 import { ListRow } from "@/components/ui/list-row";
 import { RecapCard } from "@/components/ui/recap-card";
@@ -418,6 +419,25 @@ export default function DesignPage() {
                 meta="Jordan Patel"
                 date="Apr 8"
               />
+            </div>
+            <div className="mt-4 flex flex-wrap items-end gap-3" aria-label="File types">
+              {[
+                "a.pdf",
+                "a.docx",
+                "a.xlsx",
+                "a.pptx",
+                "a.zip",
+                "a.png",
+                "a.mp4",
+                "a.mp3",
+                "a.txt",
+                "a.bin",
+              ].map((n) => (
+                <FileTypeIcon key={n} name={n} size={32} />
+              ))}
+              <FileTypeIcon name="a.pdf" size={48} />
+              <FileTypeIcon name="a.pdf" size={20} />
+              <FileTypeIcon name="a.pdf" size={16} />
             </div>
           </div>
         </div>

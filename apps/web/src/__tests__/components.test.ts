@@ -10,7 +10,11 @@ describe("file type icons", () => {
     expect(kindOf("workshop-notes.docx")).toBe("doc");
     expect(kindOf("image/png")).toBe("image");
     expect(kindOf("client-assets.zip")).toBe("archive");
-    expect(kindOf("recording.mp4")).toBe("file");
+    expect(kindOf("recording.mp4")).toBe("video");
+    expect(kindOf("deck.pptx")).toBe("slides");
+    expect(kindOf("notes.md")).toBe("text");
+    expect(kindOf("data.csv")).toBe("sheet");
+    expect(kindOf("mystery.bin")).toBe("other");
   });
 });
 

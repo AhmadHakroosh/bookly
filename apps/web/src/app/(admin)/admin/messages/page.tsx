@@ -551,7 +551,7 @@ async function ClientContext({
             <ul className="space-y-1">
               {latest.map((f) => (
                 <li key={f.id} className="flex items-center gap-2 text-xs">
-                  <FileTypeIcon name={f.name} className="size-3.5" />
+                  <FileTypeIcon name={f.name} size={16} />
                   <span className="min-w-0 flex-1 truncate">
                     <FileLink file={f} className="hover:underline" />
                   </span>

@@ -11,8 +11,8 @@ const DOT = {
 /**
  * One connected tool (`mocks.png` 05 and 08): an icon tile, the tool's name with the account or
  * a line on what it does, its state as a dot and a word ("Connected", "Ready to use", "Not
- * connected"), and the action on the right (Connect, Manage, or ⋮). Other companies' tools are
- * named in text with a neutral icon, never their logo.
+ * connected"), and the action on the right (Connect, Manage, or ⋮). A product's own icon
+ * (`ProviderIcon`, 32 px) goes in `mark`; anything that isn't a product gets a neutral `icon`.
  */
 function IntegrationRow({
   icon: Icon,
@@ -38,7 +38,13 @@ function IntegrationRow({
   return (
     <li data-slot="integration-row" className={cn("px-4 py-3 sm:px-5", className)}>
       <div className="flex items-center gap-3">
-        <span className="flex size-10 shrink-0 items-center justify-center rounded-lg border bg-background">
+        {/* A product's own icon stands alone in the 40 px slot; a neutral icon gets a tile. */}
+        <span
+          className={cn(
+            "flex size-10 shrink-0 items-center justify-center",
+            !mark && "rounded-lg border bg-background",
+          )}
+        >
           {mark ?? (Icon && <Icon className="size-5 text-muted-foreground" aria-hidden />)}
         </span>
         <div className="min-w-0 flex-1">
