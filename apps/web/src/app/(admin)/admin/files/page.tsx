@@ -3,13 +3,11 @@ import { PaneHeader } from "@/components/ui/pane-header";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import { PaneHost } from "@/components/pane";
+import { FileTypeIcon } from "@/components/ui/file-row";
 import { PLANS, planFor } from "@bookly/cloud";
 import {
   ClockIcon,
   ContactRoundIcon,
-  FileIcon,
-  FileImageIcon,
-  FileTextIcon,
   FolderIcon,
   SearchIcon,
   Trash2Icon,
@@ -23,7 +21,7 @@ import { UploadButton } from "@/components/drive/upload-button";
 import { BookingsSkeleton } from "@/components/skeletons/pages";
 import { Input } from "@/components/ui/input";
 import { formatBytes } from "@bookly/cloud";
-import { fmtDateTime } from "@/lib/time";
+import { fmtDateTime, formatInTz } from "@/lib/time";
 import { cn } from "@/lib/utils";
 import {
   PREVIEWABLE,
@@ -54,16 +52,14 @@ export const metadata = { title: "Files" };
 type SP = Record<string, string | string[] | undefined>;
 const one = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v) || undefined;
 type View = "my" | "team" | "contacts" | "recent" | "trash";
+/** The drive's views, as `ui mocks.png` 06 names them: everything, yours, clients', shared. */
 const VIEWS: [View, string, LucideIcon][] = [
+  ["recent", "All files", ClockIcon],
   ["my", "My files", UserRoundIcon],
-  ["team", "Team", UsersIcon],
-  ["contacts", "Contacts", ContactRoundIcon],
-  ["recent", "Recent", ClockIcon],
+  ["contacts", "Client files", ContactRoundIcon],
+  ["team", "Shared", UsersIcon],
   ["trash", "Trash", Trash2Icon],
 ];
-
-const iconFor = (mime: string) =>
-  mime.startsWith("image/") ? FileImageIcon : mime === "application/pdf" ? FileTextIcon : FileIcon;
 
 async function FilesPage({ searchParams }: PageProps<"/admin/files">) {
   const [{ session }, ws, sp] = await Promise.all([
@@ -86,7 +82,7 @@ async function FilesPage({ searchParams }: PageProps<"/admin/files">) {
   const contactId = one(sp.contact);
   const view: View = contactId
     ? "contacts"
-    : ((VIEWS.find(([k]) => k === one(sp.view))?.[0] ?? "my") as View);
+    : ((VIEWS.find(([k]) => k === one(sp.view))?.[0] ?? "recent") as View);
   const folderId = one(sp.folder) ?? null;
   const q = one(sp.q)?.trim() ?? "";
   const filter = (["all", "received", "ours"] as const).find((f) => f === one(sp.filter)) ?? "all";
@@ -130,89 +126,79 @@ async function FilesPage({ searchParams }: PageProps<"/admin/files">) {
             {formatBytes(used)} used{budget !== null ? ` of ${formatBytes(budget)}` : ""}
           </>
         }
-        actions={
-          <>
-            <form
-              method="get"
-              action="/admin/files"
-              className="relative w-full sm:w-72"
-              role="search"
-            >
-              <SearchIcon
-                className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground"
-                aria-hidden
-              />
-              <Input
-                name="q"
-                defaultValue={q}
-                placeholder="Search files"
-                aria-label="Search files"
-                className="pl-9"
-              />
-            </form>
-          </>
-        }
       />
-      <div className="grid gap-6 md:grid-cols-[180px_1fr]">
-        <nav aria-label="Drive" className="flex gap-1 overflow-x-auto md:flex-col">
-          {VIEWS.filter(([k]) => k !== "team" || canTeam).map(([k, label, Icon]) => (
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <nav aria-label="Drive" className="flex flex-wrap gap-2">
+          {VIEWS.filter(([k]) => k !== "team" || canTeam).map(([k, label]) => (
             <Link
               key={k}
               href={`/admin/files?view=${k}`}
               aria-current={view === k && !q ? "page" : undefined}
               className={cn(
-                "flex items-center gap-2 rounded-md px-2 py-1.5 text-sm whitespace-nowrap",
+                "inline-flex h-8 items-center rounded-lg border px-3 text-sm font-medium whitespace-nowrap outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
                 view === k && !q
-                  ? "bg-muted font-medium text-foreground"
-                  : "text-muted-foreground hover:bg-muted/60 hover:text-foreground",
+                  ? "border-primary/40 bg-accent text-accent-foreground"
+                  : "bg-card text-muted-foreground hover:text-foreground",
               )}
             >
-              <Icon className="size-4" aria-hidden />
               {label}
             </Link>
           ))}
-          {!canTeam && (
-            <p className="hidden px-2 pt-2 text-xs text-muted-foreground md:block">
-              Team folders come with {PLANS[planFor("sharedFolders")].name}.
-            </p>
-          )}
         </nav>
-        <section aria-label="Files" className="min-w-0 space-y-4">
-          <Suspense fallback={<p className="text-sm text-muted-foreground">Loading…</p>}>
-            {q ? (
-              <SearchView v={v} q={q} cursor={cursor} hrefFor={hrefFor} tz={tz} canTeam={canTeam} />
-            ) : view === "my" || view === "team" ? (
-              <FolderView
+        <form method="get" action="/admin/files" className="relative w-full sm:w-64" role="search">
+          <SearchIcon
+            className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground"
+            aria-hidden
+          />
+          <Input
+            name="q"
+            defaultValue={q}
+            placeholder="Search files…"
+            aria-label="Search files"
+            className="h-8 pl-9"
+          />
+        </form>
+      </div>
+      {!canTeam && (
+        <p className="-mt-3 text-xs text-muted-foreground">
+          Shared team folders come with {PLANS[planFor("sharedFolders")].name}.
+        </p>
+      )}
+      <section aria-label="Files" className="min-w-0 space-y-4">
+        <Suspense fallback={<p className="text-sm text-muted-foreground">Loading…</p>}>
+          {q ? (
+            <SearchView v={v} q={q} cursor={cursor} hrefFor={hrefFor} tz={tz} canTeam={canTeam} />
+          ) : view === "my" || view === "team" ? (
+            <FolderView
+              v={v}
+              space={view === "my" ? "personal" : "team"}
+              folderId={folderId}
+              cursor={cursor}
+              hrefFor={hrefFor}
+              tz={tz}
+              canTeam={canTeam}
+            />
+          ) : view === "contacts" ? (
+            contactId ? (
+              <ContactView
                 v={v}
-                space={view === "my" ? "personal" : "team"}
-                folderId={folderId}
+                contactId={contactId}
+                filter={filter}
                 cursor={cursor}
                 hrefFor={hrefFor}
                 tz={tz}
                 canTeam={canTeam}
               />
-            ) : view === "contacts" ? (
-              contactId ? (
-                <ContactView
-                  v={v}
-                  contactId={contactId}
-                  filter={filter}
-                  cursor={cursor}
-                  hrefFor={hrefFor}
-                  tz={tz}
-                  canTeam={canTeam}
-                />
-              ) : (
-                <ContactsView v={v} />
-              )
-            ) : view === "recent" ? (
-              <RecentView v={v} cursor={cursor} hrefFor={hrefFor} tz={tz} canTeam={canTeam} />
             ) : (
-              <TrashView v={v} tz={tz} canTeam={canTeam} />
-            )}
-          </Suspense>
-        </section>
-      </div>
+              <ContactsView v={v} />
+            )
+          ) : view === "recent" ? (
+            <RecentView v={v} cursor={cursor} hrefFor={hrefFor} tz={tz} canTeam={canTeam} />
+          ) : (
+            <TrashView v={v} tz={tz} canTeam={canTeam} />
+          )}
+        </Suspense>
+      </section>
       <PaneHost param="file" id={one(sp.file) ?? null} label="File">
         {one(sp.file) && (
           <FilePane
@@ -245,28 +231,63 @@ function FileRows({
   userId: string;
   trashed?: boolean;
 }) {
+  const cols =
+    "grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 px-3 sm:grid-cols-[minmax(0,1fr)_8rem_9rem_7.5rem_auto]";
   return (
     <>
+      {files.length > 0 && (
+        <li aria-hidden className={`${cols} py-2 text-xs text-muted-foreground`}>
+          <span>Name</span>
+          <span className="hidden sm:block">Owner</span>
+          <span className="hidden sm:block">Client</span>
+          <span className="hidden sm:block">{trashed ? "Deleted" : "Updated"}</span>
+          <span className="w-8" />
+        </li>
+      )}
       {files.map((f) => {
-        const Icon = iconFor(f.mime);
         const open = hrefFor({ file: f.id });
         return (
-          <li key={f.id} className="flex items-center gap-3 px-3 py-2 text-sm">
-            <Icon className="size-4 shrink-0 text-muted-foreground" aria-hidden />
-            <span className="min-w-0 flex-1">
-              {trashed ? (
-                <span className="block truncate">{f.name}</span>
-              ) : (
-                <Link href={open} scroll={false} className="block truncate hover:underline">
-                  {f.name}
-                </Link>
-              )}
-              <span className="block truncate text-xs text-muted-foreground">
-                {[f.contactName, f.ownerName, formatBytes(f.size)].filter(Boolean).join(" · ")}
+          <li key={f.id} className={`${cols} py-2 text-sm`}>
+            <span className="flex min-w-0 items-center gap-3">
+              <FileTypeIcon name={f.name} />
+              <span className="min-w-0">
+                {trashed ? (
+                  <span className="block truncate font-medium">{f.name}</span>
+                ) : (
+                  <Link
+                    href={open}
+                    scroll={false}
+                    className="block truncate font-medium hover:underline"
+                  >
+                    {f.name}
+                  </Link>
+                )}
+                <span className="block truncate text-xs text-muted-foreground sm:hidden">
+                  {[f.contactName, f.ownerName, formatBytes(f.size)].filter(Boolean).join(" · ")}
+                </span>
               </span>
             </span>
+            <span className="hidden truncate text-muted-foreground sm:block">
+              {f.ownerName ?? "—"}
+            </span>
+            <span className="hidden truncate sm:block">
+              {f.contactId && f.contactName ? (
+                <Link
+                  href={`/admin/contacts/${f.contactId}`}
+                  className="text-primary hover:underline"
+                >
+                  {f.contactName}
+                </Link>
+              ) : (
+                <span className="text-muted-foreground">—</span>
+              )}
+            </span>
             <span className="hidden text-xs text-muted-foreground tabular-nums sm:block">
-              {fmtDateTime(f.deletedAt ?? f.updatedAt ?? f.readyAt ?? f.createdAt, tz)}
+              {formatInTz(f.deletedAt ?? f.updatedAt ?? f.readyAt ?? f.createdAt, tz, {
+                month: "short",
+                day: "numeric",
+                year: "numeric",
+              })}
             </span>
             <FileActions
               file={{ id: f.id, name: f.name, mime: f.mime, contactId: f.contactId }}
@@ -359,7 +380,7 @@ async function FolderView({
         </Empty>
       ) : (
         <ul
-          className="divide-y rounded-xl border"
+          className="divide-y rounded-xl border bg-card"
           aria-label={`${trail.at(-1)?.name ?? root} contents`}
         >
           {folders.map((f) => (
@@ -391,7 +412,7 @@ async function ContactsView({ v }: { v: Viewer }) {
       </Empty>
     );
   return (
-    <ul className="divide-y rounded-xl border" aria-label="Contact folders">
+    <ul className="divide-y rounded-xl border bg-card" aria-label="Contact folders">
       {list.map((c) => (
         <li key={c.id} className="flex items-center gap-3 px-3 py-2 text-sm">
           <FolderIcon className="size-4 shrink-0 text-muted-foreground" aria-hidden />
@@ -479,7 +500,7 @@ async function ContactView({
         <Empty>Files they send you and files you keep for them show up here.</Empty>
       ) : (
         <ul
-          className="divide-y rounded-xl border"
+          className="divide-y rounded-xl border bg-card"
           aria-label={`${contact.name || contact.email}'s files`}
         >
           <FileRows files={files} hrefFor={hrefFor} tz={tz} canTeam={canTeam} userId={v.userId} />
@@ -507,7 +528,7 @@ async function RecentView({
   if (!files.length) return <Empty>Nothing yet.</Empty>;
   return (
     <>
-      <ul className="divide-y rounded-xl border" aria-label="Recent files">
+      <ul className="divide-y rounded-xl border bg-card" aria-label="Recent files">
         <FileRows files={files} hrefFor={hrefFor} tz={tz} canTeam={canTeam} userId={v.userId} />
       </ul>
       <More next={next} hrefFor={hrefFor} />
@@ -542,7 +563,7 @@ async function SearchView({
       {files.length === 0 ? (
         <Empty>No files match.</Empty>
       ) : (
-        <ul className="divide-y rounded-xl border" aria-label="Search results">
+        <ul className="divide-y rounded-xl border bg-card" aria-label="Search results">
           <FileRows files={files} hrefFor={hrefFor} tz={tz} canTeam={canTeam} userId={v.userId} />
         </ul>
       )}
@@ -560,7 +581,7 @@ async function TrashView({ v, tz, canTeam }: { v: Viewer; tz: string; canTeam: b
       <p className="text-sm text-muted-foreground">
         Files and folders in the trash are deleted for good after 30 days.
       </p>
-      <ul className="divide-y rounded-xl border" aria-label="Trash">
+      <ul className="divide-y rounded-xl border bg-card" aria-label="Trash">
         {folders.map((f) => (
           <li key={f.id} className="flex items-center gap-3 px-3 py-2 text-sm">
             <FolderIcon className="size-4 shrink-0 text-muted-foreground" aria-hidden />

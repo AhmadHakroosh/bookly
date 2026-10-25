@@ -1,17 +1,20 @@
 # Files
 
 A drive for the workspace, behind the `files` feature flag (Console → Flags; a **Beta** badge
-shows while it is in beta). **Admin → Files** has five places:
+shows while it is in beta). **Admin → Files** has five tabs, and a search on the right:
 
+- **All files**: everything you can see, newest first.
 - **My files**: yours alone. Folders nest as deep as you like.
-- **Team**: folders and files every member sees (Team plan).
-- **Contacts**: one folder per contact, holding what they sent you (_Received from them_) and
-  the files you keep for them (_Ours_).
-- **Recent**: everything you can see, newest first.
+- **Client files**: one folder per contact, holding what they sent you (_Received from them_)
+  and the files you keep for them (_Ours_).
+- **Shared**: folders and files every member sees (Team plan).
 - **Trash**: deleted files and folders, restorable for 30 days, then deleted for good. A folder
   comes back with everything that was deleted with it.
 
-Upload (several at once), new folder, rename, move (between My files, Team and their folders),
+Files are listed with their type icon, owner, the client they belong to (a link to the
+contact) and when they changed.
+
+Upload (several at once), new folder, rename, move (between My files, Shared and their folders),
 "Belongs to…" (put a file in a contact's folder; it also shows on their timeline), move to the
 trash, restore, delete forever, search by name. Clicking a file opens it in a side pane: a
 preview for images and PDFs, where it came from, its contact and the tasks it is on. Lists load
@@ -23,7 +26,7 @@ and the file is never rendered in the browser. A file's name on a task, on the c
 Files card and on the timeline opens the same viewer (or downloads); Cmd/Ctrl-click opens it in
 a new tab.
 
-Who sees what: your My files are yours; Team files and anything that belongs to a contact are
+Who sees what: your My files are yours; Shared files and anything that belongs to a contact are
 seen by every member; a file on a task is seen by whoever can see the task; a file attached to a
 message is seen by everyone in that conversation (`docs/messages.md`).
 
