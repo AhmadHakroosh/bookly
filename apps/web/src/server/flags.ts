@@ -56,7 +56,6 @@ type Resolved = {
 
 /** One round trip per workspace per request: states, this workspace's grants, its cohorts' flags. */
 const resolve = cache(async (workspaceId: string): Promise<Resolved> => {
-  const now = new Date();
   const [states, grants, cohortFlags] = await Promise.all([
     db()
       .select({ key: schema.featureFlags.key, state: schema.featureFlags.state })
@@ -67,7 +66,11 @@ const resolve = cache(async (workspaceId: string): Promise<Resolved> => {
       .where(
         and(
           eq(schema.workspaceFlags.workspaceId, workspaceId),
-          or(isNull(schema.workspaceFlags.expiresAt), gt(schema.workspaceFlags.expiresAt, now)),
+          // The database's clock, not the render's: a prerender may not read the time.
+          or(
+            isNull(schema.workspaceFlags.expiresAt),
+            gt(schema.workspaceFlags.expiresAt, sql`now()`),
+          ),
         ),
       ),
     db()

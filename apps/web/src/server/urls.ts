@@ -11,11 +11,12 @@ const TTL = 30_000;
 
 /**
  * The verified domain marked primary under Admin → Domains, or null. Cached in-process for
- * 30s; domain actions clear it, and `proxy.ts` keeps its own copy in `tenancy.ts`.
+ * 30s; domain actions clear it, and `proxy.ts` keeps its own copy in `tenancy.ts`. The TTL is
+ * timed with `performance.now()`: a prerender may not read the wall clock.
  */
 export async function primaryDomain(workspaceId: string): Promise<string | null> {
   const hit = cache.get(workspaceId);
-  if (hit && Date.now() - hit.at < TTL) return hit.host;
+  if (hit && performance.now() - hit.at < TTL) return hit.host;
   const row = await db().query.workspaceDomains.findFirst({
     where: and(
       eq(schema.workspaceDomains.workspaceId, workspaceId),
@@ -25,7 +26,7 @@ export async function primaryDomain(workspaceId: string): Promise<string | null>
     columns: { host: true },
   });
   const host = row?.host ?? null;
-  cache.set(workspaceId, { host, at: Date.now() });
+  cache.set(workspaceId, { host, at: performance.now() });
   return host;
 }
 

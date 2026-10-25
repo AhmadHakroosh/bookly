@@ -86,6 +86,9 @@ const nextConfig: NextConfig = {
   // Standalone output feeds the Docker image; Vercel and the e2e build use the regular server.
   output: process.env.VERCEL || process.env.E2E ? undefined : "standalone",
   cacheComponents: true,
+  // Links prefetch one shared App Shell per route. No link opts into the legacy full prefetch
+  // (`prefetch={true}`), and pages read params and searchParams inside their Suspense boundary.
+  partialPrefetching: true,
   // The stylesheet is small (~24 KiB) and most visits to the marketing site are first visits:
   // inlining it removes the render-blocking request that held the mobile LCP.
   experimental: { inlineCss: true, serverActions: { bodySizeLimit: "12mb" } },

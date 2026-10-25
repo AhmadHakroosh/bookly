@@ -40,6 +40,7 @@ export default function ComparePage() {
               <li key={c.slug}>
                 <Link
                   href={`/compare/${c.slug}`}
+                  prefetch
                   className="group flex h-full flex-col rounded-2xl border bg-card p-6 transition-colors hover:border-(--brand)/40"
                 >
                   <h3 className="text-lg font-bold tracking-tight">Bookly vs {c.name}</h3>

@@ -311,6 +311,17 @@ export function solutionMetadata(s: Solution) {
 
 const href = (slug: string) => (slug === "consultants" ? "/solutions" : `/solutions/${slug}`);
 
+/** The same for every audience, so `[slug]` shows it while the tab's content streams in. */
+export function SolutionsHero() {
+  return (
+    <PageHero
+      first="Built around"
+      second="the way you work."
+      lead="Flexible tools for different ways of working, with the same connected journey for every client, applicant and cohort."
+    />
+  );
+}
+
 export function SolutionsPage({ slug }: { slug: string }) {
   const s = SOLUTIONS.find((x) => x.slug === slug);
   if (!s) notFound();
@@ -329,11 +340,7 @@ export function SolutionsPage({ slug }: { slug: string }) {
           faqLd(FAQ),
         ]}
       />
-      <PageHero
-        first="Built around"
-        second="the way you work."
-        lead="Flexible tools for different ways of working, with the same connected journey for every client, applicant and cohort."
-      />
+      <SolutionsHero />
       <Section className="pt-4 md:pt-6" labelledBy="solution-title">
         <nav aria-label="Solutions by audience" className="-mx-4 overflow-x-auto px-4">
           <ul className="flex min-w-max gap-1 border-b">
@@ -341,8 +348,10 @@ export function SolutionsPage({ slug }: { slug: string }) {
               const active = x.slug === s.slug;
               return (
                 <li key={x.slug}>
+                  {/* A tab switch: prefetch the tab's content too, not only the route's shell. */}
                   <Link
                     href={href(x.slug)}
+                    prefetch
                     scroll={false}
                     aria-current={active ? "page" : undefined}
                     className={`relative inline-flex h-11 items-center px-4 text-sm font-medium transition-colors ${active ? "text-primary after:absolute after:inset-x-2 after:-bottom-px after:h-0.5 after:rounded-full after:bg-(--brand)" : "text-muted-foreground hover:text-foreground"}`}

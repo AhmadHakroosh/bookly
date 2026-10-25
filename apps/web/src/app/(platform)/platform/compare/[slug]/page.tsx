@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { Suspense } from "react";
 import { CheckIcon } from "lucide-react";
 import { breadcrumbLd, faqLd, JsonLd } from "../../json-ld";
 import { pageMetadata, SITE } from "../../site";
@@ -25,7 +26,16 @@ export async function generateMetadata({
 
 const host = (url: string) => new URL(url).hostname.replace(/^www\./, "") + new URL(url).pathname;
 
-export default async function ComparisonPage({ params }: PageProps<"/platform/compare/[slug]">) {
+/** The slug is URL data: it resolves inside Suspense, so every comparison shares the App Shell. */
+export default function ComparisonPageBoundary({ params }: PageProps<"/platform/compare/[slug]">) {
+  return (
+    <Suspense fallback={null}>
+      <ComparisonPage params={params} />
+    </Suspense>
+  );
+}
+
+async function ComparisonPage({ params }: Pick<PageProps<"/platform/compare/[slug]">, "params">) {
   const c = comparison((await params).slug);
   if (!c) notFound();
   return (
