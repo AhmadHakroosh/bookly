@@ -102,3 +102,32 @@ export function PaneHost({
     </Sheet>
   );
 }
+
+/**
+ * A pane that sits in the page instead of sliding over it (Messages' thread column, as
+ * `ui mocks.png` 04 draws it), addressed by the same search parameter. `empty` shows while
+ * nothing is chosen; while the address asks for another one (just clicked), the skeleton.
+ */
+export function InlinePane({
+  param,
+  id,
+  label,
+  empty,
+  className,
+  children,
+}: {
+  param: (typeof PANE_PARAMS)[number];
+  id: string | null;
+  label: string;
+  empty: ReactNode;
+  className?: string;
+  children: ReactNode;
+}) {
+  const wanted = useSearchParams().get(param);
+  if (!wanted) return <div className={className}>{empty}</div>;
+  return (
+    <section aria-label={label} className={className}>
+      {wanted !== id ? <PaneSkeleton /> : children}
+    </section>
+  );
+}

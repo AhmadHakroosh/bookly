@@ -163,11 +163,11 @@ test.describe("files", () => {
     // It is in the contact's folder and on their timeline, linked to the task.
     await admin.goto(contactUrl);
     await expect(admin.getByText(`File added to “${task}”: ${file}`)).toBeVisible();
-    await expect(admin.getByRole("region", { name: "Files" })).toContainText(file);
+    await expect(admin.getByRole("region", { name: /^Recent files/ })).toContainText(file);
 
     // Sent from the drive with a follow-up: the email's timeline entry lists it.
     await admin.waitForLoadState("networkidle");
-    await admin.getByRole("button", { name: "Follow-up" }).click();
+    await admin.getByRole("button", { name: "Add follow-up" }).click();
     await admin.getByRole("button", { name: "Attach from Files" }).click();
     const picker = admin.getByRole("dialog");
     await picker.getByRole("checkbox").first().check();

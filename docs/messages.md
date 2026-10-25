@@ -1,8 +1,11 @@
 # Messages
 
 Conversations with your clients and between your team, behind the `messages` feature flag
-(Console → Flags; a **Beta** badge shows while it is in beta). **Admin → Messages** lists them
-newest first, with the unread count in the sidebar and on Home.
+(Console → Flags; a **Beta** badge shows while it is in beta). **Admin → Messages** is three
+columns: the conversations newest first (**All · Clients · Team**, search, **Unread** and
+**Closed**), the open conversation with its composer, and **Client context** beside it (who they
+are, how to reach them, recent bookings and files). On a phone the list and the conversation take
+turns. The unread count is in the sidebar and on Home.
 
 ## A conversation per client
 
@@ -40,8 +43,8 @@ by everyone in the thread.
 
 ## Inbox, unread and closing
 
-- **Inbox**: open conversations and threads. **Unread**: someone else wrote since you last
-  opened it. **Clients** and **Team** filter by kind. **Closed**: what was closed.
+- **All**: open conversations and threads. **Clients** and **Team** filter by kind. **Unread**:
+  someone else wrote since you last opened it. **Closed**: what was closed.
 - Opening a conversation marks it read for you only.
 - **Close thread** takes it out of the inbox; a client writing again reopens it.
 - Search finds conversations by the contact's name or email and threads by subject.

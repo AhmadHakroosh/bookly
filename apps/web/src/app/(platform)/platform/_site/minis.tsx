@@ -247,6 +247,66 @@ export function PaymentMini({ className = "" }: { className?: string }) {
   );
 }
 
+/** "Call notes" (Home): the notes taken during the call, beside its action items. */
+export function CallNotesMini({ className = "" }: { className?: string }) {
+  return (
+    <Frame title="Call notes" className={className}>
+      <div className="flex gap-4 border-b text-xs">
+        <span className="-mb-px border-b-2 border-primary pb-2 font-medium text-primary">
+          Notes
+        </span>
+        <span className="pb-2 text-muted-foreground">Action items</span>
+      </div>
+      <ul className="mt-3 list-disc space-y-1.5 pl-4 text-xs">
+        {[
+          "Maya shared their Q3 goals",
+          "Focus on brand positioning and messaging",
+          "Need a go-to-market plan",
+          "Budget around $1–2K",
+          "Will share case studies by Friday",
+        ].map((t) => (
+          <li key={t}>{t}</li>
+        ))}
+      </ul>
+    </Frame>
+  );
+}
+
+/** "Client timeline" (Home): the journey so far, done steps ticked, the current one in orange. */
+export function JourneyTimelineMini({ className = "" }: { className?: string }) {
+  const steps: [string, string, "done" | "now" | "next"][] = [
+    ["Discovery call completed", "May 6, 2026", "done"],
+    ["Recap sent", "May 6, 2026", "done"],
+    ["Proposal sent", "May 7, 2026", "now"],
+    ["Invoice paid", "Pending", "next"],
+  ];
+  return (
+    <Frame title="Client timeline" className={className}>
+      <ol>
+        {steps.map(([t, when, state], i) => (
+          <li key={t} className="relative flex gap-3 pb-3 last:pb-0">
+            {i < steps.length - 1 && (
+              <span
+                className={`absolute top-6 bottom-0 left-[11px] w-px ${state === "done" ? "bg-success" : "bg-border"}`}
+              />
+            )}
+            <span
+              className={`relative inline-flex size-6 shrink-0 items-center justify-center rounded-full border-2 ${state === "done" ? "border-success bg-success text-white" : state === "now" ? "border-primary bg-card" : "bg-card"}`}
+            >
+              {state === "done" && <CheckIcon className="size-3.5" strokeWidth={3} />}
+              {state === "now" && <span className="size-2.5 rounded-full bg-primary" />}
+            </span>
+            <span className="min-w-0">
+              <span className="block text-xs font-medium">{t}</span>
+              <span className="block text-[11px] text-muted-foreground">{when}</span>
+            </span>
+          </li>
+        ))}
+      </ol>
+    </Frame>
+  );
+}
+
 export type TimelineStep = { title: string; when: string; icon: LucideIcon; done?: boolean };
 
 /** "Client timeline": every step of one relationship, in order. */

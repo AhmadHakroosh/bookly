@@ -2,6 +2,8 @@ import { EventPublicSkeleton } from "@/components/skeletons/pages";
 import type { Metadata } from "next";
 import type { EventType } from "@bookly/db/schema";
 import Link from "next/link";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { initialsOf } from "@/components/ui/avatar-stack";
 import { connection } from "next/server";
 import { BackLink } from "@/components/links";
 import { notFound } from "next/navigation";
@@ -154,10 +156,24 @@ async function EventPage({ params, searchParams }: PageProps<"/[username]/[event
       <Suspense fallback={null}>
         <TzDetect />
       </Suspense>
-      <div className="grid gap-8 rounded-2xl border md:grid-cols-[260px_1fr]">
+      <div className="grid rounded-2xl border bg-card md:grid-cols-[280px_1fr]">
         <aside className="border-b p-6 md:border-r md:border-b-0">
-          <BackLink href={`/${profile.username}`}>{profile.displayName}</BackLink>
-          <div className="mt-3 flex items-start justify-between gap-3">
+          {/* The host (mocks.png 01): who you are booking, a link back to all their event types. */}
+          <Link href={`/${profile.username}`} className="group flex items-center gap-3">
+            <Avatar className="size-12" aria-hidden>
+              {profile.avatarUrl && <AvatarImage src={profile.avatarUrl} alt="" />}
+              <AvatarFallback className="bg-accent font-semibold text-accent-foreground">
+                {initialsOf(profile.displayName)}
+              </AvatarFallback>
+            </Avatar>
+            <span className="min-w-0">
+              <span className="block truncate font-semibold group-hover:underline">
+                {profile.displayName}
+              </span>
+              <span className="block text-xs text-muted-foreground">All event types</span>
+            </span>
+          </Link>
+          <div className="mt-5 flex items-start justify-between gap-3">
             <h1 className="text-2xl font-semibold tracking-tight">{et.title}</h1>
             {rule && (
               <Badge variant="outline" className="mt-1 shrink-0">
@@ -319,8 +335,9 @@ async function Picker({
   const full = date ? await fullSessions(et, tz, date) : [];
   const waiting = await waitingCounts(et.id, full);
   return (
-    <div className="space-y-6">
-      <div className="max-w-sm">
+    <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_9.5rem]">
+      <div>
+        <h2 className="mb-3 text-sm font-semibold">Select a date</h2>
         <MonthCalendar
           month={month}
           availableDates={availableDates}
@@ -330,17 +347,21 @@ async function Picker({
         />
       </div>
       <div>
-        <p className="mb-2 text-sm font-medium">
-          {date
-            ? new Date(`${date}T12:00:00Z`).toLocaleDateString("en", {
+        <h2 className="mb-3 text-sm font-semibold">
+          Select a time
+          {date && (
+            <span className="block font-normal text-muted-foreground">
+              {new Date(`${date}T12:00:00Z`).toLocaleDateString("en", {
                 weekday: "long",
                 month: "short",
                 day: "numeric",
                 timeZone: "UTC",
-              })
-            : "Pick a day"}
-        </p>
-        <ul className="grid grid-cols-3 gap-2 sm:grid-cols-4 lg:grid-cols-5">
+              })}
+            </span>
+          )}
+        </h2>
+        {!date && <p className="text-sm text-muted-foreground">Pick a day</p>}
+        <ul className="grid grid-cols-3 gap-2 sm:grid-cols-4 lg:max-h-[24rem] lg:grid-cols-1 lg:overflow-y-auto lg:pe-1">
           {[...daySlots.map((s) => ({ s, full: false })), ...full.map((s) => ({ s, full: true }))]
             .sort((a, b) => a.s.getTime() - b.s.getTime())
             .map(({ s, full: isFull }) => {

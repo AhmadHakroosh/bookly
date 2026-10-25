@@ -63,7 +63,7 @@ export function MonthCalendar({
               <Link
                 key={d}
                 href={makeHref({ date: d, slot: undefined })}
-                className={`flex aspect-square items-center justify-center rounded-md text-sm font-medium tabular-nums transition-colors ${selected === d ? "bg-muted ring-1 ring-foreground" : "bg-muted hover:bg-muted/70"}`}
+                className={`flex aspect-square items-center justify-center rounded-md text-sm font-medium tabular-nums transition-colors ${selected === d ? "bg-primary text-primary-foreground" : "bg-muted hover:bg-accent hover:text-accent-foreground"}`}
                 aria-current={selected === d ? "date" : undefined}
               >
                 {Number(d.slice(-2))}

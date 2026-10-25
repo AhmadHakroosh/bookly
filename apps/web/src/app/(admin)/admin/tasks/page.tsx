@@ -47,6 +47,8 @@ import { taskFiles } from "@/server/drive";
 import { CommentForm, DeleteTaskButton, NewTaskButton, TaskEditForm, TaskPane } from "./task-forms";
 import { TasksToolbar } from "./toolbar";
 import { PageHeader } from "@/components/ui/page-header";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { initialsOf } from "@/components/ui/avatar-stack";
 
 export const metadata = { title: "Tasks" };
 
@@ -102,7 +104,7 @@ async function TasksPage({ searchParams }: PageProps<"/admin/tasks">) {
     ? "list"
     : layoutParam === "board" || layoutParam === "list"
       ? layoutParam
-      : (saved?.layout ?? (cookieLayout === "list" ? "list" : "board"));
+      : (saved?.layout ?? (cookieLayout === "board" ? "board" : "list"));
 
   const ctx: FilterCtx = { workspaceId: ws.id, viewerId: userId, tz };
   const names = Object.fromEntries(people.map((p) => [p.userId, p.displayName]));
@@ -117,7 +119,21 @@ async function TasksPage({ searchParams }: PageProps<"/admin/tasks">) {
     return `/admin/tasks${s ? `?${s}` : ""}`;
   };
   const taskId = one(sp.task);
-  const [contacts, eventTypes] = await Promise.all([taskContacts(ws.id), listAllEventTypes(ws.id)]);
+  const t = schema.tasks;
+  const [contacts, eventTypes, [counts]] = await Promise.all([
+    taskContacts(ws.id),
+    listAllEventTypes(ws.id),
+    db()
+      .select({
+        mine: sql<number>`count(*) filter (where ${t.doneAt} is null and ${t.userId} = ${userId})::int`,
+        all: sql<number>`count(*) filter (where ${t.doneAt} is null)::int`,
+        completed: canAssign
+          ? sql<number>`count(*) filter (where ${t.doneAt} is not null)::int`
+          : sql<number>`count(*) filter (where ${t.doneAt} is not null and ${t.userId} = ${userId})::int`,
+      })
+      .from(t)
+      .where(eq(t.workspaceId, ws.id)),
+  ]);
 
   return (
     <div className="space-y-6">
@@ -162,6 +178,8 @@ async function TasksPage({ searchParams }: PageProps<"/admin/tasks">) {
         eventTypes={eventTypes.map((e) => ({ id: e.id, name: e.title }))}
         proName={PLANS[planFor("taskBoard")].name}
         teamName={PLANS[planFor("taskAssignment")].name}
+        counts={counts ?? { mine: 0, all: 0, completed: 0 }}
+        doneStatusIds={statuses.filter((st) => st.isDone).map((st) => st.id)}
       />
 
       {layout === "board" ? (
@@ -184,6 +202,7 @@ async function TasksPage({ searchParams }: PageProps<"/admin/tasks">) {
           cursor={one(sp.after)}
           hrefFor={hrefFor}
           showAssignee={canAssign}
+          selected={taskId ?? null}
         />
       )}
 
@@ -289,6 +308,7 @@ async function ListSection({
   cursor,
   hrefFor,
   showAssignee,
+  selected,
 }: {
   filters: TaskFilters;
   ctx: FilterCtx;
@@ -298,6 +318,8 @@ async function ListSection({
   cursor: string | undefined;
   hrefFor: (patch: Record<string, string | null>) => string;
   showAssignee: boolean;
+  /** The task open in the pane. */
+  selected: string | null;
 }) {
   const { rows, next } = await listPage(filters, ctx, decodeListCursor(cursor));
   const status = new Map(statuses.map((s) => [s.id, s]));
@@ -310,66 +332,119 @@ async function ListSection({
             : "Nothing here. New tasks from your meeting recaps land here too."}
         </p>
       ) : (
-        <ul className="divide-y rounded-xl border">
-          {rows.map((r) => {
-            const card = cardOf(r, tz, names);
-            const s = r.statusId ? status.get(r.statusId) : undefined;
-            return (
-              <li key={r.id} className="flex items-center gap-3 px-3 py-2.5 text-sm">
-                <form action={toggleTask.bind(null, r.id, !card.done, "/admin/tasks")}>
-                  <TaskToggleButton
-                    label={`${card.done ? "Reopen" : "Mark done"}: ${r.title}`}
-                    done={card.done}
-                  />
-                </form>
-                <Link
-                  href={hrefFor({ task: r.id })}
-                  scroll={false}
-                  className="min-w-0 flex-1 hover:underline"
+        <div className="overflow-x-auto rounded-xl border bg-card">
+          <table className="w-full table-fixed text-sm">
+            <thead>
+              <tr className="border-b text-left text-xs text-muted-foreground">
+                <th scope="col" className="w-12 py-2.5 ps-3">
+                  <span className="sr-only">Done</span>
+                </th>
+                <th scope="col" className="py-2.5 font-medium">
+                  Task
+                </th>
+                {showAssignee && (
+                  <th scope="col" className="hidden w-48 py-2.5 font-medium md:table-cell">
+                    Assignee
+                  </th>
+                )}
+                <th scope="col" className="w-32 py-2.5 font-medium">
+                  Due date
+                </th>
+                <th
+                  scope="col"
+                  className="hidden w-44 py-2.5 pe-3 font-medium sm:table-cell lg:w-52"
                 >
-                  <span
-                    className={cn(
-                      "block truncate",
-                      card.done && "text-muted-foreground line-through",
-                    )}
+                  Contact
+                </th>
+              </tr>
+            </thead>
+            <tbody className="divide-y">
+              {rows.map((r) => {
+                const card = cardOf(r, tz, names);
+                const s = r.statusId ? status.get(r.statusId) : undefined;
+                const today = card.due === "Today";
+                return (
+                  <tr
+                    key={r.id}
+                    className={cn("hover:bg-muted/40", selected === r.id && "bg-accent")}
                   >
-                    {r.title}
-                  </span>
-                  {(card.contact || card.booking) && (
-                    <span className="block truncate text-xs text-muted-foreground">
-                      {[card.contact, card.booking].filter(Boolean).join(" · ")}
-                    </span>
-                  )}
-                </Link>
-                {s && (
-                  <span className="hidden items-center gap-1.5 text-xs text-muted-foreground sm:inline-flex">
-                    <span
-                      className="size-2 rounded-full"
-                      style={{ background: s.color }}
-                      aria-hidden
-                    />
-                    {s.name}
-                  </span>
-                )}
-                {showAssignee && card.assignee && (
-                  <span className="hidden text-xs text-muted-foreground md:inline">
-                    {card.assignee}
-                  </span>
-                )}
-                {card.due && (
-                  <span
-                    className={cn(
-                      "text-xs tabular-nums",
-                      card.overdue ? "text-destructive" : "text-muted-foreground",
+                    <td className="py-2.5 ps-3 align-middle">
+                      <form action={toggleTask.bind(null, r.id, !card.done, "/admin/tasks")}>
+                        <TaskToggleButton
+                          label={`${card.done ? "Reopen" : "Mark done"}: ${r.title}`}
+                          done={card.done}
+                        />
+                      </form>
+                    </td>
+                    <td className="py-2.5 pe-3">
+                      <Link
+                        href={hrefFor({ task: r.id })}
+                        scroll={false}
+                        className={cn(
+                          "block truncate font-medium hover:underline",
+                          card.done && "text-muted-foreground line-through",
+                        )}
+                      >
+                        {r.title}
+                      </Link>
+                      {s && (
+                        <span className="mt-0.5 inline-flex items-center gap-1.5 text-xs text-muted-foreground">
+                          <span
+                            className="size-2 rounded-full"
+                            style={{ background: s.color }}
+                            aria-hidden
+                          />
+                          {s.name}
+                        </span>
+                      )}
+                    </td>
+                    {showAssignee && (
+                      <td className="hidden py-2.5 pe-3 md:table-cell">
+                        {card.assignee ? (
+                          <span className="inline-flex items-center gap-2">
+                            <Avatar size="sm" aria-hidden>
+                              <AvatarFallback className="bg-accent text-[10px] font-semibold text-accent-foreground">
+                                {initialsOf(card.assignee)}
+                              </AvatarFallback>
+                            </Avatar>
+                            <span className="truncate text-muted-foreground">{card.assignee}</span>
+                          </span>
+                        ) : (
+                          <span className="text-muted-foreground">—</span>
+                        )}
+                      </td>
                     )}
-                  >
-                    {card.due}
-                  </span>
-                )}
-              </li>
-            );
-          })}
-        </ul>
+                    <td className="py-2.5 pe-3 whitespace-nowrap">
+                      <span
+                        className={cn(
+                          "tabular-nums",
+                          card.overdue || today
+                            ? "font-medium text-warning"
+                            : "text-muted-foreground",
+                        )}
+                      >
+                        {card.due ?? "—"}
+                        {card.overdue && <span className="sr-only"> (overdue)</span>}
+                      </span>
+                    </td>
+                    <td className="hidden py-2.5 pe-3 sm:table-cell">
+                      {r.contactId && card.contact ? (
+                        <Link
+                          href={`/admin/contacts/${r.contactId}`}
+                          className="block truncate text-primary hover:underline"
+                        >
+                          {card.contact}
+                        </Link>
+                      ) : (
+                        <span className="text-muted-foreground">—</span>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
       )}
       <div className="flex gap-2">
         {cursor && (
@@ -448,35 +523,29 @@ async function TaskDetail({
   return (
     <TaskPane title={t.title} closeHref={closeHref}>
       <div className="space-y-6">
-        <div className="space-y-1">
-          <p className="text-xs text-muted-foreground">
-            {t.createdBy && t.createdBy !== t.userId
-              ? `${name.get(t.createdBy) ?? "A teammate"} gave this to ${name.get(t.userId) ?? "someone"}`
-              : `Created by ${name.get(t.createdBy ?? t.userId) ?? "you"}`}{" "}
-            on {fmtDateTime(t.createdAt, tz)}
-          </p>
-          <h1 className="text-xl font-semibold tracking-tight">{t.title}</h1>
-          {(t.contactId || booking) && (
-            <p className="flex flex-wrap gap-x-3 text-sm">
-              {t.contactId && (
-                <Link
-                  href={`/admin/contacts/${t.contactId}`}
-                  className="underline underline-offset-4"
-                >
-                  {t.contactName ?? "Contact"}
-                </Link>
+        <div className="flex items-start gap-3 pe-8">
+          <form action={toggleTask.bind(null, t.id, !t.doneAt, "/admin/tasks")} className="pt-1">
+            <TaskToggleButton
+              label={`${t.doneAt ? "Reopen" : "Mark done"}: ${t.title}`}
+              done={!!t.doneAt}
+            />
+          </form>
+          <div className="min-w-0 space-y-1">
+            <h1
+              className={cn(
+                "text-lg font-semibold tracking-tight break-words",
+                t.doneAt && "text-muted-foreground line-through",
               )}
-              {booking && (
-                <Link
-                  href={`/admin/bookings/${booking.id}`}
-                  className="underline underline-offset-4"
-                >
-                  {t.bookingTitle ?? "Meeting"} with {booking.attendeeName},{" "}
-                  {fmtDateTime(booking.startAt, tz)}
-                </Link>
-              )}
+            >
+              {t.title}
+            </h1>
+            <p className="text-xs text-muted-foreground">
+              {t.createdBy && t.createdBy !== t.userId
+                ? `${name.get(t.createdBy) ?? "A teammate"} gave this to ${name.get(t.userId) ?? "someone"}`
+                : `Created by ${name.get(t.createdBy ?? t.userId) ?? "you"}`}{" "}
+              on {fmtDateTime(t.createdAt, tz)}
             </p>
-          )}
+          </div>
         </div>
         <TaskEditForm
           key={`${t.id}:${t.updatedAt.getTime()}`}
@@ -490,6 +559,26 @@ async function TaskDetail({
           people={people.map((p) => ({ id: p.userId, name: p.displayName }))}
           canBoard={canBoard}
           canAssign={canAssign}
+          links={[
+            ...(t.contactId
+              ? [
+                  {
+                    label: "Contact",
+                    href: `/admin/contacts/${t.contactId}`,
+                    text: t.contactName ?? "Contact",
+                  },
+                ]
+              : []),
+            ...(booking
+              ? [
+                  {
+                    label: "Meeting",
+                    href: `/admin/bookings/${booking.id}`,
+                    text: `${t.bookingTitle ?? "Meeting"} with ${booking.attendeeName}, ${fmtDateTime(booking.startAt, tz)}`,
+                  },
+                ]
+              : []),
+          ]}
         />
         {filesOn && (
           <TaskFiles

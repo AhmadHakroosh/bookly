@@ -64,11 +64,15 @@ export function Headline({
   second: string;
   as?: "h1" | "h2";
   id?: string;
-  /** hero: a page's opening; split: a hero that shares its row with a picture. */
-  size?: "hero" | "split" | "section";
+  /**
+   * display: Home's opening, the largest type on the site; hero: a page's opening; split: a hero
+   * that shares its row with a picture.
+   */
+  size?: "display" | "hero" | "split" | "section";
   className?: string;
 }) {
   const scale = {
+    display: "text-[2.75rem] leading-[0.98] sm:text-7xl lg:text-[5.5rem] xl:text-[6rem]",
     hero: "text-[2.6rem] leading-[1.02] sm:text-6xl md:text-[4.25rem]",
     split: "text-[2.6rem] leading-[1.02] sm:text-6xl lg:text-[3.5rem] xl:text-[3.75rem]",
     section: "text-3xl leading-[1.05] md:text-5xl",

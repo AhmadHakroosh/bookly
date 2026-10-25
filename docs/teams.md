@@ -57,7 +57,7 @@ name), `{host}`, `{event}`, `{bookingUrl}`. Replies go to the host.
 
 ## No-shows
 
-Under **Admin → Bookings → Past**, mark a booking as **No-show** (or undo it). No-shows skip the
+Under **Admin → Bookings → Past**, a booking's ⋯ (or **More actions** on the booking) marks it as a **No-show** (or undoes it). No-shows skip the
 follow-up email and count in the public API as `status: "no_show"`.
 
 ## Booking questions

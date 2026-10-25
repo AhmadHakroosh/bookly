@@ -16,7 +16,6 @@ import { db } from "@/lib/db";
 /** Every flag the code knows about. The console shows these; unknown keys are never true. */
 export const FLAGS = {
   file_uploads: "Upload avatars and logos instead of linking them (0.12.1)",
-  home_dashboard: "Home dashboard with summary cards (0.13.0)",
   bookings_calendar: "Bookings as list and calendar with the side pane (0.14.0)",
   notifications: "In-app and desktop notifications (0.15.0)",
   task_board: "Task board with workspace-defined statuses (0.16.0)",

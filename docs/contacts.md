@@ -2,7 +2,7 @@
 
 Bookly keeps a **contact** for every person who books, joins a waitlist or fills a routing form: one row per email per workspace, with a name, company, phone, tags, free-form notes, a follow-up date and a **stage** (`lead → active → won → lost`). Everything that happens with that person lands on the contact's **timeline**: bookings and their answers, confirmations, cancellations and reschedules, completed meetings and no-shows, every email Bookly sent, form answers, notes and stage changes.
 
-`Admin → Contacts` lists everyone (search, filter by stage), and each contact page shows the timeline, upcoming meetings and the editable details. Booking rows link to the attendee's contact. A first completed meeting moves a lead to _active_ automatically; the other stages are yours to set.
+`Admin → Contacts` lists everyone (search, filter by stage). Each contact page opens with the person (name, company, email, phone) and their stage as a chip you can change in place, then the **client journey**: Booked → Prepared → Met → Followed up → Paid, done steps ticked and the current one highlighted, each linking to the booking, briefing or composer behind it. **Overview · Bookings · Tasks · Files** follow; Overview has the timeline with notes, and on the right **Next actions** (the one the journey points at first), linked tasks, recent files and the editable client details. ⋮ has opting out of emails and the folder. Booking rows link to the attendee's contact. A first completed meeting moves a lead to _active_ automatically; the other stages are yours to set.
 
 ### Your own stages
 
@@ -23,27 +23,31 @@ Automations run in the background right after the move (through the job queue, w
 
 ## Home
 
-At the top of Home a row of cards sums up the day, each a link to the page that owns it:
-**This week** (meetings still to come this week and the next three), **Since your last visit**
-(new bookings and cancellations since you last opened Home; reloading within half an hour keeps
-the same starting point), **Needs attention** (requests to accept, recaps to review, people to
-follow up), **Your tasks** (open, overdue, due today; owners and admins also see the team's
-count), **Contacts** (added this week, follow-ups due) and, for owners and admins, **Payments
-this month** (paid bookings summed per currency, or a prompt to connect Stripe). Members see
-their own meetings; owners and admins see everyone's. Every card loads on its own. The cards
-roll out behind the `home_dashboard` flag (a "Beta" badge shows while it is in beta).
+Home greets you and shows what needs your attention, as one page:
 
-`Admin` opens on **Home**: today's meetings with their briefings and join links, booking requests to accept (or answer by email instead, which withdraws the request), contacts to follow up (a due follow-up date, or a lead that has been quiet for a week; snooze pushes it out a week), your open tasks with overdue ones flagged, and a note when people are waiting on a waitlist. Members see their own bookings; owners and admins see the workspace.
+- **The day's counts**: meetings today, follow-ups due and open tasks, each a link to its list.
+- **Today**: the day as a timeline, each meeting with who it is with, how it happens, how long it
+  takes and how many people come, **Join meeting** while it is ahead and **Open briefing** (or
+  **Open notes** once it is over). The meeting on now or next is highlighted, with **Pick up where
+  you left off** from its briefing. ‹ and › move to other days.
+- **Requests** to accept (or answer by email instead, which withdraws the request), the first
+  three with a link to the rest.
+- **Keep things moving**: contacts to follow up (a due follow-up date, or a lead quiet for a
+  week) with **Draft follow-up** and, under ⋯, a snooze for a week.
+- On the right, **Your next steps** (your open tasks: tick one off, or add one), **Recent
+  conversations** from Messages, and the **Recap ready** card for the latest recap to review.
+
+Members see their own bookings; owners and admins see the workspace. A note says when people are waiting on a waitlist.
 
 ## Executing the outcome
 
-- **Proposal / Payment request / Follow-up** buttons on a contact page send a templated email (edit the templates under `Admin → Settings → Emails`; placeholders `{name} {company} {host} {amount} {payLink} {bookingUrl}`). A payment request with Stripe configured includes a Checkout link for the amount. All three set the next follow-up date so Home nudges you again; Home's "Follow up" link opens the contact with the follow-up composer ready.
+- **Create proposal / Send payment request / Add follow-up** under Next actions on a contact page send a templated email (edit the templates under `Admin → Settings → Emails`; placeholders `{name} {company} {host} {amount} {payLink} {bookingUrl}`). A payment request with Stripe configured includes a Checkout link for the amount. All three set the next follow-up date so Home nudges you again; Home's **Draft follow-up** opens the contact with the follow-up composer ready.
 - **CRM sync** (`Admin → Settings → Integrations → CRM sync`): with a HubSpot private-app token or a Pipedrive API token, contacts and stage changes are mirrored to the CRM and meeting summaries and sent proposals become notes on the CRM contact. Sync is best-effort and never blocks a booking.
 - **Webhooks and API**: `contact.created`, `contact.stage_changed`, `meeting.captured` and `task.created` events, plus `GET/POST /api/v1/contacts` and `GET /api/v1/tasks`, let any other tool react to what happens in Bookly.
 
 ## Pre-meeting briefing
 
-Every upcoming booking has a **briefing** for the host: who the person is, what happened before (last meeting, open threads, no-shows), what they asked for in the booking questions, and what to prepare. Open it from `Admin → Bookings → Brief` or from the contact page; it is also included in the host's reminder email closest to the meeting.
+Every upcoming booking has a **briefing** for the host: who the person is, what happened before (last meeting, open threads, no-shows), what they asked for in the booking questions, and what to prepare. Open it from a booking in `Admin → Bookings` (its **Briefing** tab) or from the contact page; it is also included in the host's reminder email closest to the meeting.
 
 With `ANTHROPIC_API_KEY` set (model via `ASSISTANT_MODEL`, default `claude-sonnet-5`) the briefing is written by the assistant from the contact's timeline. Without a key it is a plain, deterministic summary of the same facts, so nothing depends on the model. Briefs are cached for a day and can be regenerated.
 
@@ -80,11 +84,11 @@ are not. Notes are part of the workspace export with the booking.
 
 ## After the meeting: capture
 
-On a booking's page (`Admin → Bookings → Notes`), paste your notes or a transcript and press **Capture**. With the assistant configured it extracts a summary, decisions, action items with due dates (yours and theirs), a next step, a stage suggestion and a follow-up email draft; without it, your notes become the summary and every line starting with `- ` becomes a task. Tasks live on the booking and the contact, can be completed or removed, and an overdue task is nudged once by email (and text, if enabled). With the task board on, they also land on Admin → Tasks ([tasks.md](tasks.md)). A clear outcome moves the contact's stage (won / lost / active). The follow-up draft can be edited and sent from Bookly with your address as reply-to; it lands on the timeline like every other email.
+On a booking's **Notes** tab (open it from `Admin → Bookings`), paste your notes or a transcript and press **Capture**. With the assistant configured it extracts a summary, decisions, action items with due dates (yours and theirs), a next step, a stage suggestion and a follow-up email draft; without it, your notes become the summary and every line starting with `- ` becomes a task. Tasks live on the booking and the contact, can be completed or removed, and an overdue task is nudged once by email (and text, if enabled). With the task board on, they also land on Admin → Tasks ([tasks.md](tasks.md)). A clear outcome moves the contact's stage (won / lost / active). The follow-up draft can be edited and sent from Bookly with your address as reply-to; it lands on the timeline like every other email.
 
 ## Proposals, payment requests and follow-ups
 
-From a contact's page, **Proposal**, **Payment request** and **Follow-up** open a form prefilled
+From a contact's page, **Create proposal**, **Send payment request** and **Add follow-up** open a form prefilled
 from the workspace templates (Settings → Proposal, payment and follow-up emails) with the
 placeholders filled in; `{bookingUrl}` in a follow-up becomes a link to your booking page.
 Edit freely, then **Preview email** shows the exact branded message the contact will receive,

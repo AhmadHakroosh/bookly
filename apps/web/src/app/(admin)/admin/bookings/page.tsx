@@ -1,5 +1,6 @@
 import { BookingsSkeleton } from "@/components/skeletons/pages";
 import { cookies } from "next/headers";
+import { connection } from "next/server";
 import { BetaBadge } from "@/components/beta-badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -9,8 +10,9 @@ import {
   viewRange,
   type CalendarView,
 } from "@/lib/calendar";
-import { todayIn } from "@/lib/time";
+import { addDays, fmtTime, formatInTz, todayIn, utcToZoned, zonedToUtc } from "@/lib/time";
 import {
+  countRequests,
   decodeListCursor,
   legendOf,
   listBookingsPage,
@@ -28,8 +30,14 @@ import { ViewToggle } from "./view-controls";
 import Link from "next/link";
 import { Suspense } from "react";
 import { PaneHost } from "@/components/pane";
-import { CheckIcon, ClockIcon, UsersIcon } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+import { CalendarIcon, ClockIcon, UsersIcon } from "lucide-react";
+import { cn } from "cn";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { initialsOf } from "@/components/ui/avatar-stack";
+import { EmptyState } from "@/components/ui/empty-state";
+import { SegmentedTabs } from "@/components/ui/segmented-tabs";
+import { StatusChip, type StatusTone } from "@/components/ui/status-chip";
+import { BookingRowMenu } from "./booking-row-menu";
 import { SubmitButton } from "@/components/submit-button";
 import { fmtDateTime } from "@/lib/time";
 import { formatPrice } from "@/server/payments";
@@ -51,115 +59,130 @@ type Row = Awaited<ReturnType<typeof listBookings>>[number] & {
 type OpenHref = (id: string) => string;
 const toPage: OpenHref = (id) => `/admin/bookings/${id}`;
 
-function StatusBadge({ status }: { status: string }) {
+const STATUS_TONE: Record<string, StatusTone> = {
+  pending: "warning",
+  cancelled: "neutral",
+  rescheduled: "neutral",
+  no_show: "destructive",
+  completed: "neutral",
+};
+
+/** A status worth saying: confirmed is the norm, so it has no chip. */
+function Status({ status }: { status: string }) {
+  if (status === "confirmed") return null;
+  const label = status === "pending" ? "Request" : status.replace("_", " ");
   return (
-    <Badge variant={status === "confirmed" ? "default" : "secondary"} className="capitalize">
-      {status.replace("_", " ")}
-    </Badge>
+    <StatusChip tone={STATUS_TONE[status] ?? "neutral"} className="capitalize">
+      {label}
+    </StatusChip>
   );
 }
 
-/** The actions a host can take on one booking; used on single rows and on each seat. */
-function Actions({ b, past, open: openHref }: { b: Row; past: boolean; open: OpenHref }) {
-  const open = b.status !== "cancelled" && b.status !== "rescheduled";
+/** ⋯ for one booking, with the actions that fit its state. */
+function RowMenu({ b, past, open: openHref }: { b: Row; past: boolean; open: OpenHref }) {
+  const live = b.status !== "cancelled" && b.status !== "rescheduled";
   return (
-    <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-      {open && (
-        <Link href={openHref(b.id)} scroll={false} className="text-sm underline underline-offset-4">
-          {past ? "Notes" : "Brief"}
-        </Link>
-      )}
-      {b.status === "pending" && (
-        <form action={hostConfirm.bind(null, b.id)}>
-          <SubmitButton>Confirm</SubmitButton>
-        </form>
-      )}
-      {past && (b.status === "confirmed" || b.status === "completed") && (
-        <form action={hostMark.bind(null, b.id, "no_show")}>
-          <SubmitButton variant="ghost">No-show</SubmitButton>
-        </form>
-      )}
-      {past && b.status === "no_show" && (
-        <form action={hostMark.bind(null, b.id, "completed")}>
-          <SubmitButton variant="ghost">Undo no-show</SubmitButton>
-        </form>
-      )}
-      {(b.status === "confirmed" || b.status === "pending") && b.endAt > new Date() && (
-        <form action={hostCancel.bind(null, b.id)} className="flex gap-1">
-          <input
-            name="reason"
-            placeholder="Reason"
-            aria-label="Cancellation reason"
-            className="w-32 rounded-lg border bg-background px-3 text-sm"
-          />
-          <SubmitButton variant="ghost">Cancel</SubmitButton>
-        </form>
-      )}
-    </div>
-  );
-}
-
-function Attendee({ b }: { b: Row }) {
-  return (
-    <span className="min-w-0">
-      {b.contactId ? (
-        <Link href={`/admin/contacts/${b.contactId}`} className="font-medium hover:underline">
-          {b.attendeeName}
-        </Link>
-      ) : (
-        <span className="font-medium">{b.attendeeName}</span>
-      )}
-      {b.contactCompany && <span className="text-muted-foreground"> · {b.contactCompany}</span>}
-      <span className="block truncate text-xs text-muted-foreground">
-        {b.attendeeEmail}
-        {b.notes ? ` · “${b.notes}”` : ""}
-      </span>
-      {b.guests.length > 0 && (
-        <span className="block truncate text-xs text-muted-foreground">
-          With {b.guests.join(", ")}
-        </span>
-      )}
-    </span>
+    <BookingRowMenu
+      label={`${b.eventTitle ?? "Meeting"} with ${b.attendeeName}`}
+      openHref={live ? openHref(b.id) : toPage(b.id)}
+      past={past}
+      confirm={b.status === "pending" ? hostConfirm.bind(null, b.id) : undefined}
+      noShow={
+        past && (b.status === "confirmed" || b.status === "completed")
+          ? hostMark.bind(null, b.id, "no_show")
+          : undefined
+      }
+      undoNoShow={
+        past && b.status === "no_show" ? hostMark.bind(null, b.id, "completed") : undefined
+      }
+      cancel={
+        (b.status === "confirmed" || b.status === "pending") && b.endAt > new Date()
+          ? hostCancel.bind(null, b.id)
+          : undefined
+      }
+    />
   );
 }
 
 const durationOf = (b: Row) => Math.round((b.endAt.getTime() - b.startAt.getTime()) / 60_000);
 
-/** A small dot in the event type's colour, before the title. */
+/** A small dot in the event type's colour. */
 function Swatch({ color }: { color?: string | null }) {
   return (
     <span
       aria-hidden
-      className="mr-1.5 inline-block size-2.5 rounded-full align-middle"
+      className="inline-block size-2 shrink-0 rounded-full"
       style={{ background: safeColor(color) }}
     />
   );
 }
 
+function Initials({ name, group = false }: { name: string; group?: boolean }) {
+  return (
+    <Avatar size="lg" aria-hidden className="hidden sm:flex">
+      <AvatarFallback className="bg-accent text-sm font-semibold text-accent-foreground">
+        {group ? <UsersIcon className="size-4" /> : initialsOf(name)}
+      </AvatarFallback>
+    </Avatar>
+  );
+}
+
+/** Payment, series and receipt facts for a booking, as small chips. */
+function Facts({ b, series = true }: { b: Row; series?: boolean }) {
+  return (
+    <>
+      {series && b.seriesCount && (
+        <StatusChip tone="neutral">
+          Session {b.seriesIndex} of {b.seriesCount}
+        </StatusChip>
+      )}
+      {b.paymentStatus && b.amountCents != null && (
+        <StatusChip tone={b.paymentStatus === "paid" ? "success" : "neutral"}>
+          {formatPrice(b.amountCents, b.currency)}
+          {b.paymentStatus === "refunded"
+            ? " refunded"
+            : b.paymentStatus === "paid"
+              ? " paid"
+              : " unpaid"}
+        </StatusChip>
+      )}
+    </>
+  );
+}
+
 type Waits = Awaited<ReturnType<typeof listWaitlist>>;
 
-/** The bookings as a list: singles and group sessions, with waitlists under their sessions. */
+/**
+ * The bookings as `ui mocks.png` 02 lists them: grouped by day ("Today · Sun, Oct 25"), each
+ * row the time and length, the person and the event type, and ⋯. A row opens the booking (in
+ * the side pane on the workspace page, `selected` while it is open). Group sessions are one
+ * row with their seats and everyone in them; waitlists sit under their sessions.
+ */
 function BookingList({
   rows,
   waitlist,
   tz,
   past,
+  today,
   open = toPage,
-  pane = false,
+  selected = null,
   colors = false,
   showHost = false,
   more,
+  empty,
 }: {
   rows: Row[];
   waitlist: Waits;
   tz: string;
   past: boolean;
+  today: string;
   open?: OpenHref;
-  pane?: boolean;
+  selected?: string | null;
   colors?: boolean;
   showHost?: boolean;
   /** "Show more" link for the next page, when there is one. */
   more?: string | null;
+  empty: string;
 }) {
   const groups = groupSessions(rows);
   // Waiting entries that belong to a specific group session are shown with that session.
@@ -170,218 +193,203 @@ function BookingList({
     sessionWaits.set(key, [...(sessionWaits.get(key) ?? []), w]);
   }
   const shownWaits = new Set<string>();
+  const dayOf = (d: Date) => utcToZoned(d, tz).date;
+  const days: { date: string; groups: typeof groups }[] = [];
+  for (const g of groups) {
+    const first = g.kind === "single" ? g.booking : g.bookings[0]!;
+    const d = dayOf(first.startAt);
+    const last = days.at(-1);
+    if (last?.date === d) last.groups.push(g);
+    else days.push({ date: d, groups: [g] });
+  }
+  const dayTitle = (d: string) => {
+    const label = formatInTz(zonedToUtc(d, 12 * 60, tz), tz, {
+      weekday: "short",
+      month: "short",
+      day: "numeric",
+    });
+    return d === today
+      ? `Today · ${label}`
+      : d === addDays(today, 1)
+        ? `Tomorrow · ${label}`
+        : d === addDays(today, -1)
+          ? `Yesterday · ${label}`
+          : label;
+  };
+  const time = (d: Date) => fmtTime(d, tz);
+  const rowCls = (on: boolean) =>
+    cn(
+      "flex min-w-0 flex-1 items-center gap-3 rounded-lg px-3 py-2.5 outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
+      on ? "bg-accent ring-1 ring-primary/40" : "hover:bg-muted/60",
+    );
   return (
     <>
-      <ul className="space-y-3">
-        {groups.map((g) => {
-          if (g.kind === "single") {
-            const b = g.booking;
-            return (
-              <li key={b.id} className="rounded-xl border p-4 text-sm">
-                <div className="flex flex-wrap items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <p className="font-medium">
-                      {colors && <Swatch color={b.eventColor} />}
-                      {pane ? (
-                        <Link href={open(b.id)} scroll={false} className="hover:underline">
-                          {b.eventTitle ?? "Meeting"} with {b.attendeeName}
-                        </Link>
-                      ) : (
-                        <>
-                          {b.eventTitle ?? "Meeting"} with{" "}
-                          {b.contactId ? (
-                            <Link
-                              href={`/admin/contacts/${b.contactId}`}
-                              className="hover:underline"
-                            >
-                              {b.attendeeName}
-                            </Link>
-                          ) : (
-                            b.attendeeName
-                          )}
-                        </>
-                      )}
-                    </p>
-                    <p className="text-muted-foreground">
-                      {fmtDateTime(b.startAt, tz)} · {b.meetingUrl ?? locationLabel(b.location)}
-                      {showHost && b.hostName ? ` · ${b.hostName}` : ""}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      {b.attendeeEmail}
-                      {b.notes ? ` · “${b.notes}”` : ""}
-                    </p>
-                    {b.guests.length > 0 && (
-                      <p className="text-xs text-muted-foreground">With {b.guests.join(", ")}</p>
-                    )}
-                  </div>
-                  <div className="flex flex-wrap items-center gap-2">
-                    {b.seriesCount && (
-                      <Badge variant="outline">
-                        Session {b.seriesIndex} of {b.seriesCount}
-                      </Badge>
-                    )}
-                    {b.paymentStatus && b.amountCents != null && (
-                      <Badge variant="outline">
-                        {formatPrice(b.amountCents, b.currency)}
-                        {b.paymentStatus === "refunded"
-                          ? " refunded"
-                          : b.paymentStatus === "paid"
-                            ? " paid"
-                            : " unpaid"}
-                      </Badge>
-                    )}
-                    {b.manageToken &&
-                      (b.paymentStatus === "paid" || b.paymentStatus === "refunded") && (
+      {rows.length === 0 ? (
+        <EmptyState size="sm" icon={CalendarIcon} title={empty} />
+      ) : (
+        <div className="space-y-5">
+          {days.map((day) => (
+            <section key={day.date} aria-label={dayTitle(day.date)}>
+              <h2 className="mb-1.5 px-1 text-sm font-semibold text-muted-foreground">
+                {dayTitle(day.date)}
+              </h2>
+              <ul className="divide-y rounded-xl border bg-card p-1.5">
+                {day.groups.map((g) => {
+                  if (g.kind === "single") {
+                    const b = g.booking;
+                    return (
+                      <li key={b.id} className="flex items-center gap-1 py-0.5">
                         <Link
-                          href={`/booking/${b.manageToken}/receipt`}
-                          className="text-xs underline underline-offset-4"
+                          href={open(b.id)}
+                          scroll={false}
+                          className={rowCls(selected === b.id)}
                         >
-                          Receipt
-                        </Link>
-                      )}
-                    {b.paymentRef?.receiptUrl && (
-                      <a
-                        href={b.paymentRef.receiptUrl}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="text-xs underline underline-offset-4"
-                      >
-                        Stripe receipt
-                      </a>
-                    )}
-                    <StatusBadge status={b.status} />
-                  </div>
-                </div>
-                <div className="mt-3">
-                  <Actions b={b} past={past} open={open} />
-                </div>
-              </li>
-            );
-          }
-          const first = g.bookings[0]!;
-          const waits =
-            sessionWaits.get(`${first.eventTypeId}|${first.startAt.toISOString()}`) ?? [];
-          for (const w of waits) shownWaits.add(w.id);
-          return (
-            <li key={g.key} className="rounded-xl border p-4 text-sm">
-              <div className="flex flex-wrap items-start justify-between gap-3">
-                <div className="min-w-0">
-                  <p className="font-medium">
-                    {colors && <Swatch color={first.eventColor} />}
-                    {first.eventTitle ?? "Group session"} · {fmtDateTime(first.startAt, tz)}
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    {first.seriesCount
-                      ? `Session ${first.seriesIndex} of ${first.seriesCount} · `
-                      : ""}
-                    {durationOf(first)} min · {first.meetingUrl ?? locationLabel(first.location)}
-                  </p>
-                </div>
-                <Badge className="shrink-0">
-                  <UsersIcon className="mr-1 size-3" aria-hidden />
-                  {g.taken} / {g.seats} seats
-                </Badge>
-              </div>
-              <ul className="mt-3 divide-y rounded-lg border">
-                {g.bookings.map((b) => (
-                  <li key={b.id} className="space-y-2 p-3">
-                    <div className="flex flex-wrap items-center justify-between gap-2">
-                      <Attendee b={b} />
-                      <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
-                        {b.paymentStatus && b.amountCents != null && (
-                          <span>
-                            {formatPrice(b.amountCents, b.currency)}
-                            {b.paymentStatus === "refunded"
-                              ? " refunded"
-                              : b.paymentStatus === "paid"
-                                ? " paid"
-                                : " unpaid"}
-                            {b.manageToken &&
-                              (b.paymentStatus === "paid" || b.paymentStatus === "refunded") && (
-                                <>
-                                  {" · "}
-                                  <Link
-                                    href={`/booking/${b.manageToken}/receipt`}
-                                    className="underline underline-offset-4"
-                                  >
-                                    Receipt
-                                  </Link>
-                                  {b.paymentRef?.receiptUrl && (
-                                    <>
-                                      {" · "}
-                                      <a
-                                        href={b.paymentRef.receiptUrl}
-                                        target="_blank"
-                                        rel="noreferrer"
-                                        className="underline underline-offset-4"
-                                      >
-                                        Stripe
-                                      </a>
-                                    </>
-                                  )}
-                                </>
-                              )}{" "}
-                            ·
+                          <span className="w-[4.5rem] shrink-0 text-sm whitespace-nowrap sm:w-20">
+                            <span className="block font-semibold tabular-nums">
+                              {time(b.startAt)}
+                            </span>
+                            <span className="block text-xs text-muted-foreground">
+                              {durationOf(b)} min
+                            </span>
                           </span>
-                        )}
-                        {b.status === "confirmed" && <CheckIcon className="size-3" aria-hidden />}
-                        <span className="capitalize">{b.status.replace("_", " ")}</span>
-                      </span>
-                    </div>
-                    <Actions b={b} past={past} open={open} />
-                  </li>
-                ))}
-              </ul>
-              {waits.length > 0 && (
-                <div className="mt-3 rounded-lg border border-dashed p-3">
-                  <p className="inline-flex items-center gap-1.5 text-xs font-medium">
-                    <ClockIcon className="size-3 text-muted-foreground" aria-hidden />
-                    Waitlist: {waits.length} {waits.length === 1 ? "person" : "people"}
-                  </p>
-                  <p className="mt-0.5 text-xs text-muted-foreground">
-                    First in line is offered the seat if someone cancels.
-                  </p>
-                  <ul className="mt-2 space-y-1">
-                    {waits.map((w, i) => (
-                      <li
-                        key={w.id}
-                        className="flex flex-wrap items-center justify-between gap-2 text-xs"
-                      >
-                        <span>
-                          {i + 1}. {w.attendeeName}{" "}
-                          <span className="text-muted-foreground">· {w.attendeeEmail}</span>
-                        </span>
-                        <form action={hostRemoveWaitlist.bind(null, w.id)}>
-                          <SubmitButton variant="ghost">Remove</SubmitButton>
-                        </form>
+                          <Initials name={b.attendeeName} />
+                          <span className="min-w-0 flex-1">
+                            <span className="block truncate text-sm font-semibold">
+                              {b.attendeeName}
+                            </span>
+                            <span className="flex min-w-0 items-center gap-1.5 text-sm text-muted-foreground">
+                              {colors && <Swatch color={b.eventColor} />}
+                              <span className="truncate">
+                                {b.eventTitle ?? "Meeting"}
+                                {b.contactCompany ? ` · ${b.contactCompany}` : ""}
+                                {showHost && b.hostName ? ` · ${b.hostName}` : ""}
+                              </span>
+                            </span>
+                          </span>
+                          <span className="hidden shrink-0 flex-wrap items-center justify-end gap-1.5 sm:flex">
+                            <Facts b={b} />
+                            <Status status={b.status} />
+                          </span>
+                          <span className="sm:hidden">
+                            <Status status={b.status} />
+                          </span>
+                        </Link>
+                        <RowMenu b={b} past={past} open={open} />
                       </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-            </li>
-          );
-        })}
-        {rows.length === 0 && (
-          <li className="rounded-xl border border-dashed p-10 text-center text-muted-foreground">
-            No {past ? "past" : "upcoming"} bookings.
-          </li>
-        )}
-      </ul>
+                    );
+                  }
+                  const first = g.bookings[0]!;
+                  const waits =
+                    sessionWaits.get(`${first.eventTypeId}|${first.startAt.toISOString()}`) ?? [];
+                  for (const w of waits) shownWaits.add(w.id);
+                  return (
+                    <li key={g.key} className="py-1">
+                      <Link
+                        href={open(first.id)}
+                        scroll={false}
+                        className={rowCls(g.bookings.some((b) => b.id === selected))}
+                      >
+                        <span className="w-[4.5rem] shrink-0 text-sm whitespace-nowrap sm:w-20">
+                          <span className="block font-semibold tabular-nums">
+                            {time(first.startAt)}
+                          </span>
+                          <span className="block text-xs text-muted-foreground">
+                            {durationOf(first)} min
+                          </span>
+                        </span>
+                        <Initials name="" group />
+                        <span className="min-w-0 flex-1">
+                          <span className="flex min-w-0 items-center gap-1.5 text-sm font-semibold">
+                            {colors && <Swatch color={first.eventColor} />}
+                            <span className="truncate">{first.eventTitle ?? "Group session"}</span>
+                          </span>
+                          <span className="block truncate text-sm text-muted-foreground">
+                            {first.seriesCount
+                              ? `Session ${first.seriesIndex} of ${first.seriesCount} · `
+                              : ""}
+                            {first.meetingUrl ? "Video call" : locationLabel(first.location)}
+                          </span>
+                        </span>
+                        <StatusChip tone={g.taken >= g.seats ? "accent" : "neutral"}>
+                          <UsersIcon className="size-3" aria-hidden />
+                          {g.taken} / {g.seats} seats
+                        </StatusChip>
+                      </Link>
+                      <ul className="ms-[6.5rem] mt-1 space-y-0.5 border-s ps-3">
+                        {g.bookings.map((b) => (
+                          <li key={b.id} className="flex items-center gap-2 text-sm">
+                            <Link
+                              href={open(b.id)}
+                              scroll={false}
+                              className={cn(
+                                "flex min-w-0 flex-1 items-center gap-2 rounded-md px-2 py-1 outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
+                                selected === b.id ? "bg-accent" : "hover:bg-muted/60",
+                              )}
+                            >
+                              <span className="min-w-0 flex-1 truncate">
+                                <span className="font-medium">{b.attendeeName}</span>
+                                <span className="text-muted-foreground"> · {b.attendeeEmail}</span>
+                              </span>
+                              <Facts b={b} series={false} />
+                              <Status status={b.status} />
+                            </Link>
+                            <RowMenu b={b} past={past} open={open} />
+                          </li>
+                        ))}
+                      </ul>
+                      {waits.length > 0 && (
+                        <div className="ms-[6.5rem] mt-2 rounded-lg border border-dashed p-3">
+                          <p className="inline-flex items-center gap-1.5 text-xs font-medium">
+                            <ClockIcon className="size-3 text-muted-foreground" aria-hidden />
+                            Waitlist: {waits.length} {waits.length === 1 ? "person" : "people"}
+                          </p>
+                          <p className="mt-0.5 text-xs text-muted-foreground">
+                            First in line is offered the seat if someone cancels.
+                          </p>
+                          <ul className="mt-2 space-y-1">
+                            {waits.map((w, i) => (
+                              <li
+                                key={w.id}
+                                className="flex flex-wrap items-center justify-between gap-2 text-xs"
+                              >
+                                <span>
+                                  {i + 1}. {w.attendeeName}{" "}
+                                  <span className="text-muted-foreground">· {w.attendeeEmail}</span>
+                                </span>
+                                <form action={hostRemoveWaitlist.bind(null, w.id)}>
+                                  <SubmitButton variant="ghost" size="sm">
+                                    Remove
+                                  </SubmitButton>
+                                </form>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                    </li>
+                  );
+                })}
+              </ul>
+            </section>
+          ))}
+        </div>
+      )}
       {waitlist.some((w) => !shownWaits.has(w.id)) && (
-        <section>
-          <h2 className="text-lg font-semibold tracking-tight">Waitlist</h2>
+        <section aria-labelledby="waitlist-title" className="rounded-xl border bg-card p-5">
+          <h2 id="waitlist-title" className="text-lg font-semibold tracking-tight">
+            Waitlist
+          </h2>
           <p className="text-sm text-muted-foreground">
             People who asked to be told when a spot opens. They are emailed automatically on a
             cancellation.
           </p>
-          <ul className="mt-3 space-y-2">
+          <ul className="mt-3 divide-y">
             {waitlist
               .filter((w) => !shownWaits.has(w.id))
               .map((w) => (
                 <li
                   key={w.id}
-                  className="flex flex-wrap items-center justify-between gap-3 rounded-xl border p-4 text-sm"
+                  className="flex flex-wrap items-center justify-between gap-3 py-2.5 text-sm"
                 >
                   <div>
                     <p className="font-medium">
@@ -437,43 +445,56 @@ async function LegacyBookings({ past }: { past: boolean }) {
         description={<>Times shown in {tz}.</>}
         actions={
           <TimeTabs
-            past={past}
-            upcomingHref="/admin/bookings"
-            pastHref="/admin/bookings?view=past"
+            view={past ? "past" : "upcoming"}
+            hrefs={{
+              upcoming: "/admin/bookings",
+              past: "/admin/bookings?view=past",
+              requests: "/admin/bookings",
+            }}
+            requests={null}
           />
         }
       />
-      <BookingList rows={rows} waitlist={waitlist} tz={tz} past={past} />
+      <BookingList
+        rows={rows}
+        waitlist={waitlist}
+        tz={tz}
+        past={past}
+        today={todayIn(tz)}
+        empty={past ? "No past bookings." : "No upcoming bookings."}
+      />
     </div>
   );
 }
 
+/** Upcoming · Past · Requests (n), as the concept's segmented tabs. */
 function TimeTabs({
-  past,
-  upcomingHref,
-  pastHref,
+  view,
+  hrefs,
+  requests,
 }: {
-  past: boolean;
-  upcomingHref: string;
-  pastHref: string;
+  view: "upcoming" | "past" | "requests";
+  hrefs: Record<"upcoming" | "past" | "requests", string>;
+  requests: number | null;
 }) {
   return (
-    <nav className="flex gap-2 text-sm" aria-label="Upcoming or past">
-      <Link
-        href={upcomingHref}
-        aria-current={!past ? "page" : undefined}
-        className={`rounded-md px-2.5 py-1 ${!past ? "bg-muted font-medium" : "text-muted-foreground"}`}
-      >
-        Upcoming
-      </Link>
-      <Link
-        href={pastHref}
-        aria-current={past ? "page" : undefined}
-        className={`rounded-md px-2.5 py-1 ${past ? "bg-muted font-medium" : "text-muted-foreground"}`}
-      >
-        Past
-      </Link>
-    </nav>
+    <SegmentedTabs
+      label="Which bookings"
+      items={[
+        { href: hrefs.upcoming, label: "Upcoming", active: view === "upcoming" },
+        { href: hrefs.past, label: "Past", active: view === "past" },
+        ...(requests !== null
+          ? [
+              {
+                href: hrefs.requests,
+                label: "Requests",
+                count: requests,
+                active: view === "requests",
+              },
+            ]
+          : []),
+      ]}
+    />
   );
 }
 
@@ -482,6 +503,8 @@ const one = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v);
 async function BookingsPage({ searchParams }: PageProps<"/admin/bookings">) {
   const [ws, sp, jar] = await Promise.all([getCurrentWorkspace(), searchParams, cookies()]);
   if (!ws) return null;
+  // Bookings are about now: render per request (today, upcoming, the clock).
+  await connection();
   const past = one(sp.view) === "past";
   if (!(await hasFlag(ws, "bookings_calendar"))) return <LegacyBookings past={past} />;
   return <BookingsWorkspace sp={sp} cookieMode={jar.get(BOOKINGS_VIEW_COOKIE)?.value} />;
@@ -509,6 +532,7 @@ async function BookingsWorkspace({
         ? "calendar"
         : "list";
   const past = one(sp.view) === "past";
+  const requestsView = one(sp.view) === "requests";
   const cal: CalendarView = isCalendarView(one(sp.cal)) ? (one(sp.cal) as CalendarView) : "week";
   const date = isIsoDate(one(sp.date)) ? one(sp.date)! : today;
   const profiles = manager ? await listProfiles(ws.id) : [];
@@ -523,7 +547,7 @@ async function BookingsWorkspace({
 
   const current: Record<string, string | null> = {
     mode,
-    view: past ? "past" : null,
+    view: past ? "past" : requestsView ? "requests" : null,
     cal: mode === "calendar" ? cal : null,
     date: mode === "calendar" && date !== today ? date : null,
     host: manager && hostUserId ? hostUserId : null,
@@ -547,10 +571,11 @@ async function BookingsWorkspace({
     ({ rows, capped } = await listBookingsRange(ws.id, { ...range, hostUserId, viewer }));
   } else {
     [{ rows, next }, waitlist] = await Promise.all([
-      listBookingsPage(ws.id, { past, hostUserId, cursor, viewer }),
-      past ? Promise.resolve([] as Waits) : listWaitlist(ws.id, hostUserId),
+      listBookingsPage(ws.id, { past, hostUserId, cursor, viewer, pendingOnly: requestsView }),
+      past || requestsView ? Promise.resolve([] as Waits) : listWaitlist(ws.id, hostUserId),
     ]);
   }
+  const requests = await countRequests(ws.id, hostUserId);
   const legend = legendOf(rows);
   const bookingId = one(sp.booking);
   // Previous / next walk what is on screen: calendar blocks (a group session is one), list rows.
@@ -565,28 +590,31 @@ async function BookingsWorkspace({
         badge={(await inBeta(ws, "bookings_calendar")) && <BetaBadge />}
         description={<>Times shown in {tz}.</>}
         actions={
-          <>
-            {mode === "list" && (
-              <TimeTabs
-                past={past}
-                upcomingHref={hrefFor({ view: null, after: null, booking: null })}
-                pastHref={hrefFor({ view: "past", after: null, booking: null })}
-              />
-            )}
-            <ViewToggle
-              mode={mode}
-              listHref={hrefFor({ mode: "list", cal: null, date: null, booking: null })}
-              calendarHref={hrefFor({
-                mode: "calendar",
-                view: null,
-                after: null,
-                booking: null,
-                cal: cal,
-              })}
-            />
-          </>
+          <ViewToggle
+            mode={mode}
+            listHref={hrefFor({ mode: "list", cal: null, date: null, booking: null })}
+            calendarHref={hrefFor({
+              mode: "calendar",
+              view: null,
+              after: null,
+              booking: null,
+              cal: cal,
+            })}
+          />
         }
       />
+
+      {mode === "list" && (
+        <TimeTabs
+          view={past ? "past" : requestsView ? "requests" : "upcoming"}
+          hrefs={{
+            upcoming: hrefFor({ view: null, after: null, booking: null }),
+            past: hrefFor({ view: "past", after: null, booking: null }),
+            requests: hrefFor({ view: "requests", after: null, booking: null }),
+          }}
+          requests={requests}
+        />
+      )}
 
       {(manager && profiles.length > 1) || legend.length > 0 ? (
         <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
@@ -665,8 +693,16 @@ async function BookingsWorkspace({
           waitlist={waitlist}
           tz={tz}
           past={past}
+          today={today}
           open={open}
-          pane
+          selected={bookingId ?? null}
+          empty={
+            requestsView
+              ? "No requests waiting for you."
+              : past
+                ? "No past bookings."
+                : "No upcoming bookings."
+          }
           colors
           showHost={manager && !hostUserId}
           more={next ? hrefFor({ after: next, booking: null }) : null}

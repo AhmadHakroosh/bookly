@@ -3,7 +3,7 @@ import "server-only";
 import { formatPhone, looksLikePhone } from "@/lib/phone";
 import { createHash } from "node:crypto";
 import { cacheLife, cacheTag } from "next/cache";
-import { and, asc, desc, eq, gte, inArray, lte, ne, schema, sql } from "@bookly/db";
+import { and, asc, desc, eq, gte, inArray, lt, lte, ne, schema, sql } from "@bookly/db";
 import type {
   Booking,
   EventType,
@@ -510,6 +510,9 @@ export async function listBookings(
     viewer?: string | null;
     /** Leave interviews out instead (the API, until it has hiring scopes). */
     withoutInterviews?: boolean;
+    /** Only bookings that start in [from, to): one day on Home. */
+    from?: Date;
+    to?: Date;
   } = {},
 ): Promise<
   (Booking & {
@@ -523,6 +526,8 @@ export async function listBookings(
   if (opts.upcoming === true) conds.push(gte(schema.bookings.endAt, new Date()));
   if (opts.upcoming === false) conds.push(lte(schema.bookings.endAt, new Date()));
   if (opts.withoutInterviews) conds.push(bookingsVisibleTo(null));
+  if (opts.from) conds.push(gte(schema.bookings.startAt, opts.from));
+  if (opts.to) conds.push(lt(schema.bookings.startAt, opts.to));
   const rows = await db()
     .select({
       b: schema.bookings,

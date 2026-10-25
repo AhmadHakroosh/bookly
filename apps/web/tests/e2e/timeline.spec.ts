@@ -112,7 +112,7 @@ test("a guest's reply lands under the email it answers, and the host answers fro
   const attachments = replies.getByRole("list", { name: "Attachments" });
   await expect(attachments.getByRole("link", { name: "agenda.pdf" })).toBeVisible();
   await expect(attachments).not.toContainText("logo.png");
-  await expect(admin.getByRole("region", { name: "Files" })).toContainText("agenda.pdf");
+  await expect(admin.getByRole("region", { name: /^Recent files/ })).toContainText("agenda.pdf");
 
   // A kept PDF opens in the viewer, with a way out to a new tab.
   await admin.waitForLoadState("networkidle");

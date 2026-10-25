@@ -56,9 +56,10 @@ const card = (page: Page, name: string) =>
 const auth = () => ({ authorization: `Bearer ${apiKey}` });
 
 async function pickStage(page: Page, name: string) {
+  // The stage chip beside the contact's name saves as soon as another is chosen.
   await page.getByRole("combobox", { name: "Stage" }).click();
   await page.getByRole("option", { name, exact: true }).click();
-  await page.getByRole("button", { name: "Update" }).click();
+  await expect(page.getByText(`Moved to ${name}`)).toBeVisible();
 }
 
 test("the pipeline editor shapes the stages contacts move through", async ({ page, request }) => {

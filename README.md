@@ -4,7 +4,7 @@
 
 <h1 align="center">Bookly</h1>
 
-<p align="center"><strong>The meeting is booked. Bookly handles the rest.</strong></p>
+<p align="center"><strong>A booking starts it. Bookly keeps it moving.</strong></p>
 
 <p align="center">
   <a href="https://github.com/AhmadHakroosh/bookly/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/AhmadHakroosh/bookly/actions/workflows/ci.yml/badge.svg" /></a>
