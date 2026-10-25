@@ -44,11 +44,18 @@ describe("marketing site", () => {
     }
   });
 
-  it("says when a hiring capability is still planned", () => {
-    for (const c of COMPARISONS.filter((x) => x.group === "hiring"))
+  it("says which hiring capabilities are in beta and which are still planned", () => {
+    for (const c of COMPARISONS.filter((x) => x.group === "hiring")) {
       expect(
         c.rows.some((r) => r.bookly.includes("Coming in Bookly 1.0")),
         c.name,
       ).toBe(true);
+      expect(
+        c.rows.some((r) => /in beta/i.test(r.bookly)),
+        c.name,
+      ).toBe(true);
+      // Nothing about hiring is "arriving" any more: what runs is in beta, the rest is labelled.
+      expect(JSON.stringify(c)).not.toMatch(/coming in 1\.0\)|arriving with Bookly 1\.0/);
+    }
   });
 });

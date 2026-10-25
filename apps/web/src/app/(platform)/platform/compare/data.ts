@@ -42,6 +42,7 @@ const BOOKLY_SELF_HOST =
 const BOOKLY_RECAPS = `Transcription with consent on Bookly video, Google Meet, Zoom and Teams; a recap with decisions and action items. Pro includes 5 hours a month, Team 8 per member, pooled`;
 const BOOKLY_PAYMENTS = `Stripe, into your own account; no platform fee on Pro and Team, ${PLANS.free.feePercent}% on Free; payment requests after the call`;
 const COMING = "Coming in Bookly 1.0";
+const BETA = "In beta, by invitation";
 
 const VERIFIED = "2026-10-25";
 
@@ -391,9 +392,9 @@ export const COMPARISONS: Comparison[] = [
     summary: "An enterprise ATS, or selection on your client platform.",
     first: "Bookly vs Greenhouse:",
     second: "An enterprise ATS, or selection on the platform you already use.",
-    lead: "Greenhouse is a mature applicant tracking system for companies hiring across teams and regions. Bookly's hiring, arriving with Bookly 1.0, puts applications, reviews, interviews and decisions on the same platform as your scheduling and client work. It is not built to replace an enterprise ATS today.",
+    lead: "Greenhouse is a mature applicant tracking system for companies hiring across teams and regions. Bookly's hiring, in beta and complete with Bookly 1.0, puts applications, reviews, interviews and decisions on the same platform as your scheduling and client work. It is not built to replace an enterprise ATS today.",
     booklyIs:
-      "Hiring on Bookly (coming in 1.0): an application page, a pipeline you define, independent reviews, interviews that are ordinary Bookly bookings, and decisions recorded with who made them and why.",
+      "Hiring on Bookly, in beta: an application page and a pipeline you define today; independent reviews, interviews scheduled from a stage and decisions recorded with who made them and why arrive with Bookly 1.0.",
     themIs:
       "Greenhouse is an applicant tracking and hiring platform: sourcing, structured interviewing, scheduling, Voice AI interviews and onboarding, plus MyGreenhouse for job seekers.",
     chooseBookly: [
@@ -411,7 +412,7 @@ export const COMPARISONS: Comparison[] = [
     rows: [
       {
         feature: "What it is",
-        bookly: `Hiring on the Bookly platform. ${COMING}`,
+        bookly: `Hiring on the Bookly platform. ${BETA}; reviews, interview scheduling and decisions: ${COMING}`,
         them: "An applicant tracking and hiring platform with sourcing, structured interviewing, scheduling, Voice AI and onboarding",
         source: "https://www.greenhouse.com/",
       },
@@ -429,7 +430,7 @@ export const COMPARISONS: Comparison[] = [
       },
       {
         feature: "Interview scheduling",
-        bookly: `Interviews are bookings: panels, self-scheduling links, Bookly video, Meet, Zoom or Teams. ${COMING}`,
+        bookly: `Interviews are bookings on Bookly video, Meet, Zoom or Teams. Panels and self-scheduling links from a stage: ${COMING}`,
         them: "Built in, with self-scheduling, scheduling links and automation rules",
         source: "https://www.greenhouse.com/pricing",
       },
@@ -442,13 +443,13 @@ export const COMPARISONS: Comparison[] = [
       },
       {
         feature: "Candidate status",
-        bookly: `A status page each applicant can check. ${COMING}`,
+        bookly: `A status page each applicant can check. ${BETA}`,
         them: "MyGreenhouse shows job seekers their stage where the employer maps stages",
         source: "https://www.greenhouse.com/product-features/mygreenhouse-stages",
       },
       {
         feature: "Data and retention",
-        bookly: `Full workspace export; retention per opportunity, 12 months after the cycle for jobs by default. ${COMING}`,
+        bookly: `Full workspace export; retention set per opportunity (12 months after the cycle for jobs by default), with automatic deletion: ${COMING}`,
         them: "Harvest API, BI Connector (Plus) and an audit log (Pro)",
         source: "https://developers.greenhouse.io/harvest.html",
       },
@@ -486,9 +487,9 @@ export const COMPARISONS: Comparison[] = [
     summary: "An all-in-one ATS, or selection on your client platform.",
     first: "Bookly vs Ashby:",
     second: "An all-in-one ATS, or selection on the platform you already use.",
-    lead: "Ashby is an all-in-one recruiting platform with deep analytics. Bookly's hiring, arriving with Bookly 1.0, puts applications, reviews, interviews and decisions on the same platform as your scheduling and client work, with an open-source core.",
+    lead: "Ashby is an all-in-one recruiting platform with deep analytics. Bookly's hiring, in beta and complete with Bookly 1.0, puts applications, reviews, interviews and decisions on the same platform as your scheduling and client work, with an open-source core.",
     booklyIs:
-      "Hiring on Bookly (coming in 1.0): an application page, a pipeline you define, independent reviews, interviews that are ordinary Bookly bookings, and decisions recorded with who made them and why.",
+      "Hiring on Bookly, in beta: an application page and a pipeline you define today; independent reviews, interviews scheduled from a stage and decisions recorded with who made them and why arrive with Bookly 1.0.",
     themIs:
       "Ashby is an all-in-one recruiting platform: applicant tracking, CRM and sourcing, scheduling and analytics. It also sells its analytics on top of other applicant trackers.",
     chooseBookly: [
@@ -504,7 +505,7 @@ export const COMPARISONS: Comparison[] = [
     rows: [
       {
         feature: "What it is",
-        bookly: `Hiring on the Bookly platform. ${COMING}`,
+        bookly: `Hiring on the Bookly platform. ${BETA}; reviews, interview scheduling and decisions: ${COMING}`,
         them: "An all-in-one recruiting platform: ATS, CRM and sourcing, scheduling, analytics",
         source: "https://www.ashbyhq.com/",
       },
@@ -522,7 +523,7 @@ export const COMPARISONS: Comparison[] = [
       },
       {
         feature: "Interview scheduling",
-        bookly: `Interviews are bookings: panels, self-scheduling links, Bookly video, Meet, Zoom or Teams. ${COMING}`,
+        bookly: `Interviews are bookings on Bookly video, Meet, Zoom or Teams. Panels and self-scheduling links from a stage: ${COMING}`,
         them: "Built in; the AI auto-scheduler needs the Advanced Scheduling add-on",
         source: "https://www.ashbyhq.com/pricing",
       },
@@ -571,9 +572,9 @@ export const COMPARISONS: Comparison[] = [
     summary: "Grant software, or selection with interviews built in.",
     first: "Bookly vs Submittable:",
     second: "Grant software, or selection with interviews built in.",
-    lead: "Submittable runs grant, scholarship, award and CSR programs for funders at large scale. Bookly's selection tools, arriving with Bookly 1.0, are for programs that interview: fellowships, accelerators, internships and admissions, on the same platform as your scheduling and video.",
+    lead: "Submittable runs grant, scholarship, award and CSR programs for funders at large scale. Bookly's selection tools, in beta and complete with Bookly 1.0, are for programs that interview: fellowships, accelerators, internships and admissions, on the same platform as your scheduling and video.",
     booklyIs:
-      "Programs and cohorts on Bookly (coming in 1.0): intake rounds, applications with documents, shared scorecards, info sessions and assessment days with seats, and batch decisions at a decision meeting.",
+      "Programs and cohorts on Bookly, in beta: intake rounds from a template, applications with documents and a pipeline today; shared scorecards and batch decisions at a decision meeting arrive with Bookly 1.0.",
     themIs:
       "Submittable is software foundations, governments and corporations use to run grant and CSR programs, including scholarships, awards, employee giving and volunteering.",
     chooseBookly: [
@@ -589,7 +590,7 @@ export const COMPARISONS: Comparison[] = [
     rows: [
       {
         feature: "What it is",
-        bookly: `Selection for programs and cohorts on the Bookly platform. ${COMING}`,
+        bookly: `Selection for programs and cohorts on the Bookly platform. ${BETA}; reviews and batch decisions: ${COMING}`,
         them: "Grant, scholarship, award and CSR program software for funders",
         source: "https://www.submittable.com/",
       },
@@ -607,7 +608,7 @@ export const COMPARISONS: Comparison[] = [
       },
       {
         feature: "Interviews and sessions",
-        bookly: `Interviews, info sessions and assessment days as bookings and group sessions with seats. ${COMING}`,
+        bookly: `Interviews as bookings, info sessions and assessment days as group sessions with seats. Scheduling them from a stage: ${COMING}`,
         them: "Interview scheduling not listed",
       },
       {
@@ -619,7 +620,7 @@ export const COMPARISONS: Comparison[] = [
       },
       {
         feature: "Applicant experience",
-        bookly: `A status page each applicant can check, and one conversation per applicant. ${COMING}`,
+        bookly: `A status page each applicant can check (${BETA.toLowerCase()}); one conversation per applicant: ${COMING}`,
         them: "Form builder and application portal, with messaging to applicants",
         source: "https://www.submittable.com/solutions/grants",
       },
