@@ -15,7 +15,6 @@ import {
   SquareKanbanIcon,
   UserIcon,
   UsersIcon,
-  VideoIcon,
   type LucideIcon,
 } from "lucide-react";
 
@@ -64,8 +63,12 @@ export type NavOptions = {
 const COLLABORATOR: NavItem[] = [
   { href: "/admin/profile", label: "Profile", icon: UserIcon },
   { href: "/admin/availability", label: "Availability", icon: CalendarClockIcon },
-  { href: "/admin/calendars", label: "Calendars", icon: CalendarDaysIcon },
-  { href: "/admin/conferencing", label: "Conferencing", icon: VideoIcon },
+  {
+    href: "/admin/calendars",
+    label: "Calendars & conferencing",
+    icon: CalendarDaysIcon,
+    also: ["/admin/conferencing"],
+  },
   { href: "/admin/notifications", label: "Notifications", icon: BellIcon },
 ];
 
@@ -191,18 +194,9 @@ export function navPages(o: NavOptions): { item: NavItem; solution: Solution }[]
     add(
       {
         href: "/admin/calendars",
-        label: "Calendars",
+        label: "Calendars & conferencing",
         icon: CalendarDaysIcon,
-        keywords: "google outlook connect",
-      },
-      "clients",
-    );
-    add(
-      {
-        href: "/admin/conferencing",
-        label: "Conferencing",
-        icon: VideoIcon,
-        keywords: "zoom meet video",
+        keywords: "google outlook connect zoom meet teams video conferencing",
       },
       "clients",
     );

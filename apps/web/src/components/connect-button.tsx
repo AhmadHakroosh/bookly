@@ -7,15 +7,19 @@ export function ConnectButton({
   back,
   label = "Connect",
   variant = "default",
+  size,
 }: {
   provider: string;
   back: string;
   label?: string;
   variant?: "default" | "outline";
+  size?: "sm";
 }) {
   return (
     <form action={startConnect.bind(null, provider, back)}>
-      <SubmitButton variant={variant}>{label}</SubmitButton>
+      <SubmitButton variant={variant} size={size}>
+        {label}
+      </SubmitButton>
     </form>
   );
 }

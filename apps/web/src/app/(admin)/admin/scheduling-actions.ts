@@ -409,6 +409,8 @@ export async function createEventType() {
       slug: `meeting-${id.slice(0, 4)}`,
       title: "New meeting",
       durationMin: 30,
+      // The member's default video tool (Calendars & conferencing), else the column's default.
+      ...(profile.defaultConferencing ? { location: { type: profile.defaultConferencing } } : {}),
     });
   await audit({
     action: "event_type.created",

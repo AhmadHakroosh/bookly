@@ -317,19 +317,20 @@ export function BillingSkeleton() {
 
 export function CalendarsSkeleton() {
   return (
-    <Shell className="max-w-2xl space-y-6">
-      <Heading width="w-32" />
-      <Card height="h-24" />
-      <Card height="h-24" />
-    </Shell>
-  );
-}
-
-export function ConferencingSkeleton() {
-  return (
-    <Shell className="max-w-2xl space-y-6">
-      <Heading width="w-36" />
-      <DividedList rows={4} />
+    <Shell className="max-w-3xl space-y-8">
+      <Heading width="w-80" />
+      <section className="space-y-3">
+        <Subheading width="w-40" />
+        <DividedList rows={2} />
+      </section>
+      <section className="space-y-3">
+        <Subheading width="w-44" />
+        <Card height="h-20" title={false} />
+      </section>
+      <section className="space-y-3">
+        <Subheading width="w-32" />
+        <DividedList rows={4} />
+      </section>
     </Shell>
   );
 }

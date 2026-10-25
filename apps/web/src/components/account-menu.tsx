@@ -10,7 +10,6 @@ import {
   ExternalLinkIcon,
   LogOutIcon,
   UserRoundIcon,
-  VideoIcon,
 } from "lucide-react";
 import { BusyOverlay } from "@/components/busy-overlay";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -112,11 +111,7 @@ export function AccountMenu({
           </DropdownMenuItem>
           <DropdownMenuItem render={<Link href="/admin/calendars" />}>
             <CalendarDaysIcon className="size-4" aria-hidden />
-            Calendars
-          </DropdownMenuItem>
-          <DropdownMenuItem render={<Link href="/admin/conferencing" />}>
-            <VideoIcon className="size-4" aria-hidden />
-            Conferencing
+            Calendars & conferencing
           </DropdownMenuItem>
           {bookingPageHref && (
             <DropdownMenuItem

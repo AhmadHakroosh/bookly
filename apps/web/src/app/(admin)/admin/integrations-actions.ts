@@ -4,7 +4,13 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { encrypt, signState } from "@/lib/crypto";
 import { z } from "zod";
-import type { IntegrationProvider, IntegrationSettings } from "@bookly/db/schema";
+import { and, eq, schema } from "@bookly/db";
+import type {
+  ConferencingType,
+  IntegrationProvider,
+  IntegrationSettings,
+} from "@bookly/db/schema";
+import { db } from "@/lib/db";
 import { audit, diff } from "@/server/audit";
 import {
   authorizeUrl,
@@ -17,6 +23,7 @@ import {
   refreshCalendars,
   updateIntegrationSettings,
 } from "@/server/integrations";
+import { refreshWorkspace } from "@/server/cache";
 import { assertWithinLimit, LimitError } from "@/server/limits";
 import { requireWorkspaceUser } from "@/server/session";
 import { getCurrentWorkspace } from "@/server/workspace";
@@ -110,5 +117,34 @@ export async function saveCalendarSettings(
   });
   invalidateBusy(uid);
   revalidatePath("/admin", "layout");
+  return { ok: true };
+}
+
+const CONFERENCING = ["daily", "google_meet", "zoom", "teams"] as const;
+
+/** The video tool new event types start with; saved as it is picked. */
+export async function saveDefaultConferencing(value: string) {
+  const [{ session }, ws] = await Promise.all([requireWorkspaceUser(), getCurrentWorkspace()]);
+  if (!ws) return { error: "No workspace" };
+  const next = (CONFERENCING as readonly string[]).includes(value)
+    ? (value as ConferencingType)
+    : null;
+  const where = and(
+    eq(schema.profiles.workspaceId, ws.id),
+    eq(schema.profiles.userId, session.user.id),
+  );
+  const before = await db().query.profiles.findFirst({
+    where,
+    columns: { defaultConferencing: true, displayName: true },
+  });
+  if (!before) return { error: "Set up your booking page first." };
+  await db().update(schema.profiles).set({ defaultConferencing: next }).where(where);
+  await audit({
+    action: "profile.updated",
+    target: { type: "profile", id: session.user.id, label: before.displayName },
+    changes: diff(before, { defaultConferencing: next }, ["defaultConferencing"]),
+  });
+  // Profiles are cached with the workspace tag.
+  refreshWorkspace(ws.id);
   return { ok: true };
 }
