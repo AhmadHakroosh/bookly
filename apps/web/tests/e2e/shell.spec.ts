@@ -65,7 +65,7 @@ test("the sidebar is the concept's, and the breadcrumb starts at Workspace", asy
 
   await nav.getByRole("link", { name: "Settings" }).click();
   await expect(page.getByRole("heading", { name: "Workspace settings", level: 1 })).toBeVisible();
-  await page.getByRole("link", { name: "Brand & communications" }).click();
+  await page.getByRole("button", { name: "Brand & communications" }).click();
   await expect(page).toHaveURL(/\/admin\/settings\/branding/);
   await expect(crumbs.getByRole("link", { name: "Settings" })).toBeVisible();
   await expect(crumbs.locator('[aria-current="page"]')).toHaveText("Branding");
