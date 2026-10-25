@@ -59,7 +59,7 @@ test.describe("agent discovery", () => {
 
 test.describe("marketing site", () => {
   const pages: [string, string][] = [
-    ["/", "The meeting is booked"],
+    ["/", "A booking starts it."],
     ["/pricing", "Start free"],
     ["/product", "One client."],
     ["/solutions", "Built around"],

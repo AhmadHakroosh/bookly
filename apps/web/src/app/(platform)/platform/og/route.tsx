@@ -69,7 +69,7 @@ export function GET(req: Request) {
       </div>
       <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
         <div style={{ fontSize: size, fontWeight: 700, letterSpacing: -2, lineHeight: 1.05 }}>
-          {title || "The meeting is booked."}
+          {title || "A booking starts it."}
         </div>
         <div
           style={{
@@ -80,10 +80,10 @@ export function GET(req: Request) {
             color: ORANGE,
           }}
         >
-          {title ? "Bookly" : "Bookly handles the rest."}
+          {title ? "Bookly" : "Bookly keeps it moving."}
         </div>
         <div style={{ fontSize: 28, color: MUTED, marginTop: 8 }}>
-          Briefings before, transcripts during, tasks and follow-ups after.
+          Meet prepared. Keep what matters. Every client, in one place.
         </div>
       </div>
       <div style={{ display: "flex", gap: 14, alignItems: "center" }}>

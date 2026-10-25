@@ -4,7 +4,7 @@ import { loadEnv } from "@bookly/config";
 /** Marketing-site constants for the platform host. */
 export const SITE = {
   name: "Bookly",
-  tagline: "The meeting is booked. Bookly handles the rest.",
+  tagline: "A booking starts it. Bookly keeps it moving.",
   description:
     "A connected workspace for client work: booking pages, a briefing before each call, transcripts with consent, recaps, follow-ups and payment requests, with an open-source core you can run yourself.",
   github: "https://github.com/AhmadHakroosh/bookly",
