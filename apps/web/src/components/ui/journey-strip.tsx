@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { CheckIcon } from "lucide-react";
+import { CheckIcon, ChevronRightIcon } from "lucide-react";
 import { cn } from "cn";
 
 /** The client journey every contact shows (concept fidelity §3, decision D3). */
@@ -15,10 +15,11 @@ export type JourneyStep = {
 };
 
 /**
- * Where a person is in their journey: Booked → Prepared → Met → Followed up → Paid
- * (`marketing ui 1/2.png`). Done steps are filled Bookly Orange with a tick, the current one is
- * ringed, the rest are outlined; each links to its record when there is one. It scrolls
- * sideways on a phone rather than wrapping.
+ * Where a person is in their journey: Booked → Prepared → Met → Followed up → Paid, drawn as
+ * the website draws it (`marketing ui 1/2.png`): a numbered circle, the step and one line under
+ * it, chevrons between. Done steps are ticked, the current one sits in a Peach pill with a
+ * filled orange number, the rest are outlined; each links to its record when there is one. It
+ * scrolls sideways on a phone rather than wrapping.
  */
 function JourneyStrip({
   steps,
@@ -33,56 +34,76 @@ function JourneyStrip({
     <ol
       aria-label={label}
       data-slot="journey-strip"
-      className={cn("flex overflow-x-auto rounded-xl border bg-card p-4", className)}
+      className={cn(
+        "flex [scrollbar-width:none] items-center gap-1 overflow-x-auto rounded-xl border bg-card p-1.5",
+        className,
+      )}
     >
       {steps.map((s, i) => {
         const body = (
           <>
             <span
               className={cn(
-                "flex size-8 items-center justify-center rounded-full border-2 text-xs font-semibold",
-                s.state === "done" && "border-brand bg-brand text-white",
-                s.state === "current" && "border-brand bg-accent text-accent-foreground",
-                s.state === "todo" && "border-border bg-card text-muted-foreground",
+                "flex size-8 shrink-0 items-center justify-center rounded-full border text-xs font-semibold tabular-nums",
+                s.state === "done" && "border-success bg-success text-white",
+                s.state === "current" && "border-primary bg-primary text-primary-foreground",
+                s.state === "todo" && "bg-card text-muted-foreground",
               )}
               aria-hidden
             >
-              {s.state === "done" ? <CheckIcon className="size-4" /> : i + 1}
-            </span>
-            <span
-              className={cn(
-                "text-sm",
-                s.state === "todo" ? "text-muted-foreground" : "font-medium text-foreground",
+              {s.state === "done" ? (
+                <CheckIcon className="size-4" />
+              ) : (
+                String(i + 1).padStart(2, "0")
               )}
-            >
-              {s.label}
-              <span className="sr-only">
-                {s.state === "done" ? " (done)" : s.state === "current" ? " (current step)" : ""}
-              </span>
             </span>
-            {s.detail && <span className="text-xs text-muted-foreground">{s.detail}</span>}
+            <span className="min-w-0 text-left">
+              <span
+                className={cn(
+                  "block text-sm font-semibold whitespace-nowrap",
+                  s.state === "current" && "text-primary",
+                  s.state === "todo" && "font-medium text-muted-foreground",
+                )}
+              >
+                {s.label}
+                <span className="sr-only">
+                  {s.state === "done" ? " (done)" : s.state === "current" ? " (current step)" : ""}
+                </span>
+              </span>
+              {s.detail && (
+                <span className="block text-xs whitespace-nowrap text-muted-foreground">
+                  {s.detail}
+                </span>
+              )}
+            </span>
           </>
+        );
+        const cls = cn(
+          "flex flex-1 items-center gap-2.5 rounded-lg px-2.5 py-2",
+          s.state === "current" && "bg-accent",
         );
         return (
           <li
             key={s.label}
             aria-current={s.state === "current" ? "step" : undefined}
-            className={cn(
-              "relative flex min-w-28 flex-1 flex-col items-center text-center",
-              // The line to the next step, from this circle's edge.
-              "after:absolute after:start-[calc(50%+1.25rem)] after:end-[calc(-50%+1.25rem)] after:top-4 after:h-0.5 last:after:hidden",
-              s.state === "done" ? "after:bg-brand" : "after:bg-border",
-            )}
+            className="flex min-w-max flex-1 items-center gap-1"
           >
             {s.href ? (
               <Link
                 href={s.href}
-                className="flex flex-col items-center gap-1.5 rounded-lg px-1 outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+                className={cn(
+                  cls,
+                  "outline-none hover:bg-muted/60 focus-visible:ring-3 focus-visible:ring-ring/50",
+                  s.state === "current" && "hover:bg-accent",
+                )}
               >
                 {body}
               </Link>
             ) : (
-              <span className="flex flex-col items-center gap-1.5 px-1">{body}</span>
+              <span className={cls}>{body}</span>
+            )}
+            {i < steps.length - 1 && (
+              <ChevronRightIcon className="size-4 shrink-0 text-muted-foreground" aria-hidden />
             )}
           </li>
         );

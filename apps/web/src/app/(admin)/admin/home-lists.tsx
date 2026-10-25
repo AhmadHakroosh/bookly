@@ -14,8 +14,9 @@ import {
 import { snoozeContact, toggleTask } from "./scheduling-actions";
 
 /*
- * Home's interactive lists (`app ui.png`): "Your next steps" ticks a task off where it is shown,
- * and each "Keep things moving" row has its ⋯ menu. The rest of Home is server-rendered.
+ * Home's interactive lists (`app ui.png`): "Your next steps" ticks a task off where it is shown
+ * (a contact's linked tasks use it too), and each "Keep things moving" row has its ⋯ menu. The
+ * rest of Home is server-rendered.
  */
 
 export type NextStep = {
@@ -27,7 +28,7 @@ export type NextStep = {
   href?: string;
 };
 
-export function NextSteps({ steps }: { steps: NextStep[] }) {
+export function NextSteps({ steps, path = "/admin" }: { steps: NextStep[]; path?: string }) {
   const [done, setDone] = useOptimistic(new Set<string>(), (s, id: string) => new Set(s).add(id));
   const [, start] = useTransition();
   return (
@@ -46,7 +47,7 @@ export function NextSteps({ steps }: { steps: NextStep[] }) {
               start(async () => {
                 setDone(t.id);
                 try {
-                  await toggleTask(t.id, true, "/admin");
+                  await toggleTask(t.id, true, path);
                 } catch {
                   toast.error("That task didn't save. Try again.");
                 }

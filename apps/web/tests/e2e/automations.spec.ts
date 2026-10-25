@@ -81,7 +81,6 @@ test("a client who reaches Won gets the checklist and the welcome email, once", 
   await page.goto(`/admin/contacts/${contactId}`);
   await page.getByRole("combobox", { name: "Stage" }).click();
   await page.getByRole("option", { name: "Won", exact: true }).click();
-  await page.getByRole("button", { name: "Update" }).click();
   await expect(page.getByText(/Stage: .* → Won/)).toBeVisible();
 
   // The automation runs right after the move.

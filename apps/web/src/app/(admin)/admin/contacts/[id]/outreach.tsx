@@ -1,7 +1,14 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { ArrowLeftIcon, SendIcon } from "lucide-react";
+import {
+  ArrowLeftIcon,
+  CalendarClockIcon,
+  CreditCardIcon,
+  FileTextIcon,
+  SendIcon,
+} from "lucide-react";
+import { cn } from "cn";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { ActionButton } from "@/components/action-button";
@@ -31,8 +38,16 @@ const SERVER_KIND = {
   followUp: "checkIn",
 } as const;
 
+const ORDER: Kind[] = ["proposal", "payment", "followUp"];
+const ACTIONS = {
+  proposal: { label: "Create proposal", icon: FileTextIcon },
+  payment: { label: "Send payment request", icon: CreditCardIcon },
+  followUp: { label: "Add follow-up", icon: CalendarClockIcon },
+} as const;
+
 /**
- * Proposal, payment-request and follow-up emails in two steps: edit the prefilled template,
+ * "Next actions" on a contact (`ui mocks.png` 03): proposal, payment-request and follow-up
+ * emails, the one the journey points at first and in Peach. Each works in two steps: edit the prefilled template,
  * preview the exact email the contact will receive, then send. `initial` opens a composer at
  * once (Home links here with the follow-up ready to go).
  */
@@ -44,6 +59,7 @@ export function Outreach({
   followUp,
   stripe,
   initial = null,
+  suggest = "proposal",
   optedOut = false,
 }: {
   contactId: string;
@@ -54,6 +70,8 @@ export function Outreach({
   followUp: T;
   stripe: boolean;
   initial?: Kind | null;
+  /** The step the contact's journey points at: shown first, in Peach. */
+  suggest?: Kind;
   /** The contact unsubscribed: the composer stays readable but nothing can be sent. */
   optedOut?: boolean;
 }) {
@@ -117,37 +135,42 @@ export function Outreach({
   }
 
   return (
-    <section className="rounded-xl border p-4 text-sm">
-      <h2 className="text-base font-semibold tracking-tight">Send</h2>
+    <section aria-labelledby="next-actions" className="rounded-xl border bg-card p-4 text-sm">
+      <h2 id="next-actions" className="text-base font-semibold tracking-tight">
+        Next actions
+      </h2>
       {optedOut && (
         <p className="mt-1 text-xs text-muted-foreground">
           This contact unsubscribed from your emails. You can still call or write to them another
           way; booking emails are unaffected.
         </p>
       )}
-      <div className="mt-2 flex flex-wrap gap-2">
-        <Button
-          type="button"
-          variant={open === "proposal" ? "default" : "outline"}
-          onClick={() => switchTo("proposal")}
-        >
-          Proposal
-        </Button>
-        <Button
-          type="button"
-          variant={open === "payment" ? "default" : "outline"}
-          onClick={() => switchTo("payment")}
-        >
-          Payment request
-        </Button>
-        <Button
-          type="button"
-          variant={open === "followUp" ? "default" : "outline"}
-          onClick={() => switchTo("followUp")}
-        >
-          Follow-up
-        </Button>
-      </div>
+      <ul className="mt-3 space-y-2">
+        {ORDER.slice()
+          .sort((a, b) => Number(b === suggest) - Number(a === suggest))
+          .map((k) => {
+            const { label, icon: Icon } = ACTIONS[k];
+            const on = open === k;
+            return (
+              <li key={k}>
+                <button
+                  type="button"
+                  aria-expanded={on}
+                  onClick={() => switchTo(k)}
+                  className={cn(
+                    "flex h-10 w-full items-center gap-2.5 rounded-lg border px-3 text-sm font-medium outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
+                    k === suggest || on
+                      ? "border-primary/30 bg-accent text-accent-foreground hover:bg-[color-mix(in_oklch,var(--accent),var(--primary)_8%)]"
+                      : "bg-card hover:bg-muted",
+                  )}
+                >
+                  <Icon className="size-4 shrink-0" aria-hidden />
+                  {label}
+                </button>
+              </li>
+            );
+          })}
+      </ul>
 
       {open && (
         // Keyed by kind: switching remounts the form with the other template's subject and body.

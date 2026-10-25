@@ -2,7 +2,7 @@
 
 Bookly keeps a **contact** for every person who books, joins a waitlist or fills a routing form: one row per email per workspace, with a name, company, phone, tags, free-form notes, a follow-up date and a **stage** (`lead → active → won → lost`). Everything that happens with that person lands on the contact's **timeline**: bookings and their answers, confirmations, cancellations and reschedules, completed meetings and no-shows, every email Bookly sent, form answers, notes and stage changes.
 
-`Admin → Contacts` lists everyone (search, filter by stage), and each contact page shows the timeline, upcoming meetings and the editable details. Booking rows link to the attendee's contact. A first completed meeting moves a lead to _active_ automatically; the other stages are yours to set.
+`Admin → Contacts` lists everyone (search, filter by stage). Each contact page opens with the person (name, company, email, phone) and their stage as a chip you can change in place, then the **client journey**: Booked → Prepared → Met → Followed up → Paid, done steps ticked and the current one highlighted, each linking to the booking, briefing or composer behind it. **Overview · Bookings · Tasks · Files** follow; Overview has the timeline with notes, and on the right **Next actions** (the one the journey points at first), linked tasks, recent files and the editable client details. ⋮ has opting out of emails and the folder. Booking rows link to the attendee's contact. A first completed meeting moves a lead to _active_ automatically; the other stages are yours to set.
 
 ### Your own stages
 
@@ -41,7 +41,7 @@ Members see their own bookings; owners and admins see the workspace. A note says
 
 ## Executing the outcome
 
-- **Proposal / Payment request / Follow-up** buttons on a contact page send a templated email (edit the templates under `Admin → Settings → Emails`; placeholders `{name} {company} {host} {amount} {payLink} {bookingUrl}`). A payment request with Stripe configured includes a Checkout link for the amount. All three set the next follow-up date so Home nudges you again; Home's **Draft follow-up** opens the contact with the follow-up composer ready.
+- **Create proposal / Send payment request / Add follow-up** under Next actions on a contact page send a templated email (edit the templates under `Admin → Settings → Emails`; placeholders `{name} {company} {host} {amount} {payLink} {bookingUrl}`). A payment request with Stripe configured includes a Checkout link for the amount. All three set the next follow-up date so Home nudges you again; Home's **Draft follow-up** opens the contact with the follow-up composer ready.
 - **CRM sync** (`Admin → Settings → Integrations → CRM sync`): with a HubSpot private-app token or a Pipedrive API token, contacts and stage changes are mirrored to the CRM and meeting summaries and sent proposals become notes on the CRM contact. Sync is best-effort and never blocks a booking.
 - **Webhooks and API**: `contact.created`, `contact.stage_changed`, `meeting.captured` and `task.created` events, plus `GET/POST /api/v1/contacts` and `GET /api/v1/tasks`, let any other tool react to what happens in Bookly.
 
@@ -88,7 +88,7 @@ On a booking's page (`Admin → Bookings → Notes`), paste your notes or a tran
 
 ## Proposals, payment requests and follow-ups
 
-From a contact's page, **Proposal**, **Payment request** and **Follow-up** open a form prefilled
+From a contact's page, **Create proposal**, **Send payment request** and **Add follow-up** open a form prefilled
 from the workspace templates (Settings → Proposal, payment and follow-up emails) with the
 placeholders filled in; `{bookingUrl}` in a follow-up becomes a link to your booking page.
 Edit freely, then **Preview email** shows the exact branded message the contact will receive,
