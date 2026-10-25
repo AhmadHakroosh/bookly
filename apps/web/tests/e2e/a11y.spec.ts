@@ -5,6 +5,7 @@ import { DEMO, STORAGE, settled } from "./helpers";
 const scan = async (page: import("@playwright/test").Page) =>
   new AxeBuilder({ page })
     .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"])
+    // The mocks' orange is under AA contrast for small text, by choice (globals.css).
     .disableRules(["color-contrast"])
     .analyze();
 
