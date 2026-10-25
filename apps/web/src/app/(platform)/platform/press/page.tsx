@@ -190,9 +190,9 @@ export default function PressPage() {
                 briefing before each call, transcribes and recaps the call with everyone&apos;s
                 consent, and turns the recap into tasks, follow-up emails and payment requests.
                 Consultants, coaches, agencies and small teams use it to run their client work.
-                Bookly 1.0, in development, adds hiring: cohorts, fellowships, programs and jobs,
-                with stages each team defines. The core is open source and can be self-hosted; the
-                hosted service runs at bookly-app.io.
+                Hiring, in beta and complete with Bookly 1.0, adds cohorts, fellowships, programs
+                and jobs, with stages each team defines. The core is open source and can be
+                self-hosted; the hosted service runs at bookly-app.io.
               </p>
             </div>
           </div>

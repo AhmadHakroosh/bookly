@@ -185,7 +185,7 @@ export const MENUS: { product: Menu; solutions: Menu; resources: Menu } = {
       },
     ],
     featured: {
-      eyebrow: "Hiring · coming in Bookly 1.0",
+      eyebrow: "Hiring · Beta",
       title: "Every applicant heard. Every decision clear.",
       body: "Applications, independent reviews, interviews and decisions on the same platform as your client work. People decide; AI only summarises.",
       href: "/solutions/hiring",

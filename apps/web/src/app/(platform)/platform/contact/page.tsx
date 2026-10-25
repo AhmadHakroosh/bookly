@@ -5,6 +5,7 @@ import {
   MailIcon,
   MessageSquareIcon,
   ShieldAlertIcon,
+  UserRoundSearchIcon,
   type LucideIcon,
 } from "lucide-react";
 import { pageMetadata, SITE } from "../site";
@@ -16,7 +17,15 @@ export const metadata: Metadata = pageMetadata({
   path: "/contact",
 });
 
-const WAYS: [LucideIcon, string, string, string, string][] = [
+const WAYS: [LucideIcon, string, string, string, string, string?][] = [
+  [
+    UserRoundSearchIcon,
+    "Join the hiring beta",
+    "Running a fellowship, cohort, internship or hiring round? Tell us about it and we'll open hiring for your workspace.",
+    `mailto:${SITE.supportEmail}?subject=Hiring%20beta`,
+    "Ask to join",
+    "hiring-beta",
+  ],
   [
     MailIcon,
     "Support and sales",
@@ -57,9 +66,10 @@ export default function ContactPage() {
         sooner.
       </p>
       <div className="mt-10 grid gap-4 sm:grid-cols-2">
-        {WAYS.map(([Icon, title, text, href, label]) => (
+        {WAYS.map(([Icon, title, text, href, label, id]) => (
           <a
             key={title}
+            id={id}
             href={href}
             target={href.startsWith("http") ? "_blank" : undefined}
             rel={href.startsWith("http") ? "noreferrer" : undefined}

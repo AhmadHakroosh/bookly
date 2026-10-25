@@ -4,6 +4,7 @@ import {
   ArrowRightIcon,
   CalendarCheckIcon,
   CheckIcon,
+  ClockIcon,
   ClipboardCheckIcon,
   FileTextIcon,
   GraduationCapIcon,
@@ -38,12 +39,13 @@ export type Solution = {
   first: string;
   second: string;
   body: string;
-  bullets: string[];
+  /** A bullet that is not built yet carries `coming`: it shows "Coming in 1.0" beside it. */
+  bullets: (string | { text: string; coming: true })[];
   link: { href: string; label: string };
   timeline: { title: string; steps: TimelineStep[] };
   person: { name: string; role: string; counts: [string, string][] };
-  /** Hiring and programs are in development: the page says so. */
-  coming?: boolean;
+  /** Hiring and programs are in beta: the page says what is live and what comes with 1.0. */
+  beta?: boolean;
   description: string;
 };
 
@@ -203,15 +205,22 @@ export const SOLUTIONS: Solution[] = [
   {
     slug: "hiring",
     label: "Hiring",
-    eyebrow: "For hiring · coming in Bookly 1.0",
+    eyebrow: "For hiring · Beta",
     first: "Every applicant heard.",
     second: "Every decision clear.",
-    body: "Jobs and internships on the same platform as your client work: an application page, a pipeline you define, independent reviews, interviews booked on your calendars, and a decision with a name and a reason on it. AI summarises; people decide.",
+    body: "Jobs and internships on the same platform as your client work: an application page and a pipeline you define today, and with Bookly 1.0 independent reviews, interviews booked on your calendars, and a decision with a name and a reason on it. AI summarises; people decide.",
     bullets: [
-      "Every applicant gets a confirmation and a status they can check",
-      "Reviewers don't see each other's feedback until they submit their own",
-      "Interviews are bookings: panels, self-scheduling links, Bookly video",
+      "Every applicant gets a confirmation and a status page they can check",
+      "A pipeline you define, with flags a person looks at before anyone moves on",
       "No scores that rank people, and nothing is rejected automatically",
+      {
+        text: "Reviewers don't see each other's feedback until they submit their own",
+        coming: true,
+      },
+      {
+        text: "Interviews booked from a stage: panels, self-scheduling links, Bookly video",
+        coming: true,
+      },
     ],
     link: { href: "/compare/greenhouse", label: "Compare with Greenhouse and Ashby" },
     timeline: { title: "Application timeline", steps: HIRING_STEPS },
@@ -225,22 +234,28 @@ export const SOLUTIONS: Solution[] = [
         ["Status", "Interview"],
       ],
     },
-    coming: true,
+    beta: true,
     description:
-      "Hiring on Bookly (coming in 1.0): application pages, pipelines you define, independent reviews, interviews on your calendars and decisions people own. Every applicant heard. Every decision clear.",
+      "Hiring on Bookly, in beta: application and status pages and pipelines you define today; independent reviews, interview scheduling and decisions people own with Bookly 1.0.",
   },
   {
     slug: "programs",
     label: "Programs & cohorts",
-    eyebrow: "For programs & cohorts · coming in Bookly 1.0",
+    eyebrow: "For programs & cohorts · Beta",
     first: "From application",
     second: "to cohort, in one place.",
-    body: "Fellowships, accelerators, internships, scholarships and admissions: open an intake round, collect applications and documents, review against a shared scorecard, run info sessions and assessment days with seats, and decide in batches at a decision meeting.",
+    body: "Fellowships, accelerators, internships, scholarships and admissions: open an intake round, collect applications and documents and move people through your stages today; review against a shared scorecard and decide in batches at a decision meeting with Bookly 1.0.",
     bullets: [
-      "Stages and the modules on each one are yours to choose per round",
-      "Info sessions and assessment days as group sessions with seats",
-      "Batch decisions, each one recorded with who made it",
-      "Data of people not admitted deleted after the cycle (6 months by default, adjustable)",
+      "Start from a template; the stages of each round are yours to choose",
+      "An application page with documents, and a status page for every applicant",
+      {
+        text: "Shared scorecards and batch decisions, each recorded with who made it",
+        coming: true,
+      },
+      {
+        text: "Data of people not admitted deleted after the cycle (6 months by default)",
+        coming: true,
+      },
     ],
     link: { href: "/compare/submittable", label: "Compare with Submittable" },
     timeline: {
@@ -276,20 +291,20 @@ export const SOLUTIONS: Solution[] = [
         ["Seats", "20"],
       ],
     },
-    coming: true,
+    beta: true,
     description:
-      "Programs and cohorts on Bookly (coming in 1.0): intake rounds, applications with documents, shared scorecards, assessment days with seats and batch decisions.",
+      "Programs and cohorts on Bookly, in beta: intake rounds from a template, applications with documents and a pipeline today; shared scorecards and batch decisions with Bookly 1.0.",
   },
 ];
 
 const FAQ: [string, string][] = [
   [
     "Can one workspace run client work and hiring?",
-    "Yes, from Bookly 1.0. A workspace turns on one solution or both; with both, a switch in the sidebar moves between Clients and Hiring, and Messages, Files, Team and Settings stay shared. A candidate is a contact, and an interview is a booking.",
+    "Yes. A workspace in the hiring beta runs both, with a switch in the sidebar between Clients and Hiring. From Bookly 1.0 you choose one solution or both when you sign up. A candidate is a contact, and an interview is a booking.",
   ],
   [
-    "When does hiring arrive?",
-    "With Bookly 1.0. The data model is in place and the screens are being built now; programs and cohorts come first, jobs follow on the same model. Talk to us if you want to join the design-partner group.",
+    "Can I use hiring today?",
+    "In the beta, by invitation. Round setup from templates, the application and status pages and the pipeline board are live; structured reviews, interview scheduling from a stage and decisions arrive with Bookly 1.0. Join the hiring beta to try it with a real round.",
   ],
   [
     "Does AI decide who gets hired or admitted?",
@@ -376,19 +391,33 @@ export function SolutionsPage({ slug }: { slug: string }) {
             </h2>
             <p className="mt-4 text-muted-foreground">{s.body}</p>
             <ul className="mt-6 space-y-2 text-sm">
-              {s.bullets.map((b) => (
-                <li key={b} className="flex gap-2">
-                  <CheckIcon className="mt-0.5 size-4 shrink-0 text-(--brand)" aria-hidden />
-                  {b}
-                </li>
-              ))}
+              {s.bullets.map((b) =>
+                typeof b === "string" ? (
+                  <li key={b} className="flex gap-2">
+                    <CheckIcon className="mt-0.5 size-4 shrink-0 text-(--brand)" aria-hidden />
+                    {b}
+                  </li>
+                ) : (
+                  <li key={b.text} className="flex gap-2 text-muted-foreground">
+                    <ClockIcon className="mt-0.5 size-4 shrink-0" aria-hidden />
+                    <span>
+                      {b.text}{" "}
+                      <span className="ms-1 inline-flex rounded-full border px-2 py-px text-xs font-medium whitespace-nowrap text-foreground">
+                        Coming in 1.0
+                      </span>
+                    </span>
+                  </li>
+                ),
+              )}
             </ul>
-            {s.coming ? (
+            {s.beta ? (
               <p className="mt-6 rounded-xl border border-dashed bg-card p-4 text-sm text-muted-foreground">
-                Hiring is in development and arrives with Bookly 1.0. Running a fellowship, cohort
-                or hiring round next year?{" "}
-                <Link href="/contact" className="font-medium text-primary hover:underline">
-                  Join the design partners
+                Hiring is in beta, by invitation. Running a fellowship, cohort or hiring round?{" "}
+                <Link
+                  href="/contact#hiring-beta"
+                  className="font-medium text-primary hover:underline"
+                >
+                  Join the hiring beta
                 </Link>
                 .
               </p>
