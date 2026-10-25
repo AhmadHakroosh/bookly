@@ -54,6 +54,25 @@ the notes for that version from `CHANGELOG.md`. Do these in order, in one commit
    the marketing site renders this file at build time, so it goes live with the deploy.
 3. Commit, then `git tag -a vX.Y.Z -m "Bookly vX.Y.Z" && git push origin main vX.Y.Z`.
 
+## Local staging
+
+`pnpm dev` is for building. To see the trunk as staging runs it, run the production Docker image
+next to it:
+
+```bash
+scripts/local-staging.sh up        # first run builds the image from the pushed v2 and seeds demo data
+scripts/local-staging.sh update    # rebuild from the latest v2 and restart (migrations run on start)
+```
+
+It is multi-tenant like staging.bookly-app.io: the platform at http://localhost:3100, workspaces
+at `<slug>.localhost:3100` (the demo at http://demo.localhost:3100/admin, demo@example.com /
+demo-password-1234, also a platform admin for `/console`), and every email in Mailpit at
+http://localhost:8026. It has its own Postgres (`localhost:5434`), the image's job worker and
+websocket server, and every feature flag on. Stripe, Daily, Anthropic and the OAuth apps stay off
+until you add their keys to `deploy/local-staging/.env` (git-ignored, created on first run with
+fresh secrets). `REF=worktree scripts/local-staging.sh update` builds this checkout as it is
+instead; `status`, `logs` and `down` (`down --wipe` drops the data) do what they say.
+
 ## End-to-end tests
 
 Two Playwright suites run in CI against a production build:

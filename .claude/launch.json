@@ -8,6 +8,10 @@
       "port": 3002
     },
     {
+      "name": "bookly-staging",
+      "url": "http://localhost:3100"
+    },
+    {
       "name": "bookly-web-cloud",
       "runtimeExecutable": "env",
       "runtimeArgs": [
