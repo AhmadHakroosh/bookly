@@ -15,11 +15,12 @@ export function InviteForm({ collaborators = false }: { collaborators?: boolean 
     else if (state.error) toast.error(state.error);
   }, [state]);
   return (
-    <form action={action} className="flex flex-wrap items-end gap-2 rounded-xl border p-4">
+    <form action={action} className="flex flex-wrap items-end gap-2">
       <Input
         name="email"
         type="email"
         placeholder="teammate@example.com"
+        aria-label="Email"
         required
         className="min-w-0 flex-1 basis-56"
       />
@@ -36,7 +37,7 @@ export function InviteForm({ collaborators = false }: { collaborators?: boolean 
             : []),
         ]}
       />
-      <SubmitButton pendingText="Sending…">Invite</SubmitButton>
+      <SubmitButton pendingText="Sending…">Invite member</SubmitButton>
     </form>
   );
 }

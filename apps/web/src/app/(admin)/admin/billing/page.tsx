@@ -13,6 +13,8 @@ import { billingConfigured, overageConfigured, planName, yearlyConfigured } from
 import { overageAllowed, usageSummary, workspaceLimits } from "@/server/limits";
 import { isCloud } from "@/server/platform";
 import { requireStaff } from "@/server/session";
+import { PageHeader } from "@/components/ui/page-header";
+import { TeamBillingNav } from "../team/team-billing-nav";
 import { getCurrentWorkspace } from "@/server/workspace";
 import { manageBilling, toggleCaptureOverage } from "./actions";
 import { UpgradeCards } from "./upgrade-cards";
@@ -39,8 +41,10 @@ async function BillingPage({ searchParams }: PageProps<"/admin/billing">) {
   const overageOn = overageAllowed(ws);
   return (
     <div className="max-w-3xl space-y-8">
+      <PageHeader title="Team & billing">
+        {canManage && <TeamBillingNav current="billing" />}
+      </PageHeader>
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Billing</h1>
         <p className="text-sm text-muted-foreground">
           You are on the <strong>{planName(ws.plan)}</strong> plan
           {ws.planStatus && ws.planStatus !== "active"
