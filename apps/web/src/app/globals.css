@@ -257,7 +257,6 @@
   opacity: 1;
 }
 
-
 /* Marketing mockups always render in the light theme, whatever the page theme is. */
 .force-light {
   color-scheme: light;
