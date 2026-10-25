@@ -420,7 +420,11 @@ export default function DesignPage() {
                 date="Apr 8"
               />
             </div>
-            <div className="mt-4 flex flex-wrap items-end gap-3" aria-label="File types">
+            <div
+              className="mt-4 flex flex-wrap items-end gap-3"
+              role="group"
+              aria-label="File types"
+            >
               {[
                 "a.pdf",
                 "a.docx",

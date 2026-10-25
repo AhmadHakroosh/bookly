@@ -89,37 +89,39 @@ test.describe("admin", () => {
     await expect(page).toHaveURL(/\/admin\/calendars/);
   });
 
-  test("a profile photo can be uploaded and is served from /files", async ({ browser }) => {
+  test("an account photo is cropped, uploaded and served from /files", async ({ browser }) => {
     const page = await (await browser.newContext({ storageState: STORAGE })).newPage();
-    await page.goto("/admin/profile");
-    // A small solid PNG; the server resizes whatever it gets, so a tiny image is enough.
+    await page.goto("/admin/account");
+    // Big enough for the 128 px minimum; the browser crops it to 512 × 512 before upload.
     const png = await sharp({
-      create: { width: 8, height: 8, channels: 3, background: "#e8965a" },
+      create: { width: 300, height: 200, channels: 3, background: "#e8965a" },
     })
       .png()
       .toBuffer();
     // The input is wired by React on hydration; the file chooser only opens once it is.
     await page.waitForLoadState("networkidle");
+    const photo = page.locator("#photo");
     const [chooser] = await Promise.all([
       page.waitForEvent("filechooser"),
-      page.getByRole("button", { name: /(Upload|Replace) photo/ }).click(),
+      photo.getByRole("button", { name: "Upload photo" }).click(),
     ]);
     await chooser.setFiles({ name: "me.png", mimeType: "image/png", buffer: png });
+    const dialog = page.getByRole("dialog", { name: "Crop your photo" });
+    await expect(dialog).toBeVisible();
+    await dialog.getByRole("button", { name: "Save" }).click();
     await expect(page.getByText("Photo updated")).toBeVisible({ timeout: 15_000 });
-    const url = await page.locator('input[name="avatarUrl"]').inputValue();
+    const url = await photo.locator("img").first().getAttribute("src");
     expect(url).toMatch(/^\/files\/[0-9a-f-]{36}$/);
-    const res = await page.request.get(url);
+    const res = await page.request.get(url!);
     expect(res.status()).toBe(200);
     expect(res.headers()["content-type"]).toMatch(/^image\//);
     expect(res.headers()["cache-control"]).toContain("immutable");
-    await page.goto("/admin/settings/data/activity");
-    await expect(
-      page
-        .getByRole("list")
-        .filter({ hasText: "File uploaded" })
-        .getByText("File uploaded")
-        .first(),
-    ).toBeVisible({ timeout: 15_000 });
+    // The sidebar's account card shows it at once.
+    await page.reload();
+    await expect(page.getByRole("complementary").locator(`img[src="${url}"]`)).toHaveCount(1);
+    // Initials again, everywhere, for the next run.
+    await photo.getByRole("button", { name: "Remove photo" }).click();
+    await expect(page.getByText("Photo removed")).toBeVisible();
   });
 
   test("bookings calendar: views, the side pane and the remembered toggle", async ({
