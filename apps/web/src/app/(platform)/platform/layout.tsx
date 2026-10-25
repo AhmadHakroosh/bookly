@@ -3,6 +3,7 @@ import { Caveat } from "next/font/google";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { headers } from "next/headers";
+import { connection } from "next/server";
 import { Suspense } from "react";
 import { Button } from "@/components/ui/button";
 import { SubmitButton } from "@/components/submit-button";
@@ -86,7 +87,13 @@ async function AgentTools() {
   );
 }
 
+/**
+ * Request time, not the App Shell: Partial Prefetching resolves session reads in the shell, and
+ * Better Auth checks the session's expiry against the clock. The marketing shell stays the same
+ * for every visitor and the session links stream in after it.
+ */
 async function sessionState() {
+  await connection();
   const session = await getSession();
   return { session, admin: !!session && isPlatformAdmin(session.user.email) };
 }
