@@ -19,27 +19,32 @@ async function GeneralPage() {
   const optedOut = !!workspace.settings.betaOptOut;
   const betas = await betaFlagsFor(workspace);
   return (
-    <div className="max-w-xl space-y-8">
-      <div>
-        <p className="text-sm text-muted-foreground">
+    <div className="max-w-2xl space-y-5">
+      <section aria-labelledby="general-title" className="rounded-xl border bg-card p-5 md:p-6">
+        <h2 id="general-title" className="text-base font-semibold tracking-tight">
+          General
+        </h2>
+        <p className="mt-1 mb-5 text-sm text-muted-foreground">
           The workspace name appears in the admin header and in email footers. The default timezone
           is used for new booking pages and schedules.
         </p>
-      </div>
-      <GeneralForm
-        workspace={{
-          name: workspace.name,
-          description: workspace.description ?? "",
-          locale: workspace.locale,
-          timezone: workspace.timezone,
-          blocklist: ((workspace.settings.blockedEmails as string[] | undefined) ?? []).join("\n"),
-          postalAddress: workspace.settings.postalAddress ?? "",
-          telemetryStats: !!workspace.settings.telemetryStats,
-        }}
-        selfHosted={!isCloud()}
-        zones={timezoneList()}
-      />
-      <section className="space-y-3 rounded-lg border p-4">
+        <GeneralForm
+          workspace={{
+            name: workspace.name,
+            description: workspace.description ?? "",
+            locale: workspace.locale,
+            timezone: workspace.timezone,
+            blocklist: ((workspace.settings.blockedEmails as string[] | undefined) ?? []).join(
+              "\n",
+            ),
+            postalAddress: workspace.settings.postalAddress ?? "",
+            telemetryStats: !!workspace.settings.telemetryStats,
+          }}
+          selfHosted={!isCloud()}
+          zones={timezoneList()}
+        />
+      </section>
+      <section className="space-y-3 rounded-xl border bg-card p-5">
         <div className="flex items-start justify-between gap-4">
           <div>
             <h2 className="flex items-center gap-2 text-base font-semibold tracking-tight">
@@ -61,7 +66,7 @@ async function GeneralPage() {
           </p>
         )}
       </section>
-      <section className="space-y-3 rounded-lg border p-4">
+      <section className="space-y-3 rounded-xl border bg-card p-5">
         <div className="flex items-start justify-between gap-4">
           <div>
             <h2 className="flex items-center gap-2 text-base font-semibold tracking-tight">
