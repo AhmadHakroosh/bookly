@@ -2,7 +2,7 @@ import { Progress } from "@/components/ui/progress";
 
 /**
  * A plan limit and how much of it is used (`mocks.png` 07: "Team members 3 of 5", "Bookings this
- * month 128 of 500"). The bar turns Ember at the limit. `limit: null` means unlimited.
+ * month 128 of 500"). The bar turns orange at the limit. `limit: null` means unlimited.
  */
 function UsageBar({
   label,

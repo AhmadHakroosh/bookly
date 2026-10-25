@@ -4,8 +4,8 @@ import { cn } from "cn";
 
 /**
  * "Recap ready" on Home (`app ui.png`): a Peach card with the label, the call it is about, what
- * it holds ("3 decisions • 2 action items") and the action. The concept fills the button with
- * Bookly Orange; Bookly uses Ember (`Button` default), because white on Bookly Orange is 3.48:1.
+ * it holds ("3 decisions • 2 action items") and the action. Its button is the default Button,
+ * Bookly Orange, as the concept fills it.
  */
 function RecapCard({
   label = "Recap ready",

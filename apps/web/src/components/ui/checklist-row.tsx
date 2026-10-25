@@ -7,7 +7,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 
 /**
  * A task as a row with its checkbox ("Your next steps" on Home, linked tasks on a contact): the
- * title, who and what it is for, and when it is due, in Ember when it is today or late.
+ * title, who and what it is for, and when it is due, in orange when it is today or late.
  */
 function ChecklistRow({
   title,
@@ -24,7 +24,7 @@ function ChecklistRow({
   meta?: ReactNode;
   /** "Due today", "Due Thu, Oct 29". */
   due?: ReactNode;
-  /** Due today or overdue: the date turns Ember. */
+  /** Due today or overdue: the date turns orange. */
   urgent?: boolean;
   checked: boolean;
   onCheckedChange?: (checked: boolean) => void;

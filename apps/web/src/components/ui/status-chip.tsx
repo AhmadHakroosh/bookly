@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 /**
  * A status beside a title or in a row: "Open", "Confirmed", "Intake ready", "Feedback missing".
  * Status is semantic (DESIGN.md): `success`, `warning`, `destructive`, `info`, or `neutral`
- * for states that need nothing. `accent` (Peach and Ember) is emphasis that is not a status,
+ * for states that need nothing. `accent` (Peach and orange) is emphasis that is not a status,
  * such as "In 15 min". The dot is decoration; the words carry the meaning.
  */
 const VARIANT = {

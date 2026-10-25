@@ -15,9 +15,8 @@ png/  High-resolution PNGs (transparent unless the file has its own background).
   bookly-icon-square    App icon, square, for platforms that round corners themselves.
 
 Colours
-  Bookly Orange  #E85D2C   the mark, highlights, large type
-  Ember          #B93E10   orange text and buttons
-  Peach          #FBE9DF   soft fills
+  Bookly Orange  #E85D2C   the mark, buttons, links, highlights
+  Peach          #FCEAE1   soft fills
   Ink            #1C1C1C   text and dark surfaces
   Paper          #FAF8F4   backgrounds
 

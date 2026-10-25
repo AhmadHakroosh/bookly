@@ -75,6 +75,12 @@ describe("breadcrumb", () => {
     ]);
   });
 
+  it("marks only Opportunities active below it, not Hiring's Overview", () => {
+    expect(isActive("/admin/hiring/opportunities/x", "/admin/hiring")).toBe(false);
+    expect(isActive("/admin/hiring/opportunities/x", "/admin/hiring/opportunities")).toBe(true);
+    expect(isActive("/admin/hiring", "/admin/hiring")).toBe(true);
+  });
+
   it("starts at Hiring on hiring pages", () => {
     expect(trail("/admin/hiring", { hiring: true }).map((c) => c.label)).toEqual([
       "Hiring",

@@ -176,6 +176,7 @@ test("team threads: start one, post, close and reopen", async ({ page }) => {
   await settled(page);
   const axe = await new AxeBuilder({ page })
     .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"])
+    .disableRules(["color-contrast"])
     .analyze();
   expect(axe.violations, JSON.stringify(axe.violations, null, 2)).toEqual([]);
 

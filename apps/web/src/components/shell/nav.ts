@@ -219,8 +219,11 @@ export function navPages(o: NavOptions): { item: NavItem; solution: Solution }[]
   return out;
 }
 
+/** Each side's home (Home, Hiring's Overview) is active only on itself, not on the pages below it. */
+const HOMES = new Set(["/admin", "/admin/hiring"]);
+
 export const isActive = (pathname: string, href: string) =>
-  href === "/admin" ? pathname === href : pathname === href || pathname.startsWith(`${href}/`);
+  HOMES.has(href) ? pathname === href : pathname === href || pathname.startsWith(`${href}/`);
 
 /** The page a path belongs to (the longest matching href), with its solution. */
 export function findNav(o: NavOptions, pathname: string) {

@@ -6,7 +6,7 @@ export type SegmentedTab = { href: string; label: string; count?: number; active
 /**
  * Pill tabs that switch a list's view, with counts, as the concepts draw "Upcoming (4) · Past ·
  * Requests (1)" and "Mine (6) · All (12) · Completed (8)". Each is a link, so the view is in the
- * address; the current one is Peach with an Ember outline.
+ * address; the current one is Peach with an orange outline.
  */
 function SegmentedTabs({
   items,
