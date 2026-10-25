@@ -44,8 +44,7 @@ async function AvailabilityPage({ searchParams }: PageProps<"/admin/availability
   if (!ws) return null;
   const profile = await getProfileByUser(ws.id, session.user.id);
   if (!profile) redirect("/admin/profile?setup=1");
-  const tab: AvailabilityTab =
-    sp.tab === "overrides" || sp.tab === "priority" ? sp.tab : "hours";
+  const tab: AvailabilityTab = sp.tab === "overrides" || sp.tab === "priority" ? sp.tab : "hours";
   const routing = !isCollaborator(role);
   const fallback = await ensureDefaultSchedule(ws.id, session.user.id, profile.timezone);
   const all = await listSchedules(ws.id, session.user.id);
@@ -81,11 +80,7 @@ async function AvailabilityPage({ searchParams }: PageProps<"/admin/availability
 
   return (
     <div className="space-y-6">
-      <AvailabilityHeader
-        current={tab}
-        routing={routing}
-        schedule={s.isDefault ? null : s.id}
-      />
+      <AvailabilityHeader current={tab} routing={routing} schedule={s.isDefault ? null : s.id} />
       <section aria-label="Schedules" className="space-y-2">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <SegmentedTabs
@@ -211,8 +206,7 @@ async function Overrides({
             p.endMin === o.endMin,
         ),
       );
-  if (!s.overrides.length)
-    return <p className="text-sm text-muted-foreground">No overrides.</p>;
+  if (!s.overrides.length) return <p className="text-sm text-muted-foreground">No overrides.</p>;
   return (
     <ul className="divide-y rounded-xl border text-sm">
       {s.overrides.map((o) => (

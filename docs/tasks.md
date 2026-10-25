@@ -60,7 +60,7 @@ Plan gates are `taskBoard` and `taskAssignment` in `packages/cloud`, checked on 
 
 ## Activity log and API
 
-Every change is in Settings → Data → Activity: `task.created`, `task.moved` (with the status it
+Every change is in Settings → Privacy → Activity: `task.created`, `task.moved` (with the status it
 left and entered), `task.updated`, `task.completed` / `task.reopened`, `task.deleted`,
 `task.commented`, `task_status.created` / `updated` / `reordered` / `archived`,
 `task_view.created` / `deleted`. `GET /api/v1/tasks` includes each task's `statusId`. The

@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useState } from "react";
+import { useActionState, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
@@ -38,13 +38,15 @@ export function CrmDialog({
   companyDomain: string;
 }) {
   const [open, setOpen] = useState(false);
-  const [state, action] = useActionState(updateWorkspaceSettings, {} as SettingsState);
-  useEffect(() => {
-    if (state.ok) {
+  // Closes from the action itself, so a save never sets state from an effect.
+  const [, action] = useActionState(async (prev: SettingsState, form: FormData) => {
+    const r = await updateWorkspaceSettings(prev, form);
+    if (r.ok) {
       toast.success("CRM settings saved");
       setOpen(false);
-    } else if (state.error) toast.error(state.error);
-  }, [state]);
+    } else if (r.error) toast.error(r.error);
+    return r;
+  }, {} as SettingsState);
   const name = NAME[provider];
   return (
     <Dialog open={open} onOpenChange={setOpen}>

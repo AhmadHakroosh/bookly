@@ -5,11 +5,7 @@ import { redirect } from "next/navigation";
 import { encrypt, signState } from "@/lib/crypto";
 import { z } from "zod";
 import { and, eq, schema } from "@bookly/db";
-import type {
-  ConferencingType,
-  IntegrationProvider,
-  IntegrationSettings,
-} from "@bookly/db/schema";
+import type { ConferencingType, IntegrationProvider, IntegrationSettings } from "@bookly/db/schema";
 import { db } from "@/lib/db";
 import { audit, diff } from "@/server/audit";
 import {

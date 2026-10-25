@@ -11,17 +11,29 @@ workspace and shows its name and logo. Below it:
 
 - **Home, Bookings, Contacts**, and **Messages**, **Tasks** and **Files** where they are switched
   on. Messages shows how many conversations are unread.
-- After a line, your scheduling: **Booking page, Event types, Availability, Routing**.
+- After a line, your scheduling: **Booking page, Event types, Availability**. Availability is
+  **Availability & routing**: Weekly hours (a switch per day), Date overrides, Priority rules
+  (the weekly budget and hours kept for priority contacts) and Routing (your routing forms, with a
+  preview beside your weekly hours of who each answer goes to).
 - At the bottom, for owners and admins: **Settings** and **Team**.
 - At the very bottom, you: your picture, name and email, which open your menu.
 
 Workspaces in the hiring beta (the `hiring` flag) get a **Clients | Hiring** switch under the
-workspace. Hiring has its own items: **Overview** and **Opportunities** (see [Hiring](hiring.md)),
-with candidates, interviews and reviews arriving as they ship. Messages, Files, Settings and Team are the same on
-both sides.
+workspace. Hiring has its own items: **Overview**, **Opportunities**, **Candidates**, **Interviews** and
+**Reviews** (with how many you owe; see [Hiring](hiring.md)). Messages, Files, Settings and Team
+are the same on both sides.
 
 Collaborators (outside reviewers and interviewers, see [Teams](teams.md)) see only their own
-profile, availability, calendars, conferencing and notifications.
+profile, availability, calendars and conferencing, and notifications.
+
+Your own connections live in **Calendars & conferencing** (your menu, or ⌘K): the calendars you
+connected and which of them block your hours, calendar feeds, the video tools that are ready, and
+the **default conferencing tool** new event types start with.
+
+**Settings** has two halves. **Workspace settings**: General, Integrations (HubSpot, Pipedrive,
+Stripe, each with its state and Connect or Manage), API (keys and webhooks), Privacy (transcript
+retention, export, the activity log and the Danger zone). **Brand & communications**: Branding,
+Domains and Emails. A button at the top of each half leads to the other.
 
 On a phone or a narrow window the sidebar folds away: the menu button at the top left opens it,
 and choosing a page closes it again.

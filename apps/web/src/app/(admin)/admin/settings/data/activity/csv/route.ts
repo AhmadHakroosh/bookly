@@ -5,7 +5,7 @@ import { hasFeature } from "@/server/limits";
 import { getSession, getStaffRole, isManager } from "@/server/session";
 import { getCurrentWorkspace } from "@/server/workspace";
 
-/** Settings → Data → Activity → Download CSV. Streams the filtered log, newest first. */
+/** Settings → Privacy → Activity → Download CSV. Streams the filtered log, newest first. */
 export async function GET(req: Request) {
   const [session, role, workspace] = await Promise.all([
     getSession(),

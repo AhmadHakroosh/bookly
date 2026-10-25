@@ -46,8 +46,8 @@ async function RoutingListPage() {
                   {f.name}
                 </Link>
                 <p className="truncate text-muted-foreground">
-                  /r/{f.slug} · {f.questions.length} question{f.questions.length === 1 ? "" : "s"}{" "}
-                  · {f.rules.length} rule{f.rules.length === 1 ? "" : "s"}
+                  /r/{f.slug} · {f.questions.length} question{f.questions.length === 1 ? "" : "s"} ·{" "}
+                  {f.rules.length} rule{f.rules.length === 1 ? "" : "s"}
                 </p>
               </div>
               <StatusChip tone={f.active ? "success" : "neutral"} dot>

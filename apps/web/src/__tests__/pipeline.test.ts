@@ -524,4 +524,63 @@ describe.skipIf(!realDb)("the board (seeded database)", () => {
       );
     expect(last[0]).toMatchObject({ actorType: "rule", actorId: rule!.id, depth: 1 });
   });
+
+  it("lists candidates, interviews and the member's own reviews across opportunities", async () => {
+    const q = await import("@/server/hiring/queries");
+    const stranger = {
+      ...me,
+      userId: id("nobody"),
+      workspaceId: id("other"),
+      workspaceRole: "member",
+      opportunityRoles: new Map(),
+    } as unknown as Actor;
+    // Candidates: every sent application the actor may see; search by name or email.
+    expect((await q.listCandidates(me)).map((r) => r.name).sort()).toEqual([
+      "Maya Chen",
+      "Noah Patel",
+      "Priya Nair",
+    ]);
+    expect((await q.listCandidates(me, { q: "maya" })).map((r) => r.name)).toEqual(["Maya Chen"]);
+    expect(await q.listCandidates(stranger)).toEqual([]);
+
+    // Reviews: only the member's own assignments; the owed count follows submission.
+    await db.insert(schema.reviewAssignments).values({
+      id: id("ra"),
+      workspaceId: ws,
+      applicationId: apps[1]!,
+      stageId: stage.applied!,
+      reviewerUserId: viewerId,
+      dueAt: new Date(Date.now() - 86_400_000),
+    });
+    expect(await q.reviewsOwed(viewer)).toBe(1);
+    expect(await q.reviewsOwed(me)).toBe(0);
+    expect(await q.listMyReviews(me)).toEqual([]);
+    expect(await q.listMyReviews(viewer)).toMatchObject([
+      { candidate: "Noah Patel", status: "pending", kind: "review" },
+    ]);
+    await db
+      .update(schema.reviewAssignments)
+      .set({ status: "submitted", submittedAt: new Date() })
+      .where(eq(schema.reviewAssignments.id, id("ra")));
+    expect(await q.reviewsOwed(viewer)).toBe(0);
+    expect((await q.listMyReviews(viewer))[0]).toMatchObject({ status: "submitted" });
+
+    // Interviews: bookings tied to an application, upcoming or past, never someone else's.
+    const start = new Date(Date.now() + 86_400_000);
+    await db.insert(schema.bookings).values({
+      id: id("iv"),
+      workspaceId: ws,
+      hostUserId: owner,
+      startAt: start,
+      endAt: new Date(start.getTime() + 45 * 60_000),
+      attendeeName: "Maya Chen",
+      attendeeEmail: `${id("p0")}@example.test`,
+      manageToken: id("iv-token"),
+      status: "confirmed",
+      applicationId: apps[0]!,
+    });
+    expect((await q.listInterviews(me)).map((r) => r.candidate)).toEqual(["Maya Chen"]);
+    expect(await q.listInterviews(me, { past: true })).toEqual([]);
+    expect(await q.listInterviews(stranger)).toEqual([]);
+  });
 });

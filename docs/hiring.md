@@ -205,6 +205,21 @@ even if a stage became an outcome after the rule was saved. Actions whose part o
 here yet (assigning reviewers, booking links, follow-up forms, payments) are skipped and say so
 in the run's results.
 
+## Candidates, Interviews and Reviews
+
+Three pages in the hiring sidebar look across every opportunity you can see, with the same
+rules as the board (a reviewer sees only the people assigned to them):
+
+- **Candidates**: everyone who applied, newest first, with their opportunity and stage. Search by
+  name or email, or narrow to one opportunity.
+- **Interviews**: interviews by day, **Upcoming** or **Past**, with who runs them; **Join** shows
+  from 15 minutes before.
+- **Reviews**: the reviews and interview feedback assigned to you, **To do** (soonest due first,
+  overdue marked) and **Submitted**. The number beside Reviews in the sidebar is how many you owe.
+  Other people's reviews never show here.
+
+Each row opens the candidate pane on the same page.
+
 ## After publishing
 
 The opportunity's page shows its status, cohort and dates, and **Pipeline · Interviews · Review

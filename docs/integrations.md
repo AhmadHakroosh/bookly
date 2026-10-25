@@ -1,6 +1,9 @@
 # Calendar & conferencing integrations
 
-Bookly hosts connect their own accounts from **Admin → Calendars** and **Admin → Conferencing**.
+Bookly hosts connect their own accounts from **Admin → Calendars & conferencing** (your menu,
+or ⌘K; `/admin/conferencing` redirects there). Ticking a calendar under "Check for conflicts
+with" saves at once; the **default conferencing tool** is the location new event types start
+with (each event type can still pick its own).
 The server admin registers the OAuth apps once and puts the keys in the environment; a provider
 without keys shows as "Not set up on this server".
 
@@ -90,7 +93,7 @@ Any calendar that can publish a private ICS address works without OAuth: Google 
 ("Settings → Integrate calendar → Secret address in iCal format"), Outlook.com and Microsoft 365
 ("Calendar settings → Shared calendars → Publish a calendar", the ICS link), iCloud (share the
 calendar as public, use the `webcal://` link), Fastmail, Nextcloud, Proton (calendar link). Hosts
-add them under Admin → Calendars → Calendar feeds, up to five each.
+add them under Admin → Calendars & conferencing → Calendar feeds, up to five each.
 
 - **Read-only.** Feeds hide busy time; bookings are not written to them, and the host's own
   bookings still reach any OAuth-connected calendar as before. Invites go out by email as usual.
@@ -149,6 +152,15 @@ The webhook route finds the booking by room name across workspaces. Attendees' l
 signed-in workspace members get an owner token, so the host is identified by `owner: true` rather
 than by the name they typed. Transcription on Bookly video starts once the owner and one other
 participant are in the room.
+
+**The meeting page** shows the meeting in its header and, once you are in, the time in the call
+and, when the call is transcribed, "Transcription on" (with "consent recorded" when the attendee
+agreed on the booking form). Under the video: **Mute**, **Stop video**, **Share**, **Raise hand**,
+**React**, **Panel**, **More** (marking a moment, background effects, picture in picture, full
+screen, camera, microphone and speaker, background noise) and **Leave**; on a phone Share and
+Raise hand move into More. The side panel, open by default on a wide screen, has **Notes** (for
+members taking notes), **Transcript** (while the call is transcribed), **Chat** and **People**.
+Members who leave are offered the booking, where the recap appears once the call has ended.
 
 Rooms are private and named after the booking: the host and the booked attendee join with their
 tokens, anyone else who opens the link asks to join and waits in Daily's lobby until the host
