@@ -13,7 +13,8 @@ const TTL_MISS = 2_000;
 /**
  * Host → workspace. Single-tenant: the only workspace. Multi-tenant: `<slug>.<ROOT_DOMAIN>`
  * subdomain or a verified custom domain from `workspace_domains`.
- * Cached in-process for 30s; a Redis-backed cache slots in here later.
+ * Cached in-process for 30s; a Redis-backed cache slots in here later. The TTL is timed with
+ * `performance.now()`: pages call this while Next prerenders them, which may not read the clock.
  */
 export async function resolveWorkspaceByHost(
   hostHeader: string | null,
@@ -23,7 +24,7 @@ export async function resolveWorkspaceByHost(
   const host = (hostHeader ?? "").toLowerCase();
   const key = env.TENANCY === "single" ? "*" : host;
   const hit = opts.fresh ? undefined : cache.get(key);
-  if (hit && Date.now() - hit.at < (hit.value ? TTL_HIT : TTL_MISS)) return hit.value;
+  if (hit && performance.now() - hit.at < (hit.value ? TTL_HIT : TTL_MISS)) return hit.value;
 
   let value: Resolved = null;
   if (env.TENANCY === "single") {
@@ -68,7 +69,7 @@ export async function resolveWorkspaceByHost(
       value = { workspaceId, primaryHost };
     }
   }
-  cache.set(key, { value, at: Date.now() });
+  cache.set(key, { value, at: performance.now() });
   return value;
 }
 
