@@ -4,7 +4,7 @@ import { connection } from "next/server";
 import { Suspense } from "react";
 import { CalendarDaysIcon, VideoIcon } from "lucide-react";
 import type { ConferencingType, Integration } from "@bookly/db/schema";
-import { LogoMark } from "@/components/brand/logo";
+import { ProviderIcon } from "@/components/brand-icons";
 import { ConnectButton } from "@/components/connect-button";
 import { IntegrationList, IntegrationRow } from "@/components/ui/integration-row";
 import { PageHeader } from "@/components/ui/page-header";
@@ -208,7 +208,7 @@ async function CalendarsPage({ searchParams }: PageProps<"/admin/calendars">) {
         </div>
         <IntegrationList>
           <IntegrationRow
-            mark={<LogoMark className="size-6" />}
+            mark={<ProviderIcon id="daily" />}
             name="Bookly video"
             detail="Built-in video meetings, no account needed by anyone"
             status={

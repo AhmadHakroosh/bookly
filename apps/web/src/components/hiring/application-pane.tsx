@@ -18,6 +18,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { Actor } from "@/server/access";
 import { applicationDetail } from "@/server/hiring/pipeline";
 import { initials } from "@/server/hiring/pipeline-text";
+import { FileTypeIcon } from "@/components/ui/file-type-icon";
 import { AccommodationsReveal, ClearFlag, StageMenu } from "./pane-controls";
 import { StageChip } from "./stage-chip";
 
@@ -204,9 +205,9 @@ export async function ApplicationPane({
                       href={`/files/${f.id}`}
                       target="_blank"
                       rel="noreferrer"
-                      className="inline-flex items-center gap-2 text-sm font-medium text-brand hover:underline"
+                      className="inline-flex items-center gap-2 text-sm font-medium text-primary hover:underline"
                     >
-                      <FileTextIcon className="size-4" aria-hidden />
+                      <FileTypeIcon name={f.name} size={16} />
                       {f.name}
                       <ExternalLinkIcon className="size-3.5" aria-hidden />
                       <span className="sr-only">(opens in a new tab)</span>

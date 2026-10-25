@@ -5,49 +5,13 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { authClient } from "@/lib/auth-client";
+import { SignInMark } from "@/components/brand-icons";
 import type { SocialProvider, SocialProviderId } from "@/lib/social-providers";
 
-function Icon({ id }: { id: SocialProviderId }) {
-  if (id === "google")
-    return (
-      <svg viewBox="0 0 24 24" aria-hidden className="size-5">
-        <path
-          fill="#4285F4"
-          d="M23.5 12.3c0-.8-.1-1.6-.2-2.3H12v4.5h6.5c-.3 1.5-1.1 2.7-2.4 3.6v3h3.9c2.3-2.1 3.5-5.2 3.5-8.8z"
-        />
-        <path
-          fill="#34A853"
-          d="M12 24c3.2 0 6-1.1 8-2.9l-3.9-3c-1.1.7-2.5 1.2-4.1 1.2-3.1 0-5.8-2.1-6.7-5H1.2v3.1C3.2 21.3 7.3 24 12 24z"
-        />
-        <path
-          fill="#FBBC05"
-          d="M5.3 14.3c-.5-1.5-.5-3.1 0-4.6V6.6H1.2c-1.6 3.3-1.6 7.2 0 10.8l4.1-3.1z"
-        />
-        <path
-          fill="#EA4335"
-          d="M12 4.8c1.8 0 3.3.6 4.6 1.8l3.4-3.4C17.9 1.2 15.2 0 12 0 7.3 0 3.2 2.7 1.2 6.6l4.1 3.1c.9-2.9 3.6-4.9 6.7-4.9z"
-        />
-      </svg>
-    );
-  if (id === "microsoft")
-    return (
-      <svg viewBox="0 0 24 24" aria-hidden className="size-5">
-        <rect x="1" y="1" width="10.5" height="10.5" fill="#F25022" />
-        <rect x="12.5" y="1" width="10.5" height="10.5" fill="#7FBA00" />
-        <rect x="1" y="12.5" width="10.5" height="10.5" fill="#00A4EF" />
-        <rect x="12.5" y="12.5" width="10.5" height="10.5" fill="#FFB900" />
-      </svg>
-    );
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden className="size-5 fill-current">
-      <path d="M12 .3a12 12 0 0 0-3.8 23.4c.6.1.8-.3.8-.6v-2c-3.3.7-4-1.6-4-1.6-.6-1.4-1.4-1.8-1.4-1.8-1.1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1.1 1.8 2.8 1.3 3.5 1 .1-.8.4-1.3.8-1.6-2.7-.3-5.5-1.3-5.5-5.9 0-1.3.5-2.4 1.2-3.2-.1-.3-.5-1.5.1-3.2 0 0 1-.3 3.3 1.2a11.5 11.5 0 0 1 6 0c2.3-1.5 3.3-1.2 3.3-1.2.6 1.7.2 2.9.1 3.2.8.8 1.2 1.9 1.2 3.2 0 4.6-2.8 5.6-5.5 5.9.4.4.8 1.1.8 2.2v3.3c0 .3.2.7.8.6A12 12 0 0 0 12 .3z" />
-    </svg>
-  );
-}
-
 /**
- * One square, icon-only button per configured provider, in a row; the provider name is the
- * accessible label and the tooltip. The page decides what happens after
+ * One labelled, full-width button per configured provider ("Continue with Google", "Sign in with
+ * Microsoft", "Continue with GitHub"), each provider's mark as its vendor requires it
+ * (planning/v2/ux/visual-alignment.md §1.3). The page decides what happens after
  * the round trip through the provider (`callbackURL`) and whether a new account may be created
  * (`signUp`); errors come back on `errorCallbackURL` as `?error=<code>&provider=<id>`.
  */
@@ -97,30 +61,30 @@ export function SocialButtons({
 
   return (
     <div
-      className="grid auto-cols-fr grid-flow-col gap-3"
+      className="grid gap-2"
       role="group"
       aria-label="Continue with a provider"
       data-testid="social-buttons"
     >
       {providers.map((p) => {
-        const label = busy === p.id ? `Redirecting to ${p.label}…` : `Continue with ${p.label}`;
+        // Microsoft's guidance names the button "Sign in with Microsoft".
+        const verb = p.id === "microsoft" ? "Sign in with" : "Continue with";
+        const label = busy === p.id ? `Redirecting to ${p.label}…` : `${verb} ${p.label}`;
         return (
           <Button
             key={p.id}
             type="button"
             variant="outline"
-            size="lg"
-            className="h-12 w-full"
-            aria-label={label}
-            title={label}
+            className="h-10 w-full"
             disabled={disabled || busy !== null}
             onClick={() => go(p.id)}
           >
             {busy === p.id ? (
-              <Loader2 className="size-5 animate-spin" aria-hidden />
+              <Loader2 className="size-5 animate-spin" data-icon="inline-start" aria-hidden />
             ) : (
-              <Icon id={p.id} />
+              <SignInMark id={p.id} className="size-5" data-icon="inline-start" />
             )}
+            {label}
           </Button>
         );
       })}

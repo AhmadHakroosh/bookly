@@ -49,6 +49,16 @@
   --color-success-foreground: var(--success-foreground);
   --color-success-muted: var(--success-muted);
   --color-warning: var(--warning);
+  --color-file-pdf: var(--file-pdf);
+  --color-file-doc: var(--file-doc);
+  --color-file-sheet: var(--file-sheet);
+  --color-file-slides: var(--file-slides);
+  --color-file-archive: var(--file-archive);
+  --color-file-image: var(--file-image);
+  --color-file-video: var(--file-video);
+  --color-file-audio: var(--file-audio);
+  --color-file-text: var(--file-text);
+  --color-file-other: var(--file-other);
   --color-warning-foreground: var(--warning-foreground);
   --color-warning-muted: var(--warning-muted);
   --color-info: var(--info);
@@ -117,6 +127,17 @@
   --success-muted: oklch(0.955 0.03 150);
   /* Warnings are the concepts' orange, as they draw "Due today" and "Feedback missing". */
   --warning: oklch(0.651 0.183 38.6);
+  /* File kinds (ui mocks.png 06): status-neutral colours for the filled file-type icons. */
+  --file-pdf: #e5483b;
+  --file-doc: #2f6fe4;
+  --file-sheet: #1e9e5a;
+  --file-slides: #d97a1e;
+  --file-archive: #e0a100;
+  --file-image: #0e9f9a;
+  --file-video: #7c5ce0;
+  --file-audio: #d6407f;
+  --file-text: #66625e;
+  --file-other: #66625e;
   --warning-foreground: oklch(1 0 0);
   --warning-muted: oklch(0.96 0.025 45);
   --info: oklch(0.5 0.13 250);
