@@ -12,6 +12,7 @@ import {
 import { loadEnv } from "@bookly/config";
 import { sendEmail } from "@bookly/email";
 import { after } from "next/server";
+import { decrypt, encrypt } from "@/lib/crypto";
 import { db } from "@/lib/db";
 import { assertOnOpportunity, type Actor } from "../access";
 import { audit, type AuditActor } from "../audit";
@@ -391,6 +392,7 @@ export async function submitApplication(
         tags: [...new Set(tags)].slice(0, 20),
         flags,
         statusTokenHash: hash(statusToken),
+        statusTokenEnc: encrypt(statusToken),
         statusTokenExpiresAt: new Date(at.getTime() + days(LINK_DAYS)),
         privacyVersion: notice?.version ?? null,
         privacyConsentAt: at,
@@ -562,6 +564,56 @@ export function plainName(name: string): string {
  * An email to a candidate: from the opportunity's sender name, replies to its reply-to, with the
  * status link as the button (every candidate email carries it). Never answers or documents.
  */
+/**
+ * An email about an application from the team's side (a stage's message, later a decision): the
+ * candidate's existing status link (its 30 days start again), the opportunity's sender. The
+ * text is the coordinator's, with `{name}`, `{opportunity}` and `{decides_by}` filled in.
+ */
+export async function emailCandidate(
+  ws: Workspace,
+  app: Pick<Application, "id" | "contactId" | "cohortId" | "statusTokenEnc">,
+  opp: Pick<Opportunity, "title" | "settings">,
+  t: { subject: string; body: string },
+): Promise<"done" | "skipped:no_email" | "skipped:no_link"> {
+  const [contact, cohort] = await Promise.all([
+    db().query.contacts.findFirst({
+      where: eq(schema.contacts.id, app.contactId),
+      columns: { email: true, name: true },
+    }),
+    db().query.opportunityCohorts.findFirst({
+      where: eq(schema.opportunityCohorts.id, app.cohortId),
+      columns: { decidesBy: true },
+    }),
+  ]);
+  if (!contact?.email) return "skipped:no_email";
+  if (!app.statusTokenEnc) return "skipped:no_link";
+  const token = decrypt(app.statusTokenEnc);
+  await db()
+    .update(schema.applications)
+    .set({ statusTokenExpiresAt: new Date(Date.now() + days(LINK_DAYS)) })
+    .where(eq(schema.applications.id, app.id));
+  const tz = opp.settings.timezone ?? ws.timezone;
+  const fill = (s: string) =>
+    s.replace(/\{(\w+)\}/g, (m, k: string) =>
+      k === "name"
+        ? plainName(contact.name)
+        : k === "opportunity"
+          ? opp.title
+          : k === "decides_by"
+            ? cohort?.decidesBy
+              ? fmtDay(cohort.decidesBy, tz)
+              : "the decision date"
+            : m,
+    );
+  await candidateEmail(ws, opp, {
+    to: contact.email,
+    subject: fill(t.subject),
+    body: fill(t.body),
+    cta: { href: `${await publicBaseUrl(ws)}/applications/${token}`, label: COPY.statusButton },
+  });
+  return "done";
+}
+
 async function candidateEmail(
   ws: Workspace,
   opp: Pick<Opportunity, "title" | "settings">,
@@ -607,6 +659,7 @@ async function resendStatusLink(
     .update(schema.applications)
     .set({
       statusTokenHash: hash(token),
+      statusTokenEnc: encrypt(token),
       statusTokenExpiresAt: new Date(Date.now() + days(LINK_DAYS)),
     })
     .where(eq(schema.applications.id, app.id));

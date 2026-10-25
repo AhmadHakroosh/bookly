@@ -9,7 +9,7 @@ import { cn } from "@/lib/utils";
 
 /*
  * Side panes that open and close at once. A pane is addressed by a search parameter
- * (`?task=`, `?thread=`, `?file=`, `?booking=`, `?entry=`) so it can be linked and survives a
+ * (`?task=`, `?thread=`, `?file=`, `?booking=`, `?entry=`, `?application=`) so it can be linked and survives a
  * reload, but opening one no longer waits for the server to re-render the page:
  * - Opening (a link that only adds or changes the pane's parameter) updates the address in the
  *   browser right away, so the pane slides in with a skeleton, and fetches its content in the

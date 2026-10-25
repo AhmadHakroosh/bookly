@@ -10,6 +10,13 @@ import { zonedToUtc } from "@/lib/time";
 import { ApplyError, deleteNow, recordLegalHold } from "@/server/hiring/apply";
 import { inviteToTeam, removeInvite } from "@/server/hiring/invites";
 import {
+  clearFlag,
+  moveApplications,
+  PipelineError,
+  showAccommodations,
+  type MoveResult,
+} from "@/server/hiring/pipeline";
+import {
   addStage,
   archiveOpportunity,
   closeOpportunity,
@@ -366,6 +373,57 @@ export async function discardDraftAction(id: string) {
   const r = await attempt(() => discardDraft(actor, id));
   if (!r.error) redirect("/admin/hiring/opportunities");
   return r;
+}
+
+/* ---------------- The board ---------------- */
+
+/**
+ * Moves applications to a stage. Failing exit checks come back for "Move anyway" unless
+ * `override`, which is audited per check (ADR 0002).
+ */
+export async function moveApplicationsAction(
+  id: string,
+  applicationIds: string[],
+  toStageId: string,
+  override = false,
+): Promise<MoveResult> {
+  // audit: by server/hiring/pipeline.ts
+  const { ws, actor } = await ctx();
+  if (!Array.isArray(applicationIds)) return { ok: false, error: "Choose who to move." };
+  try {
+    return await moveApplications(
+      actor,
+      ws,
+      String(id),
+      applicationIds.map(String),
+      String(toStageId),
+      { override: override === true },
+    );
+  } catch (e) {
+    if (e instanceof HiringAccessError || e instanceof PipelineError)
+      return { ok: false, error: e.message };
+    throw e;
+  }
+}
+
+export async function clearFlagAction(applicationId: string, requirement: string) {
+  // audit: by server/hiring/pipeline.ts
+  const { actor } = await ctx();
+  return attemptApply(() => clearFlag(actor, String(applicationId), String(requirement)));
+}
+
+/** The adjustments someone asked for, on a coordinator's click; every read is audited. */
+export async function showAccommodationsAction(
+  applicationId: string,
+): Promise<{ text?: string | null; error?: string }> {
+  // audit: by server/hiring/sensitive.ts
+  const { actor } = await ctx();
+  try {
+    return { text: await showAccommodations(actor, String(applicationId)) };
+  } catch (e) {
+    if (e instanceof HiringAccessError) return { error: e.message };
+    throw e;
+  }
 }
 
 /* ---------------- Data requests ---------------- */
