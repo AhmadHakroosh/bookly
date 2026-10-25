@@ -648,7 +648,7 @@ export const ROLE_LABELS: Record<OpportunityRole, string> = {
 };
 
 export const ACCESS_SUMMARY =
-  "Coordinators see every application and make decisions. Reviewers see only the applications assigned to them, and never see accommodations requests. Viewers see the pipeline without documents or reviews.";
+  "Coordinators see every application and make decisions. Reviewers see only the applications assigned to them, and never see accommodations requests. Viewers see every application, its answers and documents, but not reviews or accommodations requests.";
 
 export const COLLABORATOR_EXPLAINER =
   "Collaborators review, interview or view. They don't host bookings or own pipelines.";
@@ -661,7 +661,7 @@ export function privacyNoticeTemplate(workspace: string, retentionDays: number) 
   return [
     `${workspace} uses Bookly to receive and review applications. We use what you send us only to assess your application and to contact you about it.`,
     "You must be 16 or older to apply.",
-    "Your application is seen by the people running this selection round: coordinators see everything you send; reviewers see only the applications assigned to them. An accommodations request is seen by coordinators only. No automated system ranks, scores or rejects applicants: people make every decision.",
+    "Your application is seen by the people running this selection round: coordinators, and anyone they add to follow the round, see everything you send; reviewers see only the applications assigned to them. An accommodations request is seen by coordinators only. No automated system ranks, scores or rejects applicants: people make every decision.",
     `If you are not admitted, we delete your application ${months} months after the last decision of this round. You can withdraw your application, or ask us to delete it, at any time from the link in your confirmation email.`,
   ].join("\n\n");
 }

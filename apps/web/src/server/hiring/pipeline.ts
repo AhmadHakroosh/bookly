@@ -382,8 +382,9 @@ export async function moveOne(
 
 /**
  * What the candidate pane shows the actor about one application, or null when they may not see
- * it. Viewers get the pipeline facts without answers or documents; review progress is for
- * coordinators; accommodations only say they exist, to coordinators, and open on request.
+ * it. Everyone who may see it gets the answers, documents and contact details (ADR 0005);
+ * review progress is for coordinators; accommodations only say they exist, to coordinators,
+ * and open on request.
  */
 export async function applicationDetail(actor: Actor, applicationId: string, now = new Date()) {
   const [row] = await db()
@@ -398,10 +399,9 @@ export async function applicationDetail(actor: Actor, applicationId: string, now
   if (!opp) return null;
   const stages = await stagesOf(opp);
   const stage = stages.find((s) => s.id === app.stageId) ?? null;
-  const viewer = role === "viewer" || !role;
   const coordinator = role === "coordinator";
   const [response, counts, interviews, accommodations] = await Promise.all([
-    app.formResponseId && !viewer
+    app.formResponseId
       ? db().query.formResponses.findFirst({
           where: eq(schema.formResponses.id, app.formResponseId),
         })
@@ -465,7 +465,7 @@ export async function applicationDetail(actor: Actor, applicationId: string, now
   const c = counts.get(app.id)!;
   return {
     application: app,
-    contact: { name: row.contact.name, email: viewer ? null : row.contact.email },
+    contact: { name: row.contact.name, email: row.contact.email },
     opportunity: { id: opp.id, title: opp.title, timezone: opp.settings.timezone ?? null },
     role,
     stage: stage ? { id: stage.id, name: stage.name, category: stage.category } : null,

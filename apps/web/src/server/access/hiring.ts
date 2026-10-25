@@ -21,16 +21,8 @@ const isManager = (role: string) => role === "owner" || role === "admin";
 
 const a = schema.applications;
 
-/**
- * Any user's view of one application row (`app` is the applications table or an alias).
- * `viewers: false` leaves out people who only view: they see the card, never the documents
- * (planning/v2/ux README role table).
- */
-export function canSeeApplication(
-  userId: string,
-  app: typeof a = a,
-  { viewers = true }: { viewers?: boolean } = {},
-): SQL {
+/** Any user's view of one application row (`app` is the applications table or an alias). */
+export function canSeeApplication(userId: string, app: typeof a = a): SQL {
   return sql`(
     exists (
       select 1 from ${schema.members} m
@@ -41,7 +33,7 @@ export function canSeeApplication(
       select 1 from ${schema.opportunityMembers} om
       where om.opportunity_id = ${app.opportunityId} and om.user_id = ${userId}
         and (
-          ${viewers ? sql`om.role = 'viewer'` : sql`false`}
+          om.role = 'viewer'
           -- A collaborator never coordinates, whatever a stale row says (ADR 0005).
           or (om.role = 'coordinator' and not exists (
             select 1 from ${schema.members} m2
@@ -110,9 +102,9 @@ export function bookingsVisibleTo(userId: string | null): SQL {
  */
 export function filesVisibleToHiring(userId: string | null): SQL {
   const f = schema.files;
-  const visibleApp = (id: SQL, viewers = true) =>
+  const visibleApp = (id: SQL) =>
     userId
-      ? sql`exists (select 1 from ${a} where ${a.id} = ${id} and ${canSeeApplication(userId, a, { viewers })})`
+      ? sql`exists (select 1 from ${a} where ${a.id} = ${id} and ${canSeeApplication(userId)})`
       : sql`false`;
   const visibleContact = (id: SQL) =>
     sql`exists (select 1 from ${schema.contacts} where ${schema.contacts.id} = ${id} and ${contactsVisibleTo(userId)})`;
@@ -126,7 +118,7 @@ export function filesVisibleToHiring(userId: string | null): SQL {
     and not exists (
       select 1 from ${schema.formResponses} r
       where ${f.ownerType} = 'form_response' and r.id = ${f.ownerId} and r.application_id is not null
-        and not ${visibleApp(sql`r.application_id`, false)}
+        and not ${visibleApp(sql`r.application_id`)}
     )
     and not exists (
       select 1 from ${schema.fileLinks} l join ${schema.contactEvents} ev on ev.id = l.target_id

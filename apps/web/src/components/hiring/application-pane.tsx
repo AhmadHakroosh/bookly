@@ -25,8 +25,7 @@ import { StageChip } from "./stage-chip";
  * The candidate pane (hiring.png, concept-fidelity.md §5): beside the board, for `?application=`.
  * What it shows follows the actor's role (ADR 0005, hiring README): coordinators see everything
  * the team does plus review progress, exit checks and whether adjustments were asked for;
- * reviewers see the application; viewers see the pipeline facts without answers, documents or
- * email. Reviews and decisions fill the Feedback tab and Decision status as H4 and H6 ship.
+ * reviewers and viewers see the application, its answers and documents. Reviews and decisions fill the Feedback tab and Decision status as H4 and H6 ship.
  */
 
 const OUTCOME: Record<string, string> = {
@@ -97,7 +96,6 @@ export async function ApplicationPane({
     return `${f} · ${t(x)}${y ? ` – ${t(y)}` : ""}`;
   };
   const coordinator = d.role === "coordinator";
-  const viewer = !d.role || d.role === "viewer";
   const name = d.contact.name || d.contact.email || "Applicant";
   const fileFields = new Set(
     d.form?.fields.filter((f) => f.type === "file").map((f) => f.id) ?? [],
@@ -176,11 +174,7 @@ export async function ApplicationPane({
           )}
 
           <Section icon={UserIcon} title="About">
-            {viewer ? (
-              <p className="text-sm text-muted-foreground">
-                Answers and documents are shared with reviewers and coordinators.
-              </p>
-            ) : answers.length ? (
+            {answers.length ? (
               <dl className="space-y-2 text-sm">
                 {answers.map(([q, v]) => (
                   <div key={q}>
@@ -203,7 +197,7 @@ export async function ApplicationPane({
             )}
           </Section>
 
-          {!viewer && d.files.length > 0 && (
+          {d.files.length > 0 && (
             <Section icon={FileTextIcon} title="Documents">
               <ul className="space-y-1.5">
                 {d.files.map((f) => (
