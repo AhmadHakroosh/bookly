@@ -12,11 +12,14 @@ badge shows while it is in beta).
   card, **Space** picks it up, the arrow keys move it (← → change column, ↑ ↓ change place),
   **Space** drops it, **Escape** cancels. **Enter** opens it. Each column loads 50 cards and
   **Show more** for the rest; a quick **Add task** sits at the bottom of every open column.
-- **List**: soonest due first, tasks without a date last, open tasks unless **Show done** is on;
-  50 at a time with **Show more**. The circle marks a task done or reopens it.
+- **List** (the default): a table of the task, its assignee, due date (today and overdue in
+  orange) and contact, soonest due first, tasks without a date last, open tasks unless **Show
+  done** is on; 50 at a time with **Show more**. The circle marks a task done or reopens it.
 
-Clicking a card or row opens the task in a side pane (`?task=<id>`): title, notes, status, due
-date and assignee, the booking and contact it came from, comments, and **Delete task**.
+The icons at the right switch between list and board. Clicking a card or row opens the task in a
+side pane (`?task=<id>`): the done circle and title, then its properties (title, assignee, due
+date, the contact and meeting it came from, status), the description, files, comments and
+**Delete task**.
 
 ## Statuses
 
@@ -31,10 +34,11 @@ task to the first done status.
 
 ## Views and filters
 
-Filter by assignee, due date (overdue, today, this week, none), status, contact and event type;
-every filter is part of the URL, so a view can be bookmarked or shared. **My tasks** is the
-default for members, **Everyone's tasks** for owners and admins on Team. **Save view** keeps the
-current filters and layout under a name, for you or (Team) the whole workspace. The page
+**Mine · All · Completed** sit at the top with their counts (All on Team). **Mine** is the default
+for members, **All** for owners and admins on Team. **Filters** holds the assignee, due date
+(overdue, today, this week, none), status, contact and event type; every filter is part of the
+URL, so a view can be bookmarked or shared. **Save view** keeps the current filters and layout
+under a name, for you or (Team) the whole workspace, and **Saved views** brings it back. The page
 remembers your last view and layout.
 
 ## Teammates

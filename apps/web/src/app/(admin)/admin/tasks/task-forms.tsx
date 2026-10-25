@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useActionState, useEffect, useState, useTransition, type ReactNode } from "react";
 import { toast } from "sonner";
@@ -46,7 +47,10 @@ export function TaskPane({
   return <div className="p-5">{children}</div>;
 }
 
-/** Title, description, status, assignee and due date of one task. */
+/**
+ * One task's properties as `ui mocks.png` 05 lists them in its pane: label on the left, value
+ * on the right (title, assignee, due date, contact and meeting, status), then the description.
+ */
 export function TaskEditForm({
   taskId,
   title,
@@ -58,6 +62,7 @@ export function TaskEditForm({
   people,
   canBoard,
   canAssign,
+  links = [],
 }: {
   taskId: string;
   title: string;
@@ -69,50 +74,64 @@ export function TaskEditForm({
   people: Option[];
   canBoard: boolean;
   canAssign: boolean;
+  /** Read-only rows: the contact and the meeting the task belongs to. */
+  links?: { label: string; href: string; text: string }[];
 }) {
   const [state, action] = useActionState(updateTaskAction.bind(null, taskId), {} as ActionResult);
   useResultToast(state, "Saved");
+  const row = "grid grid-cols-[6.5rem_minmax(0,1fr)] items-center gap-3";
   return (
     <form action={action} className="space-y-4">
-      <label className="block space-y-1 text-sm">
-        <span className="font-medium">Title</span>
-        <Input name="title" defaultValue={title} required maxLength={200} />
-      </label>
-      <div className="grid gap-4 sm:grid-cols-2">
-        {canBoard && (
-          <label className="block space-y-1 text-sm">
-            <span className="font-medium">Status</span>
+      <div className="space-y-2.5 text-sm">
+        <label className={row}>
+          <span className="text-muted-foreground">Title</span>
+          <Input name="title" defaultValue={title} required maxLength={200} className="h-8" />
+        </label>
+        {canAssign && (
+          <div className={row}>
+            <span className="text-muted-foreground">Assignee</span>
             <Dropdown
-              name="statusId"
-              ariaLabel="Status"
-              defaultValue={statusId ?? statuses[0]?.id}
-              options={statuses.map((s) => ({ value: s.id, label: s.name }))}
+              name="assignee"
+              ariaLabel="Assignee"
+              size="sm"
+              defaultValue={assignee}
+              options={people.map((p) => ({ value: p.id, label: p.name }))}
             />
-          </label>
+          </div>
         )}
-        <label className="block space-y-1 text-sm">
-          <span className="font-medium">Due</span>
+        <div className={row}>
+          <span className="text-muted-foreground">Due date</span>
           <DatePicker
             name="dueAt"
             defaultValue={dueAt}
             ariaLabel="Due date"
             placeholder="No due date"
+            className="h-8"
           />
-        </label>
-        {canAssign && (
-          <label className="block space-y-1 text-sm">
-            <span className="font-medium">Assignee</span>
+        </div>
+        {links.map((l) => (
+          <div key={l.label} className={row}>
+            <span className="text-muted-foreground">{l.label}</span>
+            <Link href={l.href} className="truncate text-primary hover:underline">
+              {l.text}
+            </Link>
+          </div>
+        ))}
+        {canBoard && (
+          <div className={row}>
+            <span className="text-muted-foreground">Status</span>
             <Dropdown
-              name="assignee"
-              ariaLabel="Assignee"
-              defaultValue={assignee}
-              options={people.map((p) => ({ value: p.id, label: p.name }))}
+              name="statusId"
+              ariaLabel="Status"
+              size="sm"
+              defaultValue={statusId ?? statuses[0]?.id}
+              options={statuses.map((st) => ({ value: st.id, label: st.name }))}
             />
-          </label>
+          </div>
         )}
       </div>
-      <label className="block space-y-1 text-sm">
-        <span className="font-medium">Notes</span>
+      <label className="block space-y-1.5 text-sm">
+        <span className="font-medium">Description</span>
         <Textarea
           name="description"
           defaultValue={description}
@@ -121,7 +140,9 @@ export function TaskEditForm({
           placeholder="Details, links, what done looks like"
         />
       </label>
-      <SubmitButton pendingText="Saving…">Save</SubmitButton>
+      <SubmitButton pendingText="Saving…" size="sm">
+        Save
+      </SubmitButton>
     </form>
   );
 }

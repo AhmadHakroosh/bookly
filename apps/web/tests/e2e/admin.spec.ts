@@ -266,7 +266,7 @@ test.describe("pending state", () => {
     await page.unroute("**/admin");
     await expect(add).toBeEnabled();
     // Home lists the next few; the task list has them all.
-    await page.goto("/admin/tasks?view=list");
+    await page.goto("/admin/tasks?view=mine&layout=list");
     await expect(page.getByText(title)).toBeVisible();
   });
 });
