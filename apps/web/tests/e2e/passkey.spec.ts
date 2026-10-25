@@ -30,7 +30,8 @@ test("a passkey registers on the profile page and signs in without a password", 
     await page.getByRole("button", { name: "Add a passkey" }).click();
     await expect(page.getByText(name)).toBeVisible();
 
-    await page.getByRole("button", { name: /^Account:/ }).click();
+    // From lg the account menu opens from the sidebar's account card.
+    await page.getByRole("complementary").getByRole("button", { name: /Demo/ }).click();
     await page.getByRole("menuitem", { name: "Sign out" }).click();
     await page.waitForURL(/\/login/);
     // The login page offers saved passkeys through the email field's autofill; the virtual
