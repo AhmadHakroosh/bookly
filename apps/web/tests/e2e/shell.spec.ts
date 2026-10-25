@@ -144,6 +144,21 @@ test("a workspace in the hiring beta switches between Clients and Hiring", async
   await flags("off");
 });
 
+test("the account sits in the sidebar on a large screen and in the top bar on a phone", async ({
+  page,
+}) => {
+  // visual-alignment §2.3: no header avatar from lg; a 44 px card at the foot of the sidebar.
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.goto("/admin");
+  const header = page.locator("header").first();
+  await expect(header.getByRole("button", { name: /^Account:/ })).toHaveCount(0);
+  const card = page.getByRole("complementary").locator('[data-slot="avatar"]').last();
+  await expect(card).toHaveAttribute("data-size", "lg");
+  expect((await card.boundingBox())?.width).toBe(44);
+  await page.setViewportSize({ width: 375, height: 812 });
+  await expect(header.getByRole("button", { name: /^Account:/ })).toBeVisible();
+});
+
 test("on a phone the sidebar opens from the menu button and closes on a link", async ({ page }) => {
   await page.setViewportSize({ width: 375, height: 812 });
   await page.goto("/admin");

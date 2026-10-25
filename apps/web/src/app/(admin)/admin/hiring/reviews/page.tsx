@@ -79,9 +79,7 @@ async function ReviewsPage({ searchParams }: PageProps<"/admin/hiring/reviews">)
                   className="flex flex-wrap items-center gap-3 rounded-lg px-3 py-2.5 text-sm outline-none hover:bg-muted/60 focus-visible:ring-3 focus-visible:ring-ring/50"
                 >
                   <Avatar size="lg" aria-hidden>
-                    <AvatarFallback className="bg-accent text-sm font-semibold text-accent-foreground">
-                      {initialsOf(r.candidate || "?")}
-                    </AvatarFallback>
+                    <AvatarFallback>{initialsOf(r.candidate || "?")}</AvatarFallback>
                   </Avatar>
                   <div className="min-w-0 flex-1">
                     <p className="truncate font-semibold">{r.candidate || "Candidate"}</p>

@@ -133,7 +133,7 @@ function Destination({ to }: { to: PreviewDestination }) {
   if (to.kind === "event")
     return (
       <div className="flex items-center gap-3">
-        <Avatar className="size-9">
+        <Avatar size="lg">
           {to.avatarUrl && <AvatarImage src={to.avatarUrl} alt="" />}
           <AvatarFallback>{initialsOf(to.host)}</AvatarFallback>
         </Avatar>

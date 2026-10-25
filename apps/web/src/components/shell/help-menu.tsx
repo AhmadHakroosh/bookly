@@ -50,7 +50,7 @@ export function HelpMenu({ supportHref }: { supportHref: string }) {
         <DropdownMenuTrigger
           render={<Button variant="ghost" className="gap-1.5 px-2.5" aria-label="Help" />}
         >
-          <CircleHelpIcon className="size-[18px]" aria-hidden />
+          <CircleHelpIcon className="size-5" aria-hidden />
           <span className="hidden text-sm font-medium lg:inline" aria-hidden>
             Help
           </span>

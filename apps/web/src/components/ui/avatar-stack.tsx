@@ -27,12 +27,12 @@ export function initialsOf(name: string) {
 function AvatarStack({
   people,
   max = 3,
-  size = "sm",
+  size = "default",
   className,
 }: {
   people: StackPerson[];
   max?: number;
-  size?: "sm" | "default" | "lg";
+  size?: "xs" | "sm" | "default" | "lg";
   className?: string;
 }) {
   const shown = people.slice(0, max);
@@ -43,9 +43,7 @@ function AvatarStack({
         {shown.map((p, i) => (
           <Avatar key={`${p.name}-${i}`} size={size}>
             {p.image && <AvatarImage src={p.image} alt="" />}
-            <AvatarFallback className="bg-accent font-medium text-accent-foreground">
-              {initialsOf(p.name)}
-            </AvatarFallback>
+            <AvatarFallback>{initialsOf(p.name)}</AvatarFallback>
           </Avatar>
         ))}
         {more > 0 && (

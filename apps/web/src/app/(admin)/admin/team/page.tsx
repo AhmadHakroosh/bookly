@@ -97,9 +97,7 @@ async function TeamPage({ searchParams }: PageProps<"/admin/team">) {
           {members.map((m) => (
             <li key={m.id} className="flex flex-wrap items-center gap-3 px-5 py-3 text-sm">
               <Avatar size="lg" aria-hidden>
-                <AvatarFallback className="bg-accent text-sm font-semibold text-accent-foreground">
-                  {initialsOf(m.name || m.email)}
-                </AvatarFallback>
+                <AvatarFallback>{initialsOf(m.name || m.email)}</AvatarFallback>
               </Avatar>
               <div className="min-w-0 flex-1">
                 <p className="flex flex-wrap items-center gap-2 font-medium">

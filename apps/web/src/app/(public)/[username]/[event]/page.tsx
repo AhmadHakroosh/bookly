@@ -162,9 +162,7 @@ async function EventPage({ params, searchParams }: PageProps<"/[username]/[event
           <Link href={`/${profile.username}`} className="group flex items-center gap-3">
             <Avatar className="size-12" aria-hidden>
               {profile.avatarUrl && <AvatarImage src={profile.avatarUrl} alt="" />}
-              <AvatarFallback className="bg-accent font-semibold text-accent-foreground">
-                {initialsOf(profile.displayName)}
-              </AvatarFallback>
+              <AvatarFallback>{initialsOf(profile.displayName)}</AvatarFallback>
             </Avatar>
             <span className="min-w-0">
               <span className="block truncate font-semibold group-hover:underline">

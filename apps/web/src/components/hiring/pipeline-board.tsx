@@ -167,8 +167,8 @@ function CardBody({
     <KanbanCard selected={open} lifted={overlay} className="group/card relative space-y-2.5 p-3">
       <div className="flex items-start gap-3">
         <div className="relative shrink-0">
-          <Avatar>
-            <AvatarFallback className="text-xs font-medium">{card.initials}</AvatarFallback>
+          <Avatar size="lg">
+            <AvatarFallback>{card.initials}</AvatarFallback>
           </Avatar>
           {onCheck && (
             // Over the avatar, as in mail: shown on hover and focus, and while selecting.

@@ -124,7 +124,7 @@ async function AdminShell({ children }: { children: React.ReactNode }) {
   );
   return (
     <div className="flex min-h-full flex-1">
-      <aside className="sticky top-0 hidden h-dvh w-60 shrink-0 overflow-y-auto border-e border-sidebar-border bg-sidebar lg:block">
+      <aside className="sticky top-0 hidden h-dvh w-64 shrink-0 overflow-y-auto border-e border-sidebar-border bg-sidebar lg:block">
         {sidebar}
       </aside>
       <div className="flex min-w-0 flex-1 flex-col">
@@ -148,7 +148,10 @@ async function AdminShell({ children }: { children: React.ReactNode }) {
               </Suspense>
             )}
             <HelpMenu supportHref={supportHref} />
-            <AccountMenu {...account} />
+            {/* From lg the account lives in the sidebar card; the top bar carries none. */}
+            <div className="lg:hidden">
+              <AccountMenu {...account} />
+            </div>
           </div>
         </header>
         <PaneLinks />

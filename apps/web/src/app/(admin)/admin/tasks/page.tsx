@@ -402,10 +402,8 @@ async function ListSection({
                       <td className="hidden py-2.5 pe-3 md:table-cell">
                         {card.assignee ? (
                           <span className="inline-flex items-center gap-2">
-                            <Avatar size="sm" aria-hidden>
-                              <AvatarFallback className="bg-accent text-[10px] font-semibold text-accent-foreground">
-                                {initialsOf(card.assignee)}
-                              </AvatarFallback>
+                            <Avatar size="xs" aria-hidden>
+                              <AvatarFallback>{initialsOf(card.assignee)}</AvatarFallback>
                             </Avatar>
                             <span className="truncate text-muted-foreground">{card.assignee}</span>
                           </span>
