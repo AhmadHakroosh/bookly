@@ -28,6 +28,7 @@ What creates one, and the defaults:
 | Team message          | on        | on      | off                           |
 | Mentioned in Messages | on        | on      | on                            |
 | Hiring team           | on        | on      | on                            |
+| Hiring applications   | on        | on      | off                           |
 
 Each member changes these under **Notifications → What you hear about** (your menu at the top right);
 the email column also governs the host copies Bookly always sent (booking, cancellation,

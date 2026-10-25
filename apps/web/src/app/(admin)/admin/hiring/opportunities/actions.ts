@@ -7,6 +7,7 @@ import { OPPORTUNITY_TYPES, STAGE_CATEGORIES } from "@bookly/db/schema";
 import { HiringAccessError } from "@/server/access";
 import { refreshWorkspace } from "@/server/cache";
 import { zonedToUtc } from "@/lib/time";
+import { ApplyError, deleteNow, recordLegalHold } from "@/server/hiring/apply";
 import { inviteToTeam, removeInvite } from "@/server/hiring/invites";
 import {
   addStage,
@@ -365,4 +366,28 @@ export async function discardDraftAction(id: string) {
   const r = await attempt(() => discardDraft(actor, id));
   if (!r.error) redirect("/admin/hiring/opportunities");
   return r;
+}
+
+/* ---------------- Data requests ---------------- */
+
+export async function deleteNowAction(requestId: string) {
+  // audit: by server/hiring/apply.ts
+  const { ws, actor } = await ctx();
+  return attemptApply(() => deleteNow(actor, ws, requestId));
+}
+
+export async function legalHoldAction(requestId: string, reason: string) {
+  // audit: by server/hiring/apply.ts
+  const { ws, actor } = await ctx();
+  return attemptApply(() => recordLegalHold(actor, ws, requestId, String(reason).slice(0, 600)));
+}
+
+async function attemptApply(fn: () => Promise<unknown>): Promise<{ error?: string }> {
+  try {
+    await fn();
+    return {};
+  } catch (e) {
+    if (e instanceof ApplyError || e instanceof HiringAccessError) return { error: e.message };
+    throw e;
+  }
 }

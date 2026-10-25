@@ -1,7 +1,18 @@
 import "server-only";
 import { createHash, randomBytes } from "node:crypto";
 import { cacheLife, cacheTag } from "next/cache";
-import { and, desc, eq, inArray, isNull, lt, notExists, schema, sql } from "@bookly/db";
+import {
+  and,
+  desc,
+  eq,
+  inArray,
+  isNull,
+  lt,
+  notExists,
+  schema,
+  sql,
+  type SQLWrapper,
+} from "@bookly/db";
 import type { EventQuestion, FormPurpose, Workspace } from "@bookly/db/schema";
 import {
   answersFromEntries,
@@ -390,6 +401,8 @@ const UUID = /^[0-9a-f-]{36}$/i;
 export async function startDraftResponse(
   workspaceId: string,
   formId: string,
+  /** An edit of a submitted application: the draft belongs to it (and goes with it). */
+  link: { applicationId: string; contactId: string } | null = null,
 ): Promise<{ id: string; token: string } | null> {
   const form = await db().query.forms.findFirst({
     where: and(eq(schema.forms.id, formId), eq(schema.forms.workspaceId, workspaceId)),
@@ -405,6 +418,7 @@ export async function startDraftResponse(
       formVersionId: form.publishedVersionId,
       status: "draft",
       resumeTokenHash: tokenHash(token),
+      ...(link ?? {}),
     })
     .returning({ id: schema.formResponses.id });
   return { id: row!.id, token };
@@ -543,6 +557,10 @@ export async function responseFiles(workspaceId: string, bookingId: string) {
  * Daily: files of drafts nobody touched for a week go (and of responses deleted with their
  * booking), and drafts untouched for 30 days with them (ADR 0004).
  */
+/** A draft application keeps its answers and files while its opportunity takes applications. */
+const applying = (formId: SQLWrapper) =>
+  sql`exists (select 1 from ${schema.opportunities} o where o.form_id = ${formId} and o.status = 'open')`;
+
 export async function sweepFormDrafts(now = new Date()): Promise<number> {
   const week = new Date(now.getTime() - 7 * 86_400_000);
   const month = new Date(now.getTime() - 30 * 86_400_000);
@@ -560,7 +578,7 @@ export async function sweepFormDrafts(now = new Date()): Promise<number> {
             .where(
               and(
                 sql`${responses.id} = ${schema.files.ownerId}`,
-                sql`not (${responses.status} = 'draft' and ${responses.updatedAt} < ${week})`,
+                sql`not (${responses.status} = 'draft' and ${responses.updatedAt} < ${week} and not ${applying(responses.formId)})`,
               ),
             ),
         ),
@@ -569,7 +587,13 @@ export async function sweepFormDrafts(now = new Date()): Promise<number> {
   for (const f of files) await removeFile(f, { silent: true });
   const gone = await db()
     .delete(responses)
-    .where(and(eq(responses.status, "draft"), lt(responses.updatedAt, month)))
+    .where(
+      and(
+        eq(responses.status, "draft"),
+        lt(responses.updatedAt, month),
+        sql`not ${applying(responses.formId)}`,
+      ),
+    )
     .returning({ id: responses.id });
   return files.length + gone.length;
 }

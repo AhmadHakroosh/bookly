@@ -51,7 +51,9 @@ Add an endpoint under **Admin → Settings → Integrations** and choose events:
 **Ping** to send a test delivery.
 
 `opportunity.published` (hiring beta) carries `{ id, title, type, slug, opensAt, closesAt,
-decidesBy }` when an opportunity is published; it never carries applicant data.
+decidesBy }` when an opportunity is published. `application.submitted` carries `{ id,
+opportunityId, cohortId, stage: { key, category }, submittedAt }` and `application.withdrawn`
+`{ id, opportunityId, withdrawnAt }`. Hiring webhooks carry ids only, never applicant data.
 
 `contact.stage_changed` carries `{ contact, from, to, by, fromStage, toStage }`. `from` and `to`
 are the four classic values (`lead`, `active`, `won`, `lost`); `fromStage` and `toStage` are the

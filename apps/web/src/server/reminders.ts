@@ -211,6 +211,9 @@ export async function sendDueReminders(
   await sweepAuditLog(now).catch((e) => console.error("[audit] retention failed", e));
   await sweepPendingFiles(now).catch((e) => console.error("[files] sweep failed", e));
   await sweepFormDrafts(now).catch((e) => console.error("[forms] draft sweep failed", e));
+  await import("./hiring/apply")
+    .then((m) => m.sweepDataRequests(now))
+    .catch((e) => console.error("[hiring] data requests sweep failed", e));
   await (
     await import("./pipelines/rules")
   )

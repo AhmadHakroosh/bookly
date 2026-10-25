@@ -175,6 +175,8 @@ const RESERVED_ADDRESSES = new Set([
 /** Path segments the app itself serves, so a username can never shadow them. */
 const RESERVED_USERNAMES = new Set([
   "admin",
+  "apply",
+  "applications",
   "api",
   "realtime",
   "booking",

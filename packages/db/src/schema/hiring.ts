@@ -204,6 +204,13 @@ export const applications = pgTable(
     waitlistPosition: integer("waitlist_position"),
     /** SHA-256 of the candidate's status-page token (a link, no account). */
     statusTokenHash: text("status_token_hash"),
+    /** The status link works until then: 30 days after the last email that carried it. */
+    statusTokenExpiresAt: timestamp("status_token_expires_at", { withTimezone: true }),
+    /** The privacy notice version the candidate agreed to when they submitted. */
+    privacyVersion: text("privacy_version"),
+    privacyConsentAt: timestamp("privacy_consent_at", { withTimezone: true }),
+    /** "Keep my details for future opportunities": optional, off by default. */
+    futureContact: boolean("future_contact").notNull().default(false),
     submittedAt: timestamp("submitted_at", { withTimezone: true }),
     withdrawnAt: timestamp("withdrawn_at", { withTimezone: true }),
     lastActivityAt: timestamp("last_activity_at", { withTimezone: true }).notNull().defaultNow(),
@@ -451,6 +458,8 @@ export const dataRequests = pgTable(
     applicationId: text("application_id"),
     opportunityId: text("opportunity_id"),
     contactEmail: text("contact_email").notNull(),
+    /** The status link's hash, so it can still say "This application has been deleted." */
+    statusTokenHash: text("status_token_hash"),
     kind: text("kind").$type<"deletion">().notNull().default("deletion"),
     status: text("status").$type<"open" | "held" | "completed">().notNull().default("open"),
     requestedAt: timestamp("requested_at", { withTimezone: true }).notNull().defaultNow(),

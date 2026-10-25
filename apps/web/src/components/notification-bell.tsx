@@ -63,6 +63,7 @@ const ICONS: Record<string, LucideIcon> = {
   "task.mentioned": AtSignIcon,
   "task.overdue": ClockAlertIcon,
   "hiring.team": BriefcaseIcon,
+  "application.submitted": BriefcaseIcon,
   "message.posted": MessagesSquareIcon,
   "message.mentioned": AtSignIcon,
 };
