@@ -48,6 +48,21 @@ everyone in it and its waitlist. Choosing a booking opens it beside the list: th
 event type and status, **Join meeting** and **More actions**, when, where (copy the link) and who,
 then **Briefing · Notes · Recap**.
 
+## Your photo
+
+One photo stands for you everywhere: the sidebar, your team's lists, avatar stacks, and your
+booking pages. Set it under **Account → Your photo** (or **Change photo** in your menu): upload a
+JPEG, PNG, WebP or HEIC picture up to 10 MB, or drop it on the circle, then move, zoom and rotate
+it in the circular crop (arrows, + / − and R work too) and save. It is stored as a 512 × 512
+picture with its location and other metadata removed. **Remove photo** puts your initials back
+everywhere at once. A picture from Google or GitHub at sign-in is copied in once, so it is never
+loaded from the provider again.
+
+A booking page uses your photo unless you tick **Use a different photo on this booking page**
+under **Booking page**. Without uploads (a self-host with no storage), the photo is an image
+address instead. Owners and admins can remove a member's photo from **Team**; it is recorded in
+the activity log and the member is told.
+
 ## The top bar
 
 - **Breadcrumb**: where you are, for example _Workspace › Settings › Branding_ or _Hiring ›

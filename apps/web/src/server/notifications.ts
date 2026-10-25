@@ -144,6 +144,11 @@ export const KINDS: Record<NotificationKind, KindInfo> = {
     defaults: { inApp: true, desktop: false, email: false },
     text: "reminder1h",
   },
+  "account.photo_removed": {
+    label: "Photo removed",
+    hint: "An owner or admin removed your photo.",
+    defaults: { inApp: true, desktop: false, email: true },
+  },
 };
 
 export const KIND_KEYS = Object.keys(KINDS) as NotificationKind[];

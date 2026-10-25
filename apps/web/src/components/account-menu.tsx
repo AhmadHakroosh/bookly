@@ -5,6 +5,7 @@ import { useState, useTransition } from "react";
 import {
   BellIcon,
   CalendarDaysIcon,
+  CameraIcon,
   ChevronsUpDownIcon,
   ExternalLinkIcon,
   LogOutIcon,
@@ -98,6 +99,10 @@ export function AccountMenu({
           <DropdownMenuItem render={<Link href="/admin/account" />}>
             <UserRoundIcon className="size-4" aria-hidden />
             Account
+          </DropdownMenuItem>
+          <DropdownMenuItem render={<Link href="/admin/account#photo" />}>
+            <CameraIcon className="size-4" aria-hidden />
+            Change photo
           </DropdownMenuItem>
           <DropdownMenuItem render={<Link href="/admin/notifications" />}>
             <BellIcon className="size-4" aria-hidden />

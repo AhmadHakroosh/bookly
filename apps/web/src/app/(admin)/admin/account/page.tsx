@@ -8,7 +8,14 @@ import { getProfileByUser } from "@/server/scheduling";
 import { requireWorkspaceUser } from "@/server/session";
 import { getCurrentWorkspace } from "@/server/workspace";
 import { ownerOf } from "@/server/data-rights";
+import { PhotoField } from "@/components/photo-field";
+import { hasFlag } from "@/server/flags";
 import { DeleteAccount } from "./delete-account";
+import {
+  removeAccountPhotoAction,
+  setAccountPhotoUrlAction,
+  uploadAccountPhotoAction,
+} from "./photo-actions";
 import { PasswordForm } from "./password-form";
 import { SetPasswordForm } from "./set-password-form";
 import { SignInMethods } from "./sign-in-methods";
@@ -29,11 +36,12 @@ async function AccountPage({ searchParams }: PageProps<"/admin/account">) {
   ]);
   if (!ws) return null;
   const h = await headers();
-  const [p, accounts, passkeys, owned] = await Promise.all([
+  const [p, accounts, passkeys, owned, uploads] = await Promise.all([
     getProfileByUser(ws.id, session.user.id),
     auth.api.listUserAccounts({ headers: h }),
     auth.api.listPasskeys({ headers: h }),
     ownerOf(session.user.id),
+    hasFlag(ws, "file_uploads"),
   ]);
   const hasPassword = accounts.some((a) => a.providerId === "credential");
   const providers = configuredSocialProviders(loadEnv());
@@ -56,6 +64,29 @@ async function AccountPage({ searchParams }: PageProps<"/admin/account">) {
           </>
         }
       />
+      <section
+        id="photo"
+        aria-labelledby="photo-title"
+        className="scroll-mt-20 space-y-4 rounded-xl border bg-card p-5"
+      >
+        <div>
+          <h2 id="photo-title" className="text-base font-semibold tracking-tight">
+            Your photo
+          </h2>
+          <p className="text-sm text-muted-foreground">
+            One photo everywhere: the sidebar, your team, and your booking pages unless one has its
+            own.
+          </p>
+        </div>
+        <PhotoField
+          name={session.user.name || session.user.email}
+          initial={session.user.image ?? null}
+          uploads={uploads}
+          upload={uploadAccountPhotoAction}
+          remove={removeAccountPhotoAction}
+          setUrl={setAccountPhotoUrlAction}
+        />
+      </section>
       {linkError && (
         <p role="alert" className="rounded-md border border-destructive/40 p-3 text-sm">
           {linkError}

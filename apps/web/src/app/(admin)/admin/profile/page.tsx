@@ -45,6 +45,7 @@ async function ProfilePage({ searchParams }: PageProps<"/admin/profile">) {
         saved={!!p}
         zones={timezoneList()}
         uploads={await hasFlag(ws, "file_uploads")}
+        accountPhoto={session.user.image ?? null}
       />
     </div>
   );

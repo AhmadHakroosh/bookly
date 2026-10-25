@@ -13,7 +13,9 @@ import { CommandMenu } from "@/components/shell/command-menu";
 import { HelpMenu } from "@/components/shell/help-menu";
 import { MobileNav } from "@/components/shell/mobile-nav";
 import type { NavOptions } from "@/components/shell/nav";
+import { after } from "next/server";
 import { getActor } from "@/server/access";
+import { importProviderPhoto, providerPhoto } from "@/server/photos";
 import { reviewsOwed } from "@/server/hiring/queries";
 import { UpdateNotice } from "@/components/update-notice";
 import { hasFlag } from "@/server/flags";
@@ -62,6 +64,9 @@ async function AdminShell({ children }: { children: React.ReactNode }) {
       ? { unread: await unreadThreads({ userId: session.user.id, ws: workspace }) }
       : null;
   const profile = workspace ? await getProfileByUser(workspace.id, session.user.id) : null;
+  // A picture set by Google or GitHub at sign-in is copied into storage once, never hot-linked.
+  if (workspace && providerPhoto(session.user.image))
+    after(() => importProviderPhoto(workspace, session.user.id, session.user.image!));
   // The hiring sidebar's Reviews count: what this member owes.
   const actor = hiring && !isCollaborator(role) ? await getActor() : null;
   const owed = actor ? await reviewsOwed(actor) : 0;
