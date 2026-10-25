@@ -119,7 +119,7 @@ function Swatch({ color }: { color?: string | null }) {
 
 function Initials({ name, group = false }: { name: string; group?: boolean }) {
   return (
-    <Avatar size="lg" aria-hidden>
+    <Avatar size="lg" aria-hidden className="hidden sm:flex">
       <AvatarFallback className="bg-accent text-sm font-semibold text-accent-foreground">
         {group ? <UsersIcon className="size-4" /> : initialsOf(name)}
       </AvatarFallback>
@@ -244,7 +244,7 @@ function BookingList({
                           scroll={false}
                           className={rowCls(selected === b.id)}
                         >
-                          <span className="w-20 shrink-0 text-sm">
+                          <span className="w-[4.5rem] shrink-0 text-sm whitespace-nowrap sm:w-20">
                             <span className="block font-semibold tabular-nums">
                               {time(b.startAt)}
                             </span>
@@ -289,7 +289,7 @@ function BookingList({
                         scroll={false}
                         className={rowCls(g.bookings.some((b) => b.id === selected))}
                       >
-                        <span className="w-20 shrink-0 text-sm">
+                        <span className="w-[4.5rem] shrink-0 text-sm whitespace-nowrap sm:w-20">
                           <span className="block font-semibold tabular-nums">
                             {time(first.startAt)}
                           </span>
