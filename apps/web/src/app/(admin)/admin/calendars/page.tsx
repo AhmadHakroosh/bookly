@@ -1,5 +1,6 @@
 import { CalendarsSkeleton } from "@/components/skeletons/pages";
 import Link from "next/link";
+import { connection } from "next/server";
 import { Suspense } from "react";
 import { CalendarDaysIcon, VideoIcon } from "lucide-react";
 import type { ConferencingType, Integration } from "@bookly/db/schema";
@@ -49,6 +50,8 @@ const TOOL_NAME: Record<ConferencingType, string> = {
  * services are under Settings → Integrations.
  */
 async function CalendarsPage({ searchParams }: PageProps<"/admin/calendars">) {
+  // Feed times and connection states are read per request.
+  await connection();
   const [{ session }, sp, ws] = await Promise.all([
     requireWorkspaceUser(),
     searchParams,

@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useRef, useTransition } from "react";
+import { useActionState, useEffect, useState, useTransition } from "react";
 import { toast } from "sonner";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Dropdown } from "@/components/dropdown";
@@ -30,26 +30,36 @@ export function ConflictsForm({
     {} as { ok?: boolean; error?: string },
   );
   const [, start] = useTransition();
-  const form = useRef<HTMLFormElement>(null);
-  // After the change has rendered, so the form carries the new value.
-  const save = () => setTimeout(() => start(() => action(new FormData(form.current!))), 0);
+  // Controlled, and saved from state: after a save the page comes back with the new values,
+  // which a default can't take.
+  const [on, setOn] = useState(() => new Set(conflict));
+  const [dest, setDest] = useState(destination);
+  const save = (next: Set<string>, to: string) => {
+    const f = new FormData();
+    f.set("provider", provider);
+    f.set("destinationCalendarId", to);
+    for (const id of next) f.append("conflict", id);
+    start(() => action(f));
+  };
   useEffect(() => {
     if (state.ok) toast.success("Saved");
     else if (state.error) toast.error(state.error);
   }, [state]);
-  const on = new Set(conflict);
   return (
-    <form ref={form} action={action} className="space-y-3 text-sm">
-      <input type="hidden" name="provider" value={provider} />
+    <div className="space-y-3 text-sm">
       <ul className="space-y-2" aria-label={`Calendars in ${account}`}>
         {calendars.map((c) => (
           <li key={c.id}>
             <label className="inline-flex items-center gap-2.5">
               <Checkbox
-                name="conflict"
-                value={c.id}
-                defaultChecked={on.has(c.id)}
-                onCheckedChange={save}
+                checked={on.has(c.id)}
+                onCheckedChange={(checked) => {
+                  const next = new Set(on);
+                  if (checked) next.add(c.id);
+                  else next.delete(c.id);
+                  setOn(next);
+                  save(next, dest);
+                }}
               />
               <span>
                 {c.name}
@@ -65,14 +75,16 @@ export function ConflictsForm({
         </label>
         <Dropdown
           id={`dest-${provider}`}
-          name="destinationCalendarId"
           size="sm"
-          defaultValue={destination}
-          onValueChange={save}
+          value={dest}
+          onValueChange={(v) => {
+            setDest(v);
+            save(on, v);
+          }}
           className="w-56"
           options={calendars.map((c) => ({ value: c.id, label: c.name }))}
         />
       </div>
-    </form>
+    </div>
   );
 }

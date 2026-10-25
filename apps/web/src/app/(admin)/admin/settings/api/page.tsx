@@ -1,4 +1,5 @@
 import { ApiSkeleton } from "@/components/skeletons/pages";
+import { connection } from "next/server";
 import { Suspense } from "react";
 import { desc, eq, inArray, schema } from "@bookly/db";
 import { loadEnv } from "@bookly/config";
@@ -27,6 +28,8 @@ export const metadata = { title: "API" };
 
 /** API keys for the public API and webhooks for its events (docs/api.md). */
 async function ApiPage() {
+  // "Last used" and delivery times are read per request.
+  await connection();
   const workspace = await getCurrentWorkspace();
   if (!workspace) return null;
   const base = loadEnv().APP_URL.replace(/\/$/, "");

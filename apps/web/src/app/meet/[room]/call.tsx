@@ -7,10 +7,10 @@ import {
   useDailyEvent,
   useNetwork,
 } from "@daily-co/daily-react";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
-import { Captions, useLiveTranscript } from "./captions";
+import { useLiveTranscript } from "./captions";
 import { applySavedEffect, noiseCancellationWanted } from "./effects";
 import { Prejoin } from "./prejoin";
 import { Room } from "./room";
@@ -33,7 +33,81 @@ export type CallProps = {
   needsName: boolean;
   /** A signed-in member with in-meeting notes on their plan: the notes panel and Mark moment. */
   notes?: boolean;
+  /** The header's left side: the logo and what the meeting is, drawn on the server. */
+  title: ReactNode;
+  /** When the meeting is, shown in the header until the call starts. */
+  when: string;
+  /** Capture is on because the guest said yes when booking (not because it is always on). */
+  consent?: boolean;
+  /** Under the header for a visitor who might be the host: the sign-in link. */
+  hint?: ReactNode;
+  /** A member's way to the booking, where notes and the recap land after the call. */
+  recap?: string | null;
 };
+
+/**
+ * The call's top bar (`mocks.png` 04): the logo and the meeting on the left; on the right, the
+ * time until the call starts, then "● Transcription on · consent recorded" and the time in it.
+ */
+function Header({
+  title,
+  when,
+  live,
+  capture,
+  consent,
+}: {
+  title: ReactNode;
+  when: string;
+  /** In the call since. */
+  live: number | null;
+  capture: boolean;
+  consent: boolean;
+}) {
+  return (
+    <header className="flex items-center justify-between gap-3 border-b px-4 py-2.5 text-sm">
+      {title}
+      {live === null ? (
+        <span className="shrink-0 text-muted-foreground">{when}</span>
+      ) : (
+        <span className="flex shrink-0 items-center gap-3 text-muted-foreground">
+          {capture && (
+            <span className="hidden items-center gap-1.5 sm:inline-flex">
+              <span className="size-2 rounded-full bg-destructive" aria-hidden />
+              Transcription on{consent ? " · consent recorded" : ""}
+            </span>
+          )}
+          {capture && (
+            <span
+              className="size-2 rounded-full bg-destructive sm:hidden"
+              role="img"
+              aria-label="Transcription on"
+            />
+          )}
+          <Elapsed since={live} />
+        </span>
+      )}
+    </header>
+  );
+}
+
+/** Minutes and seconds in the call, ticking. */
+function Elapsed({ since }: { since: number }) {
+  const [now, setNow] = useState(since);
+  useEffect(() => {
+    const t = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(t);
+  }, []);
+  const s = Math.max(0, Math.floor((now - since) / 1000));
+  const clock = `${s >= 3600 ? `${Math.floor(s / 3600)}:` : ""}${String(Math.floor((s % 3600) / 60)).padStart(s >= 3600 ? 2 : 1, "0")}:${String(s % 60).padStart(2, "0")}`;
+  return (
+    <time
+      className="font-medium text-foreground tabular-nums"
+      aria-label={`In the call for ${clock}`}
+    >
+      {clock}
+    </time>
+  );
+}
 
 /**
  * Bookly video: Bookly's own call UI on Daily's call object (no Prebuilt). The call object is
@@ -51,9 +125,18 @@ export function Call(props: CallProps) {
   });
   if (!callObject)
     return (
-      <div className="flex flex-1 items-center justify-center" aria-busy aria-label="Loading">
-        <Spinner />
-      </div>
+      <>
+        <Header
+          title={props.title}
+          when={props.when}
+          live={null}
+          capture={props.capture}
+          consent={!!props.consent}
+        />
+        <div className="flex flex-1 items-center justify-center" aria-busy aria-label="Loading">
+          <Spinner />
+        </div>
+      </>
     );
   return (
     <DailyProvider callObject={callObject}>
@@ -65,6 +148,28 @@ export function Call(props: CallProps) {
 type Stage = "prejoin" | "joining" | "knocking" | "in" | "denied" | "left" | "error";
 
 function CallUi(props: CallProps) {
+  const [live, setLive] = useState<number | null>(null);
+  return (
+    <>
+      <Header
+        title={props.title}
+        when={props.when}
+        live={live}
+        capture={props.capture}
+        consent={!!props.consent}
+      />
+      {props.capture && live === null && (
+        <p className="bg-warning-muted px-4 py-1.5 text-center text-xs text-warning">
+          This call is transcribed so both sides get notes and action items afterwards.
+        </p>
+      )}
+      {props.hint}
+      <CallStage {...props} onLive={setLive} />
+    </>
+  );
+}
+
+function CallStage({ onLive, ...props }: CallProps & { onLive: (at: number | null) => void }) {
   const call = useDaily();
   const [stage, setStage] = useState<Stage>("prejoin");
   const [name, setName] = useState(props.initialName);
@@ -119,6 +224,9 @@ function CallUi(props: CallProps) {
       setStage("error");
     }, []),
   );
+
+  // The header's timer and live state follow the call.
+  useEffect(() => onLive(stage === "in" ? Date.now() : null), [stage, onLive]);
 
   const join = async (media: { cam: boolean; mic: boolean }) => {
     if (!call) return;
@@ -185,8 +293,26 @@ function CallUi(props: CallProps) {
     return (
       <Notice
         title="You left the call"
-        body="Thanks for meeting on Bookly. You can close this page or rejoin."
-        action={<Button onClick={() => void join(lastMedia)}>Rejoin</Button>}
+        body={
+          props.recap
+            ? "Your notes are saved. The recap appears on the booking a few minutes after the call ends."
+            : "Thanks for meeting on Bookly. You can close this page or rejoin."
+        }
+        action={
+          <>
+            <Button
+              variant={props.recap ? "outline" : "default"}
+              onClick={() => void join(lastMedia)}
+            >
+              Rejoin
+            </Button>
+            {props.recap && (
+              <Button nativeButton={false} render={<a href={props.recap} />}>
+                Open the booking
+              </Button>
+            )}
+          </>
+        }
       />
     );
   return (
@@ -197,7 +323,7 @@ function CallUi(props: CallProps) {
             topology === "peer"
               ? "bg-emerald-500/15 text-emerald-200"
               : topology === "sfu"
-                ? "bg-red-500/20 text-red-200"
+                ? "bg-destructive/10 text-destructive"
                 : "bg-muted text-muted-foreground"
           }`}
           role="status"
@@ -213,11 +339,13 @@ function CallUi(props: CallProps) {
         hostName={props.hostName}
         room={props.room}
         notesEnabled={!!props.notes}
+        transcript={
+          props.capture
+            ? { lines: captions, hostName: props.hostName, attendeeName: props.attendeeName }
+            : null
+        }
         onLeave={() => void call?.leave()}
       />
-      {props.capture && (
-        <Captions lines={captions} hostName={props.hostName} attendeeName={props.attendeeName} />
-      )}
     </>
   );
 }
@@ -243,7 +371,7 @@ function Notice({
         )}
         <h2 className="text-lg font-semibold tracking-tight">{title}</h2>
         <p className="mt-2 text-sm text-muted-foreground">{body}</p>
-        {action && <div className="mt-5 flex justify-center">{action}</div>}
+        {action && <div className="mt-5 flex flex-wrap justify-center gap-2">{action}</div>}
       </div>
     </div>
   );

@@ -72,7 +72,7 @@ export function useLiveTranscript({
           ...(lang ? { lang } : {}),
         };
         queue.current.push(line);
-        setCaptions((prev) => [...prev, line].slice(-6));
+        setCaptions((prev) => [...prev, line].slice(-500));
         if (queue.current.length >= 10) flush();
       },
       [attendeeName, call, capture, flush, hostName],
@@ -93,10 +93,17 @@ export function useLiveTranscript({
   return captions;
 }
 
+const speakerLabel = (speaker: string, hostName: string, attendeeName: string) =>
+  speaker === "host"
+    ? `${hostName || "Host"} (host)`
+    : speaker === "attendee"
+      ? attendeeName || "Attendee"
+      : speaker;
+
 /**
- * The last few transcribed lines, shown under the call while capture is on. Lines are stored
- * with the role ("host" / "attendee") so recaps can tell the sides apart; on screen they carry
- * the person's name, with "(host)" after the host's.
+ * The last few transcribed lines under the stage while the side panel's Transcript tab is not in
+ * view. Lines are stored with the role ("host" / "attendee") so recaps can tell the sides apart;
+ * on screen they carry the person's name, with "(host)" after the host's.
  */
 export function Captions({
   lines,
@@ -107,15 +114,9 @@ export function Captions({
   hostName: string;
   attendeeName: string;
 }) {
-  const label = (speaker: string) =>
-    speaker === "host"
-      ? `${hostName || "Host"} (host)`
-      : speaker === "attendee"
-        ? attendeeName || "Attendee"
-        : speaker;
   return (
     <div
-      className="border-t bg-card px-4 py-2 font-mono text-xs text-foreground/85"
+      className="border-t bg-card px-4 py-2 text-xs text-foreground/85"
       aria-live="polite"
       aria-label="Live transcript"
     >
@@ -125,12 +126,59 @@ export function Captions({
         <ol className="space-y-0.5">
           {lines.map((c, i) => (
             <li key={`${c.t}-${i}`}>
-              <span className="text-muted-foreground">[{formatClock(c.t)}]</span>{" "}
-              <span className="text-brand">{label(c.speaker)}:</span> {c.text}
+              <span className="font-mono text-muted-foreground">[{formatClock(c.t)}]</span>{" "}
+              <span className="font-medium text-primary">
+                {speakerLabel(c.speaker, hostName, attendeeName)}:
+              </span>{" "}
+              {c.text}
             </li>
           ))}
         </ol>
       )}
     </div>
+  );
+}
+
+/** The side panel's Transcript tab: everything said so far, newest at the bottom. */
+export function TranscriptPanel({
+  lines,
+  hostName,
+  attendeeName,
+}: {
+  lines: Line[];
+  hostName: string;
+  attendeeName: string;
+}) {
+  const list = useRef<HTMLOListElement>(null);
+  useEffect(() => {
+    list.current?.scrollTo({ top: list.current.scrollHeight });
+  }, [lines.length]);
+  return (
+    <>
+      <p className="border-b px-4 py-2 text-[11px] text-muted-foreground">
+        This call is transcribed so both sides get notes and action items; the recap is written from
+        it when the call ends.
+      </p>
+      <ol
+        ref={list}
+        className="min-h-0 flex-1 space-y-3 overflow-y-auto px-4 py-3 text-sm"
+        aria-live="polite"
+      >
+        {lines.length === 0 && (
+          <li className="text-muted-foreground">Lines appear here as people speak.</li>
+        )}
+        {lines.map((c, i) => (
+          <li key={`${c.t}-${i}`}>
+            <p className="flex items-baseline gap-2">
+              <span className="font-medium">{speakerLabel(c.speaker, hostName, attendeeName)}</span>
+              <span className="font-mono text-[11px] text-muted-foreground">
+                {formatClock(c.t)}
+              </span>
+            </p>
+            <p className="break-words">{c.text}</p>
+          </li>
+        ))}
+      </ol>
+    </>
   );
 }
