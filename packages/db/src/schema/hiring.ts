@@ -204,6 +204,11 @@ export const applications = pgTable(
     waitlistPosition: integer("waitlist_position"),
     /** SHA-256 of the candidate's status-page token (a link, no account). */
     statusTokenHash: text("status_token_hash"),
+    /**
+     * The same token, encrypted, so later emails (stage messages, decisions) can carry the link
+     * the candidate already has instead of replacing it. Rotated together with the hash.
+     */
+    statusTokenEnc: text("status_token_enc"),
     /** The status link works until then: 30 days after the last email that carried it. */
     statusTokenExpiresAt: timestamp("status_token_expires_at", { withTimezone: true }),
     /** The privacy notice version the candidate agreed to when they submitted. */

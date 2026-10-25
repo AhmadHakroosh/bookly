@@ -109,6 +109,7 @@ export const WEBHOOK_EVENTS = [
   "task.created",
   "opportunity.published",
   "application.submitted",
+  "application.stage_changed",
   "application.withdrawn",
 ] as const;
 export type WebhookEvent = (typeof WEBHOOK_EVENTS)[number];

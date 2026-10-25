@@ -53,7 +53,9 @@ Add an endpoint under **Admin → Settings → Integrations** and choose events:
 `opportunity.published` (hiring beta) carries `{ id, title, type, slug, opensAt, closesAt,
 decidesBy }` when an opportunity is published. `application.submitted` carries `{ id,
 opportunityId, cohortId, stage: { key, category }, submittedAt }` and `application.withdrawn`
-`{ id, opportunityId, withdrawnAt }`. Hiring webhooks carry ids only, never applicant data.
+`{ id, opportunityId, withdrawnAt }`. `application.stage_changed` carries `{ id, opportunityId,
+from: { key, category } | null, to: { key, category }, by }` when a coordinator (`by: "user"`) or a
+stage rule (`by: "rule"`) moves an application. Hiring webhooks carry ids only, never applicant data.
 
 `contact.stage_changed` carries `{ contact, from, to, by, fromStage, toStage }`. `from` and `to`
 are the four classic values (`lead`, `active`, `won`, `lost`); `fromStage` and `toStage` are the

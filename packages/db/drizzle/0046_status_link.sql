@@ -1,0 +1,1 @@
+ALTER TABLE "applications" ADD COLUMN "status_token_enc" text;
