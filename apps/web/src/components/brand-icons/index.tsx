@@ -65,6 +65,8 @@ export function ProviderIcon({ id, className }: { id: ProviderId; className?: st
   return (
     <span
       aria-hidden
+      data-provider={id}
+      title={PROVIDERS[id].name}
       className={cn(
         "inline-flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary",
         className,
