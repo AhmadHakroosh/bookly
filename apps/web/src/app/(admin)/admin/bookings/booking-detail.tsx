@@ -131,10 +131,8 @@ export async function BookingDetail({ id, inPane = false }: { id: string; inPane
       <PaneHeader
         as="h1"
         media={
-          <Avatar size="lg" className="size-14" aria-hidden>
-            <AvatarFallback className="bg-accent text-base font-semibold text-accent-foreground">
-              {initialsOf(b.attendeeName)}
-            </AvatarFallback>
+          <Avatar size="xl" aria-hidden>
+            <AvatarFallback>{initialsOf(b.attendeeName)}</AvatarFallback>
           </Avatar>
         }
         title={

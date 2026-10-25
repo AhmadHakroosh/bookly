@@ -39,9 +39,7 @@ function ListRow({
     <>
       <Avatar size="lg" aria-hidden>
         {image && <AvatarImage src={image} alt="" />}
-        <AvatarFallback className="bg-accent text-sm font-semibold text-accent-foreground">
-          {initialsOf(name)}
-        </AvatarFallback>
+        <AvatarFallback>{initialsOf(name)}</AvatarFallback>
       </Avatar>
       <div className="min-w-0 flex-1">
         <div className="flex items-baseline justify-between gap-3">

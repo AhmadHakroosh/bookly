@@ -163,10 +163,8 @@ async function ContactPage({ params, searchParams }: PageProps<"/admin/contacts/
   return (
     <div className="space-y-5">
       <header className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-start gap-x-4 gap-y-3 md:grid-cols-[auto_minmax(0,1fr)_auto_auto] md:gap-x-6">
-        <Avatar className="size-14 md:size-20" aria-hidden>
-          <AvatarFallback className="bg-accent text-xl font-semibold text-accent-foreground">
-            {initialsOf(name)}
-          </AvatarFallback>
+        <Avatar size="2xl" aria-hidden>
+          <AvatarFallback>{initialsOf(name)}</AvatarFallback>
         </Avatar>
         <div className="min-w-0 flex-1 space-y-1">
           <h1 className="text-2xl font-bold tracking-[-0.02em] break-words md:text-[2rem] md:leading-10">

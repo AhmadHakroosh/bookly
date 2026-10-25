@@ -77,12 +77,17 @@ Every admin page sits in one frame (`app/(admin)/admin/layout.tsx`, parts in
   swaps in Hiring's own items (`hiring.png`, decision D1). Messages, Files, Settings and Team
   are shared and keep the side you came from.
 - **Top bar** (56 px, sticky): breadcrumb ("Workspace / Home", "Hiring / Overview"; stops before
-  an id), the search-or-jump field (⌘K) in the middle, then the bell, Help (icon and word) and
-  the avatar. No theme toggle. Personal pages (Account, Notifications, Calendars, Conferencing,
+  an id), the search-or-jump field (⌘K) in the middle, then the bell and Help (icon and word).
+  From `lg` there is no avatar in the bar: the account is the sidebar's foot card (256 px
+  sidebar, 44 px picture, name and email). No theme toggle. Personal pages (Account, Notifications, Calendars & conferencing,
   the public booking page) live in the account menu; Domains and Billing are reached from ⌘K
   until Settings is regrouped (§4.11).
 - **Phone and narrow windows**: the sidebar becomes a sheet behind a menu button; the logo mark,
-  a search button, the bell, Help and the avatar stay in the bar.
+  a search button, the bell, Help and a 32 px avatar (no chevron) stay in the bar.
+- **Avatars** (`ui/avatar.tsx`), one scale measured from the concepts: `xs` 24 table cells,
+  `sm` 28 beside a line of text, `default` 32 stacks and the agenda, `lg` 44 every person row and
+  the account card, `xl` 80 pane headers, `2xl` 64 → 96 entity page headers. Initials fall back to
+  Peach with orange letters; pass no colours of your own.
 - **⌘K** (`shell/command-menu.tsx`) is Base UI Autocomplete in a Dialog: every page the member
   can open, settings tabs, their own things, and contacts searched on the server as you type.
 

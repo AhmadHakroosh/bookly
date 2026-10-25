@@ -224,7 +224,7 @@ export default function DesignPage() {
                     <KanbanCard selected={i === 2}>
                       <div className="flex items-center gap-3">
                         <Avatar>
-                          <AvatarFallback className="bg-accent text-xs font-semibold text-accent-foreground">
+                          <AvatarFallback>
                             {name
                               .split(" ")
                               .map((w) => w[0])
@@ -253,10 +253,8 @@ export default function DesignPage() {
         <div className="max-w-xl rounded-xl border bg-popover p-5">
           <PaneHeader
             media={
-              <Avatar size="lg" className="size-14">
-                <AvatarFallback className="bg-accent text-base font-semibold text-accent-foreground">
-                  MC
-                </AvatarFallback>
+              <Avatar size="xl">
+                <AvatarFallback>MC</AvatarFallback>
               </Avatar>
             }
             title="Maya Chen"

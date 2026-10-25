@@ -115,10 +115,8 @@ export async function ApplicationPane({
     <div className="space-y-5 p-5">
       <PaneHeader
         media={
-          <Avatar size="lg">
-            <AvatarFallback className="font-medium">
-              {initials(d.contact.name, d.contact.email ?? "")}
-            </AvatarFallback>
+          <Avatar size="xl">
+            <AvatarFallback>{initials(d.contact.name, d.contact.email ?? "")}</AvatarFallback>
           </Avatar>
         }
         title={name}

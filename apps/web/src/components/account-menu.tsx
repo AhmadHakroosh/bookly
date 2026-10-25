@@ -5,7 +5,6 @@ import { useState, useTransition } from "react";
 import {
   BellIcon,
   CalendarDaysIcon,
-  ChevronDownIcon,
   ChevronsUpDownIcon,
   ExternalLinkIcon,
   LogOutIcon,
@@ -28,8 +27,8 @@ import {
 /**
  * The signed-in person's menu: their account (sign-in methods, passkeys, password, deletion),
  * their notifications and connections, their public booking page, and sign-out. Opened from the
- * avatar at the end of the top bar and from the account card at the foot of the sidebar, as
- * `app ui.png` draws both. Light only: there is no theme choice (concept fidelity).
+ * account card at the foot of the sidebar (44 px picture, name, email), as `hiring.png` draws
+ * it; on a phone, where the sidebar is a sheet, also from a 32 px avatar in the top bar. Light only: there is no theme choice (concept fidelity).
  */
 export function AccountMenu({
   email,
@@ -51,12 +50,10 @@ export function AccountMenu({
   // Signing out ends with a redirect; the page stays covered until it lands.
   const [leaving, setLeaving] = useState(false);
   const [, start] = useTransition();
-  const avatar = (size: string) => (
-    <Avatar size="sm" className={size} aria-hidden>
+  const avatar = (size: "default" | "lg") => (
+    <Avatar size={size} aria-hidden>
       {image && <AvatarImage src={image} alt="" />}
-      <AvatarFallback className="bg-accent text-xs font-semibold text-accent-foreground">
-        {initialsOf(name || email)}
-      </AvatarFallback>
+      <AvatarFallback>{initialsOf(name || email)}</AvatarFallback>
     </Avatar>
   );
   return (
@@ -72,7 +69,7 @@ export function AccountMenu({
               />
             }
           >
-            {avatar("size-9")}
+            {avatar("lg")}
             <span className="min-w-0 flex-1">
               <span className="block truncate text-sm font-medium">{name}</span>
               <span className="block truncate text-xs text-muted-foreground">{email}</span>
@@ -81,12 +78,9 @@ export function AccountMenu({
           </DropdownMenuTrigger>
         ) : (
           <DropdownMenuTrigger
-            render={
-              <Button variant="ghost" className="gap-1.5 px-1.5" aria-label={`Account: ${email}`} />
-            }
+            render={<Button variant="ghost" size="icon-lg" aria-label={`Account: ${email}`} />}
           >
-            {avatar("size-7")}
-            <ChevronDownIcon className="size-3.5 text-muted-foreground" aria-hidden />
+            {avatar("default")}
           </DropdownMenuTrigger>
         )}
         <DropdownMenuContent

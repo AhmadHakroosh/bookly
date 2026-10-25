@@ -235,7 +235,7 @@ async function MessagesPage({ searchParams }: PageProps<"/admin/messages">) {
                         )}
                       >
                         <Avatar size="lg" aria-hidden>
-                          <AvatarFallback className="bg-accent text-sm font-semibold text-accent-foreground">
+                          <AvatarFallback>
                             {r.kind === "guest" ? (
                               initialsOf(r.title)
                             ) : (
@@ -360,7 +360,7 @@ async function ThreadPane({
       <div className="flex min-h-0 min-w-0 flex-col rounded-xl border bg-card">
         <div className="flex items-start gap-3 border-b p-4">
           <Avatar size="lg" aria-hidden>
-            <AvatarFallback className="bg-accent text-sm font-semibold text-accent-foreground">
+            <AvatarFallback>
               {thread.kind === "guest" ? initialsOf(title) : <UsersIcon className="size-4" />}
             </AvatarFallback>
           </Avatar>
@@ -484,9 +484,7 @@ async function ClientContext({
       <h2 className="text-base font-semibold tracking-tight">Client context</h2>
       <div className="flex items-center gap-3">
         <Avatar size="lg" aria-hidden>
-          <AvatarFallback className="bg-accent text-sm font-semibold text-accent-foreground">
-            {initialsOf(c.name || c.email)}
-          </AvatarFallback>
+          <AvatarFallback>{initialsOf(c.name || c.email)}</AvatarFallback>
         </Avatar>
         <div className="min-w-0">
           <Link

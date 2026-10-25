@@ -107,9 +107,7 @@ async function CandidatesPage({ searchParams }: PageProps<"/admin/hiring/candida
                   className="flex flex-wrap items-center gap-3 rounded-lg px-3 py-2.5 text-sm outline-none hover:bg-muted/60 focus-visible:ring-3 focus-visible:ring-ring/50"
                 >
                   <Avatar size="lg" aria-hidden>
-                    <AvatarFallback className="bg-accent text-sm font-semibold text-accent-foreground">
-                      {initialsOf(name)}
-                    </AvatarFallback>
+                    <AvatarFallback>{initialsOf(name)}</AvatarFallback>
                   </Avatar>
                   <div className="min-w-0 flex-1">
                     <p className="truncate font-semibold">{name}</p>
