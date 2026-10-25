@@ -1,0 +1,67 @@
+# Local staging: the production image, multi-tenant like staging.bookly-app.io, on this machine.
+# Run it with scripts/local-staging.sh (it builds the image from the pushed v2 and fills .env).
+#
+#   http://localhost:3100            the platform (sign-up, pricing, console)
+#   http://<slug>.localhost:3100     a workspace (demo: demo.localhost:3100)
+#   http://localhost:8026            Mailpit: every email the app sends
+#
+# What stands in for staging's services: Postgres here for Neon, the image's in-process job
+# worker for QStash, its in-process websocket server for realtime, Mailpit for Resend, and a
+# volume for R2. Stripe, Daily, Anthropic and the OAuth apps stay off unless you add keys to
+# deploy/local-staging/.env (git-ignored).
+name: bookly-staging
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: bookly
+      POSTGRES_PASSWORD: bookly
+      POSTGRES_DB: bookly
+    # On the host too, for the demo seed and psql.
+    ports: ["127.0.0.1:5434:5432"]
+    volumes: [postgres-data:/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U bookly"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  mailpit:
+    image: axllent/mailpit:v1.31.6
+    restart: unless-stopped
+    ports: ["127.0.0.1:8026:8025"]
+
+  app:
+    image: bookly:staging
+    restart: unless-stopped
+    depends_on:
+      postgres: { condition: service_healthy }
+      mailpit: { condition: service_started }
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      DATABASE_URL: postgres://bookly:bookly@postgres:5432/bookly
+      TENANCY: multi
+      APP_URL: http://localhost:3100
+      ROOT_DOMAIN: localhost:3100
+      EMAIL_DRIVER: smtp
+      SMTP_HOST: mailpit
+      SMTP_PORT: "1025"
+      SMTP_SECURE: "false"
+      STORAGE_DRIVER: local
+      STORAGE_LOCAL_DIR: /app/data/uploads
+      TELEMETRY: "off"
+    volumes: [uploads-data:/app/data/uploads]
+    ports: ["127.0.0.1:3100:3000"]
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:3000/api/health >/dev/null || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+
+volumes:
+  postgres-data:
+  uploads-data:
