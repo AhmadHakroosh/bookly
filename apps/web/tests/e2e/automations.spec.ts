@@ -94,9 +94,8 @@ test("a client who reaches Won gets the checklist and the welcome email, once", 
     )
     .toBe(1);
   await expect(page.getByText(`Welcome aboard, Won Client ${run}`).first()).toBeVisible();
-  await expect(
-    page.getByRole("button", { name: /Mark done: Send the contract/ }).first(),
-  ).toBeVisible();
+  // The task is under Linked tasks on the contact, ticked off with its checkbox.
+  await expect(page.getByRole("checkbox", { name: /Send the contract/ }).first()).toBeVisible();
 
   // Running the sweep again does not run it twice.
   const secret = process.env.CRON_SECRET;
