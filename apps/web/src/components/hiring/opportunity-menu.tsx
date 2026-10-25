@@ -175,13 +175,18 @@ export function OpportunityMenu({
 }
 
 /** The toast after publishing, once. */
-export function PublishedToast({ message }: { message: string | null }) {
+export function PublishedToast({ message, link }: { message: string | null; link: string }) {
   useEffect(() => {
     if (!message) return;
-    toast.success(message);
+    toast.success(message, {
+      action: {
+        label: "Copy link",
+        onClick: () => void navigator.clipboard?.writeText(link),
+      },
+    });
     const url = new URL(window.location.href);
     url.searchParams.delete("published");
     window.history.replaceState(null, "", url);
-  }, [message]);
+  }, [message, link]);
   return null;
 }

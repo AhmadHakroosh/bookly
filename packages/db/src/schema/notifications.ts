@@ -28,7 +28,8 @@ export type NotificationKind =
   | "message.posted"
   | "message.mentioned"
   | "automation"
-  | "hiring.team";
+  | "hiring.team"
+  | "application.submitted";
 
 /** A channel `notify()` used for a notification, besides the bell (ADR 0007). */
 export type DeliveryChannel = "socket" | "push" | "email" | "text";

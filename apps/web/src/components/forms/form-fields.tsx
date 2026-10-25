@@ -1,10 +1,9 @@
 "use client";
 
-import { useId, useMemo, useRef, useState } from "react";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { PaperclipIcon, XIcon } from "lucide-react";
 import {
   answerName,
-  coerceAnswers,
   evaluate,
   fileAccepted,
   isDisplayField,
@@ -14,6 +13,9 @@ import {
   type FormSchema,
 } from "@bookly/forms";
 import { Dropdown } from "@/components/dropdown";
+import { answersOf, type Raw, type Uploaded } from "./raw";
+
+export { answersOf, rawFrom, type Raw, type Uploaded } from "./raw";
 
 /*
  * The public renderer for a published form (ADR 0004): booking questions and routing forms
@@ -22,9 +24,6 @@ import { Dropdown } from "@/components/dropdown";
  * checkboxes, comma-separated file ids for uploads) inside the page's own <form>, with the
  * draft's token as `form_token` once a file was uploaded.
  */
-
-type Uploaded = { id: string; name: string; size: number };
-type Raw = Record<string, string | string[] | Uploaded[]>;
 
 const input =
   "bg-background h-10 w-full rounded-lg border px-3 text-sm outline-none focus-visible:ring-2";
@@ -35,34 +34,50 @@ export function FormFields({
   /** How a question is introduced to agents filling the form (WebMCP). */
   toolPrefix = "The question",
   preview = false,
+  initial,
+  initialToken = null,
+  onChange,
+  onToken,
+  pages,
+  draftToken,
+  errors,
+  uploadContext,
 }: {
   formId: string;
   schema: FormSchema;
   toolPrefix?: string;
   /** The builder's preview: everything but uploads works. */
   preview?: boolean;
+  /** Answers to start from (a resumed draft or an edit). */
+  initial?: Raw;
+  /** A draft's token to start from, so uploads join it. */
+  initialToken?: string | null;
+  /** Every change, for callers that save as people type (applications). */
+  onChange?: (raw: Raw) => void;
+  /** The draft's token, once an upload started one. */
+  onToken?: (token: string) => void;
+  /** Only these pages show (one section of a long form at a time); the rest stay mounted. */
+  pages?: string[];
+  /** A draft token the caller got by saving, so later uploads join that draft. */
+  draftToken?: string | null;
+  /** Messages under questions, by field id, from the caller's check. */
+  errors?: Record<string, string>;
+  /** Sent with each upload's start (an application edit sends its status token). */
+  uploadContext?: Record<string, string>;
 }) {
-  const [raw, setRaw] = useState<Raw>({});
-  const [token, setToken] = useState<string | null>(null);
+  const [raw, setRaw] = useState<Raw>(initial ?? {});
+  const [token, setToken] = useState<string | null>(initialToken);
+  useEffect(() => {
+    onChange?.(raw);
+  }, [raw, onChange]);
+  useEffect(() => {
+    if (draftToken) tokenRef.current = draftToken;
+  }, [draftToken]);
   // Uploads run one after another, so the first one's draft (and token) is shared by all.
   const queue = useRef<Promise<unknown>>(Promise.resolve());
-  const tokenRef = useRef<string | null>(null);
+  const tokenRef = useRef<string | null>(initialToken);
 
-  const typed = useMemo(
-    () =>
-      coerceAnswers(
-        schema,
-        Object.fromEntries(
-          Object.entries(raw).map(([k, v]) => [
-            k,
-            Array.isArray(v) && v.length && typeof v[0] === "object"
-              ? { fileIds: (v as Uploaded[]).map((f) => f.id) }
-              : v,
-          ]),
-        ),
-      ),
-    [raw, schema],
-  );
+  const typed = useMemo(() => answersOf(schema, raw), [raw, schema]);
   const visible = new Set(visibleFields(schema, typed).map((f) => f.id));
   const byId = new Map(schema.fields.map((f) => [f.id, f]));
   const set = (id: string, v: Raw[string]) => setRaw((r) => ({ ...r, [id]: v }));
@@ -82,12 +97,14 @@ export function FormFields({
           name: file.name,
           mime: file.type || "application/octet-stream",
           size: file.size,
+          ...uploadContext,
         }),
       });
       const ticket = await start.json().catch(() => ({}));
       if (!start.ok) throw new Error(ticket.error ?? "The upload did not start.");
       tokenRef.current = ticket.token;
       setToken(ticket.token);
+      onToken?.(ticket.token);
       const put = await fetch(ticket.upload.url, {
         method: "PUT",
         headers: ticket.upload.headers,
@@ -120,23 +137,26 @@ export function FormFields({
       {schema.pages
         .filter((p) => evaluate(p.visibleWhen, typed))
         .map((p) => (
-          <div key={p.id} className="space-y-4">
+          <div key={p.id} className="space-y-4" hidden={!!pages && !pages.includes(p.id)}>
             {p.title && <h2 className="pt-2 text-base font-semibold">{p.title}</h2>}
             {p.fieldIds
               .filter((id) => visible.has(id))
               .map((id) => byId.get(id)!)
               .map((f) => (
-                <Question
-                  key={f.id}
-                  field={f}
-                  value={raw[f.id]}
-                  onChange={(v) => set(f.id, v)}
-                  toolPrefix={toolPrefix}
-                  upload={(file) => upload(f.id, file)}
-                  add={(file) => addFile(f.id, file)}
-                  preview={preview}
-                  remove={(file) => remove(f.id, file)}
-                />
+                // Anchored, so an error summary can link to the question.
+                <div key={f.id} id={`q-${f.id}`} className="scroll-mt-24">
+                  <Question
+                    field={f}
+                    value={raw[f.id]}
+                    onChange={(v) => set(f.id, v)}
+                    toolPrefix={toolPrefix}
+                    upload={(file) => upload(f.id, file)}
+                    add={(file) => addFile(f.id, file)}
+                    preview={preview}
+                    remove={(file) => remove(f.id, file)}
+                    error={errors?.[f.id]}
+                  />
+                </div>
               ))}
           </div>
         ))}
@@ -163,9 +183,11 @@ function Question({
   add,
   remove,
   preview,
+  error,
 }: {
   field: Field;
   preview: boolean;
+  error?: string;
   value: Raw[string] | undefined;
   onChange: (v: Raw[string]) => void;
   toolPrefix: string;
@@ -174,14 +196,16 @@ function Question({
   remove: (file: Uploaded) => Promise<void>;
 }) {
   const id = useId();
-  const helpId = f.help ? `${id}-help` : undefined;
+  // The help and any error both describe the field; the error comes first.
+  const helpId = f.help || error ? `${id}-help` : undefined;
   const name = answerName(f.id);
   const text = typeof value === "string" ? value : "";
   const tool = `${toolPrefix}: ${f.label}`;
-  const help = f.help && (
-    <p id={helpId} className="mt-1 text-xs text-muted-foreground">
-      {f.help}
-    </p>
+  const help = (f.help || error) && (
+    <div id={helpId} className="mt-1 space-y-0.5 text-xs">
+      {error && <p className="font-medium text-destructive">{error}</p>}
+      {f.help && <p className="text-muted-foreground">{f.help}</p>}
+    </div>
   );
 
   if (isDisplayField(f.type))

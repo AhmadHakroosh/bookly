@@ -128,6 +128,11 @@ export const KINDS: Record<NotificationKind, KindInfo> = {
     hint: "An automation on a pipeline stage asks the team to look, or failed.",
     defaults: { inApp: true, desktop: true, email: false },
   },
+  "application.submitted": {
+    label: "Hiring applications",
+    hint: "A new application, a withdrawal or a deletion request on an opportunity you coordinate.",
+    defaults: { inApp: true, desktop: true, email: false },
+  },
   "hiring.team": {
     label: "Hiring team",
     hint: "You were added to the team of an open opportunity.",

@@ -22,6 +22,8 @@ export type PreviewData = {
   notice: string;
   accommodations: boolean;
   journey: { stages: JourneyStage[]; warnings: JourneyWarning[]; emails: number };
+  /** The real application page with a preview token ("Preview — not live"). */
+  fullPreviewUrl?: string;
 };
 
 const day = (iso: string | null, timeZone: string) =>
@@ -56,6 +58,16 @@ export function ApplicantPreview({ data, stageKey }: { data: PreviewData; stageK
             { value: "journey", label: "Journey" },
           ]}
         />
+        {data.fullPreviewUrl && (
+          <a
+            href={data.fullPreviewUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="text-xs text-primary underline underline-offset-2"
+          >
+            Open full preview
+          </a>
+        )}
         {view === "applicant" && (
           <Segmented
             label="Device"

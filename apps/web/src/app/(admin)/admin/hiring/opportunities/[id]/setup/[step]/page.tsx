@@ -6,6 +6,7 @@ import { and, eq, inArray, isNull, or, schema } from "@bookly/db";
 import { BetaBadge } from "@/components/beta-badge";
 import { ApplicantPreview, type PreviewData } from "@/components/hiring/applicant-preview";
 import { BasicsForm } from "@/components/hiring/basics-form";
+import { DataRequests } from "@/components/hiring/data-requests";
 import { PrivacyForm } from "@/components/hiring/privacy-form";
 import { PublishButton } from "@/components/hiring/publish-button";
 import { StageEditor, type EditorData } from "@/components/hiring/stage-editor";
@@ -18,6 +19,8 @@ import { StatusChip } from "@/components/ui/status-chip";
 import { db } from "@/lib/db";
 import { timezoneList, utcToZoned } from "@/lib/time";
 import { retentionWarning } from "@/server/hiring/hiring-text";
+import { listDataRequests, previewToken } from "@/server/hiring/apply";
+import { daysUntil } from "@/server/hiring/apply-text";
 import { loadSetup, TYPE_LABELS, type Setup } from "@/server/hiring/setup";
 import {
   journey,
@@ -52,7 +55,7 @@ const fixHref = (id: string, i: Pick<ChecklistItem, "step" | "stageKey" | "modul
     }).toString(),
   );
 
-function previewOf(setup: Setup): PreviewData {
+function previewOf(setup: Setup, base?: string): PreviewData {
   const b = setup.basics;
   return {
     title: b.title === "Untitled opportunity" ? "" : b.title,
@@ -69,6 +72,11 @@ function previewOf(setup: Setup): PreviewData {
     notice: setup.opportunity.settings.privacyNotice?.text ?? "",
     accommodations: setup.opportunity.settings.accommodations ?? true,
     journey: journey(setup.stages, b),
+    ...(base
+      ? {
+          fullPreviewUrl: `${base}/apply/${setup.opportunity.slug}${setup.opportunity.status === "draft" ? `?preview=${previewToken(setup.opportunity.id)}` : ""}`,
+        }
+      : {}),
   };
 }
 
@@ -159,7 +167,7 @@ async function SetupPage({
           )}
           {step === "team" && <TeamStepPage ctx={c} setup={setup} />}
           {step === "privacy" && <PrivacyStep ctx={c} setup={setup} />}
-          {step === "publish" && <PublishStep setup={setup} />}
+          {step === "publish" && <PublishStep setup={setup} base={await publicBaseUrl(c.ws)} />}
           {(step === "stages" || step === "team") && (
             <div className="flex justify-between gap-2 border-t pt-4">
               {prev ? (
@@ -294,7 +302,7 @@ async function StagesStep({
     forms,
     readOnly: false,
     problems: setup.problems,
-    preview: previewOf(setup),
+    preview: previewOf(setup, await publicBaseUrl(ctx.ws)),
     initialStage: stage,
     initialModule: module,
   };
@@ -352,29 +360,58 @@ async function TeamStepPage({ ctx, setup }: { ctx: Ctx; setup: Setup }) {
   );
 }
 
-function PrivacyStep({ ctx, setup }: { ctx: Ctx; setup: Setup }) {
+async function PrivacyStep({ ctx, setup }: { ctx: Ctx; setup: Setup }) {
   const s = setup.opportunity.settings;
+  const tz = setup.basics.timezone;
+  const requests = setup.opportunity.publishedAt
+    ? await listDataRequests(ctx.actor, setup.opportunity.id)
+    : [];
+  const day = (d: Date) =>
+    new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", timeZone: tz }).format(d);
   return (
-    <PrivacyForm
-      oppId={setup.opportunity.id}
-      initial={{
-        notice: s.privacyNotice?.text ?? "",
-        retentionDays: setup.retention,
-        accommodations: s.accommodations ?? true,
-        senderName: s.senderName ?? "",
-        replyTo: s.replyTo ?? "",
-      }}
-      template={privacyNoticeTemplate(ctx.ws.name, setup.retention)}
-      employment={!!retentionWarning(setup.opportunity.type, 0)}
-      readOnly={false}
-    />
+    <div className="space-y-8">
+      <PrivacyForm
+        oppId={setup.opportunity.id}
+        initial={{
+          notice: s.privacyNotice?.text ?? "",
+          retentionDays: setup.retention,
+          accommodations: s.accommodations ?? true,
+          senderName: s.senderName ?? "",
+          replyTo: s.replyTo ?? "",
+        }}
+        template={privacyNoticeTemplate(ctx.ws.name, setup.retention)}
+        employment={!!retentionWarning(setup.opportunity.type, 0)}
+        readOnly={false}
+      />
+      {setup.opportunity.publishedAt && (
+        <section aria-labelledby="requests-title" className="space-y-3">
+          <h3 id="requests-title" className="text-base font-semibold">
+            Data requests
+          </h3>
+          <p className="text-sm text-muted-foreground">
+            Applicants can ask for their application to be deleted. You have 30 days; after that,
+            Bookly deletes it unless you record a legal hold.
+          </p>
+          <DataRequests
+            rows={requests.map((r) => ({
+              id: r.id,
+              email: r.contactEmail,
+              requested: day(r.requestedAt),
+              daysLeft: daysUntil(r.dueAt),
+              deletesOn: day(r.dueAt),
+              held: r.status === "held" ? (r.holdReason ?? "") : null,
+            }))}
+          />
+        </section>
+      )}
+    </div>
   );
 }
 
-function PublishStep({ setup }: { setup: Setup }) {
+function PublishStep({ setup, base }: { setup: Setup; base: string }) {
   const id = setup.opportunity.id;
   const failing = setup.checklist.filter((i) => !i.ok);
-  const preview = previewOf(setup);
+  const preview = previewOf(setup, base);
   const draft = setup.opportunity.status === "draft";
   return (
     <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_400px]">

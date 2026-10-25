@@ -381,6 +381,8 @@ function StageList({
         {live}
       </p>
       <DndContext
+        // A fixed id: dnd-kit's own counter differs between the server and the browser.
+        id="stage-list"
         sensors={sensors}
         collisionDetection={closestCenter}
         onDragEnd={onDragEnd}

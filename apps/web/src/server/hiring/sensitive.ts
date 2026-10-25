@@ -79,6 +79,21 @@ export async function readAccommodations(
   return decrypt(row.accommodations);
 }
 
+/**
+ * The candidate's own adjustments request, for their status page (they hold the status link,
+ * which is the only way to reach this). Not audited: it is their own data, shown back to them.
+ */
+export async function readOwnAccommodations(application: ApplicationRef): Promise<string | null> {
+  const row = await db().query.applicationSensitive.findFirst({
+    where: and(
+      eq(schema.applicationSensitive.applicationId, application.id),
+      eq(schema.applicationSensitive.workspaceId, application.workspaceId),
+    ),
+    columns: { accommodations: true },
+  });
+  return row?.accommodations ? decrypt(row.accommodations) : null;
+}
+
 /** For the retention and deletion cascade (the row also goes with its application). */
 export async function deleteSensitive(applicationId: string): Promise<void> {
   await db()
