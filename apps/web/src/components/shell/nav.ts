@@ -4,6 +4,7 @@ import {
   CalendarClockIcon,
   CalendarDaysIcon,
   CalendarIcon,
+  ClipboardCheckIcon,
   CreditCardIcon,
   FolderIcon,
   GlobeIcon,
@@ -32,6 +33,8 @@ export type NavItem = {
   icon: LucideIcon;
   /** Messages: the unread count, kept live by the notification stream. */
   unread?: number;
+  /** A count that needs the member (reviews owed), read with the page. */
+  count?: number;
   /** Extra words ⌘K matches on ("schedule" finds Availability). */
   keywords?: string;
   /** Other pages this item stands for in the sidebar: Availability is also Routing's tab. */
@@ -57,6 +60,8 @@ export type NavOptions = {
   messages?: { unread: number } | null;
   /** The `hiring` flag is on for this workspace: the Clients | Hiring switch. */
   hiring?: boolean;
+  /** Reviews the member owes, beside Reviews in the hiring sidebar. */
+  reviewsOwed?: number;
 };
 
 /** What a collaborator sees in 1.0: their own profile, schedule and connections. */
@@ -127,7 +132,25 @@ export function navSections(o: NavOptions, solution: Solution = "clients"): NavS
             icon: BriefcaseIcon,
             keywords: "fellowship internship program admissions jobs selection round",
           },
-          // Candidates, Interviews and Reviews join as their pages ship.
+          {
+            href: "/admin/hiring/candidates",
+            label: "Candidates",
+            icon: UsersIcon,
+            keywords: "applicants applications people",
+          },
+          {
+            href: "/admin/hiring/interviews",
+            label: "Interviews",
+            icon: CalendarIcon,
+            keywords: "interview schedule panel",
+          },
+          {
+            href: "/admin/hiring/reviews",
+            label: "Reviews",
+            icon: ClipboardCheckIcon,
+            keywords: "review scorecard feedback owed",
+            count: o.reviewsOwed,
+          },
           ...shared(o).filter((i) => i.href !== "/admin/tasks"),
         ],
       },

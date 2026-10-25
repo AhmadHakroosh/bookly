@@ -48,6 +48,12 @@ function Items({ items, pathname }: { items: NavItem[]; pathname: string }) {
               />
               <span className="truncate">{it.label}</span>
               {it.unread !== undefined && <UnreadBadge initial={it.unread} />}
+              {!!it.count && (
+                <span className="ms-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-xs font-semibold text-primary-foreground tabular-nums">
+                  {it.count > 99 ? "99+" : it.count}
+                  <span className="sr-only"> to do</span>
+                </span>
+              )}
             </Link>
           </li>
         );

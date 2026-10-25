@@ -224,3 +224,189 @@ export async function stageTotals(actor: Actor, opportunityId: string) {
     .groupBy(a.stageId);
   return new Map(rows.filter((r) => r.stageId).map((r) => [r.stageId!, r.n]));
 }
+
+/* ---------------- Across opportunities: Candidates, Interviews, Reviews ---------------- */
+
+export type CandidateRow = {
+  id: string;
+  name: string;
+  email: string;
+  opportunityId: string;
+  opportunity: string;
+  stage: string | null;
+  stageCategory: string | null;
+  state: string;
+  appliedAt: Date;
+};
+
+/**
+ * Every sent application the actor may see, newest first, for Hiring → Candidates. `q` matches
+ * the person's name or email; `opportunityId` narrows to one round.
+ */
+export async function listCandidates(
+  actor: Actor,
+  opts: { q?: string; opportunityId?: string; limit?: number } = {},
+): Promise<CandidateRow[]> {
+  const a = schema.applications;
+  const c = schema.contacts;
+  const o = schema.opportunities;
+  const s = schema.pipelineStages;
+  const q = opts.q?.trim();
+  return db()
+    .select({
+      id: a.id,
+      name: c.name,
+      email: c.email,
+      opportunityId: o.id,
+      opportunity: o.title,
+      stage: s.name,
+      stageCategory: s.category,
+      state: a.state,
+      appliedAt: sql<Date>`coalesce(${a.submittedAt}, ${a.createdAt})`.mapWith(a.createdAt),
+    })
+    .from(a)
+    .innerJoin(c, eq(c.id, a.contactId))
+    .innerJoin(o, eq(o.id, a.opportunityId))
+    .leftJoin(s, eq(s.id, a.stageId))
+    .where(
+      and(
+        applicationsVisibleTo(actor),
+        ne(a.state, "draft"),
+        ne(o.status, "archived"),
+        opts.opportunityId ? eq(a.opportunityId, opts.opportunityId) : undefined,
+        q ? sql`(${c.name} ilike ${`%${q}%`} or ${c.email} ilike ${`%${q}%`})` : undefined,
+      ),
+    )
+    .orderBy(desc(sql`coalesce(${a.submittedAt}, ${a.createdAt})`), asc(a.id))
+    .limit(Math.min(opts.limit ?? 200, 500));
+}
+
+export type InterviewRow = {
+  id: string;
+  applicationId: string;
+  startAt: Date;
+  endAt: Date;
+  timezone: string;
+  status: string;
+  meetingUrl: string | null;
+  hostUserId: string;
+  candidate: string;
+  opportunityId: string;
+  opportunity: string;
+  stage: string | null;
+};
+
+/**
+ * Interviews (bookings tied to an application) the actor may see, for Hiring → Interviews:
+ * upcoming soonest first, or past most recent first. Cancelled ones are left out.
+ */
+export async function listInterviews(
+  actor: Actor,
+  opts: { past?: boolean; now?: Date; limit?: number } = {},
+): Promise<InterviewRow[]> {
+  const b = schema.bookings;
+  const a = schema.applications;
+  const now = opts.now ?? new Date();
+  return db()
+    .select({
+      id: b.id,
+      applicationId: a.id,
+      startAt: b.startAt,
+      endAt: b.endAt,
+      timezone: b.timezone,
+      status: b.status,
+      meetingUrl: b.meetingUrl,
+      hostUserId: b.hostUserId,
+      candidate: schema.contacts.name,
+      opportunityId: schema.opportunities.id,
+      opportunity: schema.opportunities.title,
+      stage: schema.pipelineStages.name,
+    })
+    .from(b)
+    .innerJoin(a, eq(a.id, b.applicationId))
+    .innerJoin(schema.contacts, eq(schema.contacts.id, a.contactId))
+    .innerJoin(schema.opportunities, eq(schema.opportunities.id, a.opportunityId))
+    .leftJoin(schema.pipelineStages, eq(schema.pipelineStages.id, b.stageId))
+    .where(
+      and(
+        applicationsVisibleTo(actor),
+        eq(b.workspaceId, actor.workspaceId),
+        ne(b.status, "cancelled"),
+        opts.past ? sql`${b.endAt} < ${now}` : sql`${b.endAt} >= ${now}`,
+      ),
+    )
+    .orderBy(opts.past ? desc(b.startAt) : asc(b.startAt))
+    .limit(Math.min(opts.limit ?? 100, 300));
+}
+
+export type ReviewRow = {
+  id: string;
+  applicationId: string;
+  kind: "review" | "interview";
+  status: "pending" | "submitted" | "declined";
+  dueAt: Date | null;
+  submittedAt: Date | null;
+  candidate: string;
+  opportunityId: string;
+  opportunity: string;
+  stage: string;
+};
+
+/**
+ * The actor's own review and interview-feedback assignments, for Hiring → Reviews: what they
+ * owe (soonest due first) and what they have handed in. Nobody else's reviews, by design.
+ */
+export async function listMyReviews(actor: Actor): Promise<ReviewRow[]> {
+  const r = schema.reviewAssignments;
+  const a = schema.applications;
+  return db()
+    .select({
+      id: r.id,
+      applicationId: a.id,
+      kind: r.kind,
+      status: r.status,
+      dueAt: r.dueAt,
+      submittedAt: r.submittedAt,
+      candidate: schema.contacts.name,
+      opportunityId: schema.opportunities.id,
+      opportunity: schema.opportunities.title,
+      stage: schema.pipelineStages.name,
+    })
+    .from(r)
+    .innerJoin(a, eq(a.id, r.applicationId))
+    .innerJoin(schema.contacts, eq(schema.contacts.id, a.contactId))
+    .innerJoin(schema.opportunities, eq(schema.opportunities.id, a.opportunityId))
+    .innerJoin(schema.pipelineStages, eq(schema.pipelineStages.id, r.stageId))
+    .where(
+      and(
+        eq(r.reviewerUserId, actor.userId),
+        eq(r.workspaceId, actor.workspaceId),
+        ne(r.status, "declined"),
+        applicationsVisibleTo(actor),
+      ),
+    )
+    .orderBy(
+      sql`case ${r.status} when 'pending' then 0 else 1 end`,
+      sql`${r.dueAt} asc nulls last`,
+      desc(r.submittedAt),
+    )
+    .limit(300);
+}
+
+/** How many reviews the actor owes: the number beside Reviews in the hiring sidebar. */
+export async function reviewsOwed(actor: Actor): Promise<number> {
+  const r = schema.reviewAssignments;
+  const [row] = await db()
+    .select({ n: sql<number>`count(*)::int` })
+    .from(r)
+    .innerJoin(schema.applications, eq(schema.applications.id, r.applicationId))
+    .where(
+      and(
+        eq(r.reviewerUserId, actor.userId),
+        eq(r.workspaceId, actor.workspaceId),
+        eq(r.status, "pending"),
+        applicationsVisibleTo(actor),
+      ),
+    );
+  return row?.n ?? 0;
+}
