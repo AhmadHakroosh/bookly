@@ -94,6 +94,8 @@ export async function listBookingsPage(
     now?: Date;
     /** Who is looking; interviews they may not see show as "Interview" (ADR 0005). */
     viewer?: string | null;
+    /** Only requests waiting for the host to confirm. */
+    pendingOnly?: boolean;
   },
 ): Promise<{ rows: ViewBooking[]; next: string | null }> {
   const now = opts.now ?? new Date();
@@ -103,6 +105,7 @@ export async function listBookingsPage(
     opts.past ? lte(schema.bookings.endAt, now) : gte(schema.bookings.endAt, now),
   ];
   if (opts.hostUserId) conds.push(eq(schema.bookings.hostUserId, opts.hostUserId));
+  if (opts.pendingOnly) conds.push(eq(schema.bookings.status, "pending"));
   if (opts.cursor) {
     const at = new Date(opts.cursor.startAt);
     const before = opts.past;
@@ -171,3 +174,19 @@ export const FALLBACK_COLOR = "#71717a";
 /** A safe CSS colour from the stored value (it is validated on save, but never trust it here). */
 export const safeColor = (c: string | null | undefined) =>
   c && /^#[0-9a-f]{6}$/i.test(c) ? c : FALLBACK_COLOR;
+
+/** How many requests wait for the host to confirm (the Requests tab's count). */
+export async function countRequests(workspaceId: string, hostUserId?: string, now = new Date()) {
+  const [row] = await db()
+    .select({ n: sql<number>`count(*)::int` })
+    .from(schema.bookings)
+    .where(
+      and(
+        eq(schema.bookings.workspaceId, workspaceId),
+        eq(schema.bookings.status, "pending"),
+        gte(schema.bookings.endAt, now),
+        hostUserId ? eq(schema.bookings.hostUserId, hostUserId) : undefined,
+      ),
+    );
+  return row?.n ?? 0;
+}

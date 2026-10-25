@@ -84,13 +84,8 @@ test.describe.serial("group session", () => {
     await page.setViewportSize({ width: 1280, height: 900 });
 
     // A session card (the event-type legend is a list too, so match the seats line).
-    await page
-      .locator("li", { hasText: "3 / 3 seats" })
-      .first()
-      .getByRole("link", { name: "Brief" })
-      .first()
-      .click();
-    // "Brief" opens the booking in the side pane (`?booking=<id>`), over the list.
+    await page.locator("li", { hasText: "3 / 3 seats" }).first().getByRole("link").first().click();
+    // The session's row opens its first booking in the side pane (`?booking=<id>`), over the list.
     await expect(page).toHaveURL(/[?&]booking=[0-9a-f-]+/);
     const pane = page.locator('[data-slot="sheet-content"]');
     const who = pane.locator("section", { hasText: "Who is in this session" });

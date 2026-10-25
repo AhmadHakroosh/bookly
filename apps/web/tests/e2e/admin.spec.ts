@@ -15,13 +15,13 @@ test.describe("admin", () => {
     await bookFirstSlot(page, { name: "E2E Client", email: "e2e-client@example.com" });
     const admin = await (await browser.newContext({ storageState: STORAGE })).newPage();
     await admin.goto("/admin/bookings");
-    const row = admin.getByText("Intro call with E2E Client").first();
+    // Each row is the time, the person and the event type; it opens the booking beside the list.
+    const row = admin.getByRole("link", { name: /E2E Client.*Intro call/ }).first();
     await expect(row).toBeVisible();
-    await row
-      .locator("xpath=ancestor::li")
-      .getByRole("link", { name: /Brief|Notes/ })
-      .click();
+    await row.click();
     await expect(admin.getByRole("heading", { name: "Briefing" })).toBeVisible();
+    // Notes are on their own tab: the in-call notes, the action items and the capture.
+    await admin.getByRole("tab", { name: "Notes" }).click();
     await admin
       .getByPlaceholder(/Agreed to start/)
       .fill("Good call.\n- Send the proposal\n- Client shares docs");
@@ -137,7 +137,7 @@ test.describe("admin", () => {
     await block.first().click();
     const pane = admin.locator('[data-slot="sheet-content"]');
     // The visible title (level 1); the dialog also has a screen-reader title with the same text.
-    await expect(pane.getByRole("heading", { level: 1, name: /with Calendar Guest/ })).toBeVisible({
+    await expect(pane.getByRole("heading", { level: 1, name: /Calendar Guest/ })).toBeVisible({
       timeout: 15_000,
     });
     await expect(admin).toHaveURL(/booking=/);

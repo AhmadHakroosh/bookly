@@ -22,6 +22,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { notFound } from "next/navigation";
+import { connection } from "next/server";
 import { Suspense } from "react";
 import { PaneHost } from "@/components/pane";
 import { and, eq, inArray, schema } from "@bookly/db";
@@ -100,6 +101,8 @@ async function ContactPage({ params, searchParams }: PageProps<"/admin/contacts/
     getCurrentWorkspace(),
   ]);
   if (!ws) return null;
+  // The journey and the timeline are about now: render per request.
+  await connection();
   const tz = (await getProfileByUser(ws.id, session.user.id))?.timezone ?? ws.timezone;
   const c = await getContact(ws.id, id);
   // People who exist only as candidates open only for their team (ADR 0005).
