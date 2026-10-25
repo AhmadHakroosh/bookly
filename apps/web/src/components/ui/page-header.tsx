@@ -27,11 +27,13 @@ function PageHeader({
     <div data-slot="page-header" className={cn("space-y-4", className)}>
       <div className="flex flex-wrap items-start justify-between gap-x-6 gap-y-3">
         <div className="min-w-0 space-y-1">
-          <h1 className="flex flex-wrap items-center gap-x-3 gap-y-1 text-2xl font-semibold tracking-tight text-balance md:text-[1.75rem] md:leading-9">
+          <h1 className="flex flex-wrap items-center gap-x-3 gap-y-1 text-2xl font-bold tracking-[-0.02em] text-balance md:text-[2rem] md:leading-10">
             {title}
             {badge}
           </h1>
-          {description && <div className="text-sm text-muted-foreground">{description}</div>}
+          {description && (
+            <div className="text-sm text-muted-foreground md:text-base">{description}</div>
+          )}
         </div>
         {actions && <div className="flex flex-wrap items-center gap-2">{actions}</div>}
       </div>

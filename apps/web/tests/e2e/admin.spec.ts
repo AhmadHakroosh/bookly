@@ -158,27 +158,23 @@ test.describe("admin", () => {
     await expect(admin.getByRole("region", { name: "Calendar" })).toHaveCount(0);
   });
 
-  test("Home shows the summary cards, each linking to its page", async ({ browser }) => {
+  test("Home shows the day's counts, each linking to its list", async ({ browser }) => {
     const page = await (await browser.newContext({ storageState: STORAGE })).newPage();
     await page.goto("/admin");
-    const cards = page.getByRole("region", { name: "Summary" });
-    await expect(cards).toBeVisible({ timeout: 15_000 });
-    for (const [title, href] of [
-      ["This week", "/admin/bookings"],
-      ["Since your last visit", "/admin/bookings"],
-      ["Needs attention", "/admin#"],
-      ["Your tasks", "/admin/tasks?view=mine"],
-      ["Contacts", "/admin/contacts"],
-      ["Payments this month", "/admin/"],
+    const strip = page.getByRole("list", { name: "Today at a glance" });
+    await expect(strip).toBeVisible({ timeout: 15_000 });
+    for (const [label, href] of [
+      [/meetings? today/, "#today"],
+      [/follow-ups? due/, "#keep-moving"],
+      [/open tasks?/, "/admin/tasks?view=mine"],
     ] as const) {
-      // The card whose title is exactly this (other cards may mention the words in their text).
-      const card = cards.getByRole("link").filter({ has: page.getByText(title, { exact: true }) });
-      await expect(card).toBeVisible();
-      const value = (await card.getAttribute("href")) ?? "";
-      expect(value.startsWith(href), `${title} links to ${value}, expected ${href}…`).toBe(true);
+      const link = strip.getByRole("link", { name: label });
+      await expect(link).toHaveAttribute("href", href);
     }
-    // The page under the cards keeps its place.
+    // The day, the people waiting and the next steps keep their places.
     await expect(page.getByRole("heading", { name: "Today" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Keep things moving" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Your next steps" })).toBeVisible();
   });
 
   test("notifications: a booking rings the bell live, opens from the panel, marks read", async ({
@@ -268,7 +264,9 @@ test.describe("pending state", () => {
     await expect(add).toHaveAttribute("aria-busy", "true");
     await expect(add.getByRole("status", { name: "Loading" })).toBeVisible();
     await page.unroute("**/admin");
-    await expect(page.getByText(title)).toBeVisible();
     await expect(add).toBeEnabled();
+    // Home lists the next few; the task list has them all.
+    await page.goto("/admin/tasks?view=list");
+    await expect(page.getByText(title)).toBeVisible();
   });
 });

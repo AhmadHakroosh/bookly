@@ -357,7 +357,9 @@ test.describe("sign-up and tenants", () => {
     await page.locator('input[name="email"]').fill(DEMO.email);
     await page.locator('input[name="password"]').fill(DEMO.password);
     await page.getByRole("button", { name: "Sign in", exact: true }).click();
-    await expect(page.getByRole("heading", { name: "Home" })).toBeVisible();
+    await expect(
+      page.getByRole("heading", { level: 1, name: /^Good (morning|afternoon|evening)/ }),
+    ).toBeVisible();
     await expect(page.getByRole("button", { name: /Demo Workspace/ })).toBeVisible();
     // Cookies span the root domain, so the platform host sees the same session.
     await page.goto(`${platformUrl}/workspaces`);
@@ -409,7 +411,9 @@ test.describe("team invitations", () => {
     await page.locator('input[name="email"]').fill(DEMO.email);
     await page.locator('input[name="password"]').fill(DEMO.password);
     await page.getByRole("button", { name: "Sign in", exact: true }).click();
-    await expect(page.getByRole("heading", { name: "Home" })).toBeVisible({ timeout: 15_000 });
+    await expect(
+      page.getByRole("heading", { level: 1, name: /^Good (morning|afternoon|evening)/ }),
+    ).toBeVisible({ timeout: 15_000 });
     await page.goto(`${platformUrl}/console`);
     await page.getByRole("link", { name: "Demo Workspace" }).first().click();
     await expect(page).toHaveURL(/\/console\/[0-9a-f-]+$/);

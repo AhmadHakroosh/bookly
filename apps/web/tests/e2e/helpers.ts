@@ -18,7 +18,9 @@ export async function signIn(page: Page) {
   await page.locator('input[name="email"]').fill(DEMO.email);
   await page.locator('input[name="password"]').fill(DEMO.password);
   await page.getByRole("button", { name: "Sign in", exact: true }).click();
-  await expect(page.getByRole("heading", { name: "Home" })).toBeVisible();
+  await expect(
+    page.getByRole("heading", { level: 1, name: /^Good (morning|afternoon|evening)/ }),
+  ).toBeVisible();
 }
 
 /** Books the first slot on a day and returns the manage-page URL. */
