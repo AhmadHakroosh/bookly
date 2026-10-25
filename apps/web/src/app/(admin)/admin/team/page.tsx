@@ -3,7 +3,7 @@ import { Suspense } from "react";
 import { and, eq, schema } from "@bookly/db";
 import { isCloud } from "@/server/platform";
 import { TeamBillingNav } from "./team-billing-nav";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { initialsOf } from "@/components/ui/avatar-stack";
 import { StatusChip } from "@/components/ui/status-chip";
 import { UsageBar } from "@/components/ui/usage-bar";
@@ -14,6 +14,7 @@ import { listProfiles } from "@/server/scheduling";
 import { requireStaff } from "@/server/session";
 import { getCurrentWorkspace } from "@/server/workspace";
 import { cancelInvite, removeMember, setRole } from "./actions";
+import { removeMemberPhotoAction } from "../account/photo-actions";
 import { hasFlag } from "@/server/flags";
 import { InviteForm } from "./invite-form";
 import { PageHeader } from "@/components/ui/page-header";
@@ -33,6 +34,7 @@ async function TeamPage({ searchParams }: PageProps<"/admin/team">) {
         role: schema.members.role,
         name: schema.users.name,
         email: schema.users.email,
+        image: schema.users.image,
       })
       .from(schema.members)
       .innerJoin(schema.users, eq(schema.users.id, schema.members.userId))
@@ -97,6 +99,7 @@ async function TeamPage({ searchParams }: PageProps<"/admin/team">) {
           {members.map((m) => (
             <li key={m.id} className="flex flex-wrap items-center gap-3 px-5 py-3 text-sm">
               <Avatar size="lg" aria-hidden>
+                {m.image && <AvatarImage src={m.image} alt="" />}
                 <AvatarFallback>{initialsOf(m.name || m.email)}</AvatarFallback>
               </Avatar>
               <div className="min-w-0 flex-1">
@@ -126,6 +129,13 @@ async function TeamPage({ searchParams }: PageProps<"/admin/team">) {
                         {m.role === "admin" ? "Make member" : "Make admin"}
                       </SubmitButton>
                     </form>
+                    {m.image && (
+                      <form action={removeMemberPhotoAction.bind(null, m.id)}>
+                        <SubmitButton variant="ghost" size="sm">
+                          Remove photo
+                        </SubmitButton>
+                      </form>
+                    )}
                     <form action={removeMember.bind(null, m.id)}>
                       <SubmitButton variant="ghost" size="sm">
                         Remove
