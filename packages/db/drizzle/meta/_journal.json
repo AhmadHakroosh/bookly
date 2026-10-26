@@ -337,6 +337,13 @@
       "when": 1792956776833,
       "tag": "0047_default_conferencing",
       "breakpoints": true
+    },
+    {
+      "idx": 48,
+      "version": "7",
+      "when": 1793012091001,
+      "tag": "0048_solutions",
+      "breakpoints": true
     }
   ]
 }

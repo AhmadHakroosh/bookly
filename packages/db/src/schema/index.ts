@@ -12,3 +12,4 @@ export * from "./files";
 export * from "./notifications";
 export * from "./messages";
 export * from "./realtime";
+export * from "./solutions";

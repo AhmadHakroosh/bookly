@@ -10,6 +10,7 @@ import { isCloud, tenantUrl } from "@/server/platform";
 import { getSession } from "@/server/session";
 import { invalidateHostCache } from "@/server/tenancy";
 import { checkHandle, slugify, type HandleCheck } from "@/lib/handles";
+import { startSolutions } from "@/server/solutions";
 
 /** The workspace's subdomain, validated as typed (see lib/handles) and unused by any other workspace. */
 export async function checkAddress(raw: string): Promise<HandleCheck> {
@@ -64,6 +65,7 @@ export async function createWorkspace(
     await tx
       .insert(schema.workspaceDomains)
       .values({ workspaceId: ws!.id, host, isPrimary: true, verifiedAt: new Date() });
+    await startSolutions(tx, ws!.id, ["clients"], session.user.id);
     return ws!.id;
   });
   invalidateHostCache();

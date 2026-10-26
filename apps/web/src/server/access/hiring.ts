@@ -67,7 +67,7 @@ export function applicationsVisibleTo(actor: Actor): SQL {
  */
 export function contactsVisibleTo(userId: string | null): SQL {
   const c = schema.contacts;
-  const candidateOnly = sql`(${c.stageId} is null and exists (
+  const candidateOnly = sql`(${c.clientAt} is null and exists (
     select 1 from ${a} where ${a.contactId} = ${c.id}
   ))`;
   if (!userId) return sql`not ${candidateOnly}`;

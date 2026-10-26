@@ -1,5 +1,6 @@
 import { index, jsonb, pgTable, primaryKey, text, timestamp } from "drizzle-orm/pg-core";
 import { workspaces } from "./workspaces";
+import type { Solution } from "./solutions";
 
 const id = () =>
   text("id")
@@ -30,6 +31,8 @@ export const auditLog = pgTable(
     actorLabel: text("actor_label").notNull(),
     /** `booking.cancelled`, `settings.general.updated`, `member.role_changed`, … */
     action: text("action").notNull(),
+    /** The side the change was made on; null for workspace and account changes. */
+    solution: text("solution").$type<Solution>(),
     targetType: text("target_type").notNull(),
     targetId: text("target_id"),
     /** Snapshot of the target's name at the time, so a deleted target still reads well. */

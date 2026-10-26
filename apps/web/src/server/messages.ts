@@ -1,7 +1,7 @@
 import "server-only";
 import { cache } from "react";
 import { and, asc, desc, eq, ilike, inArray, isNotNull, isNull, or, schema, sql } from "@bookly/db";
-import type { Contact, ContactEventType, Thread, Workspace } from "@bookly/db/schema";
+import type { Contact, ContactEventType, Thread, Workspace, Solution } from "@bookly/db/schema";
 import { db } from "@/lib/db";
 import { contactsVisibleTo } from "./access/hiring";
 import { canSeeFile } from "./drive";
@@ -37,8 +37,11 @@ const t = schema.threads;
 const isParticipant = (userId: string) =>
   sql`exists (select 1 from ${schema.threadParticipants} p where p.thread_id = ${t.id} and p.user_id = ${userId})`;
 
-/** Threads this member may see: guest threads (Pro) and the team threads they are in (Team). */
-export function visibleThreads(v: Viewer) {
+/**
+ * Threads this member may see on one side (ADR 0009): guest threads (Pro) and the team threads
+ * they are in (Team). Client Messages never list a hiring thread, and the reverse.
+ */
+export function visibleThreads(v: Viewer, solution: Solution = "clients") {
   // A guest who exists only as a candidate: their conversation only for their team (ADR 0005).
   const guestVisible = sql`(${t.contactId} is null or exists (
     select 1 from ${schema.contacts} where ${schema.contacts.id} = ${t.contactId}
@@ -48,7 +51,11 @@ export function visibleThreads(v: Viewer) {
     ...(canGuest(v.ws) ? [and(eq(t.kind, "guest"), guestVisible)!] : []),
     ...(canTeam(v.ws) ? [and(eq(t.kind, "team"), isParticipant(v.userId))] : []),
   ];
-  return and(eq(t.workspaceId, v.ws.id), kinds.length ? or(...kinds) : sql`false`)!;
+  return and(
+    eq(t.workspaceId, v.ws.id),
+    eq(t.solution, solution),
+    kinds.length ? or(...kinds) : sql`false`,
+  )!;
 }
 
 /** Someone else wrote since this member last opened the thread. */
@@ -117,11 +124,21 @@ export async function guestThread(workspaceId: string, contactId: string): Promi
   await db()
     .insert(t)
     .values({ workspaceId, kind: "guest", contactId, lastActivityAt: new Date() })
-    .onConflictDoNothing({ target: t.contactId, where: sql`kind = 'guest'` });
+    .onConflictDoNothing({
+      target: t.contactId,
+      where: sql`kind = 'guest' and solution = 'clients'`,
+    });
   const [row] = await db()
     .select()
     .from(t)
-    .where(and(eq(t.workspaceId, workspaceId), eq(t.contactId, contactId), eq(t.kind, "guest")))
+    .where(
+      and(
+        eq(t.workspaceId, workspaceId),
+        eq(t.contactId, contactId),
+        eq(t.kind, "guest"),
+        eq(t.solution, "clients"),
+      ),
+    )
     .limit(1);
   return row!;
 }

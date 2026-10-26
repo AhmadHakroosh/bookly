@@ -42,8 +42,14 @@ export type Viewer = { userId: string; ws: Workspace };
 /** Members see every task with assignment (Team), otherwise only their own. */
 const seesAllTasks = (v: Viewer) => hasFeature(v.ws, "taskAssignment");
 
-/** SQL: the files this member may see (live or in the trash, per `trash`). */
-export function visibleFiles(v: Viewer, opts: { trash?: boolean } = {}) {
+/**
+ * SQL: the files this member may see on one side (live or in the trash, per `trash`). Client
+ * Files never list a hiring file, and the reverse (ADR 0009).
+ */
+export function visibleFiles(
+  v: Viewer,
+  opts: { trash?: boolean; solution?: "clients" | "hiring" } = {},
+) {
   const f = schema.files;
   const linkedTask = sql`exists (
     select 1 from ${schema.fileLinks} l join ${schema.tasks} t on t.id = l.target_id
@@ -63,6 +69,7 @@ export function visibleFiles(v: Viewer, opts: { trash?: boolean } = {}) {
   return and(
     eq(f.workspaceId, v.ws.id),
     eq(f.kind, "attachment"),
+    eq(f.solution, opts.solution ?? "clients"),
     eq(f.status, "ready"),
     opts.trash ? isNotNull(f.deletedAt) : isNull(f.deletedAt),
     // Candidates' files follow their application's access (ADR 0005).
@@ -774,6 +781,7 @@ export async function keepReceivedAttachments(
           status: "ready",
           readyAt: new Date(),
           space: "contact",
+          solution: "clients",
           contactId,
           source: "email" satisfies FileSource,
           sourceId: eventId,

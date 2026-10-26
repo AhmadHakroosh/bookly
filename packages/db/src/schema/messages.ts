@@ -1,7 +1,9 @@
 import { sql } from "drizzle-orm";
 import { index, pgTable, primaryKey, text, timestamp, uniqueIndex } from "drizzle-orm/pg-core";
 import { users } from "./auth";
+import { applications, opportunities } from "./hiring";
 import { contacts } from "./scheduling";
+import type { Solution } from "./solutions";
 import { workspaces } from "./workspaces";
 
 const id = () =>
@@ -26,6 +28,16 @@ export const threads = pgTable(
       .notNull()
       .references(() => workspaces.id, { onDelete: "cascade" }),
     kind: text("kind").$type<ThreadKind>().notNull(),
+    /** Clients or Hiring (ADR 0009); set from the route or the parent record. */
+    solution: text("solution").$type<Solution>().notNull().default("clients"),
+    /** Hiring: the candidate thread's application (one guest thread per application). */
+    applicationId: text("application_id").references(() => applications.id, {
+      onDelete: "cascade",
+    }),
+    /** Hiring: a team thread about an opportunity. */
+    opportunityId: text("opportunity_id").references(() => opportunities.id, {
+      onDelete: "cascade",
+    }),
     /** Guest threads always; team threads when they are about someone. */
     contactId: text("contact_id").references(() => contacts.id, { onDelete: "cascade" }),
     /** Team threads; a guest thread is named after its contact. */
@@ -46,9 +58,19 @@ export const threads = pgTable(
   },
   (t) => [
     index("threads_ws_activity_idx").on(t.workspaceId, t.lastActivityAt, t.id),
+    index("threads_ws_solution_activity_idx").on(
+      t.workspaceId,
+      t.solution,
+      t.lastActivityAt,
+      t.id,
+    ),
+    // One client conversation per contact; one candidate conversation per application.
     uniqueIndex("threads_guest_contact_idx")
       .on(t.contactId)
-      .where(sql`${t.kind} = 'guest'`),
+      .where(sql`${t.kind} = 'guest' and ${t.solution} = 'clients'`),
+    uniqueIndex("threads_guest_application_idx")
+      .on(t.applicationId)
+      .where(sql`${t.kind} = 'guest' and ${t.solution} = 'hiring'`),
     index("threads_contact_idx").on(t.contactId),
   ],
 );

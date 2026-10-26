@@ -8,6 +8,7 @@ import type {
   FileVisibility,
   StoredFile,
   Workspace,
+  Solution,
 } from "@bookly/db/schema";
 import { getStorage } from "@bookly/storage";
 import { db } from "@/lib/db";
@@ -174,6 +175,8 @@ export async function createUpload(opts: {
   };
   /** Where it came from outside the drive (a form upload: `form` and the question's id). */
   origin?: { source: FileSource; sourceId: string };
+  /** Clients or Hiring (ADR 0009); attachments default to Clients. */
+  solution?: Solution;
   /** The local driver's PUT target and headers, when not `/api/uploads/<id>` (public forms). */
   local?: { url: (id: string) => string; headers?: Record<string, string> };
 }): Promise<UploadTicket> {
@@ -197,6 +200,7 @@ export async function createUpload(opts: {
       uploadedBy: opts.userId,
       ownerType: opts.owner?.type ?? null,
       ownerId: opts.owner?.id ?? null,
+      solution: opts.solution ?? (opts.kind === "attachment" ? "clients" : null),
       ...(opts.drive ?? {}),
       ...(opts.origin ?? {}),
     })

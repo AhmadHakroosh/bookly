@@ -2,6 +2,7 @@ import { sql } from "drizzle-orm";
 import { index, jsonb, pgTable, text, timestamp, uniqueIndex } from "drizzle-orm/pg-core";
 import { users } from "./auth";
 import { workspaces } from "./workspaces";
+import type { Solution } from "./solutions";
 
 const id = () =>
   text("id")
@@ -63,6 +64,8 @@ export const notifications = pgTable(
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
     kind: text("kind").$type<NotificationKind>().notNull(),
+    /** The side it belongs to; null for workspace and account notices. */
+    solution: text("solution").$type<Solution>(),
     title: text("title").notNull(),
     body: text("body"),
     /** Path inside the admin (`/admin/bookings?booking=…`), never an absolute URL. */
