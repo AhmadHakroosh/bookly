@@ -36,7 +36,10 @@ export async function PaymentsCard({ ws, canManage }: { ws: Workspace; canManage
       {!allowed ? (
         <p className="rounded-md border border-(--brand)/40 bg-(--brand)/10 p-3 text-sm">
           Paid bookings are not included in your plan.{" "}
-          <Link href="/admin/billing" className="underline underline-offset-4">
+          <Link
+            href="/admin/billing"
+            className="underline decoration-current/40 underline-offset-4 hover:decoration-current"
+          >
             See plans
           </Link>
         </p>

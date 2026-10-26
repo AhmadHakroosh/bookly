@@ -122,7 +122,7 @@ async function SetupPage({
     return (
       <div className="space-y-6">
         {header}
-        <p className="rounded-xl border bg-card p-5 text-sm text-muted-foreground">
+        <p className="rounded-xl border bg-card p-4 text-sm text-muted-foreground sm:p-5">
           Only coordinators can change this opportunity&apos;s setup.
         </p>
       </div>
@@ -454,7 +454,7 @@ function PublishStep({ setup, base }: { setup: Setup; base: string }) {
           </p>
         )}
       </div>
-      <aside aria-label="Applicant preview" className="rounded-xl border bg-card p-4">
+      <aside aria-label="Applicant preview" className="rounded-xl border bg-card p-4 sm:p-5">
         <ApplicantPreview data={preview} stageKey={setup.stages[0]?.key ?? ""} />
       </aside>
     </div>

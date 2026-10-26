@@ -727,7 +727,7 @@ function StageConfig({
     <div className="@container space-y-6" aria-busy={pending}>
       <div className="grid grid-cols-1 gap-4 @lg:grid-cols-2">
         <div className="@lg:col-span-2">
-          <label htmlFor="stage-name" className="mb-1 block text-xs font-medium">
+          <label htmlFor="stage-name" className="mb-2 block text-sm font-medium">
             Stage name
           </label>
           <Input
@@ -743,7 +743,7 @@ function StageConfig({
           />
         </div>
         <div ref={categoryRef}>
-          <span className="mb-1 block text-xs font-medium" id="stage-category-label">
+          <span className="mb-2 block text-sm font-medium" id="stage-category-label">
             Category
           </span>
           <Dropdown
@@ -770,7 +770,7 @@ function StageConfig({
           )}
         </div>
         <div>
-          <label htmlFor="stage-label" className="mb-1 block text-xs font-medium">
+          <label htmlFor="stage-label" className="mb-2 block text-sm font-medium">
             What applicants see
           </label>
           <Input

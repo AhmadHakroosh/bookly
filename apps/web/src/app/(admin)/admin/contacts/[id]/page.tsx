@@ -27,6 +27,7 @@ import { Suspense } from "react";
 import { PaneHost } from "@/components/pane";
 import { and, eq, inArray, schema } from "@bookly/db";
 import { PageTabs } from "@/components/ui/page-tabs";
+import { SectionCard } from "@/components/ui/section-card";
 import { fieldClasses } from "@/components/ui/input";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { initialsOf } from "@/components/ui/avatar-stack";
@@ -162,7 +163,7 @@ async function ContactPage({ params, searchParams }: PageProps<"/admin/contacts/
   };
   const name = c.name || c.email;
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
       <header className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-start gap-x-4 gap-y-3 md:grid-cols-[auto_minmax(0,1fr)_auto_auto] md:gap-x-6">
         <Avatar size="2xl" aria-hidden>
           <AvatarFallback>{initialsOf(name)}</AvatarFallback>
@@ -231,7 +232,7 @@ async function ContactPage({ params, searchParams }: PageProps<"/admin/contacts/
         <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,22rem)]">
           <section
             aria-labelledby="timeline-title"
-            className="min-w-0 rounded-xl border bg-card p-5"
+            className="min-w-0 rounded-xl border bg-card p-4 sm:p-5"
           >
             <div className="flex flex-wrap items-center justify-between gap-2">
               <h2 id="timeline-title" className="text-lg font-semibold tracking-tight">
@@ -254,7 +255,10 @@ async function ContactPage({ params, searchParams }: PageProps<"/admin/contacts/
                   <p className="mt-2 text-xs text-muted-foreground">
                     Guests&apos; replies to your emails land here with{" "}
                     {PLANS[planFor("inboundEmail")].name}.{" "}
-                    <Link href="/admin/billing" className="underline underline-offset-4">
+                    <Link
+                      href="/admin/billing"
+                      className="underline decoration-current/40 underline-offset-4 hover:decoration-current"
+                    >
                       Upgrade
                     </Link>
                   </p>
@@ -489,7 +493,7 @@ const TAB_LABEL: Record<(typeof TABS)[number], string> = {
   files: "Files",
 };
 
-/** A card in the contact's right column: a title, an optional "View all", its content. */
+/** A card in the contact's right column: `SectionCard` with "View all ›" to its tab. */
 function SideCard({
   id,
   title,
@@ -502,23 +506,9 @@ function SideCard({
   children: React.ReactNode;
 }) {
   return (
-    <section aria-labelledby={`${id}-title`} className="rounded-xl border bg-card p-4">
-      <div className="mb-2 flex items-center justify-between gap-2">
-        <h2 id={`${id}-title`} className="text-base font-semibold tracking-tight">
-          {title}
-        </h2>
-        {more && (
-          <Link
-            href={more}
-            className="inline-flex items-center gap-0.5 text-sm text-primary hover:underline"
-          >
-            View all
-            <ArrowRightIcon className="size-3.5" aria-hidden />
-          </Link>
-        )}
-      </div>
+    <SectionCard id={id} title={title} more={more ? { href: more } : undefined}>
       {children}
-    </section>
+    </SectionCard>
   );
 }
 

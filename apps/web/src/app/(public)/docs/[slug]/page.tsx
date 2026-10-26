@@ -83,7 +83,7 @@ async function DocPage({ params }: PageProps<"/docs/[slug]">) {
       {toc.length > 1 && (
         <aside className="hidden xl:block">
           <nav aria-label="On this page" className="sticky top-6 text-sm">
-            <p className="mb-2 text-[11px] font-medium tracking-wide text-muted-foreground uppercase">
+            <p className="mb-2 text-xs font-medium tracking-wide text-muted-foreground uppercase">
               On this page
             </p>
             <ul className="space-y-1 border-l">

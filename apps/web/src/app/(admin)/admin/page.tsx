@@ -12,7 +12,6 @@ import {
   ListChecksIcon,
   MapPinIcon,
   PhoneIcon,
-  SparklesIcon,
   UsersIcon,
   VideoIcon,
 } from "lucide-react";
@@ -56,6 +55,9 @@ import { Agenda, AgendaItem } from "@/components/ui/agenda";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ListRow } from "@/components/ui/list-row";
+import type { ComponentProps } from "react";
+import { AiLabel } from "@/components/ai-label";
+import { SectionCard } from "@/components/ui/section-card";
 import { PageHeader } from "@/components/ui/page-header";
 import { RecapCard } from "@/components/ui/recap-card";
 import { Stat, StatStrip } from "@/components/ui/stat-strip";
@@ -75,43 +77,9 @@ function greeting(tz: string, now: Date) {
   return hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
 }
 
-/** A card on Home: a heading, an optional "View all ›", and its content. */
-function Card({
-  title,
-  id,
-  more,
-  children,
-  className = "",
-}: {
-  title: React.ReactNode;
-  id: string;
-  more?: { href: string; label?: string };
-  children: React.ReactNode;
-  className?: string;
-}) {
-  return (
-    <section
-      id={id}
-      aria-labelledby={`${id}-title`}
-      className={`scroll-mt-20 rounded-xl border bg-card p-5 ${className}`}
-    >
-      <div className="mb-3 flex items-center justify-between gap-3">
-        <h2 id={`${id}-title`} className="text-lg font-semibold tracking-tight">
-          {title}
-        </h2>
-        {more && (
-          <Link
-            href={more.href}
-            className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
-          >
-            {more.label ?? "View all"}
-            <ChevronRightIcon className="size-4" aria-hidden />
-          </Link>
-        )}
-      </div>
-      {children}
-    </section>
-  );
+/** A card on Home: `SectionCard`, offset for the sticky top bar when linked to. */
+function Card({ className = "", ...props }: ComponentProps<typeof SectionCard>) {
+  return <SectionCard {...props} className={`scroll-mt-20 ${className}`} />;
 }
 
 const LOCATION_ICON = {
@@ -339,7 +307,7 @@ async function AdminHome({ searchParams }: PageProps<"/admin">) {
           <section
             id="today"
             aria-labelledby="today-title"
-            className="scroll-mt-20 rounded-xl border bg-card p-5"
+            className="scroll-mt-20 rounded-xl border bg-card p-4 sm:p-5"
           >
             <div className="mb-4 flex items-center justify-between gap-3">
               <h2 id="today-title" className="text-lg font-semibold tracking-tight">
@@ -490,10 +458,7 @@ async function AdminHome({ searchParams }: PageProps<"/admin">) {
                         <div className="rounded-lg border bg-card/80 p-3 text-sm">
                           <p className="flex items-center gap-2 font-medium">
                             Pick up where you left off
-                            <span className="inline-flex items-center gap-0.5 rounded border px-1 text-[10px] leading-4 text-muted-foreground">
-                              <SparklesIcon className="size-2.5" aria-hidden />
-                              AI
-                            </span>
+                            <AiLabel />
                           </p>
                           <p className="mt-1 line-clamp-4 text-muted-foreground">{b.brief}</p>
                         </div>
@@ -705,7 +670,10 @@ async function AdminHome({ searchParams }: PageProps<"/admin">) {
           {waitlist.length > 0 && (
             <p className="text-sm text-muted-foreground">
               {waitlist.length} {waitlist.length === 1 ? "person is" : "people are"} on a waitlist.{" "}
-              <Link href="/admin/bookings" className="underline underline-offset-4">
+              <Link
+                href="/admin/bookings"
+                className="underline decoration-current/40 underline-offset-4 hover:decoration-current"
+              >
                 See bookings
               </Link>
             </p>

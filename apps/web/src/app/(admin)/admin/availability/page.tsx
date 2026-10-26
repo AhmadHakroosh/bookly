@@ -128,7 +128,7 @@ async function AvailabilityPage({ searchParams }: PageProps<"/admin/availability
         <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
           <section
             aria-labelledby="hours-title"
-            className="min-w-0 space-y-4 rounded-xl border bg-card p-5 md:p-6"
+            className="min-w-0 space-y-4 rounded-xl border bg-card p-4 sm:p-5"
           >
             <div>
               <h2 id="hours-title" className="text-lg font-semibold tracking-tight">
@@ -148,7 +148,7 @@ async function AvailabilityPage({ searchParams }: PageProps<"/admin/availability
       {tab === "overrides" && (
         <section
           aria-labelledby="overrides-title"
-          className="max-w-2xl space-y-4 rounded-xl border bg-card p-5 md:p-6"
+          className="max-w-2xl space-y-4 rounded-xl border bg-card p-4 sm:p-5"
         >
           <div>
             <h2 id="overrides-title" className="text-lg font-semibold tracking-tight">
@@ -166,7 +166,7 @@ async function AvailabilityPage({ searchParams }: PageProps<"/admin/availability
       {tab === "priority" && (
         <section
           aria-labelledby="priority-title"
-          className="max-w-2xl space-y-5 rounded-xl border bg-card p-5 md:p-6"
+          className="max-w-2xl space-y-5 rounded-xl border bg-card p-4 sm:p-5"
         >
           <div>
             <h2 id="priority-title" className="text-lg font-semibold tracking-tight">
@@ -238,7 +238,7 @@ async function RoutingAside({ workspaceId }: { workspaceId: string }) {
   const forms = await listRoutingForms(workspaceId);
   if (!forms.length)
     return (
-      <section className="space-y-3 rounded-xl border bg-card p-5">
+      <section className="space-y-3 rounded-xl border bg-card p-4 sm:p-5">
         <h2 className="text-sm font-semibold">Routing form preview</h2>
         <p className="text-sm text-muted-foreground">
           Ask a question or two before people book, and send each answer to the right event type,

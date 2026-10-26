@@ -19,7 +19,10 @@ async function ForgotPage({ searchParams }: PageProps<"/forgot-password">) {
           <ForgotForm next={target} />
         </div>
         <p className="mt-6 text-sm">
-          <Link href="/login" className="underline underline-offset-4">
+          <Link
+            href="/login"
+            className="underline decoration-current/40 underline-offset-4 hover:decoration-current"
+          >
             Back to sign in
           </Link>
         </p>

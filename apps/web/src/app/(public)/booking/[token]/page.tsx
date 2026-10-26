@@ -104,7 +104,7 @@ async function BookingPage({ params, searchParams }: PageProps<"/booking/[token]
               {b.meetingUrl ? (
                 <a
                   href={attendeeJoinUrl(b) ?? b.meetingUrl}
-                  className="underline underline-offset-4"
+                  className="underline decoration-current/40 underline-offset-4 hover:decoration-current"
                 >
                   {b.meetingUrl}
                 </a>
@@ -128,7 +128,7 @@ async function BookingPage({ params, searchParams }: PageProps<"/booking/[token]
                     {" · "}
                     <Link
                       href={`/booking/${token}/receipt`}
-                      className="underline underline-offset-4"
+                      className="underline decoration-current/40 underline-offset-4 hover:decoration-current"
                     >
                       Receipt
                     </Link>

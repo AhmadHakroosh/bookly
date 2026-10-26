@@ -37,7 +37,10 @@ export function BrandingForm({
           <p className="rounded-md border border-(--brand)/40 bg-(--brand)/10 p-3 text-sm">
             Your own logo and colour on booking pages and emails, and no “Powered by Bookly” line,
             come with Pro and Team.{" "}
-            <Link href="/admin/billing" className="underline underline-offset-4">
+            <Link
+              href="/admin/billing"
+              className="underline decoration-current/40 underline-offset-4 hover:decoration-current"
+            >
               See plans
             </Link>
           </p>

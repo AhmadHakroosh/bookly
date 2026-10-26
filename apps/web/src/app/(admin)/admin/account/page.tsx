@@ -67,7 +67,7 @@ async function AccountPage({ searchParams }: PageProps<"/admin/account">) {
       <section
         id="photo"
         aria-labelledby="photo-title"
-        className="scroll-mt-20 space-y-4 rounded-xl border bg-card p-5"
+        className="scroll-mt-20 space-y-4 rounded-xl border bg-card p-4 sm:p-5"
       >
         <div>
           <h2 id="photo-title" className="text-base font-semibold tracking-tight">

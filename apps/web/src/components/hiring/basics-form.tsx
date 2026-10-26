@@ -95,7 +95,10 @@ export function BasicsForm({
           <ul className="mt-1 list-disc pl-5">
             {Object.entries(problems).map(([k, v]) => (
               <li key={k}>
-                <a href={`#basics-${k}`} className="underline underline-offset-2">
+                <a
+                  href={`#basics-${k}`}
+                  className="underline decoration-current/40 underline-offset-4 hover:decoration-current"
+                >
                   {LABELS[k] ?? k}
                 </a>
                 : {v}

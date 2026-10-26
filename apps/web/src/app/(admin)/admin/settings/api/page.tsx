@@ -68,7 +68,7 @@ async function ApiPage() {
           Event types and availability need no key. Keys unlock reading and creating bookings. Spec:{" "}
           <a
             href={`${base}/api/v1/openapi.json`}
-            className="underline underline-offset-4"
+            className="underline decoration-current/40 underline-offset-4 hover:decoration-current"
             target="_blank"
             rel="noreferrer"
           >

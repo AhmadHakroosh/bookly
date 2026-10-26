@@ -67,6 +67,27 @@ Hand-built fields (public forms, editors) take `fieldClasses` from `ui/input.tsx
 two kinds: underline (`PageTabs`, or `Tabs` with `variant="line"`: orange text and rule) and pills
 (`SegmentedTabs`); list/board/calendar switches are one `ViewToggle`.
 
+## Type, cards and links
+
+| Role                           | Classes                                                               |
+| ------------------------------ | --------------------------------------------------------------------- |
+| Page title (`PageHeader`)      | `text-2xl md:text-[2rem] md:leading-10 font-bold tracking-[-0.02em]`  |
+| Pane title (`PaneHeader`)      | `text-xl font-semibold tracking-tight`                                |
+| Card title (`SectionCard`)     | `text-lg font-semibold tracking-tight`                                |
+| Section title (outside a card) | `text-base font-semibold tracking-tight`                              |
+| Body, row title                | `text-sm` (`font-medium` for names)                                   |
+| Meta                           | `text-xs text-muted-foreground`                                       |
+| Overline (day headings)        | `text-xs font-semibold uppercase tracking-wide text-muted-foreground` |
+
+No `text-[10px]`/`text-[11px]` in the app (count badges in 16 px circles excepted). A card is
+`SectionCard` (bordered, 16 px padding on a phone and 20 px from `sm`, title row 12 px above the
+content, "View all ›" on the right); icon tiles are `size-10 rounded-lg`. Links are `TextLink`:
+`inline` in sentences, `action` for a next step (orange, arrow), `more` for "View all ›"; a name
+that opens a record is `font-medium hover:underline`; an action in a row is a `Button`. Tables
+sit in a card: muted 12 px headers, 12 px cell padding and 20 px at the edges, Peach for the
+selected row. Menu rows are 32 px. Icons: 20 px in nav, the top bar, card titles and tiles; 16 px
+in rows, meta, buttons and menus; 14 px only in `sm` buttons and beside `text-xs`.
+
 ## The shell
 
 Every admin page sits in one frame (`app/(admin)/admin/layout.tsx`, parts in

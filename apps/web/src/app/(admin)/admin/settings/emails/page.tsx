@@ -40,7 +40,10 @@ async function EmailsPage() {
             {status === "plan" && (
               <p className="mt-1 text-sm">
                 Replies on the timeline come with {PLANS[planFor("inboundEmail")].name}.{" "}
-                <Link href="/admin/billing" className="underline underline-offset-4">
+                <Link
+                  href="/admin/billing"
+                  className="underline decoration-current/40 underline-offset-4 hover:decoration-current"
+                >
                   Upgrade
                 </Link>
               </p>

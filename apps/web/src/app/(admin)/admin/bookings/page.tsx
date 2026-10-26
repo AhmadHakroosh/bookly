@@ -373,7 +373,7 @@ function BookingList({
         </div>
       )}
       {waitlist.some((w) => !shownWaits.has(w.id)) && (
-        <section aria-labelledby="waitlist-title" className="rounded-xl border bg-card p-5">
+        <section aria-labelledby="waitlist-title" className="rounded-xl border bg-card p-4 sm:p-5">
           <h2 id="waitlist-title" className="text-lg font-semibold tracking-tight">
             Waitlist
           </h2>

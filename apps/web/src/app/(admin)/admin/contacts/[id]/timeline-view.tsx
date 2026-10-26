@@ -180,14 +180,14 @@ function Entry({
           <p className="mt-0.5 flex flex-wrap gap-x-3 text-xs">
             <Link
               href={`/admin/bookings/${item.bookingId}`}
-              className="underline underline-offset-4"
+              className="underline decoration-current/40 underline-offset-4 hover:decoration-current"
             >
               {item.meeting.title}
             </Link>
             {item.meeting.recap && (
               <Link
                 href={`/admin/bookings/${item.bookingId}#recap`}
-                className="underline underline-offset-4"
+                className="underline decoration-current/40 underline-offset-4 hover:decoration-current"
               >
                 Recap
               </Link>
@@ -195,7 +195,7 @@ function Entry({
             {item.meeting.transcript && (
               <Link
                 href={`/admin/bookings/${item.bookingId}#transcript`}
-                className="underline underline-offset-4"
+                className="underline decoration-current/40 underline-offset-4 hover:decoration-current"
               >
                 Transcript
               </Link>
@@ -216,14 +216,14 @@ function Entry({
           <p className="mt-0.5 flex flex-wrap gap-x-3 text-xs">
             <FileLink
               file={{ id: item.file.id, name: item.file.name, mime: item.file.mime }}
-              className="underline underline-offset-4"
+              className="underline decoration-current/40 underline-offset-4 hover:decoration-current"
             >
               Open file
             </FileLink>
             {item.file.taskId && (
               <Link
                 href={`/admin/tasks?task=${item.file.taskId}`}
-                className="underline underline-offset-4"
+                className="underline decoration-current/40 underline-offset-4 hover:decoration-current"
               >
                 Open task
               </Link>

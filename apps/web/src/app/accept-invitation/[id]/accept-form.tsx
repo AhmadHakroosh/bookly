@@ -95,11 +95,19 @@ export function AcceptForm({
               />
               <span>
                 I agree to the{" "}
-                <Link href="/terms" target="_blank" className="underline underline-offset-4">
+                <Link
+                  href="/terms"
+                  target="_blank"
+                  className="underline decoration-current/40 underline-offset-4 hover:decoration-current"
+                >
                   terms of service
                 </Link>{" "}
                 and have read the{" "}
-                <Link href="/privacy" target="_blank" className="underline underline-offset-4">
+                <Link
+                  href="/privacy"
+                  target="_blank"
+                  className="underline decoration-current/40 underline-offset-4 hover:decoration-current"
+                >
                   privacy policy
                 </Link>
                 .

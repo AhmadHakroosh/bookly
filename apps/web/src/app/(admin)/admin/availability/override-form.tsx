@@ -17,15 +17,15 @@ export function OverrideForm({ scheduleId, multi }: { scheduleId: string; multi:
       <input type="hidden" name="scheduleId" value={scheduleId} />
       <div className="grid grid-cols-3 gap-2">
         <label className="block min-w-0">
-          <span className="mb-1 block text-xs font-medium">Date</span>
+          <span className="mb-2 block text-sm font-medium">Date</span>
           <DatePicker name="date" required ariaLabel="Date" />
         </label>
         <label className="block min-w-0">
-          <span className="mb-1 block text-xs font-medium">From</span>
+          <span className="mb-2 block text-sm font-medium">From</span>
           <TimePicker name="start" ariaLabel="From" disabled={blocked} />
         </label>
         <label className="block min-w-0">
-          <span className="mb-1 block text-xs font-medium">To</span>
+          <span className="mb-2 block text-sm font-medium">To</span>
           <TimePicker name="end" ariaLabel="To" disabled={blocked} />
         </label>
       </div>

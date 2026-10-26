@@ -6,6 +6,7 @@ import { CalendarDaysIcon, VideoIcon } from "lucide-react";
 import type { ConferencingType, Integration } from "@bookly/db/schema";
 import { ProviderIcon } from "@/components/brand-icons";
 import { ConnectButton } from "@/components/connect-button";
+import { Button } from "@/components/ui/button";
 import { IntegrationList, IntegrationRow } from "@/components/ui/integration-row";
 import { PageHeader } from "@/components/ui/page-header";
 import {
@@ -220,12 +221,14 @@ async function CalendarsPage({ searchParams }: PageProps<"/admin/calendars">) {
             }
             action={
               avail.daily && !videoPlan ? (
-                <Link
-                  href="/admin/billing"
-                  className="text-sm font-medium text-primary hover:underline"
+                <Button
+                  variant="outline"
+                  size="sm"
+                  nativeButton={false}
+                  render={<Link href="/admin/billing" />}
                 >
                   See plans
-                </Link>
+                </Button>
               ) : null
             }
           />

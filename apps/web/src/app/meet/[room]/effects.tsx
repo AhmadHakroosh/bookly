@@ -271,7 +271,7 @@ export function EffectsPopover() {
           <UploadIcon className="size-3.5" />
           {current.type === "custom" ? "Your picture (choose another)" : "Use your own picture"}
         </button>
-        <p className="mt-1 text-[11px] text-muted-foreground">
+        <p className="mt-1 text-xs text-muted-foreground">
           JPG or PNG. Stays in this browser for this call only.
         </p>
       </div>

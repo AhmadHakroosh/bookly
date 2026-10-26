@@ -251,7 +251,7 @@ export async function BookingDetail({ id, inPane = false }: { id: string; inPane
 
   const briefing = (
     <div className="space-y-4">
-      <section aria-labelledby="briefing-title" className="rounded-xl border bg-card p-5">
+      <section aria-labelledby="briefing-title" className="rounded-xl border bg-card p-4 sm:p-5">
         <div className="flex items-center justify-between gap-3">
           <h2
             id="briefing-title"
@@ -275,7 +275,7 @@ export async function BookingDetail({ id, inPane = false }: { id: string; inPane
         </p>
       </section>
       {(Object.keys(b.answers).length > 0 || sentFiles.length > 0) && (
-        <section className="rounded-xl border bg-card p-5 text-sm">
+        <section className="rounded-xl border bg-card p-4 text-sm sm:p-5">
           <h2 className="text-base font-semibold tracking-tight">Their answers</h2>
           <dl className="mt-2 space-y-1">
             {(et?.questions ?? []).map((q) =>
@@ -291,7 +291,10 @@ export async function BookingDetail({ id, inPane = false }: { id: string; inPane
             <ul className="mt-2 space-y-1" aria-label="Files they sent">
               {sentFiles.map((f) => (
                 <li key={f.id}>
-                  <a href={fileUrl(f.id)} className="underline underline-offset-2">
+                  <a
+                    href={fileUrl(f.id)}
+                    className="underline decoration-current/40 underline-offset-4 hover:decoration-current"
+                  >
                     {f.name}
                   </a>{" "}
                   <span className="text-muted-foreground">
@@ -311,7 +314,7 @@ export async function BookingDetail({ id, inPane = false }: { id: string; inPane
     <div className="space-y-4">
       {notesHere && <BookingNotes room={room!} />}
       {lastCapture && (
-        <section className="rounded-xl border bg-card p-5 text-sm">
+        <section className="rounded-xl border bg-card p-4 text-sm sm:p-5">
           <h2 className="text-base font-semibold tracking-tight">Captured</h2>
           <p className="mt-2 whitespace-pre-line">{lastCapture.summary}</p>
           <p className="mt-2 text-xs text-muted-foreground">
@@ -398,7 +401,7 @@ export async function BookingDetail({ id, inPane = false }: { id: string; inPane
     <div className={inPane ? "space-y-5" : "max-w-3xl space-y-6"}>
       {header}
       {session && (
-        <section className="rounded-xl border bg-card p-5 text-sm">
+        <section className="rounded-xl border bg-card p-4 text-sm sm:p-5">
           <div className="flex items-center justify-between gap-3">
             <h2 className="text-base font-semibold tracking-tight">Who is in this session</h2>
             <StatusChip tone="accent">

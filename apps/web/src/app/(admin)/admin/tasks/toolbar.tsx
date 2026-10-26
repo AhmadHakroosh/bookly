@@ -251,7 +251,7 @@ export function TasksToolbar({
               <SlidersHorizontalIcon data-icon="inline-start" />
               Filters
               {extra > 0 && (
-                <span className="rounded-full bg-primary px-1.5 text-[11px] leading-4 text-primary-foreground tabular-nums">
+                <span className="rounded-full bg-primary px-1.5 text-xs leading-4 text-primary-foreground tabular-nums">
                   {extra}
                 </span>
               )}
@@ -361,7 +361,10 @@ export function TasksToolbar({
           {!canBoard
             ? `The board with drag and drop, your own statuses and saved views come with ${proName}; assigning tasks to teammates with ${teamName}.`
             : `Assigning tasks to teammates, @-mentions and shared views come with ${teamName}.`}{" "}
-          <Link href="/admin/billing" className="underline underline-offset-4">
+          <Link
+            href="/admin/billing"
+            className="underline decoration-current/40 underline-offset-4 hover:decoration-current"
+          >
             Upgrade
           </Link>
         </p>

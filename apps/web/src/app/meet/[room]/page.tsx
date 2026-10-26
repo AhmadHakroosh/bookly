@@ -155,7 +155,10 @@ async function MeetPage({ params, searchParams }: PageProps<"/meet/[room]">) {
           !token && !session ? (
             <p className="bg-muted px-4 py-1.5 text-center text-xs text-muted-foreground">
               Hosting this call?{" "}
-              <a className="underline underline-offset-2" href={signInUrl}>
+              <a
+                className="underline decoration-current/40 underline-offset-4 hover:decoration-current"
+                href={signInUrl}
+              >
                 Sign in
               </a>{" "}
               to open it as the host.
