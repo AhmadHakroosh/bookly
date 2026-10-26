@@ -134,7 +134,7 @@ export default function PrivacyPage() {
       <p>
         <strong>Signing in with Google.</strong> &ldquo;Continue with Google&rdquo; on the sign-in
         and sign-up pages is a separate, narrower use: Bookly receives only the name, email address
-        and profile picture of the Google account, to create or recognise your Bookly account. It
+        and profile picture of the Google account, to create or recognize your Bookly account. It
         asks for no calendar access; connecting a calendar is a distinct step under Admin →
         Calendars with its own consent screen. The same applies to signing in with Microsoft or
         GitHub.

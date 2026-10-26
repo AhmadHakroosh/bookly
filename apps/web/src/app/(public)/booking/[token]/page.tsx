@@ -44,7 +44,7 @@ async function BookingPage({ params, searchParams }: PageProps<"/booking/[token]
     b.status === "awaiting_payment"
       ? "Complete your payment"
       : b.status === "cancelled"
-        ? "Booking cancelled"
+        ? "Booking canceled"
         : b.status === "rescheduled"
           ? "Booking rescheduled"
           : b.status === "pending"
@@ -237,7 +237,7 @@ async function BookingPage({ params, searchParams }: PageProps<"/booking/[token]
             <h2 className="text-sm font-medium">Need to cancel?</h2>
             <p className="mt-1 text-sm text-muted-foreground">
               {b.paymentStatus === "paid" && b.amountCents != null
-                ? `Cancelling refunds your ${formatPrice(b.amountCents, b.currency)} payment to the card you paid with.`
+                ? `Canceling refunds your ${formatPrice(b.amountCents, b.currency)} payment to the card you paid with.`
                 : "You can also reschedule instead, using the button above."}
             </p>
             <form
@@ -250,7 +250,7 @@ async function BookingPage({ params, searchParams }: PageProps<"/booking/[token]
                 name="reason"
                 placeholder="Reason (optional)"
                 className="w-full rounded-lg border bg-background px-3 text-sm"
-                toolparamdescription="Why the guest is cancelling (optional); the host sees it."
+                toolparamdescription="Why the guest is canceling (optional); the host sees it."
               />
               <SubmitButton
                 variant="outline"
@@ -299,7 +299,7 @@ async function BookingPage({ params, searchParams }: PageProps<"/booking/[token]
                     name="reason"
                     placeholder="Reason (optional)"
                     className="w-full rounded-lg border bg-background px-3 text-sm"
-                    toolparamdescription="Why the guest is cancelling (optional); the host sees it."
+                    toolparamdescription="Why the guest is canceling (optional); the host sees it."
                   />
                   <SubmitButton
                     variant="outline"

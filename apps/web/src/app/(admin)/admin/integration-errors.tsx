@@ -6,7 +6,7 @@ export const INTEGRATION_ERRORS: Record<string, string> = {
   state: "The sign-in link expired. Please try again.",
   mismatch: "Please sign in with the same account you started from.",
   exchange: "The provider rejected the connection. Check the OAuth app settings and try again.",
-  access_denied: "You cancelled the connection.",
+  access_denied: "You canceled the connection.",
   limit: "Your plan's limit on connected accounts per member is reached.",
 };
 

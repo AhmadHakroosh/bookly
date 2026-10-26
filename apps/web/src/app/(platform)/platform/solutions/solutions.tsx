@@ -135,7 +135,7 @@ export const SOLUTIONS: Solution[] = [
       "Routing forms: two questions, the right person or event type",
       "Round-robin and collective events across the team (Team)",
       "HubSpot and Pipedrive sync for contacts and stages (Pro and Team)",
-      "Your domain, logo and colours on booking pages and emails",
+      "Your domain, logo and colors on booking pages and emails",
     ],
     link: { href: "/product#follow-up", label: "Explore agency features" },
     timeline: {
@@ -208,7 +208,7 @@ export const SOLUTIONS: Solution[] = [
     eyebrow: "For hiring · Beta",
     first: "Every applicant heard.",
     second: "Every decision clear.",
-    body: "Jobs and internships on the same platform as your client work: an application page and a pipeline you define today, and with Bookly 1.0 independent reviews, interviews booked on your calendars, and a decision with a name and a reason on it. AI summarises; people decide.",
+    body: "Jobs and internships on the same platform as your client work: an application page and a pipeline you define today, and with Bookly 1.0 independent reviews, interviews booked on your calendars, and a decision with a name and a reason on it. AI summarizes; people decide.",
     bullets: [
       "Every applicant gets a confirmation and a status page they can check",
       "A pipeline you define, with flags a person looks at before anyone moves on",
@@ -308,7 +308,7 @@ const FAQ: [string, string][] = [
   ],
   [
     "Does AI decide who gets hired or admitted?",
-    "No. AI may summarise an application or draft a message; it never ranks, scores, rejects or recommends a decision about a person. Every decision is made and recorded by a person, with a reason.",
+    "No. AI may summarize an application or draft a message; it never ranks, scores, rejects or recommends a decision about a person. Every decision is made and recorded by a person, with a reason.",
   ],
   [
     "Which plan do I need?",

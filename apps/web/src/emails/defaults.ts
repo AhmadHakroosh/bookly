@@ -26,8 +26,8 @@ export const DEFAULT_EMAIL_TEMPLATES: Record<EmailTemplateKind, EmailTemplate> =
     body: "Hi {name},\n\nA quick reminder that {event} with {host} is coming up {relative}.\n\nSee you then.",
   },
   cancellation: {
-    subject: "Cancelled: {event} on {when}",
-    body: "Hi {name},\n\n{event} with {host} on {when} has been cancelled. If this was a mistake, reply to this email or book a new time.",
+    subject: "Canceled: {event} on {when}",
+    body: "Hi {name},\n\n{event} with {host} on {when} has been canceled. If this was a mistake, reply to this email or book a new time.",
   },
 };
 

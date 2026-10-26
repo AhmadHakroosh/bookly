@@ -21,7 +21,7 @@ export default function TermsPage() {
       <JsonLd data={breadcrumbLd([["Terms of service", "/terms"]])} />
       <h2>1. The agreement</h2>
       <p>
-        By creating a workspace you agree to these terms on behalf of yourself or the organisation
+        By creating a workspace you agree to these terms on behalf of yourself or the organization
         you represent. The service is provided by {SITE.operator}
         {SITE.operatorAddress ? `, ${SITE.operatorAddress}` : ""} (“Bookly”, “we”). If you do not
         agree, do not use the hosted service; you may still self-host the software under its
@@ -174,7 +174,7 @@ export default function TermsPage() {
       <h2>13. Governing law</h2>
       <p>
         These terms are governed by the laws of the United States and of the state in which{" "}
-        {SITE.operator} is organised, and disputes will be resolved in the courts there, unless
+        {SITE.operator} is organized, and disputes will be resolved in the courts there, unless
         mandatory law where you live gives you additional rights.
       </p>
       <h2>14. Contact</h2>

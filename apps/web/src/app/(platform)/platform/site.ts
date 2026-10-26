@@ -187,7 +187,7 @@ export const MENUS: { product: Menu; solutions: Menu; resources: Menu } = {
     featured: {
       eyebrow: "Hiring · Beta",
       title: "Every applicant heard. Every decision clear.",
-      body: "Applications, independent reviews, interviews and decisions on the same platform as your client work. People decide; AI only summarises.",
+      body: "Applications, independent reviews, interviews and decisions on the same platform as your client work. People decide; AI only summarizes.",
       href: "/solutions/hiring",
       cta: "See hiring",
     },
@@ -236,7 +236,7 @@ export const MENUS: { product: Menu; solutions: Menu; resources: Menu } = {
           {
             href: "/press",
             label: "Brand and press",
-            description: "Logos, colours and the press kit",
+            description: "Logos, colors and the press kit",
             icon: "press",
           },
         ],

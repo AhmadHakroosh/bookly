@@ -106,7 +106,7 @@ export function ColorPicker({
           </span>
         </PopoverTrigger>
         <PopoverContent className="w-64" align="start">
-          <div className="grid grid-cols-6 gap-1.5" role="listbox" aria-label="Preset colours">
+          <div className="grid grid-cols-6 gap-1.5" role="listbox" aria-label="Preset colors">
             {COLOR_PRESETS.map((c) => (
               <button
                 key={c}
@@ -136,7 +136,7 @@ export function ColorPicker({
                 if (draftOk) apply();
               }}
               placeholder="#2563eb"
-              aria-label="Hex colour"
+              aria-label="Hex color"
               aria-invalid={!draftOk}
               className="font-mono text-xs"
               spellCheck={false}

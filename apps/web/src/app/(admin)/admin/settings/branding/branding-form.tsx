@@ -35,7 +35,7 @@ export function BrandingForm({
       <FieldGroup>
         {!allowed && (
           <p className="rounded-md border border-(--brand)/40 bg-(--brand)/10 p-3 text-sm">
-            Your own logo and colour on booking pages and emails, and no “Powered by Bookly” line,
+            Your own logo and color on booking pages and emails, and no “Powered by Bookly” line,
             come with Pro and Team.{" "}
             <Link
               href="/admin/billing"
@@ -77,13 +77,13 @@ export function BrandingForm({
               <FieldError errors={err("logoUrl")} />
             </Field>
             <Field>
-              <FieldLabel htmlFor="accent">Accent colour</FieldLabel>
+              <FieldLabel htmlFor="accent">Accent color</FieldLabel>
               <div className="flex items-center gap-2">
                 <ColorPicker
                   id="accent"
                   name="accent"
                   defaultValue={workspace.accent}
-                  ariaLabel="Accent colour"
+                  ariaLabel="Accent color"
                   placeholder="Bookly accent"
                 />
               </div>

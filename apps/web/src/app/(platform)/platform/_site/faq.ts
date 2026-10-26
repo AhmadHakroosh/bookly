@@ -24,7 +24,7 @@ export const HOME_FAQ: [string, string][] = [
   ],
   [
     "Does Bookly do hiring?",
-    "Yes, in beta by invitation: round setup from templates, application and status pages, and a pipeline board. Independent reviews, interview scheduling and decisions arrive with Bookly 1.0. AI summarises; people decide. Client work is available to everyone today.",
+    "Yes, in beta by invitation: round setup from templates, application and status pages, and a pipeline board. Independent reviews, interview scheduling and decisions arrive with Bookly 1.0. AI summarizes; people decide. Client work is available to everyone today.",
   ],
   [
     "Can I take my data with me?",

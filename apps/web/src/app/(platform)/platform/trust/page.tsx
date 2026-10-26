@@ -79,7 +79,7 @@ const AI_FACTS: [string, string][] = [
   ],
   [
     "Hiring",
-    "In hiring (beta), AI may summarise and draft, and never ranks, scores, rejects or recommends a decision about a person. Requirement flags never reject anyone on their own: a person looks. People decide, and every decision records who made it.",
+    "In hiring (beta), AI may summarize and draft, and never ranks, scores, rejects or recommends a decision about a person. Requirement flags never reject anyone on their own: a person looks. People decide, and every decision records who made it.",
   ],
 ];
 

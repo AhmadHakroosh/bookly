@@ -52,7 +52,7 @@ an email at each offset; hosts additionally get their configured pings for the o
 reminders (SMS/WhatsApp) go to attendees who left a phone number when the event type enables them.
 
 **Follow-up email** sends a message from your template a configurable number of hours after the
-meeting ends, unless the booking was cancelled or marked no-show. Placeholders: `{name}` (first
+meeting ends, unless the booking was canceled or marked no-show. Placeholders: `{name}` (first
 name), `{host}`, `{event}`, `{bookingUrl}`. Replies go to the host.
 
 ## No-shows

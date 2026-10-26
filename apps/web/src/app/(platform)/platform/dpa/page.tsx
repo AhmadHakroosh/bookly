@@ -38,7 +38,7 @@ export default function DpaPage() {
       <JsonLd data={breadcrumbLd([["Data processing agreement", "/dpa"]])} />
       <h2>1. Parties and roles</h2>
       <p>
-        The <strong>customer</strong> is the person or organisation that owns a workspace. The{" "}
+        The <strong>customer</strong> is the person or organization that owns a workspace. The{" "}
         <strong>processor</strong> is {SITE.operator}
         {SITE.operatorAddress ? `, ${SITE.operatorAddress}` : ""} (“Bookly”). For the personal data
         of guests, contacts and meeting participants that the customer puts into Bookly or that

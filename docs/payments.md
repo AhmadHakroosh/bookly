@@ -5,7 +5,7 @@ booking that event type goes: pick a slot → fill the form → **Stripe Checkou
 The slot is held for 30 minutes while the visitor pays; unpaid bookings are released by the
 cron tick / worker (`expireUnpaidBookings`) and never send emails or calendar invites.
 
-Cancelling a paid booking (by the host, the attendee, or through the API) refunds the payment in
+Canceling a paid booking (by the host, the attendee, or through the API) refunds the payment in
 full through Stripe. Partial refunds and no-refund windows are not implemented yet.
 
 ## Setup

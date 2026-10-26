@@ -74,7 +74,7 @@ export function socialErrorMessage(code: string, provider: string, cloud: boolea
     case "account_already_linked_to_different_user":
       return `That ${name} account is already connected to another Bookly account.`;
     case "access_denied":
-      return "Sign-in was cancelled.";
+      return "Sign-in was canceled.";
     default:
       return `Could not sign in with ${name}. Try again or use another method.`;
   }

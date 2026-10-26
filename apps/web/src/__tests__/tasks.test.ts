@@ -59,7 +59,7 @@ describe("status sets", () => {
   });
   it("cleans names, colours and WIP limits", () => {
     expect(cleanStatus({ name: "  " })).toMatch(/needs a name/);
-    expect(cleanStatus({ color: "red" })).toMatch(/colour/);
+    expect(cleanStatus({ color: "red" })).toMatch(/color/);
     expect(cleanStatus({ name: " Waiting ", color: "#AABBCC", wipLimit: 0 })).toEqual({
       name: "Waiting",
       color: "#aabbcc",

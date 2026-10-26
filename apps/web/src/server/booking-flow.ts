@@ -744,7 +744,7 @@ export async function cancelBooking(
     workspace,
     updated!,
     "cancelled",
-    `${by === "host" ? "Host" : "They"} cancelled ${et?.title ?? "meeting"} on ${fmtDateTime(b.startAt, b.timezone)}${reason ? `: ${reason.trim()}` : ""}`,
+    `${by === "host" ? "Host" : "They"} canceled ${et?.title ?? "meeting"} on ${fmtDateTime(b.startAt, b.timezone)}${reason ? `: ${reason.trim()}` : ""}`,
     { by, reason: reason ?? null },
   );
   emitEvent(workspace.id, "booking.cancelled", {
@@ -756,19 +756,19 @@ export async function cancelBooking(
     const when = fmtDateTime(b.startAt, workspace.timezone);
     void notify(workspace, b.hostUserId, {
       kind: "booking.cancelled",
-      title: `${b.attendeeName} cancelled ${et?.title ?? "their booking"}`,
+      title: `${b.attendeeName} canceled ${et?.title ?? "their booking"}`,
       body: `${when}${reason ? ` · “${reason.trim()}”` : ""}`,
       link: `/admin/bookings/${b.id}`,
       dedupeKey: `booking:${b.id}:cancelled`,
       bookingId: b.id,
-      text: `${b.attendeeName} cancelled their booking on ${when}${reason ? `: ${reason}` : ""}.`,
+      text: `${b.attendeeName} canceled their booking on ${when}${reason ? `: ${reason}` : ""}.`,
     });
   }
   const ctx = await mailCtx(updated!, et ?? null, workspace);
   if (et?.remindByText && b.attendeePhone)
     void textAttendee(
       b.attendeePhone,
-      `${et.title} with ${ctx.host.displayName} on ${fmtDateTime(b.startAt, b.timezone)} has been cancelled. Book again: ${ctx.baseUrl}/booking/${b.manageToken}`,
+      `${et.title} with ${ctx.host.displayName} on ${fmtDateTime(b.startAt, b.timezone)} has been canceled. Book again: ${ctx.baseUrl}/booking/${b.manageToken}`,
       {
         kind: "booking_cancelled",
         attendeeName: b.attendeeName,
@@ -882,11 +882,11 @@ export async function cancelSeries(
   if (by === "attendee")
     void notify(workspace, first.hostUserId, {
       kind: "booking.cancelled",
-      title: `${first.attendeeName} cancelled ${cancelled.length} remaining ${et?.title ?? "sessions"}`,
+      title: `${first.attendeeName} canceled ${cancelled.length} remaining ${et?.title ?? "sessions"}`,
       body: reason ? `“${reason.trim()}”` : null,
       link: `/admin/bookings/${first.id}`,
       dedupeKey: `series:${first.seriesId ?? first.id}:cancelled:${cancelled.length}`,
-      text: `${first.attendeeName} cancelled ${cancelled.length} remaining ${et?.title ?? "sessions"}${reason ? `: ${reason}` : ""}.`,
+      text: `${first.attendeeName} canceled ${cancelled.length} remaining ${et?.title ?? "sessions"}${reason ? `: ${reason}` : ""}.`,
     });
   return cancelled;
 }

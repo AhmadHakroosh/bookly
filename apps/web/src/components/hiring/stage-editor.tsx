@@ -346,7 +346,7 @@ function StageList({
       over ? `${name(active.id)} is over position ${position(over.id)}.` : "",
     onDragEnd: ({ active, over }) =>
       over ? `${name(active.id)} dropped at position ${position(over.id)}.` : "Dropped.",
-    onDragCancel: ({ active }) => `Moving ${name(active.id)} was cancelled.`,
+    onDragCancel: ({ active }) => `Moving ${name(active.id)} was canceled.`,
   };
   const row = (key: string, sortable: boolean) => {
     const s = byKey.get(key)!;

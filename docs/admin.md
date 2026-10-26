@@ -42,7 +42,7 @@ and choosing a page closes it again.
 
 **List** or **Calendar** (Day, Week, Month), remembered per browser. The list has **Upcoming**,
 **Past** and **Requests** (with how many wait for you), grouped by day: the time and length, the
-person and the event type, a chip when it is a request, cancelled or a no-show, and ⋯ to confirm,
+person and the event type, a chip when it is a request, canceled or a no-show, and ⋯ to confirm,
 mark a no-show or cancel with a reason they are told. A group session is one row with its seats,
 everyone in it and its waitlist. Choosing a booking opens it beside the list: the person, the
 event type and status, **Join meeting** and **More actions**, when, where (copy the link) and who,

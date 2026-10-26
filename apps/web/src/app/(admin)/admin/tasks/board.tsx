@@ -355,7 +355,7 @@ export function Board({
         : "Dropped.";
     },
     onDragCancel: ({ active }) =>
-      `Moving ${byId.get(String(active.id))?.title ?? "the task"} was cancelled.`,
+      `Moving ${byId.get(String(active.id))?.title ?? "the task"} was canceled.`,
   };
 
   const onDragStart = ({ active }: DragStartEvent) => {

@@ -208,7 +208,7 @@ export const PLANS: Record<PlanId, Plan> = {
       "Paid bookings via Stripe, no platform fee",
       "Custom reminders, follow-ups, SMS and WhatsApp",
       "Unlimited event types",
-      "Custom domain, your logo and colour, no Bookly branding",
+      "Custom domain, your logo and color, no Bookly branding",
       "API, webhooks, HubSpot and Pipedrive sync",
     ],
     featured: [

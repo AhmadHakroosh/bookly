@@ -97,7 +97,7 @@ that. **Send a test message** posts a line to the saved Slack webhook and report
 
 On by default; owners can mute it for the workspace under Admin → Settings → General
 (`settings.daily.joinPings`). The first attendee to enter a booking's room triggers one ping. The
-host is recognised because the meeting page gives signed-in workspace members a Daily owner
+host is recognized because the meeting page gives signed-in workspace members a Daily owner
 token (`owner: true` on the `participant.joined` event); a host who opens the raw room link
 elsewhere is still matched by display name as a fallback. The Daily webhook itself is registered
 once for the whole install (`docs/integrations.md` → Daily.co), not per workspace.
@@ -181,9 +181,9 @@ requests and client recaps. The platform name comes from the display name in `EM
 ## Look and wording
 
 Emails are rendered with React Email in the workspace's look: your logo and name in the
-header (Admin → Settings → Branding: an uploaded logo or a logo URL, and the accent colour, on Pro, Team and self-hosted installs; the Free plan keeps the Bookly mark), your accent colour on
+header (Admin → Settings → Branding: an uploaded logo or a logo URL, and the accent color, on Pro, Team and self-hosted installs; the Free plan keeps the Bookly mark), your accent color on
 buttons, the booking details in a card, and a plain-text alternative generated from the same
-template. "Powered by Bookly" appears in the footer unless the plan removes branding. The same logo, colour and footer rule applies to the booking pages themselves.
+template. "Powered by Bookly" appears in the footer unless the plan removes branding. The same logo, color and footer rule applies to the booking pages themselves.
 
 Under Admin → Settings → Emails you can replace the opening words of the confirmation,
 reminder and cancellation emails; the details block, buttons and branding are always added.

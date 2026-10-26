@@ -61,7 +61,7 @@ const ROWS: [string, (p: Plan) => string | boolean][] = [
   ["HubSpot / Pipedrive sync", ({ limits: l }) => l.api],
   ["API and webhooks", ({ limits: l }) => l.api],
   ["API requests per minute", ({ limits: l }) => fmt(l.apiRequestsPerMinute)],
-  ["Your logo and colour, no Bookly branding", ({ limits: l }) => l.removeBranding],
+  ["Your logo and color, no Bookly branding", ({ limits: l }) => l.removeBranding],
 ];
 
 const FAQ: [string, string][] = [
@@ -79,7 +79,7 @@ const FAQ: [string, string][] = [
   ],
   [
     "Monthly or yearly?",
-    "Both. Yearly is charged up front and works out to two months free ($240 a year for Pro, $300 a member for Team, so $20 and $25 a month). Yearly plans renew each year; cancelling stops the renewal and the plan stays active until the year ends. Partial years are not refunded unless the law requires it.",
+    "Both. Yearly is charged up front and works out to two months free ($240 a year for Pro, $300 a member for Team, so $20 and $25 a month). Yearly plans renew each year; canceling stops the renewal and the plan stays active until the year ends. Partial years are not refunded unless the law requires it.",
   ],
   [
     "What does a paid booking cost me?",
@@ -95,7 +95,7 @@ const FAQ: [string, string][] = [
   ],
   [
     "Do you offer discounts for non-profits or education?",
-    `Yes. Write to ${SITE.supportEmail} from your organisation's address and we will set it up.`,
+    `Yes. Write to ${SITE.supportEmail} from your organization's address and we will set it up.`,
   ],
 ];
 
@@ -132,7 +132,7 @@ export default function PricingPage() {
             <div className="min-w-0 flex-1">
               <h3 className="text-xl font-bold tracking-tight">Enterprise</h3>
               <p className="mt-1 text-sm text-muted-foreground">
-                For organisations: single sign-on and SCIM, custom roles, compliance reports and
+                For organizations: single sign-on and SCIM, custom roles, compliance reports and
                 retention per region, on our cloud or your own servers, with a contract and an
                 invoice. The first modules are in development; trial and development keys are free.
               </p>

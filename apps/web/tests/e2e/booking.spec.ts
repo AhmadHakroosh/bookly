@@ -22,7 +22,7 @@ test.describe("public booking", () => {
     // The cancel form sits in the open on the page; no disclosure to expand first.
     await expect(page.getByRole("heading", { name: "Need to cancel?" })).toBeVisible();
     await page.getByRole("button", { name: "Cancel booking" }).click();
-    await expect(page.getByRole("heading", { name: "Booking cancelled" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Booking canceled" })).toBeVisible();
   });
 
   test("the attendee can bring colleagues", async ({ page }) => {
