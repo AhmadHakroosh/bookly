@@ -25,8 +25,9 @@ import {
   paramsFromFilters,
   type TasksLayout,
 } from "@/lib/tasks-view";
-import { cn } from "@/lib/utils";
 import { deleteViewAction, saveViewAction } from "./actions";
+import { segmentedTabClass } from "@/components/ui/segmented-tabs";
+import { ViewToggle } from "@/components/ui/view-toggle";
 
 type Option = { id: string; name: string };
 
@@ -144,13 +145,7 @@ export function TasksToolbar({
       !(doneOnly && (k === "done" || k === "status")) &&
       !(view === "" && k === "assignee" && !canAssign),
   ).length;
-  const tab = (on: boolean) =>
-    cn(
-      "inline-flex h-8 items-center gap-1.5 rounded-lg border px-3 text-sm font-medium whitespace-nowrap outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
-      on
-        ? "border-primary/40 bg-accent text-accent-foreground"
-        : "bg-card text-muted-foreground hover:text-foreground",
-    );
+  const tab = segmentedTabClass;
 
   return (
     <div className="space-y-3" aria-busy={pending}>
@@ -339,47 +334,25 @@ export function TasksToolbar({
               </div>
             </PopoverContent>
           </Popover>
-          <nav aria-label="Layout" className="inline-flex rounded-lg border bg-card p-0.5">
-            {(
+          <ViewToggle
+            label="Layout"
+            items={(
               [
                 ["list", "List", ListIcon],
                 ["board", "Board", KanbanSquareIcon],
               ] as const
-            ).map(([l, label, Icon]) =>
-              l === "board" && !canBoard ? (
-                <span
-                  key={l}
-                  className="inline-flex size-7 cursor-not-allowed items-center justify-center rounded-md text-muted-foreground/50"
-                  title={`The board comes with ${proName}`}
-                >
-                  <Icon className="size-4" aria-hidden />
-                  <span className="sr-only">
-                    {label} (comes with {proName})
-                  </span>
-                </span>
-              ) : (
-                <button
-                  key={l}
-                  type="button"
-                  aria-current={layout === l ? "page" : undefined}
-                  aria-label={label}
-                  title={label}
-                  onClick={() => {
-                    remember(TASKS_LAYOUT_COOKIE, l);
-                    go({ layout: l }, { keepView: true });
-                  }}
-                  className={cn(
-                    "inline-flex size-7 items-center justify-center rounded-md outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
-                    layout === l
-                      ? "bg-accent text-accent-foreground"
-                      : "text-muted-foreground hover:text-foreground",
-                  )}
-                >
-                  <Icon className="size-4" aria-hidden />
-                </button>
-              ),
-            )}
-          </nav>
+            ).map(([l, label, Icon]) => ({
+              key: l,
+              label,
+              icon: Icon,
+              active: layout === l,
+              disabled: l === "board" && !canBoard ? `comes with ${proName}` : undefined,
+              onClick: () => {
+                remember(TASKS_LAYOUT_COOKIE, l);
+                go({ layout: l }, { keepView: true });
+              },
+            }))}
+          />
         </div>
       </div>
 

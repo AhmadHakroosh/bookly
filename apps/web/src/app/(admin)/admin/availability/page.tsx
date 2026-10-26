@@ -96,7 +96,8 @@ async function AvailabilityPage({ searchParams }: PageProps<"/admin/availability
               name="name"
               placeholder="e.g. Evenings"
               aria-label="New schedule name"
-              className="h-8 w-40"
+              size="sm"
+              className="w-40"
             />
             <SubmitButton variant="outline" size="sm">
               Add schedule

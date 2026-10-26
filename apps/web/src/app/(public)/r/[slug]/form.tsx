@@ -7,6 +7,7 @@ import { FormFields } from "@/components/forms/form-fields";
 import { submitRouting, type RoutingState } from "./actions";
 import { Dropdown } from "@/components/dropdown";
 import { SubmitButton } from "@/components/submit-button";
+import { fieldClasses } from "@/components/ui/input";
 
 export function RoutingFormView({
   slug,
@@ -19,8 +20,7 @@ export function RoutingFormView({
   form?: { formId: string; schema: FormSchema } | null;
 }) {
   const [state, action] = useActionState(submitRouting, {} as RoutingState);
-  const field =
-    "bg-background h-10 w-full rounded-lg border px-3 text-sm outline-none focus-visible:ring-2";
+  const field = `${fieldClasses} h-10 px-3`;
   return (
     <form
       action={action}

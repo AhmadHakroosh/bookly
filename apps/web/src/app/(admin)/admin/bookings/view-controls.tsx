@@ -1,11 +1,10 @@
 "use client";
 
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { CalendarDaysIcon, ListIcon } from "lucide-react";
 import { BOOKINGS_VIEW_COOKIE as VIEW_COOKIE } from "@/lib/calendar";
-import { cn } from "@/lib/utils";
+import { ViewToggle as Toggle } from "@/components/ui/view-toggle";
 
 /** Remembers the chosen view for a year (read by the page when the URL names none). */
 function remember(m: "list" | "calendar") {
@@ -22,27 +21,22 @@ export function ViewToggle({
   listHref: string;
   calendarHref: string;
 }) {
-  const item = (m: "list" | "calendar", href: string, label: string, Icon: typeof ListIcon) => (
-    <Link
-      href={href}
-      onClick={() => remember(m)}
-      aria-current={mode === m ? "page" : undefined}
-      className={cn(
-        "inline-flex h-8 items-center gap-1.5 rounded-md px-3 text-sm",
-        mode === m
-          ? "bg-background font-medium text-foreground shadow-sm"
-          : "text-muted-foreground hover:text-foreground",
-      )}
-    >
-      <Icon className="size-4" aria-hidden />
-      {label}
-    </Link>
-  );
   return (
-    <nav aria-label="View" className="inline-flex rounded-lg bg-muted p-1">
-      {item("list", listHref, "List", ListIcon)}
-      {item("calendar", calendarHref, "Calendar", CalendarDaysIcon)}
-    </nav>
+    <Toggle
+      items={(
+        [
+          ["list", listHref, "List", ListIcon],
+          ["calendar", calendarHref, "Calendar", CalendarDaysIcon],
+        ] as const
+      ).map(([m, href, label, icon]) => ({
+        key: m,
+        label,
+        icon,
+        href,
+        active: mode === m,
+        onClick: () => remember(m),
+      }))}
+    />
   );
 }
 

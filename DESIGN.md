@@ -56,9 +56,16 @@ Still one primary per page: `default` or `ink`, not both. Badges add `success`, 
 `info` for status chips.
 
 Form controls share the 40 px default height: `Input`, `Select`, `DatePicker`, `NumberField`,
-`ColorPicker`, `HandleField`, and, through a base rule in `globals.css`, every native text
-`<input>` and single `<select>`. A text field and the button beside it line up without classes;
-add `h-8` (and a `size="sm"` button) only inside tables and chips.
+`TimePicker`, `ColorPicker`, `HandleField`, and, through a base rule in `globals.css`, every native
+text `<input>` and single `<select>`. A text field and the button beside it line up without
+classes. In toolbars and rows use `size="sm"` on both (32 px: `Input`, `Dropdown`, `DatePicker`,
+`NumberField`, `TimePicker`, `Button`), never a height class. Heights are 40 / 32 / 28 / 44 only
+(no `h-9`); the one exception is the ⌘K field in the top bar (36 px, as the concepts draw it).
+Every control has the same 10 px radius (`rounded-lg`) at every size, is white (`bg-field`) on cards
+and on Paper, and focuses with one ring (`focus-visible:ring-3 ring-ring/50`, or `focus-ring`).
+Hand-built fields (public forms, editors) take `fieldClasses` from `ui/input.tsx`. Tabs come in
+two kinds: underline (`PageTabs`, or `Tabs` with `variant="line"`: orange text and rule) and pills
+(`SegmentedTabs`); list/board/calendar switches are one `ViewToggle`.
 
 ## The shell
 
@@ -66,7 +73,7 @@ Every admin page sits in one frame (`app/(admin)/admin/layout.tsx`, parts in
 `components/shell/`), drawn as `app ui.png` and specified in
 `planning/v2/ux/concept-fidelity.md` §2, which is binding:
 
-- **Sidebar** (Sand, 240 px, `lg` and up): the Bookly lockup; the workspace switcher (a card with
+- **Sidebar** (Sand, 256 px, `lg` and up): the Bookly lockup; the workspace switcher (a card with
   the workspace's logo or initial on Ink); the primary items (Home, Bookings, Contacts, Messages,
   Tasks, Files), a divider, the scheduling items (Booking page, Event types, Availability,
   Routing); Settings and Team pinned to the bottom for owners and admins; a divider and the

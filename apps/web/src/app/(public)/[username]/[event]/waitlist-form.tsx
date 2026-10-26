@@ -3,6 +3,7 @@
 import { useActionState } from "react";
 import { joinWaitlistAction, type WaitlistState } from "./actions";
 import { SubmitButton } from "@/components/submit-button";
+import { fieldClasses } from "@/components/ui/input";
 
 export function WaitlistForm({
   username,
@@ -17,8 +18,7 @@ export function WaitlistForm({
   tz: string;
 }) {
   const [state, action] = useActionState(joinWaitlistAction, {} as WaitlistState);
-  const field =
-    "bg-background h-10 w-full rounded-lg border px-3 text-sm outline-none focus-visible:ring-2";
+  const field = `${fieldClasses} h-10 px-3`;
   if (state.ok)
     return (
       <p className="rounded-lg border p-4 text-sm" role="status">

@@ -74,7 +74,8 @@ async function ContactsPage({ searchParams }: PageProps<"/admin/contacts">) {
             defaultValue={q}
             aria-label="Search contacts"
             placeholder="Search name, email, company"
-            className="h-8 pl-9"
+            size="sm"
+            className="pl-9"
           />
         </form>
       </div>

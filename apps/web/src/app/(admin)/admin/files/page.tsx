@@ -20,6 +20,7 @@ import { FileViewButtons } from "@/components/drive/file-viewer";
 import { UploadButton } from "@/components/drive/upload-button";
 import { BookingsSkeleton } from "@/components/skeletons/pages";
 import { Input } from "@/components/ui/input";
+import { SegmentedTabs } from "@/components/ui/segmented-tabs";
 import { formatBytes } from "@bookly/cloud";
 import { fmtDateTime, formatInTz } from "@/lib/time";
 import { cn } from "@/lib/utils";
@@ -128,23 +129,14 @@ async function FilesPage({ searchParams }: PageProps<"/admin/files">) {
         }
       />
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <nav aria-label="Drive" className="flex flex-wrap gap-2">
-          {VIEWS.filter(([k]) => k !== "team" || canTeam).map(([k, label]) => (
-            <Link
-              key={k}
-              href={`/admin/files?view=${k}`}
-              aria-current={view === k && !q ? "page" : undefined}
-              className={cn(
-                "inline-flex h-8 items-center rounded-lg border px-3 text-sm font-medium whitespace-nowrap outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
-                view === k && !q
-                  ? "border-primary/40 bg-accent text-accent-foreground"
-                  : "bg-card text-muted-foreground hover:text-foreground",
-              )}
-            >
-              {label}
-            </Link>
-          ))}
-        </nav>
+        <SegmentedTabs
+          label="Drive"
+          items={VIEWS.filter(([k]) => k !== "team" || canTeam).map(([k, label]) => ({
+            href: `/admin/files?view=${k}`,
+            label,
+            active: view === k && !q,
+          }))}
+        />
         <form method="get" action="/admin/files" className="relative w-full sm:w-64" role="search">
           <SearchIcon
             className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground"
@@ -155,7 +147,8 @@ async function FilesPage({ searchParams }: PageProps<"/admin/files">) {
             defaultValue={q}
             placeholder="Search files…"
             aria-label="Search files"
-            className="h-8 pl-9"
+            size="sm"
+            className="pl-9"
           />
         </form>
       </div>

@@ -437,7 +437,7 @@ export async function BookingDetail({ id, inPane = false }: { id: string; inPane
         </section>
       )}
       <Tabs defaultValue={tab}>
-        <TabsList variant="line" className="w-full justify-start border-b">
+        <TabsList variant="line">
           <TabsTrigger value="briefing">Briefing</TabsTrigger>
           <TabsTrigger value="notes">Notes</TabsTrigger>
           <TabsTrigger value="recap">Recap</TabsTrigger>
