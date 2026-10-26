@@ -89,7 +89,10 @@ async function ChangePage({ searchParams }: PageProps<"/admin/billing/change">) 
       {preview.blockers.map((b) => (
         <p key={b} className="rounded-xl border border-destructive/40 p-4 text-sm">
           {b}{" "}
-          <Link href="/admin/team" className="underline underline-offset-4">
+          <Link
+            href="/admin/team"
+            className="underline decoration-current/40 underline-offset-4 hover:decoration-current"
+          >
             Open Team
           </Link>
         </p>

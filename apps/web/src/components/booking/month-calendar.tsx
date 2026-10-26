@@ -51,7 +51,7 @@ export function MonthCalendar({
           </Link>
         </div>
       </div>
-      <div className="grid grid-cols-7 gap-1 text-center text-[11px] text-muted-foreground uppercase">
+      <div className="grid grid-cols-7 gap-1 text-center text-xs text-muted-foreground uppercase">
         {["S", "M", "T", "W", "T", "F", "S"].map((d, i) => (
           <span key={i}>{d}</span>
         ))}

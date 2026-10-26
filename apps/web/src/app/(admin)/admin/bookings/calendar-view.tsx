@@ -141,7 +141,7 @@ function TimeGrid({
           {hours.map((h, i) => (
             <span
               key={h}
-              className="absolute right-2 -translate-y-1/2 text-[10px] text-muted-foreground tabular-nums"
+              className="absolute right-2 -translate-y-1/2 text-xs text-muted-foreground tabular-nums"
               style={{ top: i * HOUR_PX }}
             >
               {i === 0 ? "" : minToHHMM(h * 60)}

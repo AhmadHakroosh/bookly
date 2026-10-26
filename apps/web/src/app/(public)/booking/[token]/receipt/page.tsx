@@ -68,7 +68,7 @@ async function ReceiptPage({ params }: PageProps<"/booking/[token]/receipt">) {
               href={ref.invoicePdf}
               target="_blank"
               rel="noreferrer"
-              className="underline underline-offset-4"
+              className="underline decoration-current/40 underline-offset-4 hover:decoration-current"
             >
               Invoice (PDF)
             </a>
@@ -78,7 +78,7 @@ async function ReceiptPage({ params }: PageProps<"/booking/[token]/receipt">) {
               href={ref.invoiceUrl}
               target="_blank"
               rel="noreferrer"
-              className="underline underline-offset-4"
+              className="underline decoration-current/40 underline-offset-4 hover:decoration-current"
             >
               Invoice
             </a>

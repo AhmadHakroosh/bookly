@@ -147,11 +147,11 @@ export function ScheduleForm({
       {hidden}
       <div className="grid gap-3 sm:grid-cols-2">
         <label className="text-sm" htmlFor="timezone">
-          <span className="mb-1 block text-xs font-medium">Time zone</span>
+          <span className="mb-2 block text-sm font-medium">Time zone</span>
           <TimezoneField name="timezone" defaultValue={timezone} zones={zones} className="w-full" />
         </label>
         <label className="text-sm">
-          <span className="mb-1 block text-xs font-medium">Schedule name</span>
+          <span className="mb-2 block text-sm font-medium">Schedule name</span>
           <Input name="name" defaultValue={name} />
         </label>
       </div>

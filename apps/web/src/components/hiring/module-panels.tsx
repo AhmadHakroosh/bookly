@@ -97,7 +97,7 @@ function Applicant({ children }: { children: React.ReactNode }) {
   );
 }
 
-const label = "mb-1 block text-xs font-medium";
+const label = "mb-2 block text-sm font-medium";
 
 export function ModulePanel({ kind, data }: { kind: ModuleKind; data: PanelData }) {
   switch (kind) {
@@ -368,7 +368,10 @@ function SchedulingPanel({ data }: { data: PanelData }) {
         ) : (
           <p className="text-sm text-muted-foreground">
             No event types yet.{" "}
-            <Link href="/admin/event-types" className="underline underline-offset-2">
+            <Link
+              href="/admin/event-types"
+              className="underline decoration-current/40 underline-offset-4 hover:decoration-current"
+            >
               Create one
             </Link>{" "}
             for interviews, then come back.

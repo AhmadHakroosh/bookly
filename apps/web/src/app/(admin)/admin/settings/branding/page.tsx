@@ -22,7 +22,7 @@ async function BrandingPage() {
   );
   return (
     <div className="grid items-start gap-5 lg:grid-cols-2">
-      <section aria-labelledby="brand-title" className="rounded-xl border bg-card p-5 md:p-6">
+      <section aria-labelledby="brand-title" className="rounded-xl border bg-card p-4 sm:p-5">
         <h2 id="brand-title" className="text-base font-semibold tracking-tight">
           Your brand
         </h2>
@@ -40,7 +40,7 @@ async function BrandingPage() {
           uploads={await hasFlag(workspace, "file_uploads")}
         />
       </section>
-      <section aria-labelledby="preview-title" className="rounded-xl border bg-card p-5 md:p-6">
+      <section aria-labelledby="preview-title" className="rounded-xl border bg-card p-4 sm:p-5">
         <h2 id="preview-title" className="text-base font-semibold tracking-tight">
           Email confirmation preview
         </h2>

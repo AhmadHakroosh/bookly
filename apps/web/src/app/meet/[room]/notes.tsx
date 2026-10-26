@@ -139,7 +139,7 @@ export function NotesPanel({
       <div className="flex items-center justify-between border-b px-4 py-2.5">
         <div>
           <h2 className="text-sm font-semibold tracking-tight">Your notes</h2>
-          <p className="text-[11px] text-muted-foreground" role="status">
+          <p className="text-xs text-muted-foreground" role="status">
             Only you see these ·{" "}
             {notes.state === "saving"
               ? "Saving…"
@@ -169,7 +169,7 @@ export function NotesPanel({
         )}
         {notes.entries.map((e) => (
           <li key={e.id} className="group flex items-start gap-2">
-            <span className="mt-1.5 shrink-0 font-mono text-[11px] text-muted-foreground">
+            <span className="mt-1.5 shrink-0 font-mono text-xs text-muted-foreground">
               {timeOf(e.at)}
             </span>
             {e.moment && (

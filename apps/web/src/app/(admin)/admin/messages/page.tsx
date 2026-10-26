@@ -52,6 +52,7 @@ import { LiveRefresh } from "./thread-sheet";
 import { AddPeopleButton, CloseButton } from "./thread-controls";
 import { PageHeader } from "@/components/ui/page-header";
 import { SegmentedTabs } from "@/components/ui/segmented-tabs";
+import { TextLink } from "@/components/ui/text-link";
 
 type SP = Record<string, string | string[] | undefined>;
 const one = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v) || undefined;
@@ -77,7 +78,10 @@ async function MessagesPage({ searchParams }: PageProps<"/admin/messages">) {
           when booking, and your internal notes. Messages with your clients come with{" "}
           {PLANS[planFor("guestMessages")].name}; team threads with{" "}
           {PLANS[planFor("teamMessages")].name}.{" "}
-          <Link href="/admin/billing" className="underline underline-offset-4">
+          <Link
+            href="/admin/billing"
+            className="underline decoration-current/40 underline-offset-4 hover:decoration-current"
+          >
             Upgrade
           </Link>
         </p>
@@ -329,7 +333,7 @@ async function ThreadPane({
   if (d) await markThreadRead(v, d.thread.id);
   if (!d)
     return (
-      <div className="rounded-xl border bg-card p-5">
+      <div className="rounded-xl border bg-card p-4 sm:p-5">
         <BackToList href={closeHref} />
         <h2 className="text-lg font-semibold tracking-tight">Conversation not found</h2>
         <p className="mt-1 text-sm text-muted-foreground">
@@ -532,12 +536,9 @@ async function ClientContext({
             <h3 className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
               Recent files
             </h3>
-            <Link
-              href={`/admin/files?contact=${c.id}`}
-              className="text-xs text-primary hover:underline"
-            >
+            <TextLink href={`/admin/files?contact=${c.id}`} variant="more" className="text-xs">
               View all
-            </Link>
+            </TextLink>
           </div>
           {latest.length === 0 ? (
             <p className="text-xs text-muted-foreground">None yet.</p>
@@ -591,7 +592,7 @@ function Item({ it, tz, contactId }: { it: ThreadItem; tz: string; contactId: st
         {it.eventId && contactId && it.source === "email" && (
           <Link
             href={`/admin/contacts/${contactId}?entry=${it.eventId}`}
-            className="underline underline-offset-4"
+            className="underline decoration-current/40 underline-offset-4 hover:decoration-current"
           >
             On the timeline
           </Link>

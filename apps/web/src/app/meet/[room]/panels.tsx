@@ -70,7 +70,7 @@ export function ChatPanel({
           <li key={m.id}>
             <div className="flex items-baseline gap-2">
               <span className="font-medium">{m.name}</span>
-              <span className="text-[11px] text-muted-foreground">
+              <span className="text-xs text-muted-foreground">
                 {new Date(m.at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
               </span>
             </div>
@@ -175,7 +175,7 @@ function PersonRow({ id, local }: { id: string; local: boolean }) {
       <span className="min-w-0 flex-1 truncate">
         {label}
         {local ? " (You)" : ""}
-        {owner === true && <span className="ml-1.5 text-[11px] text-muted-foreground">Host</span>}
+        {owner === true && <span className="ml-1.5 text-xs text-muted-foreground">Host</span>}
       </span>
       {hand && <HandIcon className="size-4 text-primary" aria-label="Hand raised" />}
       {audio.isOff ? (

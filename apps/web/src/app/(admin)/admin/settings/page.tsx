@@ -20,7 +20,7 @@ async function GeneralPage() {
   const betas = await betaFlagsFor(workspace);
   return (
     <div className="max-w-3xl space-y-5">
-      <section aria-labelledby="general-title" className="rounded-xl border bg-card p-5 md:p-6">
+      <section aria-labelledby="general-title" className="rounded-xl border bg-card p-4 sm:p-5">
         <h2 id="general-title" className="text-base font-semibold tracking-tight">
           General
         </h2>
@@ -44,7 +44,7 @@ async function GeneralPage() {
           zones={timezoneList()}
         />
       </section>
-      <section className="space-y-3 rounded-xl border bg-card p-5">
+      <section className="space-y-3 rounded-xl border bg-card p-4 sm:p-5">
         <div className="flex items-start justify-between gap-4">
           <div>
             <h2 className="flex items-center gap-2 text-base font-semibold tracking-tight">
@@ -66,7 +66,7 @@ async function GeneralPage() {
           </p>
         )}
       </section>
-      <section className="space-y-3 rounded-xl border bg-card p-5">
+      <section className="space-y-3 rounded-xl border bg-card p-4 sm:p-5">
         <div className="flex items-start justify-between gap-4">
           <div>
             <h2 className="flex items-center gap-2 text-base font-semibold tracking-tight">

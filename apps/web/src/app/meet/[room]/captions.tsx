@@ -155,7 +155,7 @@ export function TranscriptPanel({
   }, [lines.length]);
   return (
     <>
-      <p className="border-b px-4 py-2 text-[11px] text-muted-foreground">
+      <p className="border-b px-4 py-2 text-xs text-muted-foreground">
         This call is transcribed so both sides get notes and action items; the recap is written from
         it when the call ends.
       </p>
@@ -171,9 +171,7 @@ export function TranscriptPanel({
           <li key={`${c.t}-${i}`}>
             <p className="flex items-baseline gap-2">
               <span className="font-medium">{speakerLabel(c.speaker, hostName, attendeeName)}</span>
-              <span className="font-mono text-[11px] text-muted-foreground">
-                {formatClock(c.t)}
-              </span>
+              <span className="font-mono text-xs text-muted-foreground">{formatClock(c.t)}</span>
             </p>
             <p className="break-words">{c.text}</p>
           </li>

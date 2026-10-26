@@ -34,7 +34,10 @@ async function EventTypesPage({ searchParams }: PageProps<"/admin/event-types">)
           className="rounded-lg border border-destructive/40 bg-destructive/5 p-3 text-sm"
         >
           {limit}{" "}
-          <Link href="/admin/billing" className="underline underline-offset-4">
+          <Link
+            href="/admin/billing"
+            className="underline decoration-current/40 underline-offset-4 hover:decoration-current"
+          >
             See plans
           </Link>
         </p>
@@ -49,7 +52,7 @@ async function EventTypesPage({ searchParams }: PageProps<"/admin/event-types">)
                 Your page:{" "}
                 <Link
                   href={`/${profile.username}`}
-                  className="underline underline-offset-4"
+                  className="underline decoration-current/40 underline-offset-4 hover:decoration-current"
                   target="_blank"
                 >
                   /{profile.username}
@@ -57,7 +60,10 @@ async function EventTypesPage({ searchParams }: PageProps<"/admin/event-types">)
               </>
             ) : (
               <>
-                <Link href="/admin/profile?setup=1" className="underline underline-offset-4">
+                <Link
+                  href="/admin/profile?setup=1"
+                  className="underline decoration-current/40 underline-offset-4 hover:decoration-current"
+                >
                   Set up your booking page
                 </Link>{" "}
                 first.
@@ -87,7 +93,7 @@ async function EventTypesPage({ searchParams }: PageProps<"/admin/event-types">)
                 className="flex items-center gap-4 rounded-xl border bg-card p-4 outline-none hover:border-primary/40 hover:bg-[color-mix(in_oklch,var(--accent)_35%,var(--card))] focus-visible:ring-3 focus-visible:ring-ring/50"
               >
                 <span
-                  className="inline-flex size-11 shrink-0 items-center justify-center rounded-xl"
+                  className="inline-flex size-10 shrink-0 items-center justify-center rounded-lg"
                   style={{
                     background: `color-mix(in oklch, ${e.color} 14%, var(--card))`,
                     color: e.color,

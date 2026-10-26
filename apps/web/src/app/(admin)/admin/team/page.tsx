@@ -79,7 +79,7 @@ async function TeamPage({ searchParams }: PageProps<"/admin/team">) {
         <p className="rounded-xl border border-destructive/40 bg-card p-3 text-sm">{sp.error}</p>
       )}
       {canManage && (
-        <section aria-labelledby="invite-title" className="rounded-xl border bg-card p-5">
+        <section aria-labelledby="invite-title" className="rounded-xl border bg-card p-4 sm:p-5">
           <h2 id="invite-title" className="mb-3 text-base font-semibold tracking-tight">
             Invite member
           </h2>

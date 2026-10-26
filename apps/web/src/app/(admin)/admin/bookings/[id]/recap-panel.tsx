@@ -164,7 +164,7 @@ export function RecapPanel({
                       </span>
                     )}
                     {withNotes && (
-                      <Badge variant="outline" className="ml-2 align-middle text-[11px]">
+                      <Badge variant="outline" className="ml-2 align-middle">
                         {SOURCE[a.source ?? "transcript"]}
                       </Badge>
                     )}
@@ -240,7 +240,10 @@ export function RecapPanel({
       {contactId && (
         <p className="text-xs text-muted-foreground">
           Everything accepted here lands on{" "}
-          <Link href={`/admin/contacts/${contactId}`} className="underline underline-offset-4">
+          <Link
+            href={`/admin/contacts/${contactId}`}
+            className="underline decoration-current/40 underline-offset-4 hover:decoration-current"
+          >
             {attendeeName}&apos;s timeline
           </Link>
           .

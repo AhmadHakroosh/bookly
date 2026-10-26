@@ -19,7 +19,7 @@ export function SlotChip({
     <>
       <span className="block">{time}</span>
       {note && (
-        <span className="mt-0.5 block text-[11px] leading-tight font-normal text-muted-foreground">
+        <span className="mt-0.5 block text-xs leading-tight font-normal text-muted-foreground">
           {note}
         </span>
       )}

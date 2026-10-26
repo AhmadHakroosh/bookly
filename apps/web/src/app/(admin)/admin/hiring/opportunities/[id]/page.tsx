@@ -299,7 +299,7 @@ async function Interviews({ setup }: { setup: Setup }) {
       {stages.map((s) => {
         const sc = s.modules.scheduling!;
         return (
-          <li key={s.id} className="rounded-xl border bg-card p-4">
+          <li key={s.id} className="rounded-xl border bg-card p-4 sm:p-5">
             <p className="font-medium">{s.name}</p>
             <p className="mt-1 text-sm text-muted-foreground">
               {sc.sessions.length
@@ -332,7 +332,7 @@ function ReviewPlan({ setup }: { setup: Setup }) {
         const r = s.modules.reviews!;
         const card = setup.scorecards.find((x) => x.id === r.scorecardId);
         return (
-          <li key={s.id} className="rounded-xl border bg-card p-4">
+          <li key={s.id} className="rounded-xl border bg-card p-4 sm:p-5">
             <p className="font-medium">{s.name}</p>
             <p className="mt-1 text-sm text-muted-foreground">
               {r.reviewersPerApplication} reviewer{r.reviewersPerApplication === 1 ? "" : "s"} per

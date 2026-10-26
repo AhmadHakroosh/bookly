@@ -77,7 +77,7 @@ async function OpportunitiesPage() {
             {list.map((o) => {
               const s = opportunityStatus(o.status, o.opensAt);
               return (
-                <li key={o.id} className="rounded-xl border bg-card p-4">
+                <li key={o.id} className="rounded-xl border bg-card p-4 sm:p-5">
                   <div className="flex items-start justify-between gap-3">
                     <Link
                       href={

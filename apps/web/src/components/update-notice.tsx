@@ -13,7 +13,7 @@ export async function UpdateNotice() {
         href={update.url}
         target="_blank"
         rel="noreferrer"
-        className="underline underline-offset-4"
+        className="underline decoration-current/40 underline-offset-4 hover:decoration-current"
       >
         Release notes
       </a>

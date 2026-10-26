@@ -83,7 +83,10 @@ async function ActivityPage({ searchParams }: { searchParams: Promise<Search> })
         ) : (
           <p className="text-xs text-muted-foreground">
             CSV export comes with {PLANS[planFor("activityExport")].name}.{" "}
-            <Link href="/admin/billing" className="underline underline-offset-4">
+            <Link
+              href="/admin/billing"
+              className="underline decoration-current/40 underline-offset-4 hover:decoration-current"
+            >
               Upgrade
             </Link>
           </p>
@@ -91,7 +94,7 @@ async function ActivityPage({ searchParams }: { searchParams: Promise<Search> })
       </div>
 
       <form method="get" className="flex flex-wrap items-end gap-2 text-sm">
-        <label className="grid gap-1">
+        <label className="grid gap-2 text-sm font-medium">
           <span className="text-xs text-muted-foreground">Who</span>
           <select
             name="actor"
@@ -106,7 +109,7 @@ async function ActivityPage({ searchParams }: { searchParams: Promise<Search> })
             ))}
           </select>
         </label>
-        <label className="grid gap-1">
+        <label className="grid gap-2 text-sm font-medium">
           <span className="text-xs text-muted-foreground">What</span>
           <select
             name="action"
@@ -121,7 +124,7 @@ async function ActivityPage({ searchParams }: { searchParams: Promise<Search> })
             ))}
           </select>
         </label>
-        <label className="grid gap-1">
+        <label className="grid gap-2 text-sm font-medium">
           <span className="text-xs text-muted-foreground">On</span>
           <select
             name="target"
@@ -136,11 +139,11 @@ async function ActivityPage({ searchParams }: { searchParams: Promise<Search> })
             ))}
           </select>
         </label>
-        <label className="grid gap-1">
+        <label className="grid gap-2 text-sm font-medium">
           <span className="text-xs text-muted-foreground">From</span>
           <Input type="date" name="from" defaultValue={one(sp.from)} className="w-40" />
         </label>
-        <label className="grid gap-1">
+        <label className="grid gap-2 text-sm font-medium">
           <span className="text-xs text-muted-foreground">To</span>
           <Input type="date" name="to" defaultValue={one(sp.to)} className="w-40" />
         </label>

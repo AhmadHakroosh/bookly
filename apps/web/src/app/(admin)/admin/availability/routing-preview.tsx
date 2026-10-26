@@ -38,7 +38,7 @@ export function RoutingPreview({ forms }: { forms: PreviewForm[] }) {
   return (
     <section
       aria-labelledby="routing-preview-title"
-      className="space-y-4 rounded-xl border bg-card p-5"
+      className="space-y-4 rounded-xl border bg-card p-4 sm:p-5"
     >
       <div className="flex items-center justify-between gap-2">
         <h2 id="routing-preview-title" className="text-sm font-semibold">

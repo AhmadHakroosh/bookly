@@ -21,7 +21,10 @@ async function ResetPage({ searchParams }: PageProps<"/reset-password">) {
         ) : (
           <p className="mt-4 text-sm text-muted-foreground">
             This reset link is missing or has expired.{" "}
-            <Link href="/forgot-password" className="underline underline-offset-4">
+            <Link
+              href="/forgot-password"
+              className="underline decoration-current/40 underline-offset-4 hover:decoration-current"
+            >
               Request a new one
             </Link>
             .

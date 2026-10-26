@@ -10,7 +10,7 @@ export function DocsNav({ pages }: { pages: { slug: string; title: string }[] })
     <nav aria-label="Documentation" className="text-sm">
       <Link
         href="/docs"
-        className={`mb-3 flex items-center gap-2 px-2 text-[11px] font-medium tracking-wide uppercase ${pathname === "/docs" ? "text-foreground" : "text-muted-foreground hover:text-foreground"}`}
+        className={`mb-3 flex items-center gap-2 px-2 text-xs font-semibold tracking-wide uppercase ${pathname === "/docs" ? "text-foreground" : "text-muted-foreground hover:text-foreground"}`}
       >
         <BookOpenIcon className="size-3.5" aria-hidden />
         Documentation

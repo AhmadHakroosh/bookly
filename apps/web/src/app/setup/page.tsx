@@ -25,7 +25,10 @@ async function SetupPage() {
           {!session && (
             <p className="mt-6 text-sm text-muted-foreground">
               Already have an account here?{" "}
-              <Link href="/login?next=/setup" className="underline underline-offset-4">
+              <Link
+                href="/login?next=/setup"
+                className="underline decoration-current/40 underline-offset-4 hover:decoration-current"
+              >
                 Sign in
               </Link>{" "}
               and you will own the new workspace.

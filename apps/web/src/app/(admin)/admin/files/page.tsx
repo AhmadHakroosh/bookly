@@ -110,7 +110,10 @@ async function FilesPage({ searchParams }: PageProps<"/admin/files">) {
         <p className="text-sm text-muted-foreground">
           A drive for your workspace: your files, a folder for every contact with what they sent
           you, and files on tasks. Files come with {PLANS[planFor("attachments")].name}.{" "}
-          <Link href="/admin/billing" className="underline underline-offset-4">
+          <Link
+            href="/admin/billing"
+            className="underline decoration-current/40 underline-offset-4 hover:decoration-current"
+          >
             Upgrade
           </Link>
         </p>
@@ -549,7 +552,10 @@ async function SearchView({
     <>
       <p className="text-sm text-muted-foreground">
         Results for “{q}” ·{" "}
-        <Link href="/admin/files" className="underline underline-offset-4">
+        <Link
+          href="/admin/files"
+          className="underline decoration-current/40 underline-offset-4 hover:decoration-current"
+        >
           clear
         </Link>
       </p>
@@ -661,7 +667,7 @@ async function FilePane({
               <dd>
                 <Link
                   href={`/admin/contacts/${contact.id}`}
-                  className="underline underline-offset-4"
+                  className="underline decoration-current/40 underline-offset-4 hover:decoration-current"
                 >
                   {contact.name || contact.email}
                 </Link>
@@ -675,7 +681,7 @@ async function FilePane({
                 {file.source === "email" && contact && file.sourceId ? (
                   <Link
                     href={`/admin/contacts/${contact.id}?entry=${file.sourceId}`}
-                    className="underline underline-offset-4"
+                    className="underline decoration-current/40 underline-offset-4 hover:decoration-current"
                   >
                     Their email
                   </Link>
