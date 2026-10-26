@@ -27,13 +27,13 @@ Going public with the hosted service needs each provider's review, done once by 
   that names the Google API Services User Data Policy (ours does, `/privacy`), the homepage on the
   same domain, and a short screencast of the consent flow and what Bookly does with the data.
   Until verified, only listed test users can connect and their tokens expire after 7 days.
-- **Microsoft**: users in other organisations cannot consent to an unverified multi-tenant app at
+- **Microsoft**: users in other organizations cannot consent to an unverified multi-tenant app at
   all (personal accounts can), so publisher verification is needed before work accounts connect:
   a Partner Center (MPN) account for the legal entity, and the publisher domain proven by
   `public/.well-known/microsoft-identity-association.json`, which lists the app's client id
   (update it if the registration is ever recreated). Enter the Partner ID under the app's
   Branding & properties once Microsoft has verified the business.
-- **Zoom**: an unpublished app can only be authorised by accounts on its allow list. For any
+- **Zoom**: an unpublished app can only be authorized by accounts on its allow list. For any
   Zoom user to connect, the app must pass Marketplace review (privacy and support URLs, a
   deauthorization notification URL, the security questionnaire) and be published.
 
@@ -43,7 +43,7 @@ Going public with the hosted service needs each provider's review, done once by 
    creates the meeting for the event type's location: Zoom meeting, Daily room, or a Google /
    Outlook calendar event with a Meet / Teams link.
 2. The booking is then added to every other connected calendar (the "Add new bookings to" calendar).
-3. Cancelling or rescheduling deletes the meeting and the calendar events.
+3. Canceling or rescheduling deletes the meeting and the calendar events.
 4. Availability subtracts busy time from the calendars ticked under "Check for conflicts in"
    and from every subscribed calendar feed (below). Results are cached for one minute.
 
@@ -130,7 +130,7 @@ Busy time from connected calendars is cached for 60 seconds. When `APP_URL` is a
    challenge). When a user removes Bookly from their Zoom account, the route deletes their
    connection and tokens at once; Zoom requires that within ten days of the event.
 
-Until the app is published only Zoom users on its allow list can authorise it. Publishing needs
+Until the app is published only Zoom users on its allow list can authorize it. Publishing needs
 the Marketplace review: listing texts, privacy/terms/support URLs, a short demo video, the
 deauthorization endpoint above and the security questionnaire.
 
@@ -221,7 +221,7 @@ or Teams lobby when their meeting has one (Zoom without a waiting room lets it s
 
 Budget and plan rules are the same as Bookly video: the bot is not booked when the workspace's
 minutes are used up, is sent away if they run out before it starts recording, and its recording
-is capped at the remaining minutes. Cancelling or rescheduling a booking cancels the bot. Without
+is capped at the remaining minutes. Canceling or rescheduling a booking cancels the bot. Without
 `RECALL_API_KEY` the auto-capture setting is only offered on Bookly video event types.
 
 ## Local development

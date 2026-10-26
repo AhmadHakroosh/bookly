@@ -101,7 +101,7 @@ export function stageProblems(
     if (!s.name.trim()) problems.push("Every stage needs a name.");
     if (!(STAGE_CATEGORIES as readonly string[]).includes(s.category))
       problems.push(`"${s.category}" is not a stage category.`);
-    if (!/^#[0-9a-f]{6}$/i.test(s.color)) problems.push(`"${s.color}" is not a colour.`);
+    if (!/^#[0-9a-f]{6}$/i.test(s.color)) problems.push(`"${s.color}" is not a color.`);
   }
   const entries = stages.filter((s) => s.isEntry).length;
   if (entries !== 1) problems.push("Exactly one stage must be where new people start.");

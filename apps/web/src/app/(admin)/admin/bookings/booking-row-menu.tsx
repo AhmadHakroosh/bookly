@@ -128,7 +128,7 @@ export function BookingRowMenu({
                 start(async () => {
                   await cancel(f);
                   setCancelling(false);
-                  toast.success("Booking cancelled. They've been told.");
+                  toast.success("Booking canceled. They've been told.");
                 })
               }
               className="grid gap-4"

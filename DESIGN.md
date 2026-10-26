@@ -186,6 +186,10 @@ The admin opens on **Home** (`/admin`): today's meetings, requests, overdue task
 recaps to review. "Inbox" is reserved for email. Pages are nouns (Bookings, Contacts, Settings),
 actions are verbs on buttons (Save, Invite, Cancel booking).
 
+Everything a person reads is US English: color, organize, canceled, license (`us-english.test.ts`
+checks interface text, emails, plans and docs). Data keeps its own spelling: the
+`booking.cancelled` event and the `cancelled` status are API values and never change.
+
 ## Betas and the activity log
 
 A page behind a feature flag renders `<BetaBadge />` next to its title (see

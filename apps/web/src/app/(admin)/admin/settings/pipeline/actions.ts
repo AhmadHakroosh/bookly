@@ -26,7 +26,7 @@ async function ctx() {
 const stageSchema = z.object({
   name: z.string().trim().min(1, "Give the stage a name.").max(60),
   category: z.enum(STAGE_CATEGORIES),
-  color: z.string().regex(/^#[0-9a-fA-F]{6}$/, "Pick a colour."),
+  color: z.string().regex(/^#[0-9a-fA-F]{6}$/, "Pick a color."),
   priority: z.enum(["on"]).optional(),
   entry: z.enum(["on"]).optional(),
 });

@@ -209,7 +209,7 @@ export const COMPARISONS: Comparison[] = [
         source: "https://cal.com/pricing",
       },
       {
-        feature: "Licence and self-hosting",
+        feature: "License and self-hosting",
         bookly: BOOKLY_SELF_HOST,
         them: "Closed source since April 2026; self-hosting through an Enterprise sale. The MIT community edition, Cal.diy, is recommended for personal, non-production use and leaves out teams, routing forms and workflows",
         source: "https://cal.com/blog/calcom-v6-4",
@@ -223,7 +223,7 @@ export const COMPARISONS: Comparison[] = [
       {
         feature: "Notes and recaps",
         bookly: BOOKLY_RECAPS,
-        them: "Cal Video transcripts summarised into a recap, rolling out by waitlist",
+        them: "Cal Video transcripts summarized into a recap, rolling out by waitlist",
         source: "https://cal.com/blog/calcom-v6-7",
       },
       {
@@ -268,7 +268,7 @@ export const COMPARISONS: Comparison[] = [
       ],
       [
         "Is Bookly open source?",
-        "The core is, under AGPL-3.0, and it stays that way: shipped features never move behind the commercial licence. Enterprise modules are source-available under the Elastic License 2.0.",
+        "The core is open source under AGPL-3.0, and it stays that way: shipped features never move behind the commercial license. Enterprise modules are source-available under the Elastic License 2.0.",
       ],
       figures("Cal.com"),
     ],
@@ -400,7 +400,7 @@ export const COMPARISONS: Comparison[] = [
     chooseBookly: [
       "you select people in rounds: fellowships, cohorts, internships, small hiring loops",
       "you want interviews booked on the calendars and video you already use",
-      "you want AI that summarises and never scores people",
+      "you want AI that summarizes and never scores people",
       "you want to self-host, or you also run client work on Bookly",
     ],
     chooseThem: [
@@ -437,7 +437,7 @@ export const COMPARISONS: Comparison[] = [
       {
         feature: "AI and decisions",
         bookly:
-          "AI may summarise and draft; it never ranks, scores, rejects or recommends a decision about a person",
+          "AI may summarize and draft; it never ranks, scores, rejects or recommends a decision about a person",
         them: "Talent Matching prioritises candidates against weighted criteria; Voice AI scores each answer and never rejects or advances; rule-based auto-reject and auto-advance are listed",
         source: "https://www.greenhouse.com/ai-recruiting",
       },
@@ -530,7 +530,7 @@ export const COMPARISONS: Comparison[] = [
       {
         feature: "AI and decisions",
         bookly:
-          "AI may summarise and draft; it never ranks, scores, rejects or recommends a decision about a person",
+          "AI may summarize and draft; it never ranks, scores, rejects or recommends a decision about a person",
         them: "Application review marks criteria as met or not met, with citations, and never ranks or rates; rule-based auto-reject on form answers is listed",
         source: "https://www.ashbyhq.com/ai",
       },
@@ -614,7 +614,7 @@ export const COMPARISONS: Comparison[] = [
       {
         feature: "AI and decisions",
         bookly:
-          "AI may summarise and draft; it never ranks, scores, rejects or recommends a decision about a person",
+          "AI may summarize and draft; it never ranks, scores, rejects or recommends a decision about a person",
         them: "Smart Summary can give a score from a prompt; Smart Reviewer assesses applications against your rubric alongside people; Automated Review sorts and scores (premium)",
         source: "https://www.submittable.com/ai",
       },

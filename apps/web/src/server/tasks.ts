@@ -81,7 +81,7 @@ export function cleanStatus(input: Partial<StatusInput>): Partial<StatusInput> |
     out.name = name;
   }
   if (input.color !== undefined) {
-    if (!HEX.test(input.color)) return "Pick a colour.";
+    if (!HEX.test(input.color)) return "Pick a color.";
     out.color = input.color.toLowerCase();
   }
   if (input.isDone !== undefined) out.isDone = input.isDone;

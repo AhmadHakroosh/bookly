@@ -47,7 +47,7 @@ export const COPY = {
     "Your application is being reviewed, so it can't be changed. If something important is wrong, write to the team.",
   withdrawTitle: "Withdraw your application?",
   withdrawBody:
-    "The team will stop reviewing it and any interviews will be cancelled. You can apply again while applications are open.",
+    "The team will stop reviewing it and any interviews will be canceled. You can apply again while applications are open.",
   deleteTitle: "Delete your application?",
   deleteBody:
     "This withdraws your application and deletes your answers and documents within 30 days. We keep a minimal record that you applied and withdrew.",

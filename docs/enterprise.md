@@ -2,7 +2,7 @@
 
 Bookly is open core. Everything a team needs to book, meet, follow up and (from 1.0) hire is open
 source under the AGPL v3 and works without a license. Bookly Enterprise adds commercial modules
-for organisations: single sign-on and SCIM, custom roles, compliance reports, per-region
+for organizations: single sign-on and SCIM, custom roles, compliance reports, per-region
 retention policies and connectors. Their code lives in `ee/`, readable by anyone, under the
 [Elastic License 2.0](https://www.elastic.co/licensing/elastic-license).
 

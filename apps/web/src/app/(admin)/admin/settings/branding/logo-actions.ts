@@ -20,7 +20,7 @@ export async function uploadLogoAction(formData: FormData): Promise<ImageUploadS
   if (!ws) return { error: "No workspace." };
   if (!(await hasFlag(ws, "file_uploads"))) return { error: "Uploads are not enabled yet." };
   if (!hasFeature(ws, "removeBranding"))
-    return { error: "Your own logo and colour come with Pro and Team." };
+    return { error: "Your own logo and color come with Pro and Team." };
   const file = formData.get("file");
   if (!(file instanceof File) || !file.size) return { error: "Choose an image first." };
   try {

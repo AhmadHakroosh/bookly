@@ -28,7 +28,7 @@ async function BrandingPage() {
         </h2>
         <p className="mt-1 mb-5 text-sm text-muted-foreground">
           Shown on your booking pages and in every email guests receive: your logo next to the
-          workspace name, and your colour on buttons and selected dates. Leave blank for the Bookly
+          workspace name, and your color on buttons and selected dates. Leave blank for the Bookly
           mark and accent.
         </p>
         <BrandingForm

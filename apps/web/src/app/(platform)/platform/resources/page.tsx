@@ -173,7 +173,7 @@ export default async function ResourcesPage() {
             <ResourceCard
               icon={PaletteIcon}
               title="Brand and press"
-              body="Logos, colours and the press kit."
+              body="Logos, colors and the press kit."
               href="/press"
             />
           </li>

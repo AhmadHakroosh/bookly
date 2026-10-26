@@ -38,7 +38,7 @@ const brandingSchema = z.object({
   accent: z
     .string()
     .trim()
-    .regex(/^#[0-9a-fA-F]{6}$/, "Use a hex colour like #e85d2c")
+    .regex(/^#[0-9a-fA-F]{6}$/, "Use a hex color like #e85d2c")
     .or(z.literal(""))
     .default(""),
 });
@@ -119,7 +119,7 @@ export async function updateWorkspaceSettings(
     const parsed = brandingSchema.safeParse(raw);
     if (!parsed.success) return fail(parsed.error);
     if (!hasFeature(workspace, "removeBranding"))
-      return { error: "Your own logo and colour come with Pro and Team." };
+      return { error: "Your own logo and color come with Pro and Team." };
     settings = {
       ...s,
       branding: {

@@ -63,7 +63,7 @@ function StatusRow({
           <ColorPicker
             name="color"
             defaultValue={s.color}
-            ariaLabel={`Colour of ${s.name}`}
+            ariaLabel={`Color of ${s.name}`}
             className="w-28"
           />
           <Input
@@ -220,7 +220,7 @@ export function StatusEditor({ statuses }: { statuses: EditableStatus[] }) {
         <form action={action} className="space-y-3 rounded-xl border border-dashed p-3">
           <p className="text-sm font-medium">Add a status</p>
           <div className="flex items-center gap-2">
-            <ColorPicker name="color" ariaLabel="Colour of the new status" className="w-28" />
+            <ColorPicker name="color" ariaLabel="Color of the new status" className="w-28" />
             <Input
               name="name"
               placeholder="Waiting on client"

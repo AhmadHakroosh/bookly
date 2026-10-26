@@ -52,7 +52,7 @@ async function BillingPage({ searchParams }: PageProps<"/admin/billing">) {
             : ""}
           {ws.settings.billingInterval === "year" ? ", billed yearly" : ""}
           {ws.settings.billingEndsAt
-            ? ` · cancelled, ends ${new Date(ws.settings.billingEndsAt).toLocaleDateString()}`
+            ? ` · canceled, ends ${new Date(ws.settings.billingEndsAt).toLocaleDateString()}`
             : ws.planRenewsAt
               ? ` · renews ${ws.planRenewsAt.toLocaleDateString()}`
               : ""}

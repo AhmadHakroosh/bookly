@@ -69,7 +69,7 @@ export const KINDS: Record<NotificationKind, KindInfo> = {
   },
   "booking.cancelled": {
     label: "Cancellation",
-    hint: "A guest cancelled a booking or a series.",
+    hint: "A guest canceled a booking or a series.",
     defaults: { inApp: true, desktop: true, email: true },
     text: "onCancel",
   },

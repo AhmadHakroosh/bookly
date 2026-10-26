@@ -96,7 +96,7 @@ describe("stageProblems", () => {
     );
   });
 
-  it("rejects duplicate keys, empty names, unknown categories and bad colours", () => {
+  it("rejects duplicate keys, empty names, unknown categories and bad colors", () => {
     const problems = stageProblems([
       ok,
       { ...ok, isEntry: false },
@@ -108,7 +108,7 @@ describe("stageProblems", () => {
       'The stage key "a" is used twice.',
       "Every stage needs a name.",
       '"maybe" is not a stage category.',
-      '"orange" is not a colour.',
+      '"orange" is not a color.',
     ]);
   });
 

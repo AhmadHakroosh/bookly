@@ -24,7 +24,7 @@ date, the contact and meeting it came from, status), the description, files, com
 ## Statuses
 
 Each workspace defines its own flow. Bookly starts every workspace with **To do → In progress →
-Done**; owners and admins change it from **Statuses** on the Tasks page: add, rename, colour,
+Done**; owners and admins change it from **Statuses** on the Tasks page: add, rename, color,
 reorder, set a **WIP limit** (the column header warns when it holds more), mark one or more as
 **Counts as done**, choose the **default** for new tasks, and archive a status (its tasks move to
 the status you pick). A board always keeps at least one open and one done status, and exactly

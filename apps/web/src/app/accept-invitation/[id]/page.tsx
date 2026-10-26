@@ -23,7 +23,7 @@ async function AcceptPage({ params, searchParams }: PageProps<"/accept-invitatio
       <div className="mx-auto max-w-md px-4 py-16 text-center">
         <h1 className="text-2xl font-semibold">Invitation not valid</h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          It may have expired or been cancelled. Ask the workspace owner to send a new one.
+          It may have expired or been canceled. Ask the workspace owner to send a new one.
         </p>
       </div>
     );

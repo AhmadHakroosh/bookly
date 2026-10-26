@@ -73,7 +73,7 @@ describe("email templates", () => {
     expect(r.subject).toBe("Reminder: Intro call with Ahmad in 1 hour");
     expect(r.html).toContain("Join the call");
     const c = await cancellationMail(ctx(), false);
-    expect(c.subject).toMatch(/^Cancelled: Intro call on /);
+    expect(c.subject).toMatch(/^Canceled: Intro call on /);
     expect(c.html).toContain("Book another time");
   });
 });

@@ -9,7 +9,7 @@ import { pageMetadata, SITE } from "../site";
 export const metadata: Metadata = pageMetadata({
   title: "Press and brand",
   description:
-    "The Bookly press kit: logos in SVG and PNG, colours, type, product images, the story of the mark and boilerplate copy for writing about Bookly.",
+    "The Bookly press kit: logos in SVG and PNG, colors, type, product images, the story of the mark and boilerplate copy for writing about Bookly.",
   path: "/press",
 });
 
@@ -26,13 +26,13 @@ const LOGOS = [
   {
     file: "bookly-logo-on-ink",
     name: "Logo on ink",
-    use: "On dark panels: the mark keeps its colour, the wordmark turns white.",
+    use: "On dark panels: the mark keeps its color, the wordmark turns white.",
     tile: "#1C1C1C",
   },
   {
     file: "bookly-logo-reversed",
     name: "Reversed",
-    use: "All white, for photos and colour backgrounds.",
+    use: "All white, for photos and color backgrounds.",
     tile: "#E85D2C",
   },
   {
@@ -143,8 +143,8 @@ export default function PressPage() {
           People. Conversations. <span className="text-brand">Progress.</span>
         </h1>
         <p className="mt-4 text-lg text-muted-foreground">
-          Everything you need to write about Bookly or show it: the logo, colours and type, images
-          of the product, and a few words about who we are.
+          Everything you need to write about Bookly or show it: the logo, colors and type, images of
+          the product, and a few words about who we are.
         </p>
         <div className="mt-6 flex flex-wrap items-center gap-3">
           <Button size="lg" nativeButton={false} render={<a href={KIT} download />}>

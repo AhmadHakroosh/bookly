@@ -241,22 +241,22 @@ export async function cancellationMail(ctx: BookingMailCtx, forHost: boolean): P
   const rows: [string, React.ReactNode][] = [
     ["What", d.title],
     whenRow(ctx, tz),
-    ["Cancelled by", by],
+    ["Canceled by", by],
     ...(ctx.booking.cancelReason
       ? ([["Reason", ctx.booking.cancelReason]] as [string, string][])
       : []),
   ];
-  const title = dates.length ? "Sessions cancelled" : "Meeting cancelled";
+  const title = dates.length ? "Sessions canceled" : "Meeting canceled";
   if (forHost) {
     const subject = dates.length
-      ? `Cancelled: ${d.title}, ${dates.length} remaining sessions`
-      : `Cancelled: ${d.title} on ${d.when}`;
+      ? `Canceled: ${d.title}, ${dates.length} remaining sessions`
+      : `Canceled: ${d.title} on ${d.when}`;
     const { html, text } = await renderEmail(
       <HostEmail
         brand={ctx.brand}
         title={title}
         preview={subject}
-        intro={`${by} cancelled ${dates.length ? "the remaining sessions" : "this meeting"}. The calendar entry is withdrawn by the attached update.`}
+        intro={`${by} canceled ${dates.length ? "the remaining sessions" : "this meeting"}. The calendar entry is withdrawn by the attached update.`}
         rows={rows}
         cta={{ href: `${ctx.adminUrl ?? ctx.baseUrl}/admin/bookings`, label: "Open bookings" }}
       />,
