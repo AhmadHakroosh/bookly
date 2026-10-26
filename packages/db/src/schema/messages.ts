@@ -58,12 +58,7 @@ export const threads = pgTable(
   },
   (t) => [
     index("threads_ws_activity_idx").on(t.workspaceId, t.lastActivityAt, t.id),
-    index("threads_ws_solution_activity_idx").on(
-      t.workspaceId,
-      t.solution,
-      t.lastActivityAt,
-      t.id,
-    ),
+    index("threads_ws_solution_activity_idx").on(t.workspaceId, t.solution, t.lastActivityAt, t.id),
     // One client conversation per contact; one candidate conversation per application.
     uniqueIndex("threads_guest_contact_idx")
       .on(t.contactId)
