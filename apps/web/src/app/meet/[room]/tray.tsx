@@ -169,7 +169,7 @@ export function Tray({
               <button
                 key={emoji}
                 type="button"
-                className="rounded-md px-2 py-1 text-xl transition-transform hover:scale-125 focus-visible:ring-2 focus-visible:ring-ring"
+                className="rounded-md px-2 py-1 text-xl transition-transform hover:scale-125 focus-visible:ring-3 focus-visible:ring-ring/50"
                 aria-label={`React ${emoji}`}
                 onClick={() => onReaction(emoji)}
               >

@@ -3,6 +3,15 @@ import { cn } from "cn";
 
 export type SegmentedTab = { href: string; label: string; count?: number; active?: boolean };
 
+/** One pill's classes, for the places a pill is a button (a client-side view switch). */
+export const segmentedTabClass = (active: boolean) =>
+  cn(
+    "inline-flex h-8 items-center gap-1.5 rounded-lg border px-3 text-sm font-medium whitespace-nowrap outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
+    active
+      ? "border-primary/40 bg-accent text-accent-foreground"
+      : "bg-card text-muted-foreground hover:text-foreground",
+  );
+
 /**
  * Pill tabs that switch a list's view, with counts, as the concepts draw "Upcoming (4) · Past ·
  * Requests (1)" and "Mine (6) · All (12) · Completed (8)". Each is a link, so the view is in the
@@ -25,12 +34,7 @@ function SegmentedTabs({
           key={t.href}
           href={t.href}
           aria-current={t.active ? "page" : undefined}
-          className={cn(
-            "inline-flex h-8 items-center gap-1.5 rounded-lg border px-3 text-sm font-medium outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
-            t.active
-              ? "border-primary/40 bg-accent text-accent-foreground"
-              : "bg-card text-muted-foreground hover:text-foreground",
-          )}
+          className={segmentedTabClass(!!t.active)}
         >
           {t.label}
           {t.count !== undefined && <span className="tabular-nums">({t.count})</span>}

@@ -8,6 +8,7 @@ import { countryOptions } from "@/lib/phone";
 import { book, type BookState } from "./actions";
 import { Dropdown } from "@/components/dropdown";
 import { SubmitButton } from "@/components/submit-button";
+import { fieldClasses } from "@/components/ui/input";
 
 type Props = {
   username: string;
@@ -69,8 +70,7 @@ export function BookingForm({
   const askCapture = !!chosen?.capture;
   const [country, setCountry] = useState(defaultCountry);
   const countries = countryOptions();
-  const field =
-    "bg-background h-10 w-full rounded-lg border px-3 text-sm outline-none focus-visible:ring-2";
+  const field = `${fieldClasses} h-10 px-3`;
   return (
     <form
       action={action}
@@ -104,7 +104,7 @@ export function BookingForm({
             {locations.map((l) => (
               <label
                 key={l.type}
-                className={`flex h-10 cursor-pointer items-center gap-3 rounded-lg border bg-background px-3 transition-colors has-focus-visible:ring-2 ${l.type === location ? "border-primary ring-1 ring-primary" : "hover:border-foreground/30"}`}
+                className={`flex h-10 cursor-pointer items-center gap-3 rounded-lg border bg-field px-3 transition-colors has-focus-visible:ring-3 has-focus-visible:ring-ring/50 ${l.type === location ? "border-primary ring-1 ring-primary" : "hover:border-foreground/30"}`}
               >
                 <input
                   type="radio"

@@ -81,7 +81,8 @@ async function CandidatesPage({ searchParams }: PageProps<"/admin/hiring/candida
             defaultValue={q}
             aria-label="Search candidates"
             placeholder="Search name or email"
-            className="h-8 pl-9"
+            size="sm"
+            className="pl-9"
           />
         </form>
       </div>

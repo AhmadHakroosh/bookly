@@ -159,6 +159,19 @@ test("the account sits in the sidebar on a large screen and in the top bar on a 
   await expect(header.getByRole("button", { name: /^Account:/ })).toBeVisible();
 });
 
+test("controls in one row share one height (visual-alignment C1)", async ({ page }) => {
+  await page.goto("/admin/tasks?view=all");
+  const height = (l: ReturnType<typeof page.locator>) =>
+    l.first().evaluate((el) => (el as HTMLElement).offsetHeight);
+  const row = [
+    page.getByRole("navigation", { name: "Which tasks" }).getByRole("button").first(),
+    page.getByRole("button", { name: /Filters/ }),
+    page.getByRole("navigation", { name: "Layout" }),
+  ];
+  const heights = await Promise.all(row.map(height));
+  expect(new Set(heights), `heights ${heights.join(", ")}`).toEqual(new Set([32]));
+});
+
 test("on a phone the sidebar opens from the menu button and closes on a link", async ({ page }) => {
   await page.setViewportSize({ width: 375, height: 812 });
   await page.goto("/admin");

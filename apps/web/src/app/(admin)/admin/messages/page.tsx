@@ -51,6 +51,7 @@ import { NewMessageButton } from "./new-message";
 import { LiveRefresh } from "./thread-sheet";
 import { AddPeopleButton, CloseButton } from "./thread-controls";
 import { PageHeader } from "@/components/ui/page-header";
+import { SegmentedTabs } from "@/components/ui/segmented-tabs";
 
 type SP = Record<string, string | string[] | undefined>;
 const one = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v) || undefined;
@@ -148,23 +149,15 @@ async function MessagesPage({ searchParams }: PageProps<"/admin/messages">) {
           )}
         >
           <div className="space-y-3 border-b p-3">
-            <nav aria-label="Mailboxes" className="flex gap-1.5">
-              {tabs.map((t) => (
-                <Link
-                  key={t.box}
-                  href={t.box === "inbox" ? "/admin/messages" : `/admin/messages?box=${t.box}`}
-                  aria-current={box === t.box ? "page" : undefined}
-                  className={cn(
-                    "inline-flex h-8 items-center rounded-lg border px-3 text-sm font-medium outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
-                    box === t.box
-                      ? "border-primary/40 bg-accent text-accent-foreground"
-                      : "bg-card text-muted-foreground hover:text-foreground",
-                  )}
-                >
-                  {t.label}
-                </Link>
-              ))}
-            </nav>
+            <SegmentedTabs
+              label="Mailboxes"
+              className="flex-nowrap gap-1.5"
+              items={tabs.map((t) => ({
+                href: t.box === "inbox" ? "/admin/messages" : `/admin/messages?box=${t.box}`,
+                label: t.label,
+                active: box === t.box,
+              }))}
+            />
             <form method="get" action="/admin/messages" className="relative" role="search">
               <SearchIcon
                 className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground"
@@ -176,7 +169,8 @@ async function MessagesPage({ searchParams }: PageProps<"/admin/messages">) {
                 defaultValue={q}
                 placeholder="Search conversations…"
                 aria-label="Search messages"
-                className="h-8 pl-9"
+                size="sm"
+                className="pl-9"
               />
             </form>
             <p className="flex gap-3 text-xs">

@@ -291,7 +291,8 @@ function RuleForm({
         <span>it has the tag or track</span>
         <Input
           aria-label="Only for applications with this tag or track (optional)"
-          className="h-8 w-40"
+          size="sm"
+          className="w-40"
           placeholder="any"
           value={tag}
           onChange={(e) => setTag(e.target.value)}
@@ -364,7 +365,8 @@ function RuleForm({
                 />
                 <Input
                   aria-label="What to tell them"
-                  className="h-8 min-w-48 flex-1"
+                  size="sm"
+                  className="min-w-48 flex-1"
                   value={a.text}
                   onChange={(e) => set(i, { ...a, text: e.target.value })}
                 />
@@ -373,7 +375,8 @@ function RuleForm({
             {a.type === "add_tag" && (
               <Input
                 aria-label="Tag"
-                className="h-8 w-40"
+                size="sm"
+                className="w-40"
                 value={a.tag}
                 onChange={(e) => set(i, { ...a, tag: e.target.value })}
               />

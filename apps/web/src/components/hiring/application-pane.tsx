@@ -142,7 +142,7 @@ export async function ApplicationPane({
       />
 
       <Tabs defaultValue="overview">
-        <TabsList variant="line" className="w-full justify-start">
+        <TabsList variant="line">
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="interviews">Interviews</TabsTrigger>
           <TabsTrigger value="feedback">Feedback</TabsTrigger>

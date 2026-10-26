@@ -944,7 +944,8 @@ function RoutingPanel({ data }: { data: PanelData }) {
                 />
                 <Input
                   aria-label="Answer"
-                  className="h-8 w-40"
+                  size="sm"
+                  className="w-40"
                   value={String(c.value ?? "")}
                   onChange={(e) => set(i, { conditions: [{ ...c, value: e.target.value }] })}
                 />
@@ -963,7 +964,8 @@ function RoutingPanel({ data }: { data: PanelData }) {
                 />
                 <Input
                   aria-label={kind === "flag" ? "Requirement" : "Track"}
-                  className="h-8 w-56"
+                  size="sm"
+                  className="w-56"
                   placeholder={kind === "flag" ? "Enrolled at a university" : "engineering"}
                   value={"flag" in rule.to ? rule.to.flag : "tag" in rule.to ? rule.to.tag : ""}
                   onChange={(e) =>

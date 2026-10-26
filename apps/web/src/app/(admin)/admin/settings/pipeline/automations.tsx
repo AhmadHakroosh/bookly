@@ -8,6 +8,7 @@ import { SubmitButton } from "@/components/submit-button";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { deleteRuleAction, saveRuleAction, toggleRuleAction, type RuleSaveState } from "./actions";
+import { fieldClasses } from "@/components/ui/input";
 
 /*
  * A stage's automations (ADR 0002): "when someone enters (or leaves) this stage, after a wait,
@@ -36,8 +37,7 @@ const KINDS: { value: EditorAction["kind"]; label: string }[] = [
   { value: "notify", label: "Tell owners and admins" },
 ];
 
-const textarea =
-  "w-full rounded-lg border bg-background px-3 py-2 text-sm outline-none focus-visible:ring-2";
+const textarea = `${fieldClasses} px-3 py-2`;
 
 function blank(kind: EditorAction["kind"], o: Options): EditorAction {
   switch (kind) {
@@ -232,7 +232,8 @@ function RuleForm({
           value={rule.on}
           onValueChange={(v) => set({ on: v as EditorRule["on"] })}
           ariaLabel="When it runs"
-          className="h-9 w-52"
+          size="sm"
+          className="w-52"
           options={[
             { value: "enter", label: "When someone enters" },
             { value: "leave", label: "When someone leaves" },
@@ -249,7 +250,8 @@ function RuleForm({
               set({ delayHours: Math.max(0, Math.min(168, Number(e.target.value) || 0)) })
             }
             aria-label="Hours to wait"
-            className="h-9 w-20"
+            size="sm"
+            className="w-20"
           />
           <span className="text-muted-foreground">hours</span>
         </label>
@@ -258,7 +260,8 @@ function RuleForm({
           onChange={(e) => set({ tag: e.target.value })}
           aria-label="Only for contacts tagged"
           placeholder="Only for a tag (optional)"
-          className="h-9 w-48"
+          size="sm"
+          className="w-48"
           maxLength={40}
         />
       </div>
@@ -315,7 +318,8 @@ function RuleForm({
           value={adding}
           onValueChange={(v) => setAdding(v as EditorAction["kind"])}
           ariaLabel="Action to add"
-          className="h-9 w-56"
+          size="sm"
+          className="w-56"
           options={KINDS.filter(
             (k) =>
               (k.value !== "booking_link" || options.eventTypes.length) &&
@@ -435,7 +439,8 @@ function ActionFields({
                 onChange({ ...a, items: a.items.map((i) => ({ ...i, dueDays: d })) });
               }}
               aria-label={label("days until the tasks are due")}
-              className="h-8 w-20"
+              size="sm"
+              className="w-20"
             />
             days (optional). The checklist belongs to the stage: every automation here that creates
             tasks uses this list.
@@ -448,7 +453,8 @@ function ActionFields({
           value={a.eventTypeId || undefined}
           onValueChange={(v) => onChange({ ...a, eventTypeId: v })}
           ariaLabel={label("event type to book")}
-          className="h-9 w-72"
+          size="sm"
+          className="w-72"
           options={options.eventTypes}
         />
       );
@@ -458,7 +464,8 @@ function ActionFields({
           value={a.formId || undefined}
           onValueChange={(v) => onChange({ ...a, formId: v })}
           ariaLabel={label("form to fill in")}
-          className="h-9 w-72"
+          size="sm"
+          className="w-72"
           options={options.forms}
         />
       );
@@ -473,13 +480,15 @@ function ActionFields({
             onChange={(e) => onChange({ ...a, amount: Number(e.target.value) || 0 })}
             aria-label={label("amount")}
             placeholder="Amount"
-            className="h-9 w-32"
+            size="sm"
+            className="w-32"
           />
           <Input
             value={a.currency}
             onChange={(e) => onChange({ ...a, currency: e.target.value.slice(0, 3) })}
             aria-label={label("currency")}
-            className="h-9 w-20 uppercase"
+            size="sm"
+            className="w-20 uppercase"
             maxLength={3}
           />
           <Input
@@ -487,7 +496,8 @@ function ActionFields({
             onChange={(e) => onChange({ ...a, description: e.target.value })}
             aria-label={label("what it is for")}
             placeholder="What it is for"
-            className="h-9 min-w-0 flex-1 basis-48"
+            size="sm"
+            className="min-w-0 flex-1 basis-48"
             maxLength={200}
           />
         </div>
@@ -498,7 +508,8 @@ function ActionFields({
           value={a.stageKey || undefined}
           onValueChange={(v) => onChange({ ...a, stageKey: v })}
           ariaLabel={label("stage to move to")}
-          className="h-9 w-60"
+          size="sm"
+          className="w-60"
           options={options.stages}
         />
       );
@@ -509,7 +520,8 @@ function ActionFields({
           onChange={(e) => onChange({ ...a, tag: e.target.value })}
           aria-label={label("tag")}
           placeholder="Tag"
-          className="h-9 w-48"
+          size="sm"
+          className="w-48"
           maxLength={40}
         />
       );

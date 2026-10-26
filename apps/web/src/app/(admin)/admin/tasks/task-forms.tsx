@@ -85,7 +85,7 @@ export function TaskEditForm({
       <div className="space-y-2.5 text-sm">
         <label className={row}>
           <span className="text-muted-foreground">Title</span>
-          <Input name="title" defaultValue={title} required maxLength={200} className="h-8" />
+          <Input name="title" defaultValue={title} required maxLength={200} size="sm" />
         </label>
         {canAssign && (
           <div className={row}>
@@ -106,7 +106,7 @@ export function TaskEditForm({
             defaultValue={dueAt}
             ariaLabel="Due date"
             placeholder="No due date"
-            className="h-8"
+            size="sm"
           />
         </div>
         {links.map((l) => (

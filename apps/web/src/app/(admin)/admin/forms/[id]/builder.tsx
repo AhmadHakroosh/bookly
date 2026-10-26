@@ -31,6 +31,7 @@ import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { Input } from "@/components/ui/input";
 import { saveFormAction, type BuilderState } from "../actions";
+import { fieldClasses } from "@/components/ui/input";
 
 /*
  * The form builder (ADR 0004, slice S4): pages of questions of any field type, "show only
@@ -41,8 +42,7 @@ import { saveFormAction, type BuilderState } from "../actions";
  */
 
 const NEEDS_VALUE = new Set(["equals", "not_equals", "contains", "gt", "lt"]);
-const textarea =
-  "w-full rounded-lg border bg-background px-3 py-2 text-sm outline-none focus-visible:ring-2";
+const textarea = `${fieldClasses} px-3 py-2`;
 
 export function FormBuilder({
   formId,
@@ -184,7 +184,8 @@ export function FormBuilder({
                 }
                 placeholder="Page title (optional)"
                 aria-label={`Page ${pi + 1} title`}
-                className="h-8 flex-1"
+                size="sm"
+                className="flex-1"
                 maxLength={500}
               />
               {pi > 0 && (
@@ -310,8 +311,8 @@ function AddQuestion({ onAdd, page }: { onAdd: (type: FieldType) => void; page: 
         value={type}
         onValueChange={(v) => setType(v as FieldType)}
         ariaLabel={`Type of question to add to page ${page}`}
-        className="h-8 w-52"
         size="sm"
+        className="w-52"
         options={FIELD_TYPES.map((t) => ({ value: t, label: FIELD_LABELS[t] }))}
       />
       <Button type="button" variant="outline" size="sm" onClick={() => onAdd(type)}>
@@ -500,7 +501,8 @@ function FileSettings({ field: f, update }: { field: Field; update: (p: Partial<
             })
           }
           ariaLabel="Accepted files"
-          className="h-9 w-56"
+          size="sm"
+          className="w-56"
           options={[
             ...Object.entries(FILE_ACCEPT).map(([k, v]) => ({ value: k, label: v.label })),
             { value: "any", label: "Any document, image or media" },
@@ -515,7 +517,8 @@ function FileSettings({ field: f, update }: { field: Field; update: (p: Partial<
           max={10}
           value={file.maxFiles}
           onChange={(e) => update({ file: { ...file, maxFiles: clamp(e.target.value, 10) } })}
-          className="h-9 w-20"
+          size="sm"
+          className="w-20"
         />
       </label>
       <label>
@@ -528,7 +531,8 @@ function FileSettings({ field: f, update }: { field: Field; update: (p: Partial<
           onChange={(e) =>
             update({ file: { ...file, maxMb: clamp(e.target.value, PUBLIC_FILE_MB) } })
           }
-          className="h-9 w-20"
+          size="sm"
+          className="w-20"
         />
       </label>
     </div>
@@ -558,7 +562,7 @@ function ConsentSettings({
           update({ consent: { ...consent, kind: v as NonNullable<Field["consent"]>["kind"] } })
         }
         ariaLabel="Kind of consent"
-        className="h-9 w-56"
+        className="h-8 w-56"
         options={CONSENT_KINDS}
       />
       <textarea
@@ -655,8 +659,8 @@ function Conditions({
                 });
               }}
               ariaLabel={`Condition ${i + 1}: question`}
-              className="h-8 w-48"
               size="sm"
+              className="w-48"
               options={earlier.map((f) => ({ value: f.id, label: f.label.trim() || "Untitled" }))}
             />
             <Dropdown
@@ -679,8 +683,8 @@ function Conditions({
                 });
               }}
               ariaLabel={`Condition ${i + 1}: comparison`}
-              className="h-8 w-40"
               size="sm"
+              className="w-40"
               options={ops.map((o, j) => ({ value: String(j), label: o.label }))}
             />
             {def.value === undefined &&
@@ -690,8 +694,8 @@ function Conditions({
                   value={typeof c.value === "string" && c.value ? c.value : undefined}
                   onValueChange={(v) => replace({ ...c, fieldId: target.id, value: v })}
                   ariaLabel={`Condition ${i + 1}: answer`}
-                  className="h-8 w-44"
                   size="sm"
+                  className="w-44"
                   options={target.options.map((o) => ({ value: o.value, label: o.label }))}
                 />
               ) : (
@@ -706,7 +710,8 @@ function Conditions({
                   }
                   type={target.type === "number" ? "number" : "text"}
                   aria-label={`Condition ${i + 1}: answer`}
-                  className="h-8 w-44"
+                  size="sm"
+                  className="w-44"
                 />
               ))}
             <Button

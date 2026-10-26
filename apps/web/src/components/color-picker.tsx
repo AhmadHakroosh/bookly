@@ -88,7 +88,7 @@ export function ColorPicker({
               type="button"
               variant="outline"
               aria-label={ariaLabel}
-              className="h-10 gap-2 bg-background px-3 font-normal"
+              className="h-10 gap-2 bg-field px-3 font-normal"
             />
           }
         >

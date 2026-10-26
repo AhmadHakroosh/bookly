@@ -49,6 +49,7 @@
   --color-success-foreground: var(--success-foreground);
   --color-success-muted: var(--success-muted);
   --color-warning: var(--warning);
+  --color-field: var(--field);
   --color-file-pdf: var(--file-pdf);
   --color-file-doc: var(--file-doc);
   --color-file-sheet: var(--file-sheet);
@@ -127,6 +128,8 @@
   --success-muted: oklch(0.955 0.03 150);
   /* Warnings are the concepts' orange, as they draw "Due today" and "Feedback missing". */
   --warning: oklch(0.651 0.183 38.6);
+  /* Every text control is white, on cards and on Paper (concepts). */
+  --field: oklch(1 0 0);
   /* File kinds (ui mocks.png 06): status-neutral colours for the filled file-type icons. */
   --file-pdf: #e5483b;
   --file-doc: #2f6fe4;
@@ -176,7 +179,7 @@
    */
   select:not([multiple]):not([size]) {
     appearance: none;
-    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2371717a' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='m6 9 6 6 6-6'/></svg>");
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2366625E' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='m6 9 6 6 6-6'/></svg>");
     background-repeat: no-repeat;
     background-position: right 0.6rem center;
     background-size: 1rem;
@@ -227,6 +230,7 @@
   select:not([multiple]):not([size]) {
     height: 2.5rem;
   }
+
   /*
    * Every clickable thing shows a pointer: links, buttons, menu items, tabs, labels and
    * summaries, plus anything that opens something (`cursor-pointer` on rows and cards).
@@ -276,29 +280,6 @@
 .docs-prose h3:hover .heading-anchor,
 .docs-prose .heading-anchor:focus-visible {
   opacity: 1;
-}
-
-/* Marketing mockups always render in the light theme, whatever the page theme is. */
-.force-light {
-  color-scheme: light;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.5 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
 }
 
 /* Marketing site (platform host) */
@@ -354,4 +335,12 @@
 }
 .meet-float {
   animation: meet-float 2.5s ease-out forwards;
+}
+
+/* The one focus ring every focusable thing uses (visual-alignment C3). */
+@utility focus-ring {
+  outline: none;
+  &:focus-visible {
+    box-shadow: 0 0 0 3px color-mix(in oklab, var(--ring) 50%, transparent);
+  }
 }

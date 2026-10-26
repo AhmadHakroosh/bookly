@@ -27,6 +27,7 @@ import { Suspense } from "react";
 import { PaneHost } from "@/components/pane";
 import { and, eq, inArray, schema } from "@bookly/db";
 import { PageTabs } from "@/components/ui/page-tabs";
+import { fieldClasses } from "@/components/ui/input";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { initialsOf } from "@/components/ui/avatar-stack";
 import { FileTypeIcon } from "@/components/ui/file-row";
@@ -243,7 +244,7 @@ async function ContactPage({ params, searchParams }: PageProps<"/admin/contacts/
                 name="text"
                 aria-label="Note"
                 placeholder="Add a note…"
-                className="h-9 min-w-0 flex-1 rounded-lg border bg-background px-3 text-sm"
+                className={`${fieldClasses} h-10 flex-1 px-3`}
               />
               <SubmitButton variant="outline">Add</SubmitButton>
             </form>

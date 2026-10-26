@@ -550,7 +550,8 @@ export function PipelineBoard({
                   placeholder="Search by name"
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
-                  className="h-8 w-48 ps-8"
+                  size="sm"
+                  className="w-48 ps-8"
                 />
               </div>
             </div>

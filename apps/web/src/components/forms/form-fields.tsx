@@ -14,6 +14,7 @@ import {
 } from "@bookly/forms";
 import { Dropdown } from "@/components/dropdown";
 import { answersOf, type Raw, type Uploaded } from "./raw";
+import { fieldClasses } from "@/components/ui/input";
 
 export { answersOf, rawFrom, type Raw, type Uploaded } from "./raw";
 
@@ -25,8 +26,7 @@ export { answersOf, rawFrom, type Raw, type Uploaded } from "./raw";
  * draft's token as `form_token` once a file was uploaded.
  */
 
-const input =
-  "bg-background h-10 w-full rounded-lg border px-3 text-sm outline-none focus-visible:ring-2";
+const input = `${fieldClasses} h-10 px-3`;
 
 export function FormFields({
   formId,

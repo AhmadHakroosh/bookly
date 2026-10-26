@@ -25,6 +25,7 @@ export function DatePicker({
   ariaLabel,
   className,
   fromDate,
+  size = "default",
 }: {
   name?: string;
   id?: string;
@@ -37,6 +38,8 @@ export function DatePicker({
   className?: string;
   /** Earliest selectable day. */
   fromDate?: Date;
+  /** 40 px beside default buttons, 32 px in toolbars and rows. */
+  size?: "default" | "sm";
 }) {
   const [inner, setInner] = useState(defaultValue ?? "");
   const current = value ?? inner;
@@ -59,7 +62,8 @@ export function DatePicker({
               // A button cannot carry aria-required (axe: aria-allowed-attr); say it in words.
               aria-label={ariaLabel && required ? `${ariaLabel} (required)` : ariaLabel}
               className={cn(
-                "h-10 w-full justify-start gap-2 bg-background px-3 font-normal",
+                "w-full justify-start gap-2 bg-field px-3 font-normal",
+                size === "sm" ? "h-8 px-2.5" : "h-10",
                 !date && "text-muted-foreground",
                 !required && date && "pr-8",
               )}
