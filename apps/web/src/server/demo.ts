@@ -137,6 +137,14 @@ export async function seedDemo() {
       .insert(schema.workspaceDomains)
       .values({ workspaceId: ws.id, host, isPrimary: true, verifiedAt: new Date() });
   }
+  // The demo shows both solutions.
+  await db()
+    .insert(schema.workspaceSolutions)
+    .values([
+      { workspaceId: ws.id, solution: "clients", setupCompletedAt: new Date() },
+      { workspaceId: ws.id, solution: "hiring", setupCompletedAt: new Date() },
+    ])
+    .onConflictDoNothing();
   const member = await db().query.members.findFirst({
     where: and(
       eq(schema.members.organizationId, ws.organizationId),

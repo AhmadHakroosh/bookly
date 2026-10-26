@@ -1,7 +1,9 @@
 import { sql } from "drizzle-orm";
 import { bigint, index, pgTable, text, timestamp, uniqueIndex } from "drizzle-orm/pg-core";
 import { users } from "./auth";
+import { opportunities } from "./hiring";
 import { contacts } from "./scheduling";
+import type { Solution } from "./solutions";
 import { workspaces } from "./workspaces";
 
 const id = () =>
@@ -36,6 +38,12 @@ export const folders = pgTable(
     name: text("name").notNull(),
     parentId: text("parent_id"),
     space: text("space").$type<"personal" | "team">().notNull(),
+    /** Clients or Hiring (ADR 0009); a file inherits it from its folder. */
+    solution: text("solution").$type<Solution>().notNull().default("clients"),
+    /** Hiring: the opportunity's own team folder. */
+    opportunityId: text("opportunity_id").references(() => opportunities.id, {
+      onDelete: "set null",
+    }),
     /** The member whose My files it is in (personal only). */
     ownerUserId: text("owner_user_id").references(() => users.id, { onDelete: "cascade" }),
     createdBy: text("created_by").references(() => users.id, { onDelete: "set null" }),
@@ -76,6 +84,8 @@ export const files = pgTable(
     readyAt: timestamp("ready_at", { withTimezone: true }),
     /* ---- the drive (0.18.0; attachments only) ---- */
     space: text("space").$type<FileSpace>(),
+    /** Clients or Hiring for drive files and attachments; null for avatars, logos, backgrounds. */
+    solution: text("solution").$type<Solution>(),
     folderId: text("folder_id").references(() => folders.id, { onDelete: "set null" }),
     contactId: text("contact_id").references(() => contacts.id, { onDelete: "set null" }),
     source: text("source").$type<FileSource>(),

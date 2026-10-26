@@ -28,6 +28,11 @@ import {
  * timeline of everything that happened (bookings, emails, notes, form answers).
  */
 
+/**
+ * The contact for an email on the Clients side (a booking, a routing form, the waitlist, the API):
+ * found or created, and marked a client (`client_at`). Candidates are created by the application
+ * flow and only become clients here.
+ */
 export async function upsertContact(
   workspaceId: string,
   input: { email: string; name?: string | null; phone?: string | null; company?: string | null },
@@ -38,6 +43,7 @@ export async function upsertContact(
   });
   if (existing) {
     const patch: Partial<Contact> = { lastActivityAt: new Date() };
+    if (!existing.clientAt) patch.clientAt = new Date();
     if (!existing.name && input.name) patch.name = input.name.trim().slice(0, 120);
     if (!existing.phone && input.phone) patch.phone = input.phone.trim().slice(0, 40);
     if (!existing.company && input.company) patch.company = input.company.trim().slice(0, 120);
@@ -53,6 +59,7 @@ export async function upsertContact(
     .insert(schema.contacts)
     .values({
       workspaceId,
+      clientAt: new Date(),
       stageId: entry?.id ?? null,
       stageEnteredAt: entry ? new Date() : null,
       email,

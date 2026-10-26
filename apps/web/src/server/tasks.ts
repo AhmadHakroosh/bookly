@@ -283,12 +283,22 @@ const flatten = (r: Row): BoardTask => ({
   comments: r.comments ?? 0,
 });
 
-export type FilterCtx = { workspaceId: string; viewerId: string; tz: string; now?: Date };
+export type FilterCtx = {
+  workspaceId: string;
+  viewerId: string;
+  tz: string;
+  now?: Date;
+  /** The side the board belongs to (ADR 0009); Clients unless said. */
+  solution?: "clients" | "hiring";
+};
 
 /** SQL conditions for a set of filters (the status filter is applied by the caller's columns). */
 export function filterConds(f: TaskFilters, ctx: FilterCtx) {
   const now = ctx.now ?? new Date();
-  const conds = [eq(schema.tasks.workspaceId, ctx.workspaceId)];
+  const conds = [
+    eq(schema.tasks.workspaceId, ctx.workspaceId),
+    eq(schema.tasks.solution, ctx.solution ?? "clients"),
+  ];
   if (f.assignee)
     conds.push(eq(schema.tasks.userId, f.assignee === "me" ? ctx.viewerId : f.assignee));
   if (f.contactId) conds.push(eq(schema.tasks.contactId, f.contactId));

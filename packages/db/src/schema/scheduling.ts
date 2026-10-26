@@ -17,6 +17,7 @@ import { users } from "./auth";
 import { pipelineStages } from "./pipelines";
 import { workspaces } from "./workspaces";
 import type { NotificationKind } from "./notifications";
+import type { Solution } from "./solutions";
 
 const id = () =>
   text("id")
@@ -203,6 +204,8 @@ export const eventTypes = pgTable(
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
     scheduleId: text("schedule_id").references(() => schedules.id, { onDelete: "set null" }),
+    /** Clients (the booking page) or Hiring (interview types, offered only from a stage). */
+    solution: text("solution").$type<Solution>().notNull().default("clients"),
     slug: text("slug").notNull(),
     title: text("title").notNull(),
     description: text("description"),
@@ -274,6 +277,8 @@ export const contacts = pgTable(
     /** Legacy stage, written alongside `stage_id` through 1.0.x and dropped in 1.1 (ADR 0001). */
     stage: text("stage").$type<ContactStage>().notNull().default("lead"),
     /** The contact's stage in the workspace's client pipeline; null = not a client (e.g. only a candidate). */
+    /** Became a client (a booking, a routing form, added on the Clients side); null: a candidate only. */
+    clientAt: timestamp("client_at", { withTimezone: true }),
     stageId: text("stage_id").references(() => pipelineStages.id, { onDelete: "set null" }),
     stageEnteredAt: timestamp("stage_entered_at", { withTimezone: true }),
     /** Free-form host notes (markdown-ish plain text). */
@@ -292,6 +297,10 @@ export const contacts = pgTable(
     index("contacts_ws_stage_idx").on(t.workspaceId, t.stage),
     index("contacts_ws_stage_id_idx").on(t.workspaceId, t.stageId, t.lastActivityAt),
     index("contacts_ws_activity_idx").on(t.workspaceId, t.lastActivityAt),
+    // The Clients side lists only clients.
+    index("contacts_ws_client_activity_idx")
+      .on(t.workspaceId, t.lastActivityAt)
+      .where(sql`${t.clientAt} is not null`),
   ],
 );
 
@@ -387,6 +396,11 @@ export const tasks = pgTable(
     workspaceId: text("workspace_id")
       .notNull()
       .references(() => workspaces.id, { onDelete: "cascade" }),
+    /** Clients or Hiring (ADR 0009); hiring tasks come from stage rules and applications. */
+    solution: text("solution").$type<Solution>().notNull().default("clients"),
+    applicationId: text("application_id").references(() => applications.id, {
+      onDelete: "cascade",
+    }),
     contactId: text("contact_id").references(() => contacts.id, { onDelete: "cascade" }),
     bookingId: text("booking_id"),
     /** Host responsible (defaults to the booking's host). */

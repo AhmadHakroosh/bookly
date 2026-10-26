@@ -5,6 +5,7 @@ import { getStorage, scanFile, type ScanResult } from "@bookly/storage";
 import { fileAccepted, PUBLIC_FILE_MB, type Field } from "@bookly/forms";
 import { db } from "@/lib/db";
 import { bytesMatchMime, FILE_RULES, MB } from "@/lib/files";
+import type { Solution } from "@bookly/db/schema";
 import { completeUpload, createUpload, getFile, receiveUpload, removeFile } from "./files";
 import { hasFlag } from "./flags";
 import { draftResponse, publishedSchema, startDraftResponse, touchDraft } from "./forms";
@@ -67,7 +68,7 @@ async function context(req: Request, formId: string) {
     if (!(await hasFlag(ws, "hiring")) || window === "closed" || window === "scheduled")
       throw new FormUploadError("Applications aren't open.", 409);
   } else if (!(await hasFlag(ws, "forms_v2"))) throw new FormUploadError("Not found.", 404);
-  return { ws, published, draft };
+  return { ws, published, draft, solution: (opp ? "hiring" : "clients") as Solution };
 }
 
 /** A draft's file, on this form, or an error that says nothing about other people's files. */
@@ -112,7 +113,7 @@ export async function startFormUpload(
   formId: string,
   body: { fieldId: string; name: string; mime: string; size: number; statusToken?: string },
 ) {
-  const { ws, published, draft: existing } = await context(req, formId);
+  const { ws, published, draft: existing, solution } = await context(req, formId);
   const ip = await clientIp();
   const [byIp, byForm] = await Promise.all([
     rateLimit(`form-upload:${ip}`, FORM_UPLOAD_LIMIT.perIp, 10 * 60_000),
@@ -154,6 +155,7 @@ export async function startFormUpload(
     userId: null,
     owner: { type: "form_response", id: draft.id },
     visibility: "private",
+    solution,
     origin: { source: "form", sourceId: field.id },
     local: {
       url: (id) => `/api/forms/${formId}/uploads/${id}`,

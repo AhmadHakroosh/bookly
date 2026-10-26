@@ -148,8 +148,10 @@ export async function listEventTypes(
   userId?: string,
   opts: { includeHidden?: boolean } = {},
 ): Promise<EventType[]> {
+  // Clients' event types: interview types (Hiring) are never on a booking page (ADR 0009).
   const conds = [
     eq(schema.eventTypes.workspaceId, workspaceId),
+    eq(schema.eventTypes.solution, "clients"),
     eq(schema.eventTypes.active, true),
   ];
   if (userId) conds.push(eq(schema.eventTypes.userId, userId));
@@ -161,11 +163,17 @@ export async function listEventTypes(
     .orderBy(asc(schema.eventTypes.position), asc(schema.eventTypes.createdAt));
 }
 
+/** Every Clients event type, hidden and inactive included (the admin list, routing targets). */
 export async function listAllEventTypes(workspaceId: string): Promise<EventType[]> {
   return db()
     .select()
     .from(schema.eventTypes)
-    .where(eq(schema.eventTypes.workspaceId, workspaceId))
+    .where(
+      and(
+        eq(schema.eventTypes.workspaceId, workspaceId),
+        eq(schema.eventTypes.solution, "clients"),
+      ),
+    )
     .orderBy(asc(schema.eventTypes.position), asc(schema.eventTypes.createdAt));
 }
 
@@ -183,6 +191,7 @@ export async function getEventType(
         eq(schema.eventTypes.workspaceId, workspaceId),
         eq(schema.eventTypes.userId, userId),
         eq(schema.eventTypes.slug, slug),
+        eq(schema.eventTypes.solution, "clients"),
         eq(schema.eventTypes.active, true),
       ),
     })) ?? null

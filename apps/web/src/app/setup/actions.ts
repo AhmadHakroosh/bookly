@@ -10,6 +10,7 @@ import { audit } from "@/server/audit";
 import { getSession } from "@/server/session";
 import { needsSetup } from "@/server/workspace";
 import { invalidateHostCache } from "@/server/tenancy";
+import { startSolutions } from "@/server/solutions";
 
 const slugify = (s: string) =>
   s
@@ -75,6 +76,7 @@ export async function completeSetup(_prev: SetupState, formData: FormData): Prom
     await tx
       .insert(schema.workspaceDomains)
       .values({ workspaceId: workspace!.id, host, isPrimary: true, verifiedAt: new Date() });
+    await startSolutions(tx, workspace!.id, ["clients"], userId);
     return workspace!.id;
   });
   invalidateHostCache();

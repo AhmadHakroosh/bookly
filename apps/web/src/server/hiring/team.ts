@@ -173,3 +173,18 @@ export async function purgeHiringAccess(workspaceId: string, userId: string): Pr
       );
   });
 }
+
+/** Whether someone is on any opportunity's team here: that alone opens Hiring (ADR 0009 §3). */
+export async function onAnyOpportunityTeam(workspaceId: string, userId: string): Promise<boolean> {
+  const [row] = await db()
+    .select({ id: schema.opportunityMembers.opportunityId })
+    .from(schema.opportunityMembers)
+    .where(
+      and(
+        eq(schema.opportunityMembers.workspaceId, workspaceId),
+        eq(schema.opportunityMembers.userId, userId),
+      ),
+    )
+    .limit(1);
+  return !!row;
+}
